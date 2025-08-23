@@ -92,3 +92,25 @@ python3 -m http.server 8080
 ```
 
 **Regel**: NIEMALS ungetesteten Code an den User weitergeben. Immer erst selbst testen und Fehler beheben!
+
+## Git Workflow
+
+### Automatisches Git bei größeren Änderungen
+**WICHTIG**: Bei allen größeren Features oder Änderungen MUSS automatisch:
+1. **Git Add**: `git add .` für geänderte Dateien
+2. **Git Commit**: Mit aussagekräftiger Commit-Message
+3. **Git Push**: `git push origin main` zum GitHub Repository
+4. **Repository**: git@github.com:DorianGrey-Austria/tierarztapp.git
+
+### Commit Message Format
+```
+feat: Kurze Beschreibung der Änderung
+
+- Detail 1
+- Detail 2
+
+🤖 Generated with Claude Code
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Regel**: Nach jeder größeren Änderung SOFORT committen und pushen!
