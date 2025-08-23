@@ -1,0 +1,222 @@
+name: Deploy to Hostinger - vibecoding.company
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Erlaubt manuelles Triggern
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Prepare Production Files
+      run: |
+        echo "🚀 Preparing Tierarztspiel files for vibecoding.company deployment..."
+        
+        # Erstelle deployment Ordner
+        mkdir -p deploy
+        
+        # Kopiere alle HTML-Dateien des Tierarztspiels
+        cp standalone.html deploy/
+        cp vetscan-detective.html deploy/
+        cp vetscan-ultimate.html deploy/
+        cp vetscan-story-mode.html deploy/
+        cp vetgame-missions.html deploy/
+        cp vetscan-professional.html deploy/
+        
+        # Erstelle index.html als Startseite mit Auswahl
+        cat > deploy/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>VetScan Pro - Tierarzt Simulator</title>
+            <style>
+                body {
+                    font-family: system-ui, -apple-system, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0;
+                    padding: 20px;
+                }
+                .container {
+                    background: white;
+                    border-radius: 20px;
+                    padding: 40px;
+                    max-width: 600px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                }
+                h1 {
+                    color: #667eea;
+                    text-align: center;
+                    margin-bottom: 10px;
+                }
+                .subtitle {
+                    text-align: center;
+                    color: #666;
+                    margin-bottom: 30px;
+                }
+                .version-grid {
+                    display: grid;
+                    gap: 15px;
+                }
+                .version-card {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    text-decoration: none;
+                    transition: transform 0.3s, box-shadow 0.3s;
+                }
+                .version-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                }
+                .version-card h3 {
+                    margin: 0 0 10px 0;
+                    font-size: 1.2em;
+                }
+                .version-card p {
+                    margin: 0;
+                    opacity: 0.9;
+                    font-size: 0.95em;
+                }
+                .recommended {
+                    position: relative;
+                }
+                .recommended::after {
+                    content: "⭐ EMPFOHLEN";
+                    position: absolute;
+                    top: -10px;
+                    right: 10px;
+                    background: #f59e0b;
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 20px;
+                    font-size: 0.75em;
+                    font-weight: bold;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🩺 VetScan Pro 3000</h1>
+                <p class="subtitle">Wähle deine Spielversion:</p>
+                
+                <div class="version-grid">
+                    <a href="vetscan-detective.html" class="version-card recommended">
+                        <h3>🔍 Tier-Detektiv</h3>
+                        <p>Löse knifflige Fälle und lerne dabei! Die beste Version mit Lerneffekt und spannenden Rätseln.</p>
+                    </a>
+                    
+                    <a href="standalone.html" class="version-card">
+                        <h3>🏥 Klassik Version</h3>
+                        <p>Die stabile Basisversion - perfekt für Einsteiger und schnelle Diagnosen.</p>
+                    </a>
+                    
+                    <a href="vetscan-ultimate.html" class="version-card">
+                        <h3>🎮 3D Ultimate</h3>
+                        <p>Mit Karrieremodus und 3D-Grafiken! Baue deine eigene Praxis auf.</p>
+                    </a>
+                    
+                    <a href="vetscan-story-mode.html" class="version-card">
+                        <h3>📖 Story Modus</h3>
+                        <p>Erlebe spannende Geschichten mit Dr. Sarah Miller und ihrem Team.</p>
+                    </a>
+                    
+                    <a href="vetgame-missions.html" class="version-card">
+                        <h3>🎯 Missionen</h3>
+                        <p>Absolviere verschiedene Aufträge und sammle Belohnungen.</p>
+                    </a>
+                    
+                    <a href="vetscan-professional.html" class="version-card">
+                        <h3>👨‍⚕️ Professional</h3>
+                        <p>Die realistische Simulation für angehende Tierärzte.</p>
+                    </a>
+                </div>
+            </div>
+        </body>
+        </html>
+        EOF
+        
+        # Erstelle .htaccess für HTTPS und Performance
+        cat > deploy/.htaccess << 'EOF'
+        # Force HTTPS
+        RewriteEngine On
+        RewriteCond %{HTTPS} !=on
+        RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+        
+        # Enable compression for faster loading
+        <ifModule mod_deflate.c>
+            AddOutputFilterByType DEFLATE text/html
+            AddOutputFilterByType DEFLATE text/css
+            AddOutputFilterByType DEFLATE application/javascript
+            AddOutputFilterByType DEFLATE application/json
+            AddOutputFilterByType DEFLATE image/svg+xml
+        </ifModule>
+        
+        # Cache static assets
+        <ifModule mod_expires.c>
+            ExpiresActive On
+            ExpiresByType text/css "access plus 1 month"
+            ExpiresByType application/javascript "access plus 1 month"
+            ExpiresByType image/png "access plus 1 year"
+            ExpiresByType image/jpg "access plus 1 year"
+            ExpiresByType image/jpeg "access plus 1 year"
+            ExpiresByType image/gif "access plus 1 year"
+            ExpiresByType image/svg+xml "access plus 1 year"
+        </ifModule>
+        
+        # Security headers
+        Header always set X-Content-Type-Options nosniff
+        Header always set X-Frame-Options SAMEORIGIN
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set Referrer-Policy "strict-origin-when-cross-origin"
+        EOF
+        
+        echo "✅ Tierarztspiel files prepared for vibecoding.company"
+        echo "📁 Files to deploy:"
+        ls -la deploy/
+        
+    - name: Deploy to Hostinger via FTP
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        local-dir: ./deploy/
+        server-dir: /public_html/  # Hauptverzeichnis für vibecoding.company
+        dry-run: false
+        log-level: verbose
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          **/.DS_Store
+          **/Thumbs.db
+          **/*.backup
+          **/*.md
+          
+    - name: Verify Deployment
+      run: |
+        echo "🎯 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Your Tierarztspiel is now LIVE at:"
+        echo "https://vibecoding.company/"
+        echo ""
+        echo "✅ Deployment finished at $(date)"
+        echo ""
+        echo "🚀 Auto-deployed via GitHub Actions to Hostinger!"
