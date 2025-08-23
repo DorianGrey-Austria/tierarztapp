@@ -6,6 +6,7 @@
     <title>VetScan Ultimate - 3D Veterinär Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700&display=swap');
         
@@ -276,8 +277,8 @@
                     <h3 class="text-lg font-bold text-cyan-300 mb-4">Patient</h3>
                     <div class="text-center mb-4">
                         <div class="text-6xl mb-2" id="patientEmoji">🐕</div>
-                        <h4 class="text-white font-semibold" id="patientName">Max</h4>
-                        <p class="text-gray-400 text-sm" id="patientInfo">Golden Retriever, 5 Jahre</p>
+                        <h4 class="text-white font-semibold" id="patientName">Bello</h4>
+                        <p class="text-gray-400 text-sm" id="patientInfo">Golden Retriever, 4 Jahre</p>
                     </div>
                     
                     <!-- Vitalwerte -->
@@ -403,15 +404,23 @@
         // 3D Scene Setup
         let scene, camera, renderer, animalModel;
         let currentView = 'normal';
+        let mixer, clock;
+        let modelLoader;
         
         function init3D() {
             const canvas = document.getElementById('canvas3d');
             const container = canvas.parentElement;
             
+            // Clock for animations
+            clock = new THREE.Clock();
+            
             // Scene
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f172a);
             scene.fog = new THREE.Fog(0x0f172a, 10, 50);
+            
+            // GLTF Loader
+            modelLoader = new THREE.GLTFLoader();
             
             // Camera
             camera = new THREE.PerspectiveCamera(
@@ -446,8 +455,8 @@
             pointLight.position.set(0, 5, 0);
             scene.add(pointLight);
             
-            // Create simple animal model (dog)
-            createAnimalModel();
+            // Create Golden Retriever model
+            createGoldenRetrieverModel();
             
             // Animation loop
             animate();
@@ -456,59 +465,214 @@
             window.addEventListener('resize', onWindowResize);
         }
         
-        function createAnimalModel() {
-            const geometry = new THREE.Group();
+        function createGoldenRetrieverModel() {
+            const dogGroup = new THREE.Group();
             
-            // Body
-            const bodyGeometry = new THREE.BoxGeometry(2, 1, 1);
-            const bodyMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x8b4513,
-                emissive: 0x111111,
-                specular: 0x222222,
-                shininess: 30
+            // Golden Retriever Farben
+            const goldenFurMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xD4A76A,  // Goldenes Fell
+                emissive: 0x8B6914,
+                specular: 0xFFF8DC,
+                shininess: 10,
+                flatShading: false
             });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            
+            const darkFurMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xB8860B,  // Dunkleres Gold für Ohren
+                emissive: 0x654321,
+                shininess: 5
+            });
+            
+            // Körper (realistischere Proportionen)
+            const bodyGeometry = new THREE.CapsuleGeometry(0.8, 2.5, 8, 16);
+            const body = new THREE.Mesh(bodyGeometry, goldenFurMaterial);
+            body.rotation.z = Math.PI / 2;
+            body.position.set(0, 0, 0);
             body.castShadow = true;
             body.receiveShadow = true;
-            geometry.add(body);
+            dogGroup.add(body);
             
-            // Head
-            const headGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-            const head = new THREE.Mesh(headGeometry, bodyMaterial);
-            head.position.set(1.2, 0.3, 0);
+            // Brust (breiter vorne)
+            const chestGeometry = new THREE.SphereGeometry(0.9, 16, 16);
+            const chest = new THREE.Mesh(chestGeometry, goldenFurMaterial);
+            chest.position.set(0.8, 0, 0);
+            chest.scale.set(1.2, 1, 1.1);
+            chest.castShadow = true;
+            dogGroup.add(chest);
+            
+            // Kopf (Golden Retriever typisch)
+            const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const head = new THREE.Mesh(headGeometry, goldenFurMaterial);
+            head.position.set(1.8, 0.3, 0);
+            head.scale.set(1.3, 1, 1.1);
             head.castShadow = true;
-            geometry.add(head);
+            dogGroup.add(head);
             
-            // Legs
-            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8);
-            const legMaterial = new THREE.MeshPhongMaterial({ color: 0x654321 });
+            // Schnauze
+            const snoutGeometry = new THREE.ConeGeometry(0.25, 0.7, 8);
+            const snout = new THREE.Mesh(snoutGeometry, goldenFurMaterial);
+            snout.position.set(2.3, 0.1, 0);
+            snout.rotation.z = -Math.PI / 2;
+            snout.scale.set(1, 0.8, 1.2);
+            dogGroup.add(snout);
             
-            for (let i = 0; i < 4; i++) {
-                const leg = new THREE.Mesh(legGeometry, legMaterial);
-                const x = i < 2 ? 0.7 : -0.7;
-                const z = i % 2 === 0 ? 0.3 : -0.3;
-                leg.position.set(x, -0.8, z);
-                leg.castShadow = true;
-                geometry.add(leg);
-            }
+            // Nase
+            const noseGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const noseMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x000000,
+                specular: 0x444444,
+                shininess: 100
+            });
+            const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+            nose.position.set(2.65, 0.05, 0);
+            dogGroup.add(nose);
             
-            // Tail
-            const tailGeometry = new THREE.ConeGeometry(0.2, 0.8, 8);
-            const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
-            tail.position.set(-1.3, 0.2, 0);
-            tail.rotation.z = -Math.PI / 4;
-            geometry.add(tail);
+            // Augen
+            const eyeGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const eyeMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x4B3621,  // Braune Augen
+                emissive: 0x111111,
+                specular: 0xFFFFFF,
+                shininess: 100
+            });
             
-            animalModel = geometry;
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(2.0, 0.4, 0.2);
+            dogGroup.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(2.0, 0.4, -0.2);
+            dogGroup.add(rightEye);
+            
+            // Ohren (typisch hängend für Golden Retriever)
+            const earGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+            
+            const leftEar = new THREE.Mesh(earGeometry, darkFurMaterial);
+            leftEar.position.set(1.6, 0.3, 0.4);
+            leftEar.scale.set(0.7, 1.5, 0.3);
+            leftEar.rotation.z = 0.3;
+            dogGroup.add(leftEar);
+            
+            const rightEar = new THREE.Mesh(earGeometry, darkFurMaterial);
+            rightEar.position.set(1.6, 0.3, -0.4);
+            rightEar.scale.set(0.7, 1.5, 0.3);
+            rightEar.rotation.z = 0.3;
+            dogGroup.add(rightEar);
+            
+            // Beine (realistischer)
+            const legGeometry = new THREE.CylinderGeometry(0.12, 0.15, 1.0, 8);
+            const pawGeometry = new THREE.SphereGeometry(0.15, 8, 8);
+            
+            // Vorderbeine
+            const frontLeftLeg = new THREE.Mesh(legGeometry, goldenFurMaterial);
+            frontLeftLeg.position.set(0.6, -1.0, 0.35);
+            frontLeftLeg.castShadow = true;
+            dogGroup.add(frontLeftLeg);
+            
+            const frontLeftPaw = new THREE.Mesh(pawGeometry, darkFurMaterial);
+            frontLeftPaw.position.set(0.6, -1.5, 0.35);
+            frontLeftPaw.scale.set(1, 0.5, 1.2);
+            dogGroup.add(frontLeftPaw);
+            
+            const frontRightLeg = new THREE.Mesh(legGeometry, goldenFurMaterial);
+            frontRightLeg.position.set(0.6, -1.0, -0.35);
+            frontRightLeg.castShadow = true;
+            dogGroup.add(frontRightLeg);
+            
+            const frontRightPaw = new THREE.Mesh(pawGeometry, darkFurMaterial);
+            frontRightPaw.position.set(0.6, -1.5, -0.35);
+            frontRightPaw.scale.set(1, 0.5, 1.2);
+            dogGroup.add(frontRightPaw);
+            
+            // Hinterbeine
+            const backLeftLeg = new THREE.Mesh(legGeometry, goldenFurMaterial);
+            backLeftLeg.position.set(-0.8, -1.0, 0.35);
+            backLeftLeg.castShadow = true;
+            dogGroup.add(backLeftLeg);
+            
+            const backLeftPaw = new THREE.Mesh(pawGeometry, darkFurMaterial);
+            backLeftPaw.position.set(-0.8, -1.5, 0.35);
+            backLeftPaw.scale.set(1, 0.5, 1.2);
+            dogGroup.add(backLeftPaw);
+            
+            const backRightLeg = new THREE.Mesh(legGeometry, goldenFurMaterial);
+            backRightLeg.position.set(-0.8, -1.0, -0.35);
+            backRightLeg.castShadow = true;
+            dogGroup.add(backRightLeg);
+            
+            const backRightPaw = new THREE.Mesh(pawGeometry, darkFurMaterial);
+            backRightPaw.position.set(-0.8, -1.5, -0.35);
+            backRightPaw.scale.set(1, 0.5, 1.2);
+            dogGroup.add(backRightPaw);
+            
+            // Schwanz (buschig und wedelnd)
+            const tailGeometry = new THREE.ConeGeometry(0.2, 1.2, 8);
+            const tail = new THREE.Mesh(tailGeometry, goldenFurMaterial);
+            tail.position.set(-1.5, 0.3, 0);
+            tail.rotation.z = -Math.PI / 3;
+            tail.castShadow = true;
+            
+            // Schwanzspitze (buschiger)
+            const tailTipGeometry = new THREE.SphereGeometry(0.25, 8, 8);
+            const tailTip = new THREE.Mesh(tailTipGeometry, goldenFurMaterial);
+            tailTip.position.set(-2.0, 0.6, 0);
+            tailTip.scale.set(1.5, 0.7, 0.7);
+            
+            dogGroup.add(tail);
+            dogGroup.add(tailTip);
+            
+            // Animation-Properties für Schwanzwedeln
+            tail.userData = { originalRotation: tail.rotation.z };
+            tailTip.userData = { originalX: tailTip.position.x };
+            dogGroup.userData = { tail: tail, tailTip: tailTip };
+            
+            // Größe anpassen und positionieren
+            dogGroup.scale.set(0.8, 0.8, 0.8);
+            dogGroup.position.y = 0.5;
+            
+            animalModel = dogGroup;
             scene.add(animalModel);
+        }
+        
+        function createAnimalModel() {
+            // Fallback zu Golden Retriever Model
+            createGoldenRetrieverModel();
         }
         
         function animate() {
             requestAnimationFrame(animate);
             
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+            
             // Rotate model
             if (animalModel) {
                 animalModel.rotation.y += 0.005;
+                
+                // Schwanzwedeln Animation
+                if (animalModel.userData.tail) {
+                    const tail = animalModel.userData.tail;
+                    const tailTip = animalModel.userData.tailTip;
+                    
+                    // Wedelanimation
+                    tail.rotation.y = Math.sin(time * 3) * 0.3;
+                    tail.rotation.x = Math.sin(time * 2) * 0.1;
+                    
+                    // Schwanzspitze folgt
+                    tailTip.position.x = tailTip.userData.originalX + Math.sin(time * 3) * 0.2;
+                    tailTip.position.y = 0.6 + Math.sin(time * 2) * 0.1;
+                }
+                
+                // Leichte Atembewegung
+                if (animalModel.children[0]) {
+                    animalModel.children[0].scale.y = 1 + Math.sin(time * 1.5) * 0.02;
+                    animalModel.children[1].scale.y = 1 + Math.sin(time * 1.5) * 0.03; // Brust atmet stärker
+                }
+            }
+            
+            // Update mixer if animations exist
+            if (mixer) {
+                mixer.update(delta);
             }
             
             renderer.render(scene, camera);
@@ -558,8 +722,12 @@
         
         // Game Functions
         function generatePatient() {
+            // Bello als ersten Patienten, dann zufällig
+            const isFirstPatient = gameState.stats.totalCases === 0;
+            
             const animals = [
-                { emoji: '🐕', name: 'Max', type: 'Golden Retriever', age: 5 },
+                { emoji: '🐕', name: 'Bello', type: 'Golden Retriever', age: 4, special: true },
+                { emoji: '🐕', name: 'Max', type: 'Labrador', age: 5 },
                 { emoji: '🐈', name: 'Luna', type: 'Perserkatze', age: 3 },
                 { emoji: '🐰', name: 'Hopsi', type: 'Zwergkaninchen', age: 2 },
                 { emoji: '🦜', name: 'Coco', type: 'Papagei', age: 8 }
@@ -586,14 +754,34 @@
                 }
             ];
             
-            const patient = animals[Math.floor(Math.random() * animals.length)];
-            const condition = conditions[Math.floor(Math.random() * conditions.length)];
+            // Immer Bello als ersten Patienten
+            const patient = isFirstPatient ? animals[0] : animals[Math.floor(Math.random() * animals.length)];
+            
+            // Spezielle Bedingungen für Bello
+            let condition;
+            if (isFirstPatient) {
+                // Bello hat eine leichte Magenverstimmung beim ersten Mal
+                condition = {
+                    id: 'gastritis',
+                    name: 'Magenverstimmung',
+                    symptoms: ['Leichtes Erbrechen', 'Appetitlosigkeit', 'Unruhe', 'Warme Nase'],
+                    vitals: { heartRate: 105, temperature: 38.8, respiration: 24, bloodPressure: '128/82' },
+                    special: 'Bello hat zu viele Leckerlis gefressen!'
+                };
+            } else {
+                condition = conditions[Math.floor(Math.random() * conditions.length)];
+            }
             
             gameState.currentPatient = {
                 ...patient,
                 condition: condition,
                 vitals: { ...condition.vitals }
             };
+            
+            // Spezielle Nachricht für Bello
+            if (isFirstPatient) {
+                showNotification('🐕 Bello, der Golden Retriever ist dein erster Patient!', 'info');
+            }
             
             gameState.currentSymptoms = [];
             gameState.toolsUsed = [];
