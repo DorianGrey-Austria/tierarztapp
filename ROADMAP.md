@@ -29,7 +29,53 @@
 
 ## 🚀 Geplante Features (Version 4.0)
 
-### Q3 2025: Blender MCP 3D Pipeline (PRIORITY)
+### Q1 2025: Educational Content Expansion - 20 Haustiere (CURRENT PRIORITY)
+- [ ] **Datenbasis erweitern** - veterinary-medical-data.js um neue Tiere ergänzen
+  - [ ] Ratte, Maus, Degu als neue Haustiere
+  - [ ] Detaillierte medizinische Daten für alle 17 vorhandenen Tiere
+  - [ ] Neue Krankheitskategorien und Symptom-Kombinationen
+- [ ] **Pädagogische Features implementieren**
+  - [ ] Lernmodus mit altersgerechten Erklärungen (6-14 Jahre)
+  - [ ] Quiz-System mit 100+ Fragen pro Tier
+  - [ ] Vergleichssystem (Normalwerte vs. gemessene Werte) visualisieren
+  - [ ] Dr. Eule Mentor mit kontextbezogenen Tipps erweitern
+- [ ] **Gamification-System**
+  - [ ] XP-System für korrekte Diagnosen
+  - [ ] Tier-Steckbrief-Sammlung als Belohnungssystem
+  - [ ] Achievement-Badges ("Hamster-Experte", "Notfall-Held")
+  - [ ] Schwierigkeitsstufen: Anfänger → Fortgeschritten → Experte
+- [ ] **3D-Visualisierung für neue Tiere**
+  - [ ] Procedural 3D-Modelle für 20 Haustiere
+  - [ ] Medizinische Shader für alle Tiere
+  - [ ] Interaktive Untersuchungspunkte am 3D-Modell
+- [ ] **Integration & Deployment**
+  - [ ] Alle HTML-Versionen mit neuen Daten aktualisieren
+  - [ ] React-Version mit erweiterten Features
+  - [ ] Automatisches Deployment auf vibecoding.company
+
+#### Die 20 Ziel-Haustiere:
+1. **Hund** (+ Top 5 Rassen einzeln)
+2. **Katze** (+ Hauskatze vs. Rassekatzen)
+3. **Kaninchen**
+4. **Meerschweinchen**
+5. **Hamster** (Goldhamster/Zwerghamster)
+6. **Wellensittich/Papagei**
+7. **Frettchen**
+8. **Igel**
+9. **Chinchilla**
+10. **Ratte** (NEU - Farbratte als Haustier)
+11. **Maus** (NEU - Farbmaus)
+12. **Degu** (NEU)
+13. **Gerbil** (Rennmaus)
+14. **Schildkröte** (Land/Wasser)
+15. **Bartagame**
+16. **Kornnatter**
+17. **Axolotl**
+18. **Kanarienvogel**
+19. **Nymphensittich**
+20. **Goldfisch/Aquarienfische**
+
+### Q2 2025: Blender MCP 3D Pipeline
 - [ ] **Blender MCP Server Integration** - Direkte Blender-Kontrolle über Claude Code
 - [ ] **Echtes Bello 3D-Modell** - Professionelles Hunde-Modell aus Blender
 - [ ] **Automated Export Pipeline** - Multi-Quality GLB Generation (High/Medium/Low/Ultra-Low)
@@ -122,4 +168,4 @@
 
 **Letzte Aktualisierung:** 23.08.2025
 **Status:** 🟢 In aktiver Entwicklung
-**Nächster Milestone:** Multiplayer-Modus (Q3 2025)
+**Nächster Milestone:** Educational Content Expansion - 20 Haustiere (Q1 2025)

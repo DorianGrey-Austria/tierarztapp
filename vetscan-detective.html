@@ -6,6 +6,7 @@
     <title>VetScan Detective - Tier-Detektiv Spiel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="animal-patients-generator.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Fredoka:wght@400;600;700&display=swap');
         
@@ -585,9 +586,10 @@
             timeStarted: null
         };
 
-        // Medical Cases Database
+        // Medical Cases Database - Now powered by 20-Animals System
         const medicalCases = {
-            easy: [
+            easy: generate20AnimalCases(), // Generate 60 cases from Level 1 animals
+            medium: [
                 {
                     id: 'cold',
                     animal: { type: 'Hund', name: 'Bello', age: 5, emoji: '🐕' },
@@ -709,13 +711,15 @@
         };
 
         // Fun facts database
+        // Fun Facts now powered by our educational database
         const funFacts = [
-            "Kleine Tiere haben ein schnelleres Herz als große! Ein Hamster hat 300-600 Schläge pro Minute!",
-            "Katzen schnurren nicht nur wenn sie glücklich sind - auch bei Schmerzen!",
-            "Hunde können 10.000 mal besser riechen als Menschen!",
-            "Kaninchen können nicht erbrechen - deshalb ist ihre Ernährung so wichtig!",
-            "Die normale Körpertemperatur von Vögeln liegt bei 40-42°C!",
-            "Meerschweinchen brauchen Vitamin C in ihrer Nahrung, genau wie Menschen!"
+            // From our 20-animals educational system
+            ...Object.values(ANIMAL_EDUCATION).flatMap(animal => animal.funFacts),
+            // Additional general facts
+            "Kleine Tiere haben ein schnelleres Herz als große!",
+            "Jedes Tier hat seine eigenen normalen Vitalwerte!",
+            "Tierärzte müssen über 20 verschiedene Tierarten kennen!",
+            "Ein guter Tierarzt hört dem Tierbesitzer genau zu!"
         ];
 
         // 3D Scene variables

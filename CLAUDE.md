@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 💡 Claude Code Professional Tips
-For advanced workflows and productivity tips, see [Claude-Tipps.md](./Claude-Tipps.md)  
-**Note**: These are optional recommendations to enhance productivity - adapt them to your workflow.
-
 ## Project Overview
 VetScan Pro 3000 - Educational veterinary medical scanner simulation game with multiple implementations:
 - **Standalone HTML versions**: 10+ self-contained HTML files requiring no build process
@@ -18,7 +14,7 @@ VetScan Pro 3000 - Educational veterinary medical scanner simulation game with m
 ### React Version
 ```bash
 npm install                    # Install dependencies
-npm run dev                    # Start dev server at http://localhost:3000
+npm run dev                    # Start dev server (Vite)
 npm run build                  # Build for production
 npm run preview                # Preview production build
 ```
@@ -30,6 +26,9 @@ python3 -m http.server 8080    # Start local server
 
 # Alternative port if 8080 is busy:
 python3 -m http.server 8081
+
+# Kill existing server on port:
+kill $(lsof -t -i:8080)
 ```
 
 ### 3D Workflow Commands
@@ -43,34 +42,24 @@ node scripts/test-mcp-connection.js
 # Generate medical visualization shaders
 npm run generate:shaders -- --model=bello
 
-# Validate 3D model exports
+# Optimize 3D models
+npm run optimize:model -- --input=path/to/model.glb --output=path/to/output/
+
+# Run integration tests for specific model
 npm run test:integration -- --model=bello
 
-# Manual browser testing
+# Manual browser console testing
 python3 test-console-errors.py
 ```
 
 ## Architecture & File Structure
 
-### HTML Versions Priority
-**Production Versions:**
-- `vetscan-detective.html` - 🎯 **RECOMMENDED**: Educational detective gameplay with Dr. Eule mentor
-- `standalone.html` - 🛡️ **STABLE**: Most stable base version
-
-**3D Scanner Versions:**
-- `vetscan-bello-3d-v7.html` - ⚡ **VERSION 7**: Latest 3D with medical shaders (X-Ray, Ultrasound, Thermal, MRI)
-- `vetscan-bello-3d.html` - 📦 **BACKUP**: Previous 3D version (v6)
-
-**Story & Campaign Versions:**
-- `vetscan-story-mode.html` - Story campaign with Dr. Sarah Miller
-- `vetgame-missions.html` - Mission-based gameplay
-- `vetscan-professional.html` - Professional medical simulation
-- `vetscan-pro-leveling.html` - Level 1-50 RPG progression
-- `vetscan-advanced.html` - Advanced medical features
-- `vetscan-premium.html` - Premium UI version
-
-**System Files:**
-- `index.html` - Landing page with version selector (auto-generated on deployment)
+### Key HTML Versions (Priority Order)
+1. **`vetscan-bello-3d-v7.html`** - VERSION 7: Latest 3D with medical shaders (X-Ray, Ultrasound, Thermal, MRI)
+2. **`vetscan-detective.html`** - RECOMMENDED: Educational detective gameplay with Dr. Eule mentor
+3. **`standalone.html`** - STABLE: Most stable base version
+4. **`vetscan-story-mode.html`** - Story campaign with Dr. Sarah Miller
+5. **`index.html`** - Auto-generated landing page (created during deployment)
 
 ### Core Game Data Structures
 ```javascript
@@ -104,45 +93,72 @@ const medicalModes = {
 
 ## Deployment Process
 
-### GitHub Actions Workflow
-- **Trigger**: Push to `main` branch or manual workflow dispatch
-- **Target**: https://vibecoding.company via FTP to Hostinger
-- **Files Deployed**: Selected HTML versions + auto-generated landing page
-- **Configuration**: `.github/workflows/deploy.yml`
-
-### Manual Deployment
+### Automatic Deployment via GitHub Actions
 ```bash
 git add .
 git commit -m "feat: Description of changes"
 git push origin main
-# Triggers automatic deployment
+# Triggers automatic deployment to https://vibecoding.company
 ```
 
-## Testing Requirements
+**Deployment Configuration**: `.github/workflows/deploy.yml`
+- **Trigger**: Push to `main` branch or manual workflow dispatch
+- **Target**: https://vibecoding.company via FTP to Hostinger
+- **Files**: Selected HTML versions + auto-generated index.html
+
+## Version Management
+
+### Update Version Numbers on Every Deployment
+**Locations to update:**
+1. HTML `<title>` Tag
+2. Header in HTML Body
+3. JavaScript `const VERSION` (e.g., "7.0.2")
+4. JavaScript `const BUILD` (format: "YYYY.MM.DD.XXX")
+5. Status Badge in UI
+6. Debug Info Panel
+
+### CDN Configuration (Version 7)
+- **Three.js**: r128 from unpkg CDN (stable, working)
+- **Loaders**: GLTFLoader, DRACOLoader, OrbitControls
+- **Note**: Using unpkg instead of cdnjs (cdnjs lacks example files)
+
+## Progressive Loading System (3D Models)
+1. Attempts to load high-quality GLB first (`bello_high.glb`)
+2. Falls back to medium quality (`bello_medium.glb`)
+3. Falls back to low quality (`bello_low.glb`)
+4. If no GLB available, uses procedural fallback model
+5. Performance monitoring with polygon counter
+
+## Medical Visualization Shaders
+- **X-Ray**: Fresnel-based transparency with bone highlighting
+- **Ultrasound**: Noise patterns with scan-line effects
+- **Thermal**: Temperature gradient mapping
+- **MRI**: Grayscale tissue differentiation
+- **Normal**: Standard materials with realistic textures
+
+## Testing & Quality Assurance
 
 ### Browser Console Testing
 ```bash
-# Start local server
-python3 -m http.server 8080
-
-# Run automated testing checklist
-python3 test-console-errors.py
-
-# Manual browser testing (Chrome preferred)
-# Check console: Cmd+Option+J (Mac) or F12 (Windows/Linux)
+# Chrome (preferred): Cmd+Option+J (Mac) or F12 (Windows/Linux)
 # Test: Interactive elements, 3D visualization, form submissions
+# Clear cache: Cmd+Shift+R (hard reload)
+```
+
+### Integration Tests
+```bash
+npm run test:integration -- --model=bello  # Playwright tests for specific model
 ```
 
 ### Common Fixes
 - **Port conflicts**: Use 8081, 8082 if 8080 busy
-- **Kill existing server**: `kill $(lsof -t -i:8080)`
 - **Browser cache**: Hard reload with Cmd+Shift+R
-- **Service Worker conflicts**: Test in incognito mode
+- **Service worker conflicts**: Test in incognito mode
+- **Console errors**: Check browser console for errors
 
 ## Blender MCP Integration
 
-### Setup Requirements
-When Blender MCP becomes available in Claude Desktop:
+### When Blender MCP is Available
 ```bash
 # Install Blender MCP
 uvx blender-mcp
@@ -165,44 +181,12 @@ screenshot = get_viewport_screenshot(max_size=1024)  # Render current view
 - `bello_low.glb` - 25% quality, 512px textures
 - Medical material variants (X-Ray, Ultrasound, Thermal, MRI)
 
-## Version 7 Technical Details
-
-### ⚠️ WICHTIG: Versionsnummern bei jedem Deployment
-**Bei JEDEM Deployment MUSS die Versionsnummer erhöht werden!**
-- **Format**: Major.Minor.Patch (z.B. 7.0.2)
-- **Build**: YYYY.MM.DD.XXX (z.B. 2025.08.23.002)
-- **Orte zum Updaten**:
-  1. HTML `<title>` Tag
-  2. Header im HTML Body
-  3. JavaScript `const VERSION`
-  4. JavaScript `const BUILD`
-  5. Status Badge im UI
-  6. Debug Info Panel
-
-### CDN Configuration
-- **Three.js**: r128 from unpkg CDN (funktioniert garantiert!)
-- **Loaders**: GLTFLoader, DRACOLoader, OrbitControls
-- **Compatibility**: Using unpkg instead of cdnjs (cdnjs lacks example files)
-
-### Progressive Loading System
-1. Attempts to load high-quality GLB first
-2. Falls back to medium, then low quality
-3. If no GLB available, uses procedural fallback model
-4. Performance monitoring with polygon counter
-
-### Medical Visualization Shaders
-- **X-Ray**: Fresnel-based transparency with bone highlighting
-- **Ultrasound**: Noise patterns with scan-line effects
-- **Thermal**: Temperature gradient mapping
-- **MRI**: Grayscale tissue differentiation
-- **Normal**: Standard materials with realistic textures
-
 ## Performance Optimization
 
 ### Standalone HTML Files
 - All code inline (no external dependencies)
 - Optimized for direct browser execution
-- .htaccess configured for HTTPS and compression
+- `.htaccess` configured for HTTPS and compression
 
 ### React Version
 - Vite for fast HMR during development
@@ -221,3 +205,121 @@ screenshot = get_viewport_screenshot(max_size=1024)  # Render current view
 - Medical encyclopedia with 200+ animals
 - Quiz system with explanations
 - Achievement system encouraging learning
+
+## 20-Haustiere-System (100 Patienten)
+
+### Tier-Kategorisierung nach Schwierigkeit
+**STUFE 1 (6-10 Jahre) - 10 Basis-Haustiere:**
+1. **Hund** - Klassiker mit vielen Rassen
+2. **Katze** - Beliebtestes Haustier
+3. **Kaninchen** - Häufiges Kleintier
+4. **Meerschweinchen** - Beliebtes Kindertier
+5. **Hamster** - Goldhamster/Zwerghamster
+6. **Wellensittich** - Häufigster Ziervogel
+7. **Goldfisch** - Erstes Aquarientier
+8. **Schildkröte** - Land-/Wasserschildkröten
+9. **Kanarienvogel** - Singvogel-Klassiker
+10. **Maus** - Kleines Nagetier
+
+**STUFE 2 (10-14 Jahre) - 10 Fortgeschrittene Tiere:**
+11. **Frettchen** - Exotisches Raubtier
+12. **Bartagame** - Beliebte Echse
+13. **Ratte** - Intelligentes Nagetier
+14. **Chinchilla** - Weiches Fell, spezielle Pflege
+15. **Nymphensittich** - Größerer Vogel
+16. **Papagei** - Sprechender Vogel
+17. **Kornnatter** - Ungiftige Schlange
+18. **Degu** - Soziales Nagetier
+19. **Axolotl** - Wasserlebewesen
+20. **Igel** - Stacheliges Säugetier
+
+### Patient-Generator System
+```javascript
+// 100 individuelle Patienten aus 20 Tierarten
+// Jedes Tier hat 5 verschiedene Patienten mit:
+// - Individuellen Namen (Bello, Luna, Max, etc.)
+// - Verschiedenen Altersgruppen
+// - Unterschiedlichen Persönlichkeiten
+// - 5 rotierenden Symptom-Sets pro Tierart
+
+const patientDistribution = {
+  level1: 60, // 60 Patienten aus einfachen Tieren (6 pro Tier)
+  level2: 40  // 40 Patienten aus komplexen Tieren (4 pro Tier)
+}
+```
+
+### Extended Animal Data Structure
+```javascript
+{
+  id: 'dog',
+  name: 'Hund',
+  category: 'pet',
+  difficulty: 'beginner', // beginner/intermediate/advanced
+  ageGroup: '6-10',       // Altersempfehlung für Kinder
+  
+  // 3D-Modell-Konfiguration für Blender MCP
+  model3D: {
+    baseTemplate: 'quadruped_medium.blend',
+    anatomyPoints: { heart: {x,y,z}, lungs: {x,y,z}, ... },
+    colorVariations: ['brown', 'black', 'white', 'spotted'],
+    sizeVariations: ['small', 'medium', 'large']
+  },
+  
+  // 5 Patienten-Profile pro Tier
+  patientProfiles: [
+    { name: 'Bello', age: 3, breed: 'Labrador', personality: 'friendly' },
+    { name: 'Luna', age: 7, breed: 'Schäferhund', personality: 'nervous' },
+    // ... 3 weitere
+  ],
+  
+  // 5 Symptom-Sets für Variation
+  symptomSets: [
+    { symptoms: ['Husten', 'Fieber'], diagnosis: 'Erkältung' },
+    { symptoms: ['Erbrechen', 'Durchfall'], diagnosis: 'Magen-Darm' },
+    // ... 3 weitere
+  ],
+  
+  // Pädagogische Elemente
+  education: {
+    funFacts: ['Hunde riechen 10.000x besser als Menschen'],
+    memoryTricks: ['H.U.N.D = Herz, Urin, Nase, Darm prüfen']
+  }
+}
+```
+
+## Blender MCP Animal Templates
+
+### Template-Bibliothek für 3D-Modelle
+```bash
+# Template-Generierung für verschiedene Tiergruppen
+scripts/generate-animal-model.js --template=quadruped_small --animal=hamster
+scripts/generate-animal-model.js --template=bird_base --animal=wellensittich  
+scripts/generate-animal-model.js --template=reptile_base --animal=schildkroete
+scripts/generate-animal-model.js --template=aquatic_base --animal=goldfisch
+
+# Blender MCP Templates (bereit für Integration)
+templates/
+├── quadruped_small.blend    # Hamster, Maus, Meerschweinchen
+├── quadruped_medium.blend   # Hund, Katze, Kaninchen, Frettchen
+├── bird_base.blend          # Wellensittich, Kanarienvogel, Papagei
+├── reptile_base.blend       # Schildkröte, Bartagame, Kornnatter
+└── aquatic_base.blend       # Goldfisch, Axolotl
+```
+
+### 3D Model Commands (Blender MCP Active)
+```python
+# Tier-Modell generieren
+animal_model = generate_animal_model("dog", template="quadruped_medium")
+animal_model.set_color_variation("brown")
+animal_model.set_size("medium")
+animal_model.add_anatomy_points(["heart", "lungs", "stomach"])
+
+# Multi-Quality Export
+export_glb(animal_model, quality="high")    # Für Desktop
+export_glb(animal_model, quality="medium")  # Für Tablets
+export_glb(animal_model, quality="low")     # Für Mobile
+
+# Medical Shader Application
+apply_medical_shader(animal_model, mode="xray")
+apply_medical_shader(animal_model, mode="ultrasound")
+```

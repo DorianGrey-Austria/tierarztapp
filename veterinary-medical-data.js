@@ -1,16 +1,92 @@
 // Comprehensive Veterinary Medical Data for Scanner Simulation Game
 // Data compiled from veterinary medical sources with German terminology where appropriate
+// 20 Animals System: 100 Patients (60 Level 1, 40 Level 2)
 
 export const ANIMAL_SPECIES = [
-  // Common Pets
+  // LEVEL 1 (6-10 Years) - 10 Basic Pets
   {
     id: 'dog',
     name: 'Hund',
     englishName: 'Dog',
     category: 'pet',
+    difficulty: 'beginner',
+    ageGroup: '6-10',
+    model3D: {
+      baseTemplate: 'quadruped_medium.blend',
+      anatomyPoints: {
+        heart: { x: 0.3, y: 0.6, z: 0.5 },
+        lungs: { x: 0.35, y: 0.65, z: 0.5 },
+        stomach: { x: 0.5, y: 0.4, z: 0.5 },
+        liver: { x: 0.45, y: 0.45, z: 0.5 }
+      },
+      colorVariations: ['brown', 'black', 'white', 'spotted', 'golden'],
+      sizeVariations: ['small', 'medium', 'large']
+    },
+    patientProfiles: [
+      { name: 'Bello', age: 3, breed: 'Labrador', personality: 'friendly', size: 'large' },
+      { name: 'Luna', age: 7, breed: 'Schäferhund', personality: 'nervous', size: 'large' },
+      { name: 'Max', age: 1, breed: 'Mischling', personality: 'playful', size: 'medium' },
+      { name: 'Bella', age: 10, breed: 'Golden Retriever', personality: 'calm', size: 'large' },
+      { name: 'Charlie', age: 5, breed: 'Beagle', personality: 'curious', size: 'medium' }
+    ],
+    symptomSets: [
+      {
+        id: 'respiratory',
+        symptoms: ['Husten', 'Schnelle Atmung', 'Nasenausfluss'],
+        vitalChanges: { heartRate: 120, temperature: 39.0, respiratoryRate: 35 },
+        diagnosis: 'Atemwegsinfektion',
+        treatment: 'Antibiotika und Ruhe'
+      },
+      {
+        id: 'digestive',
+        symptoms: ['Erbrechen', 'Durchfall', 'Appetitlosigkeit'],
+        vitalChanges: { heartRate: 90, temperature: 38.5, bloodGlucose: 70 },
+        diagnosis: 'Magen-Darm-Störung',
+        treatment: 'Schonkost und Flüssigkeitsersatz'
+      },
+      {
+        id: 'trauma',
+        symptoms: ['Lahmheit', 'Schwellung', 'Schmerzen beim Berühren'],
+        vitalChanges: { heartRate: 130, temperature: 38.8 },
+        diagnosis: 'Verletzung am Bein',
+        treatment: 'Röntgen und Schmerzmittel'
+      },
+      {
+        id: 'skin_condition',
+        symptoms: ['Juckreiz', 'Hautrötung', 'Haarausfall'],
+        vitalChanges: { heartRate: 80, temperature: 38.2 },
+        diagnosis: 'Hautentzündung',
+        treatment: 'Medizinisches Shampoo'
+      },
+      {
+        id: 'ear_infection',
+        symptoms: ['Kopfschütteln', 'Ohrengeruch', 'Kratzen am Ohr'],
+        vitalChanges: { heartRate: 95, temperature: 38.7 },
+        diagnosis: 'Ohrenentzündung',
+        treatment: 'Ohrentropfen und Reinigung'
+      }
+    ],
+    education: {
+      funFacts: [
+        'Hunde können 10.000 mal besser riechen als Menschen',
+        'Ein Hundeherz schlägt 70-120 mal pro Minute',
+        'Hunde schwitzen nur über ihre Pfoten',
+        'Sie haben 42 Zähne (Menschen haben 32)',
+        'Hunde träumen genauso wie Menschen'
+      ],
+      comparisons: [
+        'Hundenase ist wie ein Super-Detektor',
+        'Herzschlag so schnell wie Joggen beim Menschen',
+        'Körpertemperatur wie leichtes Fieber'
+      ],
+      memoryTricks: [
+        'H.U.N.D = Herz, Urin, Nase, Darm prüfen',
+        'WUFF = Wärme, Urin, Fell, Fresslust checken'
+      ]
+    },
     vitalSigns: {
       heartRate: { min: 60, max: 180, unit: 'BPM' },
-      temperature: { min: 37.5, max: 39.2, unit: '°C' }, // 99.5-102.5°F
+      temperature: { min: 37.5, max: 39.2, unit: '°C' },
       respiratoryRate: { min: 15, max: 30, unit: '/min' },
       bloodPressure: { systolic: { min: 110, max: 160 }, diastolic: { min: 60, max: 90 }, unit: 'mmHg' },
       bloodGlucose: { min: 80, max: 120, unit: 'mg/dL' },
@@ -34,9 +110,84 @@ export const ANIMAL_SPECIES = [
     name: 'Katze',
     englishName: 'Cat',
     category: 'pet',
+    difficulty: 'beginner',
+    ageGroup: '6-10',
+    model3D: {
+      baseTemplate: 'quadruped_medium.blend',
+      anatomyPoints: {
+        heart: { x: 0.32, y: 0.62, z: 0.5 },
+        lungs: { x: 0.37, y: 0.67, z: 0.5 },
+        stomach: { x: 0.52, y: 0.42, z: 0.5 },
+        liver: { x: 0.47, y: 0.47, z: 0.5 }
+      },
+      colorVariations: ['orange', 'black', 'white', 'tabby', 'grey'],
+      sizeVariations: ['small', 'medium']
+    },
+    patientProfiles: [
+      { name: 'Mimi', age: 2, breed: 'Hauskatze', personality: 'shy', size: 'small' },
+      { name: 'Felix', age: 6, breed: 'Maine Coon', personality: 'friendly', size: 'medium' },
+      { name: 'Whiskers', age: 4, breed: 'Perser', personality: 'calm', size: 'medium' },
+      { name: 'Shadow', age: 8, breed: 'Britisch Kurzhaar', personality: 'independent', size: 'medium' },
+      { name: 'Mittens', age: 1, breed: 'Siamese', personality: 'playful', size: 'small' }
+    ],
+    symptomSets: [
+      {
+        id: 'respiratory',
+        symptoms: ['Niesen', 'Verstopfte Nase', 'Augenausfluss'],
+        vitalChanges: { heartRate: 130, temperature: 39.2, respiratoryRate: 35 },
+        diagnosis: 'Katzenschnupfen',
+        treatment: 'Antibiotika und Dampfbad'
+      },
+      {
+        id: 'urinary',
+        symptoms: ['Häufiges Urinieren', 'Schmerzen beim Wasserlassen', 'Blut im Urin'],
+        vitalChanges: { heartRate: 140, temperature: 38.9 },
+        diagnosis: 'Harnwegsinfektion',
+        treatment: 'Antibiotika und viel Wasser'
+      },
+      {
+        id: 'dental',
+        symptoms: ['Mundgeruch', 'Zahnfleischentzündung', 'Schwierigkeiten beim Fressen'],
+        vitalChanges: { heartRate: 110, temperature: 38.5 },
+        diagnosis: 'Zahnprobleme',
+        treatment: 'Zahnreinigung beim Tierarzt'
+      },
+      {
+        id: 'digestive',
+        symptoms: ['Erbrechen', 'Haarballen', 'Verstopfung'],
+        vitalChanges: { heartRate: 95, temperature: 38.0 },
+        diagnosis: 'Verdauungsstörung',
+        treatment: 'Malzpaste und Ballaststoffe'
+      },
+      {
+        id: 'skin_parasite',
+        symptoms: ['Kratzen', 'Kleine schwarze Punkte im Fell', 'Unruhe'],
+        vitalChanges: { heartRate: 125, temperature: 38.3 },
+        diagnosis: 'Flohbefall',
+        treatment: 'Antiparasitikum und Umgebungsbehandlung'
+      }
+    ],
+    education: {
+      funFacts: [
+        'Katzen können 32 Muskeln in jedem Ohr bewegen',
+        'Ein Katzenherz schlägt doppelt so schnell wie ein Menschenherz',
+        'Katzen haben einen Geruchssinn der 14x stärker ist als bei Menschen',
+        'Sie können bis zu 20 Stunden am Tag schlafen',
+        'Katzen haben 230 Knochen (Menschen haben 206)'
+      ],
+      comparisons: [
+        'Katzenaugen leuchten wie kleine Scheinwerfer',
+        'Herzschlag wie ein schnelles Trommeln',
+        'Körpertemperatur etwas wärmer als Menschen'
+      ],
+      memoryTricks: [
+        'K.A.T.Z.E = Kopf, Augen, Temperatur, Zähne, Energie prüfen',
+        'MIAU = Mund, Innenohr, Augen, Urin checken'
+      ]
+    },
     vitalSigns: {
       heartRate: { min: 100, max: 140, unit: 'BPM' },
-      temperature: { min: 37.8, max: 39.4, unit: '°C' }, // 100-103.1°F
+      temperature: { min: 37.8, max: 39.4, unit: '°C' },
       respiratoryRate: { min: 20, max: 30, unit: '/min' },
       bloodPressure: { systolic: { min: 120, max: 170 }, diastolic: { min: 70, max: 120 }, unit: 'mmHg' },
       bloodGlucose: { min: 80, max: 120, unit: 'mg/dL' },
@@ -53,6 +204,309 @@ export const ANIMAL_SPECIES = [
       'Diabetes mellitus',
       'Arthritis',
       'Zahnstein'
+    ]
+  },
+  {
+    id: 'mouse',
+    name: 'Maus',
+    englishName: 'Mouse',
+    category: 'pet',
+    difficulty: 'beginner',
+    ageGroup: '6-10',
+    model3D: {
+      baseTemplate: 'quadruped_small.blend',
+      anatomyPoints: {
+        heart: { x: 0.35, y: 0.65, z: 0.5 },
+        lungs: { x: 0.4, y: 0.7, z: 0.5 },
+        stomach: { x: 0.55, y: 0.45, z: 0.5 },
+        liver: { x: 0.5, y: 0.5, z: 0.5 }
+      },
+      colorVariations: ['white', 'brown', 'black', 'spotted', 'grey'],
+      sizeVariations: ['tiny']
+    },
+    patientProfiles: [
+      { name: 'Pip', age: 1, breed: 'Farbmaus', personality: 'curious', size: 'tiny' },
+      { name: 'Squeaky', age: 2, breed: 'Farbmaus', personality: 'shy', size: 'tiny' },
+      { name: 'Nibbles', age: 1, breed: 'Farbmaus', personality: 'playful', size: 'tiny' },
+      { name: 'Whisper', age: 2, breed: 'Farbmaus', personality: 'calm', size: 'tiny' },
+      { name: 'Zippy', age: 1, breed: 'Farbmaus', personality: 'active', size: 'tiny' }
+    ],
+    symptomSets: [
+      {
+        id: 'respiratory',
+        symptoms: ['Schnelle Atmung', 'Pfeifende Geräusche', 'Weniger aktiv'],
+        vitalChanges: { heartRate: 650, temperature: 36.5, respiratoryRate: 180 },
+        diagnosis: 'Atemwegsproblem',
+        treatment: 'Warme, feuchte Luft und Ruhe'
+      },
+      {
+        id: 'digestive',
+        symptoms: ['Weicher Kot', 'Weniger Fressen', 'Aufgeblähter Bauch'],
+        vitalChanges: { heartRate: 550, temperature: 35.5 },
+        diagnosis: 'Verdauungsstörung',
+        treatment: 'Schonkost und probiotische Mittel'
+      },
+      {
+        id: 'skin_condition',
+        symptoms: ['Kratzen', 'Rötliche Haut', 'Haarausfall'],
+        vitalChanges: { heartRate: 600, temperature: 36.2 },
+        diagnosis: 'Hautentzündung',
+        treatment: 'Spezialshampoo und Salbe'
+      },
+      {
+        id: 'trauma',
+        symptoms: ['Lahmes Bein', 'Schmerzen beim Berühren', 'Weniger bewegen'],
+        vitalChanges: { heartRate: 700, temperature: 36.8 },
+        diagnosis: 'Verletzung',
+        treatment: 'Schmerzmittel und Käfigrest'
+      },
+      {
+        id: 'parasites',
+        symptoms: ['Juckreiz', 'Kleine bewegende Punkte', 'Unruhe'],
+        vitalChanges: { heartRate: 650, temperature: 36.0 },
+        diagnosis: 'Milbenbefall',
+        treatment: 'Antiparasitikum'
+      }
+    ],
+    education: {
+      funFacts: [
+        'Mäuseherzen schlagen bis zu 700 mal pro Minute',
+        'Mäuse haben eine Körpertemperatur von 36-37°C',
+        'Sie können durch Löcher kriechen, die nur halb so groß sind wie sie',
+        'Mäuse haben einen ausgezeichneten Tastsinn durch ihre Schnurrhaare',
+        'Sie leben nur 1-3 Jahre'
+      ],
+      comparisons: [
+        'Mäuseherz schlägt so schnell wie ein Kolibri',
+        'Körpertemperatur etwas kühler als Menschen',
+        'So klein wie ein Daumen'
+      ],
+      memoryTricks: [
+        'M.A.U.S = Mini, Aktiv, Unruhig, Schnell prüfen',
+        'PIEP = Puls, Innenohr, Energie, Pfoten checken'
+      ]
+    },
+    vitalSigns: {
+      heartRate: { min: 500, max: 700, unit: 'BPM' },
+      temperature: { min: 36.0, max: 37.0, unit: '°C' },
+      respiratoryRate: { min: 100, max: 200, unit: '/min' },
+      bloodPressure: { systolic: { min: 70, max: 110 }, diastolic: { min: 40, max: 70 }, unit: 'mmHg' },
+      bloodGlucose: { min: 60, max: 140, unit: 'mg/dL' },
+      oxygenSaturation: { min: 95, max: 100, unit: '%' }
+    },
+    commonDiseases: [
+      'Atemwegsinfektionen',
+      'Milbenbefall',
+      'Durchfall',
+      'Tumore',
+      'Augenentzündungen',
+      'Verletzungen',
+      'Salmonellose',
+      'Hautprobleme',
+      'Verdauungsstörungen',
+      'Parasitenbefall'
+    ]
+  },
+  {
+    id: 'goldfish',
+    name: 'Goldfisch',
+    englishName: 'Goldfish',
+    category: 'pet',
+    difficulty: 'beginner',
+    ageGroup: '6-10',
+    model3D: {
+      baseTemplate: 'aquatic_base.blend',
+      anatomyPoints: {
+        gills: { x: 0.25, y: 0.7, z: 0.5 },
+        swim_bladder: { x: 0.5, y: 0.6, z: 0.5 },
+        fins: { x: 0.7, y: 0.5, z: 0.5 },
+        scales: { x: 0.5, y: 0.5, z: 0.5 }
+      },
+      colorVariations: ['orange', 'gold', 'white', 'red', 'calico'],
+      sizeVariations: ['small', 'medium', 'large']
+    },
+    patientProfiles: [
+      { name: 'Goldie', age: 2, breed: 'Gemeiner Goldfisch', personality: 'calm', size: 'medium' },
+      { name: 'Bubbles', age: 1, breed: 'Fantail', personality: 'active', size: 'small' },
+      { name: 'Nemo', age: 3, breed: 'Oranda', personality: 'friendly', size: 'large' },
+      { name: 'Shimmer', age: 2, breed: 'Ryukin', personality: 'shy', size: 'medium' },
+      { name: 'Flash', age: 1, breed: 'Gemeiner Goldfisch', personality: 'energetic', size: 'small' }
+    ],
+    symptomSets: [
+      {
+        id: 'swim_bladder',
+        symptoms: ['Schwimmt seitlich', 'Kann nicht tauchen', 'Treibt an Oberfläche'],
+        vitalChanges: { heartRate: 60, temperature: 15.0 },
+        diagnosis: 'Schwimmblasenproblem',
+        treatment: 'Fasten und warmes Wasser'
+      },
+      {
+        id: 'fin_rot',
+        symptoms: ['Ausgefranste Flossen', 'Rötliche Ränder', 'Träge Bewegungen'],
+        vitalChanges: { heartRate: 45, temperature: 16.5 },
+        diagnosis: 'Flossenfäule',
+        treatment: 'Wasserwechsel und Medikamente'
+      },
+      {
+        id: 'ich',
+        symptoms: ['Weiße Punkte auf Körper', 'Scheuert sich an Gegenständen', 'Schnelle Atmung'],
+        vitalChanges: { heartRate: 70, temperature: 17.0 },
+        diagnosis: 'Pünktchenkrankheit',
+        treatment: 'Temperatur erhöhen und Salzbad'
+      },
+      {
+        id: 'fungus',
+        symptoms: ['Weiße watteartige Beläge', 'Trübe Augen', 'Appetitlosigkeit'],
+        vitalChanges: { heartRate: 40, temperature: 15.5 },
+        diagnosis: 'Pilzinfektion',
+        treatment: 'Antimykotische Behandlung'
+      },
+      {
+        id: 'poor_water',
+        symptoms: ['Schnelle Atmung', 'Hängt an Oberfläche', 'Blasse Kiemen'],
+        vitalChanges: { heartRate: 80, temperature: 18.0 },
+        diagnosis: 'Schlechte Wasserqualität',
+        treatment: 'Sofortiger Wasserwechsel'
+      }
+    ],
+    education: {
+      funFacts: [
+        'Goldfische können über 20 Jahre alt werden',
+        'Sie haben ein Gedächtnis von mehreren Monaten, nicht nur 3 Sekunden',
+        'Goldfische können Farben unterscheiden',
+        'Sie haben keine Mägen - das Futter geht direkt in den Darm',
+        'Goldfische können ohne Sauerstoffpumpe überleben'
+      ],
+      comparisons: [
+        'Herzschlag so langsam wie ein ruhender Mensch',
+        'Körpertemperatur passt sich der Wassertemperatur an',
+        'Atmung durch Kiemen wie ein U-Boot mit Schnorchel'
+      ],
+      memoryTricks: [
+        'F.I.S.C.H = Flossen, Ich-Krankheit, Schwimmblase, Chilodonella, Hautprobleme',
+        'GLUB = Gills (Kiemen), Licht, Unterwasser, Bakterien prüfen'
+      ]
+    },
+    vitalSigns: {
+      heartRate: { min: 40, max: 80, unit: 'BPM' },
+      temperature: { min: 15.0, max: 25.0, unit: '°C' },
+      respiratoryRate: { min: 120, max: 180, unit: 'Kiemenbewegungen/min' },
+      bloodPressure: { systolic: { min: 30, max: 60 }, diastolic: { min: 15, max: 35 }, unit: 'mmHg' },
+      waterOxygen: { min: 5, max: 8, unit: 'ppm' },
+      phLevel: { min: 6.5, max: 7.5, unit: 'pH' }
+    },
+    commonDiseases: [
+      'Pünktchenkrankheit (Ich)',
+      'Flossenfäule',
+      'Schwimmblasenstörung',
+      'Pilzinfektionen',
+      'Bakterielle Infektionen',
+      'Parasiten',
+      'Sauerstoffmangel',
+      'Vergiftung durch Wasserschadstoffe',
+      'Verstopfung',
+      'Augentrübung'
+    ]
+  },
+  {
+    id: 'turtle',
+    name: 'Schildkröte',
+    englishName: 'Turtle',
+    category: 'pet',
+    difficulty: 'beginner',
+    ageGroup: '6-10',
+    model3D: {
+      baseTemplate: 'reptile_base.blend',
+      anatomyPoints: {
+        shell: { x: 0.5, y: 0.6, z: 0.5 },
+        head: { x: 0.2, y: 0.7, z: 0.5 },
+        legs: { x: 0.7, y: 0.3, z: 0.5 },
+        tail: { x: 0.8, y: 0.5, z: 0.5 }
+      },
+      colorVariations: ['green', 'brown', 'yellow', 'olive', 'dark_green'],
+      sizeVariations: ['small', 'medium', 'large']
+    },
+    patientProfiles: [
+      { name: 'Shelly', age: 5, breed: 'Rotwangen-Schmuckschildkröte', personality: 'calm', size: 'medium' },
+      { name: 'Speedy', age: 3, breed: 'Russische Landschildkröte', personality: 'active', size: 'small' },
+      { name: 'Tank', age: 10, breed: 'Griechische Landschildkröte', personality: 'wise', size: 'large' },
+      { name: 'Zippy', age: 2, breed: 'Moschusschildkröte', personality: 'shy', size: 'small' },
+      { name: 'Caesar', age: 8, breed: 'Gelbwangen-Schmuckschildkröte', personality: 'proud', size: 'large' }
+    ],
+    symptomSets: [
+      {
+        id: 'shell_rot',
+        symptoms: ['Weiche Stellen am Panzer', 'Übel riechender Panzer', 'Verfärbungen'],
+        vitalChanges: { heartRate: 15, temperature: 22.0 },
+        diagnosis: 'Panzerfäule',
+        treatment: 'Desinfektion und Trockenlegung'
+      },
+      {
+        id: 'respiratory',
+        symptoms: ['Maulatmung', 'Pfeifende Geräusche', 'Schleimige Nase'],
+        vitalChanges: { heartRate: 25, temperature: 24.0 },
+        diagnosis: 'Atemwegsinfektion',
+        treatment: 'Wärme und Antibiotika'
+      },
+      {
+        id: 'vitamin_deficiency',
+        symptoms: ['Weicher Panzer', 'Schwache Beine', 'Appetitlosigkeit'],
+        vitalChanges: { heartRate: 12, temperature: 20.0 },
+        diagnosis: 'Vitamin D3-Mangel',
+        treatment: 'UV-Licht und Vitamine'
+      },
+      {
+        id: 'parasites',
+        symptoms: ['Dünner Kot', 'Gewichtsverlust', 'Lethargie'],
+        vitalChanges: { heartRate: 18, temperature: 21.5 },
+        diagnosis: 'Parasitenbefall',
+        treatment: 'Antiparasitäre Medikamente'
+      },
+      {
+        id: 'eye_infection',
+        symptoms: ['Geschwollene Augen', 'Augen zu', 'Weiße Beläge'],
+        vitalChanges: { heartRate: 20, temperature: 23.0 },
+        diagnosis: 'Augenentzündung',
+        treatment: 'Augentropfen und Wärme'
+      }
+    ],
+    education: {
+      funFacts: [
+        'Schildkröten können über 100 Jahre alt werden',
+        'Ihr Herz schlägt nur 10-25 mal pro Minute',
+        'Sie können ihren Kopf in den Panzer zurückziehen',
+        'Schildkröten gibt es seit 200 Millionen Jahren',
+        'Sie haben keinen Zahnersatz, aber scharfe Kieferränder'
+      ],
+      comparisons: [
+        'Herzschlag so langsam wie ein schlafender Mensch',
+        'Panzer härter als Fingernägel',
+        'Lebensdauer wie ein alter Baum'
+      ],
+      memoryTricks: [
+        'S.C.H.I.L.D = Sonne, Calcium, Hitze, Infektion, Licht, Darm prüfen',
+        'TURTLE = Temperatur, UV-Licht, Ruhe, Trichomonaden, Leber, Eier'
+      ]
+    },
+    vitalSigns: {
+      heartRate: { min: 10, max: 25, unit: 'BPM' },
+      temperature: { min: 20.0, max: 30.0, unit: '°C' },
+      respiratoryRate: { min: 3, max: 15, unit: '/min' },
+      bloodPressure: { systolic: { min: 40, max: 80 }, diastolic: { min: 20, max: 50 }, unit: 'mmHg' },
+      bloodGlucose: { min: 50, max: 150, unit: 'mg/dL' },
+      oxygenSaturation: { min: 85, max: 100, unit: '%' }
+    },
+    commonDiseases: [
+      'Panzerfäule',
+      'Atemwegsinfektionen',
+      'Vitamin A-Mangel',
+      'Vitamin D3-Mangel',
+      'Parasiten',
+      'Augenentzündungen',
+      'Legenot',
+      'Verstopfung',
+      'Nierenprobleme',
+      'Salmonellose'
     ]
   },
   {
@@ -904,4 +1358,118 @@ export const ANIMAL_CATEGORIES = {
   pet: 'Haustiere',
   farm: 'Nutztiere',
   exotic: 'Exotische Tiere'
+};
+
+// 20-Animals System: Patient Generator
+export const PATIENT_DISTRIBUTION = {
+  level1: 60, // 60 patients from easy animals (6 per animal)
+  level2: 40  // 40 patients from complex animals (4 per animal)
+};
+
+// Generate 100 individual patients from 20 animal types
+export const generatePatients = () => {
+  const patients = [];
+  const level1Animals = ANIMAL_SPECIES.filter(a => a.ageGroup === '6-10');
+  const level2Animals = ANIMAL_SPECIES.filter(a => a.ageGroup === '10-14');
+  
+  // Generate 60 patients from Level 1 animals (6 per animal type)
+  level1Animals.slice(0, 10).forEach((animal, animalIndex) => {
+    for (let i = 0; i < 6; i++) {
+      const profile = animal.patientProfiles[i % 5];
+      const symptomSet = animal.symptomSets[i % 5];
+      
+      patients.push({
+        id: `level1_${animalIndex}_${i}`,
+        patientNumber: patients.length + 1,
+        animalType: animal.id,
+        animalName: animal.name,
+        difficulty: 'beginner',
+        ageGroup: '6-10',
+        ...profile,
+        symptoms: symptomSet.symptoms,
+        vitalChanges: symptomSet.vitalChanges,
+        correctDiagnosis: symptomSet.diagnosis,
+        treatment: symptomSet.treatment,
+        model3D: animal.model3D,
+        education: animal.education,
+        level: 1
+      });
+    }
+  });
+  
+  // Generate 40 patients from Level 2 animals (4 per animal type)
+  level2Animals.slice(0, 10).forEach((animal, animalIndex) => {
+    for (let i = 0; i < 4; i++) {
+      const profile = animal.patientProfiles[i % 5];
+      const symptomSet = animal.symptomSets[i % 5];
+      
+      patients.push({
+        id: `level2_${animalIndex}_${i}`,
+        patientNumber: patients.length + 1,
+        animalType: animal.id,
+        animalName: animal.name,
+        difficulty: 'advanced',
+        ageGroup: '10-14',
+        ...profile,
+        symptoms: symptomSet.symptoms,
+        vitalChanges: symptomSet.vitalChanges,
+        correctDiagnosis: symptomSet.diagnosis,
+        treatment: symptomSet.treatment,
+        model3D: animal.model3D,
+        education: animal.education,
+        level: 2
+      });
+    }
+  });
+  
+  // Shuffle patients for random order
+  return patients.sort(() => Math.random() - 0.5);
+};
+
+// Get patient by ID
+export const getPatientById = (id) => {
+  const allPatients = generatePatients();
+  return allPatients.find(patient => patient.id === id);
+};
+
+// Get patients by difficulty level
+export const getPatientsByLevel = (level) => {
+  const allPatients = generatePatients();
+  return allPatients.filter(patient => patient.level === level);
+};
+
+// Get random patient by age group
+export const getRandomPatientByAgeGroup = (ageGroup) => {
+  const allPatients = generatePatients();
+  const filteredPatients = allPatients.filter(patient => patient.ageGroup === ageGroup);
+  const randomIndex = Math.floor(Math.random() * filteredPatients.length);
+  return filteredPatients[randomIndex];
+};
+
+// Get patients by animal type
+export const getPatientsByAnimal = (animalId) => {
+  const allPatients = generatePatients();
+  return allPatients.filter(patient => patient.animalType === animalId);
+};
+
+// Statistics for the 20-animals system
+export const getSystemStats = () => {
+  const allPatients = generatePatients();
+  const level1Count = allPatients.filter(p => p.level === 1).length;
+  const level2Count = allPatients.filter(p => p.level === 2).length;
+  
+  const animalTypes = [...new Set(allPatients.map(p => p.animalType))];
+  const animalCounts = {};
+  animalTypes.forEach(type => {
+    animalCounts[type] = allPatients.filter(p => p.animalType === type).length;
+  });
+  
+  return {
+    totalPatients: allPatients.length,
+    level1Patients: level1Count,
+    level2Patients: level2Count,
+    animalTypes: animalTypes.length,
+    animalDistribution: animalCounts,
+    averagePatientsPerAnimal: Math.round(allPatients.length / animalTypes.length)
+  };
 };
