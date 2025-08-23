@@ -34,6 +34,31 @@
 
 **💡 Begründung**: Nutzer sehen Innovation, werden aber zu stabiler Erfahrung geleitet.
 
+---
+
+## 🚨 Version 7 Start Problem (2025-08-23)
+
+### 🔴 Problem
+- **Symptom**: Version 7 ist ausgegraut und nicht klickbar auf Landing Page
+- **User Erwartung**: Version 7 soll testbar sein trotz Beta-Status
+- **Current Implementation**: `<div>` statt `<a href="">` → nicht klickbar
+
+### ✅ Lösung
+**Design Update**: Version 7 klickbar machen aber klar als BETA kennzeichnen
+
+#### Neue UI Strategie:
+1. **🚀 Bello 3D Scanner V7** - ⚡ **KLICKBAR** aber **BETA-Styling**
+   - Status: "🔧 BETA - Jetzt testbar!"
+   - Visuell: Orange/gelber Rahmen (Warnung)
+   - Clickable: `<a href="vetscan-bello-3d-v7.html">`
+   - Disclaimer: "Experimentelle Features - Feedback willkommen"
+
+2. **🔍 Tier-Detektiv** - ⭐ **EMPFOHLEN** (unverändert)
+   - Golden Badge: "EMPFOHLEN"
+   - Vollständig stable
+
+**Implementation**: Landing Page HTML Update in deploy.yml
+
 ## 🔴 Problembeschreibung
 Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
 
