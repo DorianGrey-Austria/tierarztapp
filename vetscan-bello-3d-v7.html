@@ -278,12 +278,13 @@
         let originalMaterials = new Map();
         let isLoading = true;
 
-        // Three.js r128 CDN Compatibility Check & Fix
+        // Wait for all scripts to load before initializing
         window.addEventListener('load', function() {
-            // Ensure loaders are available globally or under THREE namespace
+            console.log('🚀 Window loaded - Checking Three.js availability...');
+            
+            // Three.js r128 CDN Compatibility Check & Fix
             if (typeof OrbitControls !== 'undefined' && !THREE.OrbitControls) {
                 console.log('📦 CDN Compatibility: Using global OrbitControls');
-                // Optional: Also add to THREE namespace for consistency
                 THREE.OrbitControls = OrbitControls;
             }
             if (typeof GLTFLoader !== 'undefined' && !THREE.GLTFLoader) {
@@ -294,10 +295,24 @@
                 console.log('📦 CDN Compatibility: Using global DRACOLoader');
                 THREE.DRACOLoader = DRACOLoader;
             }
+            
+            // Validate that all required libraries are loaded
+            if (typeof THREE === 'undefined') {
+                console.error('❌ Three.js not loaded!');
+                document.getElementById('loading-overlay').innerHTML = 
+                    '<div style="color: red; padding: 20px;">❌ Fehler: Three.js konnte nicht geladen werden. Bitte Seite neu laden.</div>';
+                return;
+            }
+            
+            console.log('✅ Three.js loaded successfully');
+            console.log('✅ OrbitControls available:', typeof OrbitControls !== 'undefined');
+            console.log('✅ GLTFLoader available:', typeof GLTFLoader !== 'undefined');
+            console.log('✅ DRACOLoader available:', typeof DRACOLoader !== 'undefined');
+            
+            // NOW initialize after everything is confirmed loaded
+            console.log('🎮 Starting VetScan Pro Bello 3D Scanner...');
+            init();
         });
-
-        // Initialisierung
-        init();
 
         function init() {
             setupScene();
@@ -650,6 +665,8 @@
         }
 
         function loadBelloModel() {
+            console.log('🐕 Starting Bello model loading...');
+            
             // Progressive Loading: Try to load real Bello GLB files from Blender export
             const qualityLevels = ['high', 'medium', 'low'];
             let currentQualityIndex = 0;
@@ -659,6 +676,7 @@
             function tryLoadNextQuality() {
                 if (currentQualityIndex >= qualityLevels.length) {
                     // No GLB files found, use enhanced fallback
+                    console.log('📦 No GLB files found, creating fallback dog...');
                     updateLoadingProgress(50, 'Erstelle procedurales Bello-Modell...');
                     createFallbackDog();
                     return;
@@ -667,15 +685,24 @@
                 const quality = qualityLevels[currentQualityIndex];
                 const modelPath = `./assets/models/animals/bello/bello_${quality}.glb`;
                 
+                console.log(`🔍 Trying to load ${quality} quality from: ${modelPath}`);
                 updateLoadingProgress(20 + (currentQualityIndex * 10), `Lade ${quality} quality...`);
                 
-                // Three.js r128 CDN: Loaders are global, not under THREE namespace
-                const loader = new GLTFLoader();
-                const dracoLoader = new DRACOLoader();
-                dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
-                loader.setDRACOLoader(dracoLoader);
-
-                loader.load(
+                // Check if loaders are available
+                if (typeof GLTFLoader === 'undefined' || typeof DRACOLoader === 'undefined') {
+                    console.error('❌ GLTFLoader or DRACOLoader not available!');
+                    updateLoadingProgress(50, 'Loader fehlt - Erstelle Fallback...');
+                    createFallbackDog();
+                    return;
+                }
+                
+                try {
+                    const loader = new GLTFLoader();
+                    const dracoLoader = new DRACOLoader();
+                    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+                    loader.setDRACOLoader(dracoLoader);
+                    
+                    loader.load(
                     modelPath,
                     // Success - found real Bello model
                     function(gltf) {
@@ -709,11 +736,16 @@
                     },
                     // Error - try next quality or fallback
                     function(error) {
-                        console.log(`⚠️ Could not load ${quality} quality:`, error.message);
+                        console.log(`⚠️ Could not load ${quality} quality:`, error.message || error);
                         currentQualityIndex++;
                         tryLoadNextQuality();
                     }
                 );
+                } catch (error) {
+                    console.error('❌ Error during model loading:', error);
+                    updateLoadingProgress(50, 'Ladefehler - Erstelle Fallback...');
+                    createFallbackDog();
+                }
             }
 
             // Start progressive loading

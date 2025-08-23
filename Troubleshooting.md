@@ -95,6 +95,47 @@ if (typeof OrbitControls !== 'undefined' && !THREE.OrbitControls) {
 
 **Result**: Version 7 funktioniert jetzt mit korrekten Namespace-Referenzen
 
+---
+
+## 🚨 Loading Stuck at 0% - Race Condition (2025-08-23)
+
+### 🔴 Problem
+- **Symptom**: Loading Progress bleibt bei 0% stecken
+- **Ursache**: `init()` wird aufgerufen BEVOR CDN Scripts fertig geladen sind
+- **Effect**: OrbitControls/GLTFLoader undefined → Loading bricht ab
+
+### ✅ Lösung - OPUS TIMING FIX
+
+#### Root Cause - Race Condition:
+```javascript
+// PROBLEM: init() wird SOFORT aufgerufen
+init(); // Scripts noch nicht geladen!
+
+// LÖSUNG: Warte auf window.load Event
+window.addEventListener('load', function() {
+    // Scripts sind jetzt geladen
+    init(); // JETZT sicher zu starten
+});
+```
+
+#### Implementation Details:
+1. **Script Loading Validation**:
+   - Check if THREE.js loaded
+   - Verify OrbitControls available
+   - Confirm GLTFLoader ready
+
+2. **Error Handling**:
+   - Try-catch um loader creation
+   - Fallback zu procedural dog
+   - User-friendly error messages
+
+3. **Console Logging**:
+   - Log loading steps
+   - Track script availability
+   - Debug model loading
+
+**Best Practice**: IMMER warten bis alle Scripts geladen sind bevor Initialization!
+
 ## 🔴 Problembeschreibung
 Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
 
