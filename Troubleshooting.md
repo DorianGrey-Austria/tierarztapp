@@ -136,6 +136,50 @@ window.addEventListener('load', function() {
 
 **Best Practice**: IMMER warten bis alle Scripts geladen sind bevor Initialization!
 
+---
+
+## 🚨 CDN 404 Error - Three.js Examples nicht gefunden (2025-08-23)
+
+### 🔴 Problem
+- **Error**: `GET https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js 404`
+- **Ursache**: cdnjs hostet KEINE Three.js example files (OrbitControls, GLTFLoader, etc.)
+- **Effect**: "OrbitControls is not defined" - Spiel lädt nicht
+
+### ✅ Lösung - OPUS CDN SWITCH
+
+#### Root Cause:
+cdnjs.cloudflare.com hat Three.js Core, aber NICHT die Example-Dateien!
+
+#### Working CDN - unpkg:
+```html
+<!-- FALSCH (404 Error auf cdnjs): -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+
+<!-- RICHTIG (funktioniert mit unpkg): -->
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+```
+
+#### Vollständige funktionierende Script-Tags:
+```html
+<!-- Three.js Core -->
+<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+<!-- Three.js Examples -->
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+```
+
+#### CDN Compatibility Matrix:
+| CDN | Three.js Core | Examples | Recommendation |
+|-----|--------------|----------|----------------|
+| cdnjs | ✅ Vorhanden | ❌ 404 | Nicht verwenden für Examples |
+| unpkg | ✅ Vorhanden | ✅ Vorhanden | **EMPFOHLEN** |
+| jsdelivr | ✅ Vorhanden | ✅ Vorhanden | Alternative |
+| skypack | ⚠️ ESM only | ⚠️ ESM only | Nur für moderne Builds |
+
+**Result**: Version 7 lädt jetzt korrekt mit unpkg CDN
+**Lesson Learned**: IMMER unpkg für Three.js verwenden - hat ALLES!
+
 ## 🔴 Problembeschreibung
 Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
 
