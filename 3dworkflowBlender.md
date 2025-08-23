@@ -589,27 +589,123 @@ class BelloPerformanceMonitor {
 
 ## 🔧 Troubleshooting Guide
 
+### CURSOR MCP SETUP (CRITICAL!)
+
+#### **Step 1: Install Blender MCP**
+```bash
+npm install -g blender-mcp
+```
+
+#### **Step 2: Cursor MCP Configuration**
+1. **Öffne Cursor Settings** (Cmd + ,)
+2. **Klicke auf "MCP" in der Sidebar**  
+3. **Klicke "+ MCP Server"**
+4. **Kopiere EXAKT diesen JSON-Code:**
+
+```json
+{
+  "mcpServers": {
+    "godot-mcp": {
+      "command": "node",
+      "args": ["/Users/doriangrey/EndlessRunner/godot-mcp/build/index.js"],
+      "env": {
+        "GODOT_PATH": "/Applications/Godot.app/Contents/MacOS/Godot",
+        "DEBUG": "true"
+      },
+      "autoApprove": [
+        "launch_editor", "run_project", "get_debug_output", "stop_project",
+        "get_godot_version", "list_projects", "get_project_info", "create_scene",
+        "add_node", "load_sprite", "export_mesh_library", "save_scene",
+        "get_uid", "update_project_uids"
+      ]
+    },
+    "blender-mcp": {
+      "command": "npx",
+      "args": ["-y", "blender-mcp"],
+      "env": {
+        "BLENDER_PATH": "/Applications/Blender.app/Contents/MacOS/Blender",
+        "PROJECT_ROOT": "/Users/doriangrey/Desktop/coding/tierarztspiel",
+        "DEBUG": "true"
+      },
+      "autoApprove": [
+        "execute_blender_code", "get_scene_info", "get_object_info",
+        "get_viewport_screenshot", "export_gltf", "create_material",
+        "set_texture", "generate_model"
+      ]
+    },
+    "filesystem": {
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/doriangrey/Desktop/coding/tierarztspiel"],
+      "autoApprove": [
+        "read_file", "write_file", "list_directory",
+        "create_directory", "get_file_info"
+      ]
+    }
+  }
+}
+```
+
+#### **Step 3: Restart Cursor**
+```bash
+# Komplett neustarten für MCP-Aktivierung
+killall Cursor && open -a Cursor
+```
+
+#### **Step 4: Test Connection**
+```bash
+# In Claude Code Terminal:
+node scripts/test-mcp-connection.js
+# Should show: ✅ Blender MCP: Connected
+```
+
 ### Common Issues & Solutions
 
 #### Issue 1: Blender MCP Connection Failed
+**Symptom:** `get_scene_info is not defined`
+
+**Lösungen:**
+1. **Check Blender Installation:**
+```bash
+# Teste Blender-Pfad
+ls -la "/Applications/Blender.app/Contents/MacOS/Blender"
+# Should exist and be executable
+```
+
+2. **Check MCP Installation:**
+```bash
+npm list -g blender-mcp
+# Should show installed version
+```
+
+3. **Check Cursor MCP Config:**
+```bash
+cat ~/.cursor/mcp.json
+# Should contain blender-mcp entry
+```
+
+4. **Debug MCP Connection:**
 ```python
-# Diagnostic steps
-def diagnose_blender_mcp():
-    print("🔍 Diagnosing Blender MCP connection...")
-    
-    # Check if Claude Desktop is running
-    check_claude_desktop_status()
-    
-    # Check if Blender MCP server is configured
-    check_mcp_server_config()
-    
-    # Test basic MCP functionality
-    try:
-        basic_test = get_scene_info()
-        print("✅ MCP Server responds")
-    except Exception as e:
-        print(f"❌ MCP Server error: {e}")
-        print("💡 Solution: Restart Claude Desktop with Blender MCP enabled")
+# In Claude Code - teste direkt:
+try:
+    scene = get_scene_info()
+    print(f"✅ Blender connected: {scene}")
+except NameError:
+    print("❌ Blender MCP not available - check config")
+except Exception as e:
+    print(f"❌ Blender error: {e}")
+```
+
+#### Issue 2: Blender Path Issues
+```bash
+# Find Blender installation
+find /Applications -name "Blender*" -type d 2>/dev/null
+# Update path in mcp.json if different
+```
+
+#### Issue 3: Permission Denied
+```bash
+# Fix Blender permissions
+chmod +x "/Applications/Blender.app/Contents/MacOS/Blender"
 ```
 
 #### Issue 2: Export Quality Issues

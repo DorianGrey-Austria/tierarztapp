@@ -1,0 +1,202 @@
+# VetScan Pro 3000 - Tierarzt Simulator
+# MCP Integration für 3D Asset Pipeline mit Blender
+
+## 🎯 Projekt Overview
+Veterinary education game mit 3D Bello-Integration über Blender MCP.
+Live: https://vibecoding.company
+
+## 🔧 Verfügbare MCP Server
+
+### Blender MCP (3D Asset Pipeline)
+Du hast direkten Zugriff auf Blender über:
+- `execute_blender_code(code: string)` - Python Code in Blender ausführen
+- `get_scene_info()` - Scene Informationen abrufen
+- `get_object_info(object_name: string)` - Details zu Objekten (z.B. "Bello")
+- `get_viewport_screenshot(max_size: int)` - Screenshots für Validierung
+- `generate_hyper3d_model_via_text(text_prompt: string)` - 3D Modelle generieren
+- `set_texture(object_name, texture_id)` - Texturen anwenden
+
+### Bestehende MCPs (NICHT ÄNDERN!)
+- GitHub MCP - für Repository-Management
+- Hostinger MCP - für Deployment
+- Filesystem MCP - für lokale Dateien
+
+## 🚀 Blender-Integration Workflow
+
+### 1. CONNECTION TEST (IMMER ZUERST!)
+```python
+# Prüfe Blender MCP Verfügbarkeit
+try:
+    scene = get_scene_info()
+    print(f"✅ Blender Connected: {len(scene.objects)} objects")
+    return True
+except:
+    print("❌ Blender MCP not available - using fallback system")
+    return False
+```
+
+### 2. BELLO EXPORT PIPELINE
+```python
+# Multi-Quality Export System
+execute_blender_code(code='''
+import bpy
+import os
+
+# Validiere Bello Object
+if "Bello" not in bpy.data.objects:
+    raise Exception("Bello object not found!")
+
+bello = bpy.data.objects["Bello"]
+base_path = "/Users/doriangrey/Desktop/coding/tierarztspiel/assets/models/animals/bello/"
+
+# Ensure directory exists
+os.makedirs(base_path, exist_ok=True)
+
+# High Quality Export (Original)
+bpy.ops.export_scene.gltf(
+    filepath=f"{base_path}bello_high.glb",
+    export_format="GLB",
+    export_draco_mesh_compression_enable=True,
+    export_draco_mesh_compression_level=6,
+    export_selected=True
+)
+
+# Medium Quality (50% polygons)
+decimate = bello.modifiers.new("Decimate_Med", "DECIMATE")
+decimate.ratio = 0.5
+bpy.ops.export_scene.gltf(
+    filepath=f"{base_path}bello_medium.glb",
+    export_format="GLB",
+    export_apply=True
+)
+bello.modifiers.remove(decimate)
+
+# Low Quality (25% polygons)
+decimate_low = bello.modifiers.new("Decimate_Low", "DECIMATE")
+decimate_low.ratio = 0.25
+bpy.ops.export_scene.gltf(
+    filepath=f"{base_path}bello_low.glb",
+    export_format="GLB",
+    export_apply=True
+)
+bello.modifiers.remove(decimate_low)
+
+print("✅ Bello exported in all quality levels")
+''')
+```
+
+### 3. MEDICAL MATERIALS CREATION
+```python
+# Erstelle X-Ray Material in Blender
+execute_blender_code(code='''
+import bpy
+
+# X-Ray Material
+xray_mat = bpy.data.materials.new(name="Bello_XRay")
+xray_mat.use_nodes = True
+nodes = xray_mat.node_tree.nodes
+links = xray_mat.node_tree.links
+
+# Clear default nodes
+nodes.clear()
+
+# Create shader network
+output = nodes.new("ShaderNodeOutputMaterial")
+fresnel = nodes.new("ShaderNodeFresnel")
+emission = nodes.new("ShaderNodeEmission") 
+transparent = nodes.new("ShaderNodeBsdfTransparent")
+mix = nodes.new("ShaderNodeMixShader")
+
+# Configure X-Ray look
+fresnel.inputs[0].default_value = 1.5
+emission.inputs[1].default_value = 2.0
+emission.inputs[0].default_value = (0.8, 0.9, 1.0, 1.0)
+
+# Link nodes
+links.new(fresnel.outputs[0], mix.inputs[0])
+links.new(transparent.outputs[0], mix.inputs[1])
+links.new(emission.outputs[0], mix.inputs[2])
+links.new(mix.outputs[0], output.inputs[0])
+
+# Apply to Bello
+bello = bpy.data.objects["Bello"]
+if bello.data.materials:
+    bello.data.materials[0] = xray_mat
+else:
+    bello.data.materials.append(xray_mat)
+
+# Export X-Ray Version
+bpy.ops.export_scene.gltf(
+    filepath=f"{base_path}bello_xray.glb",
+    export_format="GLB"
+)
+
+print("✅ X-Ray material created and exported")
+''')
+```
+
+## 📁 Wichtige Projektpfade
+- **Projekt Root**: `/Users/doriangrey/Desktop/coding/tierarztspiel/`
+- **3D Assets**: `./assets/models/animals/bello/`  
+- **Blender Source**: `./blender/source/` (falls vorhanden)
+- **Web Viewer**: `./vetscan-bello-3d.html`
+- **React Component**: `./src/components/BelloViewer.jsx`
+- **Shader System**: `./src/shaders/MedicalVisualization.js`
+
+## 🎮 Integration in Game
+Nach erfolgreichem Export automatisch:
+
+1. **Three.js Update**: AnimalLoader.js wird neue GLB-Dateien laden
+2. **Medical Shaders**: Wechsel zwischen Normal/X-Ray/Ultrasound/Thermal
+3. **Interactive Zones**: Organ-Detection für Kopf/Brust/Bauch/Beine
+4. **Progressive Loading**: Automatische Qualitätswahl basierend auf Performance
+
+## ⚡ Automated Deployment
+```bash
+# Nach erfolgreichem Blender Export:
+npm run build
+git add .
+git commit -m "feat: Update Bello 3D model from Blender MCP"
+git push origin main
+# → Auto-deploy zu https://vibecoding.company
+```
+
+## 🔍 Troubleshooting
+
+### Blender MCP nicht verfügbar?
+```python
+# Fallback: Verwende prozedurales Bello-Modell
+def create_fallback_bello():
+    print("🔧 Creating fallback Bello model...")
+    # Existing fallback system in vetscan-bello-3d.html
+    return "procedural_bello_model"
+```
+
+### Export-Probleme?
+```python
+# Mesh Cleanup vor Export
+execute_blender_code(code='''
+import bpy
+bpy.ops.object.mode_set(mode="EDIT")
+bpy.ops.mesh.select_all(action="SELECT")
+bpy.ops.mesh.remove_doubles(threshold=0.001)
+bpy.ops.mesh.normals_make_consistent(inside=False)
+bpy.ops.object.mode_set(mode="OBJECT")
+''')
+```
+
+## 🎯 DIREKTIVE FÜR CLAUDE CODE
+
+**WICHTIG**: Du hast VOLLZUGRIFF auf Blender MCP!
+- **KEINE Nachfrage** - teste direkt die Verbindung
+- **NUTZE** die MCP Tools proaktiv  
+- **EXPORTIERE** Bello automatisch in alle Qualitätsstufen
+- **ERSTELLE** Medical Materials direkt in Blender
+- **INTEGRIERE** alles nahtlos in das bestehende 3D-System
+
+Das komplette 3D-Pipeline-System wartet nur darauf, dass du die MCP-Verbindung aktivierst! 🚀
+
+## 📚 Referenzen
+- **Vollständige Dokumentation**: [3dworkflowBlender.md](./3dworkflowBlender.md)
+- **Live Demo**: https://vibecoding.company/vetscan-bello-3d.html
+- **Repository**: github.com/DorianGrey-Austria/tierarztapp

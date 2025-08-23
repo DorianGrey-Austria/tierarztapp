@@ -1,0 +1,28 @@
+{
+  "mcp.servers": {
+    "blender-mcp": {
+      "command": "npx",
+      "args": ["-y", "blender-mcp"],
+      "env": {
+        "BLENDER_PATH": "/Applications/Blender.app/Contents/MacOS/Blender",
+        "HYPER3D_API_KEY": "${env:HYPER3D_API_KEY}",
+        "SKETCHFAB_API_TOKEN": "${env:SKETCHFAB_API_TOKEN}",
+        "PROJECT_ROOT": "/Users/doriangrey/Desktop/coding/tierarztspiel"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/Users/doriangrey/Desktop/coding/tierarztspiel"],
+      "description": "Access to VetScan Pro project files"
+    },
+    "sqlite": {
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "/Users/doriangrey/Desktop/coding/tierarztspiel/data/veterinary.db"],
+      "description": "Veterinary database for animal health data"
+    }
+  },
+  "mcp.clientOptions": {
+    "timeout": 30000,
+    "retries": 3
+  }
+}
