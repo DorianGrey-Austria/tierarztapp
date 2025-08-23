@@ -31,7 +31,7 @@ python3 -m http.server 8081
 ### 3D Workflow & Blender Integration
 ```bash
 # Test Blender MCP connection (when available)
-python3 -c "scene = get_scene_info(); print(f'Blender Connected: {len(scene.objects)} objects')"
+node scripts/test-mcp-connection.js
 
 # Run 3D asset pipeline
 ./scripts/deploy-animal.sh
@@ -39,24 +39,36 @@ python3 -c "scene = get_scene_info(); print(f'Blender Connected: {len(scene.obje
 # Generate medical visualization shaders
 npm run generate:shaders -- --model=bello
 
-# Validate 3D model exports
+# Validate 3D model exports and test integration
 npm run test:integration -- --model=bello
+
+# Manual browser testing for console errors
+python3 test-console-errors.py
 ```
 
 ## Project Architecture
 
 ### Standalone HTML Versions (Primary Focus)
 Each HTML file is completely self-contained with all code inline:
-- **vetscan-detective.html** - 🎯 RECOMMENDED: Educational detective gameplay with Dr. Eule mentor
-- **standalone.html** - Most stable base version, failsafe implementation
+
+#### 🏆 **Production Versions**
+- **vetscan-detective.html** - 🎯 **RECOMMENDED**: Educational detective gameplay with Dr. Eule mentor
+- **standalone.html** - 🛡️ **STABLE**: Most stable base version, failsafe implementation
+
+#### 🚀 **3D Medical Scanner Versions**  
+- **vetscan-bello-3d-v7.html** - ⚡ **VERSION 7**: Latest 3D Bello viewer with enhanced medical shaders
+- **vetscan-bello-3d.html** - 📦 **BACKUP**: Previous 3D version (v6)
 - **vetscan-ultimate.html** - 3D visualization with Three.js and career mode
+
+#### 📖 **Story & Campaign Versions**
 - **vetscan-story-mode.html** - Story campaign with Dr. Sarah Miller
 - **vetgame-missions.html** - Mission-based gameplay variant
 - **vetscan-professional.html** - Professional medical simulation
 - **vetscan-pro-leveling.html** - Level 1-50 progression with RPG elements
 - **vetscan-advanced.html** - Advanced medical features
 - **vetscan-premium.html** - Premium UI version with modern design
-- **vetscan-bello-3d.html** - 🎯 3D Bello viewer with medical visualizations
+
+#### 🔧 **System Files**
 - **index.html** - Landing page with version selector (auto-generated on deployment)
 
 ### 3D Model System
@@ -149,11 +161,14 @@ When making significant changes to HTML files:
 # 1. Start local server
 python3 -m http.server 8080
 
-# 2. Test in browser (Chrome preferred)
-# Check for console errors: Cmd+Option+J
-# Fix any JavaScript errors before proceeding
+# 2. Run automated browser testing checklist
+python3 test-console-errors.py
 
-# 3. If port conflict:
+# 3. Manual testing in browser (Chrome preferred)
+# Check for console errors: Cmd+Option+J (Mac) or F12 (Windows/Linux)
+# Test interactive elements, 3D visualization, form submissions
+
+# 4. If port conflict:
 kill $(lsof -t -i:8080)  # Kill existing server
 python3 -m http.server 8081  # Use alternative port
 ```
@@ -199,11 +214,40 @@ screenshot = get_viewport_screenshot(max_size=1024) # Render current view
 7. **Live deployment** → Push to vibecoding.company
 
 ## Version Information
-- **Current Version**: 3.1.0
-- **React**: 18.2.0 with createRoot API
-- **Vite**: Configured for port 3000 with auto-open
+- **Current Version**: 3.1.0 (Project) / 7.0.0 (3D Scanner)
+- **React**: 18.2.0 with createRoot API  
+- **Vite**: Configured for dev server (default port 5173)
 - **Node**: Requires Node.js 18+
-- **Three.js**: 0.179.0 with GLTF/DRACO support
+- **Three.js**: r128 (v7) - stable, r179 (React) - latest
+- **Additional Dependencies**: Lucide React (icons), Tailwind CSS (styling), Playwright (testing)
+
+## 📋 Version 7 Changelog (Bello 3D Scanner)
+
+### ⚡ Version 7.0.0 - "Medical Scanner Pro" (2025-08-23)
+**🚨 CRITICAL FIX: CDN Compatibility Issue**
+
+#### 🛠️ **Technical Fixes**
+- **CDN Repair**: Fixed broken Three.js r144 + mixed CDN providers
+- **Compatibility**: Downgrade to proven Three.js r128 + official threejs.org CDNs  
+- **Geometry Fix**: CapsuleGeometry → CylinderGeometry (r128 compatibility)
+- **Loader Fix**: GLTFLoader, DRACOLoader, OrbitControls now load correctly
+
+#### ✨ **Enhanced Features**
+- **Medical Shaders**: Professional-grade X-Ray, Ultrasound, Thermal, MRI visualization
+- **Progressive Loading**: Smart GLB file detection with graceful fallback
+- **Enhanced Fallback Model**: Realistic procedural dog with snout, eyes, ears
+- **Performance Monitoring**: Polygon counter, loading progress tracking
+- **5 Scanner Modes**: Normal, X-Ray, Ultrasound, Thermal, MRI
+
+#### 🏗️ **Architecture**
+- **Version Management**: v7 (latest) + v6 (backup) system
+- **Production Ready**: Console error-free, browser tested
+- **Mobile Compatible**: Responsive design, touch controls
+
+#### 🎯 **Status**
+- **Recommended**: vetscan-detective.html (stable educational gameplay)
+- **Latest 3D**: vetscan-bello-3d-v7.html (advanced medical visualization)  
+- **Backup**: vetscan-bello-3d.html (previous version)
 
 ## Educational Features
 The game includes several pedagogical elements:

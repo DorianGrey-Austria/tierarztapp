@@ -739,8 +739,8 @@
             const dog = new THREE.Group();
             dog.name = 'bello';
 
-            // Enhanced Body (more realistic shape)
-            const bodyGeometry = new THREE.CapsuleGeometry(0.6, 1.5, 8, 16);
+            // Enhanced Body (more realistic shape) - r128 compatible
+            const bodyGeometry = new THREE.CylinderGeometry(0.6, 0.6, 1.5, 16);
             const bodyMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x8B4513,
                 roughness: 0.8,
@@ -796,8 +796,8 @@
             rightEar.rotation.z = -Math.PI / 6;
             rightEar.name = 'right_ear';
 
-            // Enhanced Legs (more realistic)
-            const legGeometry = new THREE.CapsuleGeometry(0.08, 0.6, 4, 8);
+            // Enhanced Legs (more realistic) - r128 compatible
+            const legGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.6, 8);
             const legMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x654321,
                 roughness: 0.9,

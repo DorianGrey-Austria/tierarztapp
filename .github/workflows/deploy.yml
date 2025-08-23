@@ -32,6 +32,8 @@ jobs:
         cp vetscan-story-mode.html deploy/
         cp vetgame-missions.html deploy/
         cp vetscan-professional.html deploy/
+        cp vetscan-bello-3d-v7.html deploy/
+        cp vetscan-bello-3d.html deploy/
         
         # Erstelle index.html als Startseite mit Auswahl
         cat > deploy/index.html << 'EOF'
@@ -120,6 +122,11 @@ jobs:
                     <a href="vetscan-detective.html" class="version-card recommended">
                         <h3>🔍 Tier-Detektiv</h3>
                         <p>Löse knifflige Fälle und lerne dabei! Die beste Version mit Lerneffekt und spannenden Rätseln.</p>
+                    </a>
+                    
+                    <a href="vetscan-bello-3d-v7.html" class="version-card" style="background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);">
+                        <h3>🚀 Bello 3D Scanner V7</h3>
+                        <p>NEU! Medizinische Visualisierung mit Röntgen, Ultraschall, Thermal und MRI Modi.</p>
                     </a>
                     
                     <a href="standalone.html" class="version-card">
