@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VetScan Pro - Bello 3D Scanner</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://threejs.org/examples/js/loaders/DRACOLoader.js"></script>
-    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script></thinking>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
 
     <style>
         * {
@@ -711,12 +711,14 @@
                 progressText.textContent = `${Math.round(percent)}%`;
             }
             
-            // Update loading message if available
+            // Update loading message - improved stability
             const loadingOverlay = document.getElementById('loading-overlay');
-            if (loadingOverlay) {
-                const messageEl = loadingOverlay.querySelector('div');
-                if (messageEl && message) {
+            if (loadingOverlay && message) {
+                const messageEl = loadingOverlay.querySelector('div') || loadingOverlay;
+                try {
                     messageEl.innerHTML = `🐕 ${message}<br><div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: ${percent}%"></div></div><div id="progress-text">${Math.round(percent)}%</div>`;
+                } catch(e) {
+                    console.log('Loading progress update:', message);
                 }
             }
         }
@@ -736,8 +738,11 @@
         }
 
         function createFallbackDog() {
-            const dog = new THREE.Group();
-            dog.name = 'bello';
+            try {
+                updateLoadingProgress(60, 'Erstelle Enhanced Bello-Modell...');
+                
+                const dog = new THREE.Group();
+                dog.name = 'bello';
 
             // Enhanced Body (more realistic shape) - r128 compatible
             const bodyGeometry = new THREE.CylinderGeometry(0.6, 0.6, 1.5, 16);
@@ -834,6 +839,8 @@
             // Add all parts to dog group
             dog.add(body, head, snout, leftEye, rightEye, leftEar, rightEar, tail, ...legs);
 
+            updateLoadingProgress(80, 'Konfiguriere Materialien...');
+
             // Speichere originale Materialien
             dog.traverse((child) => {
                 if (child.isMesh) {
@@ -846,13 +853,44 @@
             scene.add(dog);
             currentModel = dog;
 
+            updateLoadingProgress(90, 'Setup interaktive Zonen...');
+
             // Setup interaktive Zonen
             setupInteractiveZones(dog);
 
-            // Loading beenden
-            hideLoading();
+            updateLoadingProgress(100, 'Bello bereit für Untersuchung!');
 
-            console.log('🐕 Fallback Bello model created');
+            // Loading beenden
+            setTimeout(() => hideLoading(), 500); // Small delay for smooth UX
+
+            console.log('🐕 Enhanced Fallback Bello model created - Production Ready');
+            console.log(`📊 Model Stats: ${countPolygons(dog)} triangles`);
+            
+            } catch(error) {
+                console.error('❌ Error creating fallback dog:', error);
+                updateLoadingProgress(100, 'Fehler beim Laden - Fallback aktiv');
+                hideLoading();
+                
+                // Create minimal fallback
+                createMinimalFallback();
+            }
+        }
+
+        function createMinimalFallback() {
+            // Ultra-minimal fallback if enhanced version fails
+            const dog = new THREE.Group();
+            const geometry = new THREE.BoxGeometry(2, 1, 1);
+            const material = new THREE.MeshBasicMaterial({ color: 0x8B4513 });
+            const body = new THREE.Mesh(geometry, material);
+            
+            dog.add(body);
+            dog.name = 'bello';
+            
+            scene.add(dog);
+            currentModel = dog;
+            
+            setupInteractiveZones(dog);
+            console.log('🔧 Minimal fallback dog created');
         }
 
         function setupInteractiveZones(model) {

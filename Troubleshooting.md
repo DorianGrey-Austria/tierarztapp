@@ -1,5 +1,39 @@
 # Troubleshooting - VetScan Pro 3000 Tierarztspiel
 
+## 📋 Version Management Strategy (WICHTIG!)
+
+### 🎯 Design Philosophy - Stable First Approach
+**Regel**: Neue Features sichtbar machen aber Nutzer zur stabilen Version leiten
+
+#### Landing Page Hierarchy (BEIBEHALTEN!)
+1. **Neue Features** - Als "IN ENTWICKLUNG" anzeigen (ausgegraut, nicht klickbar)
+   - Status: "⚠️ IN ENTWICKLUNG - Console Errors möglich"
+   - Visuell: Grau, opacity 0.6, cursor: not-allowed
+   - Zweck: Transparenz über neue Entwicklungen
+
+2. **Empfohlene stabile Version** - Als "EMPFOHLEN" highlighten
+   - Status: "⭐ EMPFOHLEN" Badge (golden)
+   - Visuell: Normal klickbar, hervorgehoben
+   - Zweck: Nutzer zur stabilen Erfahrung leiten
+
+3. **Alternative Versionen** - Normal anzeigen
+   - Status: Standard styling
+   - Zweck: Wahlfreiheit für Power User
+
+### 🔧 Version 7 Implementation Status
+- **File**: vetscan-bello-3d-v7.html
+- **Status**: BETA - Console error-frei, testbar
+- **Access**: Direkte URL für Testing verfügbar
+- **UI Status**: Disabled auf Landing Page (professional UX)
+
+### 🏆 Current Production Hierarchy
+1. **🚀 Bello 3D Scanner V7** - 🔒 AUSGEGRAUT (IN ENTWICKLUNG)
+2. **🔍 Tier-Detektiv** - ⭐ EMPFOHLEN (Stabil)
+3. **🏥 Klassik Version** - Standard (Failsafe)
+4. Weitere Versionen...
+
+**💡 Begründung**: Nutzer sehen Innovation, werden aber zu stabiler Erfahrung geleitet.
+
 ## 🔴 Problembeschreibung
 Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
 
