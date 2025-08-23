@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Premium - Professional Veterinary Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Premium Color Palette */
+            --primary-blue: #0EA5E9;
+            --primary-teal: #14B8A6;
+            --accent-purple: #8B5CF6;
+            --success-green: #10B981;
+            --warning-amber: #F59E0B;
+            --danger-red: #EF4444;
+            --dark-slate: #0F172A;
+            --medium-slate: #334155;
+            --light-slate: #E2E8F0;
+            --pure-white: #FFFFFF;
+            
+            /* Gradients */
+            --premium-gradient: linear-gradient(135deg, #0EA5E9 0%, #8B5CF6 100%);
+            --dark-gradient: linear-gradient(180deg, #0F172A 0%, #1E293B 100%);
+            --glass-gradient: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--dark-gradient);
+            color: var(--pure-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(20, 184, 166, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        #app {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Glassmorphism Panel */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.37),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Neumorphic Elements */
+        .neo-button {
+            background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            box-shadow: 
+                8px 8px 20px rgba(0, 0, 0, 0.3),
+                -8px -8px 20px rgba(255, 255, 255, 0.05),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .neo-button:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                12px 12px 24px rgba(0, 0, 0, 0.4),
+                -12px -12px 24px rgba(255, 255, 255, 0.08),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.2);
+        }
+        
+        .neo-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        /* Premium Button */
+        .premium-button {
+            background: var(--premium-gradient);
+            color: white;
+            font-weight: 600;
+            padding: 16px 32px;
+            border-radius: 16px;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.3);
+        }
+        
+        .premium-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .premium-button:hover::before {
+            left: 100%;
+        }
+        
+        .premium-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(14, 165, 233, 0.5);
+        }
+        
+        /* Medical Card Design */
+        .medical-card {
+            background: var(--glass-gradient);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .medical-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .medical-card:hover::before {
+            opacity: 1;
+        }
+        
+        .medical-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(14, 165, 233, 0.3);
+            box-shadow: 0 12px 40px rgba(14, 165, 233, 0.2);
+        }
+        
+        /* Vital Signs Monitor */
+        .vital-monitor {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .vital-monitor::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #0EA5E9, transparent);
+            animation: scan-line 3s linear infinite;
+        }
+        
+        @keyframes scan-line {
+            from { left: -100%; }
+            to { left: 100%; }
+        }
+        
+        /* EKG Wave Animation */
+        .ekg-line {
+            stroke: #10B981;
+            stroke-width: 2;
+            fill: none;
+            filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5));
+            animation: pulse-line 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-line {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        /* Loading Dots */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        
+        .loading-dots span {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            animation: bounce-dot 1.4s ease-in-out infinite;
+        }
+        
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes bounce-dot {
+            0%, 80%, 100% { transform: scale(1); opacity: 0.5; }
+            40% { transform: scale(1.3); opacity: 1; }
+        }
+        
+        /* Skill Node */
+        .skill-node {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .skill-node.unlocked {
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.2) 100%);
+            border-color: #8B5CF6;
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+        }
+        
+        .skill-node:hover {
+            transform: scale(1.1);
+            border-color: #8B5CF6;
+        }
+        
+        /* Skill Connection Lines */
+        .skill-line {
+            position: absolute;
+            width: 2px;
+            background: linear-gradient(180deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+            transform-origin: top;
+        }
+        
+        .skill-line.active {
+            background: linear-gradient(180deg, transparent, #8B5CF6, transparent);
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-red);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
+        /* Progress Ring */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            stroke: rgba(255, 255, 255, 0.1);
+            fill: none;
+            stroke-width: 8;
+        }
+        
+        .progress-ring-progress {
+            stroke: var(--primary-blue);
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+            filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.5));
+        }
+        
+        /* Particle Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(14, 165, 233, 0.3);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(14, 165, 233, 0.5);
+            background-clip: content-box;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .animate-slide-up {
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .animate-slide-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+        
+        /* Focus Mode Overlay */
+        .focus-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .focus-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .spotlight {
+            position: relative;
+            z-index: 999;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Background -->
+    <canvas id="particleCanvas"></canvas>
+    
+    <div id="app" class="min-h-screen">
+        <!-- Premium Header -->
+        <header class="glass-panel m-4 p-4">
+            <div class="container mx-auto flex items-center justify-between">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span class="text-2xl">🏥</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            VetScan Premium
+                        </h1>
+                        <p class="text-xs text-gray-400">Professional Veterinary Simulator</p>
+                    </div>
+                </div>
+                
+                <!-- User Profile -->
+                <div class="flex items-center gap-6">
+                    <!-- Stats -->
+                    <div class="hidden md:flex items-center gap-4">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-400">Level</div>
+                            <div class="text-lg font-bold text-blue-400" id="userLevel">1</div>
+                        </div>
+                        <div class="w-px h-8 bg-gray-700"></div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-400">XP</div>
+                            <div class="text-lg font-bold text-purple-400" id="userXP">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Avatar -->
+                    <div class="relative">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center cursor-pointer">
+                            <span class="text-lg">👨‍⚕️</span>
+                        </div>
+                        <div class="notification-badge">3</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content Area -->
+        <div class="container mx-auto px-4 py-6">
+            <!-- Welcome Screen (Initial) -->
+            <div id="welcomeScreen" class="min-h-screen flex items-center justify-center">
+                <div class="text-center space-y-8 animate-slide-up">
+                    <h1 class="text-6xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Willkommen, Doktor!
+                    </h1>
+                    <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                        Begib dich auf eine Reise durch die Welt der Veterinärmedizin. 
+                        Behandle Tiere, lerne Diagnosen und werde zum besten Tierarzt!
+                    </p>
+                    
+                    <!-- Main Menu Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mt-12">
+                        <div class="medical-card group cursor-pointer" onclick="startStoryMode()">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-4xl animate-float">📖</div>
+                                <div class="text-xs text-gray-500">NEU</div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Story Modus</h3>
+                            <p class="text-sm text-gray-400">Erlebe spannende Fälle und rette Tierleben</p>
+                            <div class="mt-4 flex items-center gap-2">
+                                <div class="w-full bg-gray-700 rounded-full h-1">
+                                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-1 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="medical-card group cursor-pointer" onclick="startQuickPlay()">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-4xl animate-float" style="animation-delay: 0.2s">⚡</div>
+                                <div class="text-xs text-green-500">BEREIT</div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Quick Play</h3>
+                            <p class="text-sm text-gray-400">Schnelle Diagnose-Challenges für zwischendurch</p>
+                            <div class="mt-4">
+                                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                                    Beste Zeit: --:--
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="medical-card group cursor-pointer" onclick="startTraining()">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-4xl animate-float" style="animation-delay: 0.4s">🎓</div>
+                                <div class="text-xs text-blue-500">LERNEN</div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Training</h3>
+                            <p class="text-sm text-gray-400">Lerne neue Diagnose-Techniken und Behandlungen</p>
+                            <div class="mt-4">
+                                <div class="flex -space-x-2">
+                                    <span class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800 flex items-center justify-center text-xs">🔍</span>
+                                    <span class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800 flex items-center justify-center text-xs">💉</span>
+                                    <span class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-800 flex items-center justify-center text-xs">🩺</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="medical-card group cursor-pointer" onclick="openCareer()">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="text-4xl animate-float" style="animation-delay: 0.6s">🏆</div>
+                                <div class="text-xs text-purple-500">KARRIERE</div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Karriere</h3>
+                            <p class="text-sm text-gray-400">Baue deine eigene Klinik auf und werde berühmt</p>
+                            <div class="mt-4 flex items-center gap-2">
+                                <span class="text-xs text-gray-500">Rang:</span>
+                                <span class="text-sm font-bold text-purple-400">Praktikant</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Start Button -->
+                    <button onclick="quickStart()" class="premium-button text-lg">
+                        <span class="flex items-center gap-2">
+                            <span>Spiel starten</span>
+                            <span>→</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Game Screen (Hidden Initially) -->
+            <div id="gameScreen" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Main 3D Viewer -->
+                    <div class="lg:col-span-2">
+                        <div class="glass-panel p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-semibold">Untersuchungsraum</h2>
+                                <div class="flex gap-2">
+                                    <button class="neo-button px-3 py-1 text-sm" onclick="toggleView('normal')">
+                                        Normal
+                                    </button>
+                                    <button class="neo-button px-3 py-1 text-sm" onclick="toggleView('xray')">
+                                        Röntgen
+                                    </button>
+                                    <button class="neo-button px-3 py-1 text-sm" onclick="toggleView('mri')">
+                                        MRT
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 3D Canvas -->
+                            <div class="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl overflow-hidden" style="height: 500px;">
+                                <canvas id="canvas3d" class="w-full h-full"></canvas>
+                                
+                                <!-- Overlay Controls -->
+                                <div class="absolute top-4 left-4 space-y-2">
+                                    <div class="glass-panel px-3 py-2 flex items-center gap-2">
+                                        <span class="text-2xl" id="patientEmoji">🐕</span>
+                                        <div>
+                                            <div class="text-sm font-semibold" id="patientName">Max</div>
+                                            <div class="text-xs text-gray-400" id="patientInfo">Golden Retriever, 5 Jahre</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tool Palette -->
+                                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                                    <button class="neo-button p-3" onclick="selectTool('stethoscope')" id="tool-stethoscope">
+                                        <span class="text-xl">🩺</span>
+                                    </button>
+                                    <button class="neo-button p-3" onclick="selectTool('thermometer')" id="tool-thermometer">
+                                        <span class="text-xl">🌡️</span>
+                                    </button>
+                                    <button class="neo-button p-3" onclick="selectTool('syringe')" id="tool-syringe">
+                                        <span class="text-xl">💉</span>
+                                    </button>
+                                    <button class="neo-button p-3" onclick="selectTool('microscope')" id="tool-microscope">
+                                        <span class="text-xl">🔬</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Vital Signs Dashboard -->
+                        <div class="glass-panel p-6 mt-6">
+                            <h3 class="text-lg font-semibold mb-4">Vitalwerte Monitor</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <!-- Heart Rate -->
+                                <div class="vital-monitor">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs text-gray-400">HERZRATE</span>
+                                        <span class="text-xs text-green-400">NORMAL</span>
+                                    </div>
+                                    <div class="text-2xl font-bold font-mono text-green-400">
+                                        <span id="heartRate">72</span>
+                                        <span class="text-sm text-gray-500">BPM</span>
+                                    </div>
+                                    <svg width="100%" height="40" class="mt-2">
+                                        <polyline class="ekg-line" points="0,20 10,20 15,10 20,30 25,5 30,35 35,20 45,20 50,20 55,10 60,30 65,5 70,35 75,20 85,20 100,20"></polyline>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Temperature -->
+                                <div class="vital-monitor">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs text-gray-400">TEMPERATUR</span>
+                                        <span class="text-xs text-green-400">NORMAL</span>
+                                    </div>
+                                    <div class="text-2xl font-bold font-mono text-green-400">
+                                        <span id="temperature">38.5</span>
+                                        <span class="text-sm text-gray-500">°C</span>
+                                    </div>
+                                    <div class="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-500 to-red-500" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Blood Pressure -->
+                                <div class="vital-monitor">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs text-gray-400">BLUTDRUCK</span>
+                                        <span class="text-xs text-green-400">NORMAL</span>
+                                    </div>
+                                    <div class="text-2xl font-bold font-mono text-green-400">
+                                        <span id="bloodPressure">120/80</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">mmHg</div>
+                                </div>
+                                
+                                <!-- Oxygen -->
+                                <div class="vital-monitor">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs text-gray-400">O₂ SÄTTIGUNG</span>
+                                        <span class="text-xs text-green-400">OPTIMAL</span>
+                                    </div>
+                                    <div class="text-2xl font-bold font-mono text-green-400">
+                                        <span id="oxygenLevel">98</span>
+                                        <span class="text-sm text-gray-500">%</span>
+                                    </div>
+                                    <svg width="60" height="60" class="mt-2 mx-auto">
+                                        <circle class="progress-ring-circle" cx="30" cy="30" r="25"></circle>
+                                        <circle class="progress-ring-progress" cx="30" cy="30" r="25" 
+                                                style="stroke-dasharray: 157; stroke-dashoffset: 3;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Sidebar -->
+                    <div class="space-y-6">
+                        <!-- Diagnosis Panel -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-semibold mb-4">Diagnose</h3>
+                            
+                            <!-- Symptoms List -->
+                            <div class="space-y-2 mb-4" id="symptomsList">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                                    <span class="text-gray-300">Leichtes Humpeln</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                                    <span class="text-gray-300">Normale Atmung</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Diagnosis Options -->
+                            <div class="space-y-2">
+                                <button class="w-full neo-button p-3 text-left hover:border-blue-500 transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <span>Verstauchung</span>
+                                        <span class="text-xs text-gray-500">85%</span>
+                                    </div>
+                                </button>
+                                <button class="w-full neo-button p-3 text-left hover:border-blue-500 transition-colors">
+                                    <div class="flex items-center justify-between">
+                                        <span>Knochenbruch</span>
+                                        <span class="text-xs text-gray-500">15%</span>
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <button class="premium-button w-full mt-4">
+                                Diagnose stellen
+                            </button>
+                        </div>
+                        
+                        <!-- Skills Tree Preview -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-semibold mb-4">Fähigkeiten</h3>
+                            <div class="flex justify-center">
+                                <div class="relative">
+                                    <!-- Center Node -->
+                                    <div class="skill-node unlocked">
+                                        <span class="text-2xl">🔍</span>
+                                    </div>
+                                    
+                                    <!-- Branch Nodes -->
+                                    <div class="absolute -top-16 -left-16">
+                                        <div class="skill-node">
+                                            <span class="text-2xl">💉</span>
+                                        </div>
+                                    </div>
+                                    <div class="absolute -top-16 -right-16">
+                                        <div class="skill-node">
+                                            <span class="text-2xl">🔬</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-6">
+                                <p class="text-xs text-gray-400">Skill-Punkte verfügbar</p>
+                                <p class="text-2xl font-bold text-purple-400">3</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Stats -->
+                        <div class="glass-panel p-6">
+                            <h3 class="text-lg font-semibold mb-4">Statistiken</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-400">Behandelte Tiere</span>
+                                    <span class="font-bold">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-400">Erfolgsrate</span>
+                                    <span class="font-bold text-green-400">--%</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-400">Beste Serie</span>
+                                    <span class="font-bold text-purple-400">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Focus Overlay for Tutorial -->
+        <div id="focusOverlay" class="focus-overlay"></div>
+        
+        <!-- Tutorial Bubble -->
+        <div id="tutorialBubble" class="hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 glass-panel p-4 max-w-md z-[1000]">
+            <p class="text-sm" id="tutorialText">Willkommen! Lass uns gemeinsam dein erstes Tier behandeln.</p>
+            <button onclick="nextTutorialStep()" class="premium-button mt-3 text-sm">
+                Weiter →
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // Premium Game State
+        let gameState = {
+            currentScreen: 'welcome',
+            tutorialStep: 0,
+            tutorialActive: false,
+            player: {
+                level: 1,
+                xp: 0,
+                name: 'Dr. Schmidt'
+            },
+            currentPatient: null,
+            selectedTool: null,
+            vitals: {
+                heartRate: 72,
+                temperature: 38.5,
+                bloodPressure: '120/80',
+                oxygenLevel: 98
+            }
+        };
+        
+        // Particle Background
+        function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const particles = [];
+            const particleCount = 50;
+            
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.speedX = Math.random() * 0.5 - 0.25;
+                    this.speedY = Math.random() * 0.5 - 0.25;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                }
+                
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    if (this.x > canvas.width) this.x = 0;
+                    if (this.x < 0) this.x = canvas.width;
+                    if (this.y > canvas.height) this.y = 0;
+                    if (this.y < 0) this.y = canvas.height;
+                }
+                
+                draw() {
+                    ctx.fillStyle = `rgba(139, 92, 246, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                particles.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
+                
+                // Draw connections
+                particles.forEach((p1, i) => {
+                    particles.slice(i + 1).forEach(p2 => {
+                        const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                        if (distance < 100) {
+                            ctx.strokeStyle = `rgba(139, 92, 246, ${0.1 * (1 - distance / 100)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(p1.x, p1.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    });
+                });
+                
+                requestAnimationFrame(animate);
+            }
+            
+            animate();
+            
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+        
+        // 3D Scene
+        let scene, camera, renderer, animalModel;
+        
+        function init3D() {
+            const canvas = document.getElementById('canvas3d');
+            if (!canvas) return;
+            
+            const container = canvas.parentElement;
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a0a);
+            scene.fog = new THREE.Fog(0x0a0a0a, 10, 50);
+            
+            camera = new THREE.PerspectiveCamera(
+                75,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Premium Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0x0EA5E9, 1, 100);
+            pointLight.position.set(0, 5, 0);
+            scene.add(pointLight);
+            
+            createPremiumAnimalModel();
+            animate3D();
+        }
+        
+        function createPremiumAnimalModel() {
+            const group = new THREE.Group();
+            
+            // Enhanced Materials
+            const bodyMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x8b6914,
+                metalness: 0.1,
+                roughness: 0.8,
+                clearcoat: 0.3,
+                clearcoatRoughness: 0.4
+            });
+            
+            // Body
+            const bodyGeometry = new THREE.BoxGeometry(2.5, 1.2, 1.2);
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.set(1.5, 0.3, 0);
+            head.castShadow = true;
+            group.add(head);
+            
+            animalModel = group;
+            scene.add(animalModel);
+        }
+        
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            
+            if (animalModel) {
+                animalModel.rotation.y += 0.005;
+            }
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // UI Functions
+        function quickStart() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            gameState.currentScreen = 'game';
+            
+            // Initialize 3D after screen is visible
+            setTimeout(() => {
+                init3D();
+                startTutorial();
+            }, 100);
+        }
+        
+        function startTutorial() {
+            gameState.tutorialActive = true;
+            gameState.tutorialStep = 0;
+            
+            document.getElementById('focusOverlay').classList.add('active');
+            document.getElementById('tutorialBubble').classList.remove('hidden');
+            
+            updateTutorial();
+        }
+        
+        function updateTutorial() {
+            const steps = [
+                { text: "Willkommen! Ich zeige dir, wie du Tiere behandelst.", spotlight: null },
+                { text: "Das ist dein Patient. Klicke auf das Stethoskop, um zu beginnen.", spotlight: 'tool-stethoscope' },
+                { text: "Sehr gut! Jetzt siehst du die Herzfrequenz. Ist sie normal?", spotlight: 'heartRate' },
+                { text: "Perfekt! Du bist ein Naturtalent! Lass uns weitermachen.", spotlight: null }
+            ];
+            
+            const step = steps[gameState.tutorialStep];
+            if (!step) {
+                endTutorial();
+                return;
+            }
+            
+            document.getElementById('tutorialText').textContent = step.text;
+            
+            // Update spotlight
+            document.querySelectorAll('.spotlight').forEach(el => el.classList.remove('spotlight'));
+            if (step.spotlight) {
+                const element = document.getElementById(step.spotlight);
+                if (element) element.classList.add('spotlight');
+            }
+        }
+        
+        function nextTutorialStep() {
+            gameState.tutorialStep++;
+            updateTutorial();
+        }
+        
+        function endTutorial() {
+            gameState.tutorialActive = false;
+            document.getElementById('focusOverlay').classList.remove('active');
+            document.getElementById('tutorialBubble').classList.add('hidden');
+            document.querySelectorAll('.spotlight').forEach(el => el.classList.remove('spotlight'));
+        }
+        
+        function selectTool(tool) {
+            gameState.selectedTool = tool;
+            
+            // Update UI
+            document.querySelectorAll('[id^="tool-"]').forEach(btn => {
+                btn.classList.remove('border-blue-500');
+            });
+            document.getElementById(`tool-${tool}`).classList.add('border-blue-500');
+            
+            // Tutorial progress
+            if (gameState.tutorialActive && gameState.tutorialStep === 1 && tool === 'stethoscope') {
+                nextTutorialStep();
+            }
+            
+            // Update vitals based on tool
+            if (tool === 'stethoscope') {
+                animateVitalChange('heartRate', 72, 75);
+            } else if (tool === 'thermometer') {
+                animateVitalChange('temperature', 38.5, 38.8);
+            }
+        }
+        
+        function animateVitalChange(vital, from, to) {
+            const element = document.getElementById(vital);
+            const duration = 1000;
+            const start = Date.now();
+            
+            const animate = () => {
+                const elapsed = Date.now() - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const current = from + (to - from) * easeOutCubic(progress);
+                
+                element.textContent = vital === 'heartRate' ? Math.round(current) : current.toFixed(1);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
+            };
+            
+            animate();
+        }
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+        
+        // Menu Functions
+        function startStoryMode() {
+            console.log('Starting Story Mode...');
+            quickStart();
+        }
+        
+        function startQuickPlay() {
+            console.log('Starting Quick Play...');
+            quickStart();
+        }
+        
+        function startTraining() {
+            console.log('Starting Training...');
+            quickStart();
+        }
+        
+        function openCareer() {
+            console.log('Opening Career...');
+            quickStart();
+        }
+        
+        function toggleView(view) {
+            console.log('Switching to view:', view);
+            // Implement view switching logic
+        }
+        
+        // Initialize
+        window.addEventListener('load', () => {
+            initParticles();
+            
+            // Update user stats
+            document.getElementById('userLevel').textContent = gameState.player.level;
+            document.getElementById('userXP').textContent = gameState.player.xp;
+        });
+    </script>
+</body>
+</html>
