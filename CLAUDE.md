@@ -6,6 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 VetScan Pro 3000 - An educational veterinary medical scanner simulation game with multiple HTML implementations:
 - **React version**: Full-featured app using Vite, React 18, and Tailwind CSS
 - **Standalone HTML versions**: 10 self-contained HTML files requiring no build process
+- **3D Model Integration**: Advanced 3D pipeline with Blender MCP integration (see [3dworkflowBlender.md](./3dworkflowBlender.md))
 - **Live Deployment**: Automatically deployed to https://vibecoding.company via GitHub Actions
 
 ## Development Commands
@@ -27,6 +28,21 @@ python3 -m http.server 8080    # Start local server
 python3 -m http.server 8081
 ```
 
+### 3D Workflow & Blender Integration
+```bash
+# Test Blender MCP connection (when available)
+python3 -c "scene = get_scene_info(); print(f'Blender Connected: {len(scene.objects)} objects')"
+
+# Run 3D asset pipeline
+./scripts/deploy-animal.sh
+
+# Generate medical visualization shaders
+npm run generate:shaders -- --model=bello
+
+# Validate 3D model exports
+npm run test:integration -- --model=bello
+```
+
 ## Project Architecture
 
 ### Standalone HTML Versions (Primary Focus)
@@ -40,7 +56,16 @@ Each HTML file is completely self-contained with all code inline:
 - **vetscan-pro-leveling.html** - Level 1-50 progression with RPG elements
 - **vetscan-advanced.html** - Advanced medical features
 - **vetscan-premium.html** - Premium UI version with modern design
+- **vetscan-bello-3d.html** - 🎯 3D Bello viewer with medical visualizations
 - **index.html** - Landing page with version selector (auto-generated on deployment)
+
+### 3D Model System
+- **assets/models/animals/bello/** - Bello 3D model variants (high/medium/low quality)
+- **src/game/AnimalLoader.js** - Progressive 3D model loading system
+- **src/shaders/MedicalVisualization.js** - Medical visualization shader system
+- **src/components/BelloViewer.jsx** - React 3D viewer component
+- **scripts/deploy-animal.sh** - Automated 3D pipeline deployment
+- **scripts/generate-shaders.js** - Medical shader generation system
 
 ### React Components (Secondary)
 - **src/main.jsx** - Entry point, currently renders VetScanUltraAdvanced
@@ -66,6 +91,34 @@ animalNormalValues = {
     bloodPressure: [110, 160]
   },
   // ... other animals
+}
+```
+
+### 3D Medical Visualization System
+The 3D system extends the core game with advanced medical visualizations:
+```javascript
+// Medical visualization modes
+const medicalModes = {
+  normal: 'Standard appearance with original materials',
+  xray: 'Fresnel-based transparency showing bone structure',
+  ultrasound: 'Noise-based textures with scan-line effects',
+  thermal: 'Temperature mapping with heat color gradients',
+  mri: 'MRI-style grayscale with tissue differentiation'
+}
+
+// Interactive organ zones for Bello
+const bellaInteractiveZones = [
+  { name: 'head', organs: ['brain', 'eyes', 'ears'], radius: 0.6 },
+  { name: 'chest', organs: ['heart', 'lungs'], radius: 0.8 },
+  { name: 'abdomen', organs: ['stomach', 'liver', 'kidneys'], radius: 0.8 },
+  { name: 'legs', organs: ['bones', 'joints', 'muscles'], radius: 1.2 }
+]
+
+// Progressive loading configuration
+const modelQuality = {
+  high: { polygons: '100%', textures: '2048px', use: 'close examination' },
+  medium: { polygons: '50%', textures: '1024px', use: 'normal gameplay' },
+  low: { polygons: '25%', textures: '512px', use: 'overview/mobile' }
 }
 ```
 
@@ -111,11 +164,46 @@ python3 -m http.server 8081  # Use alternative port
 - **Service Worker conflicts**: Test in incognito or clear site data
 - **404 errors**: Ensure server is running and file paths are correct
 
+## Blender MCP Integration
+
+### 🎯 3D Workflow Pipeline (Advanced)
+**Reference: [3dworkflowBlender.md](./3dworkflowBlender.md) for complete documentation**
+
+#### Current Status
+- ⏳ **Blender MCP Server**: Awaiting activation in Claude Desktop
+- ✅ **Pipeline Architecture**: Fully documented and ready
+- ✅ **Fallback System**: Working 3D viewer with procedural Bello model
+
+#### When Blender MCP is Available
+```python
+# These commands will be available for direct Blender control:
+scene_info = get_scene_info()                    # Get all objects in Blender scene
+bello_info = get_object_info(object_name="Bello") # Get Bello model details
+execute_blender_code(code="...")                  # Run Python code in Blender
+screenshot = get_viewport_screenshot(max_size=1024) # Render current view
+
+# Automated export pipeline will generate:
+# - bello_high.glb (100% quality)
+# - bello_medium.glb (50% quality)  
+# - bello_low.glb (25% quality)
+# - Medical material variants (X-Ray, Ultrasound, Thermal)
+```
+
+#### 3D Asset Integration Workflow
+1. **Blender MCP connects** → Access to live Blender session
+2. **Model validation** → Check Bello mesh integrity
+3. **Multi-quality export** → Generate GLB files with compression
+4. **Medical material creation** → Apply shader materials in Blender
+5. **Automated testing** → Validate all exports
+6. **Three.js integration** → Update web viewer
+7. **Live deployment** → Push to vibecoding.company
+
 ## Version Information
 - **Current Version**: 3.1.0
 - **React**: 18.2.0 with createRoot API
 - **Vite**: Configured for port 3000 with auto-open
 - **Node**: Requires Node.js 18+
+- **Three.js**: 0.179.0 with GLTF/DRACO support
 
 ## Educational Features
 The game includes several pedagogical elements:
