@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 💡 Claude Code Professional Tips
+For advanced workflows and productivity tips, see [Claude-Tipps.md](./Claude-Tipps.md)  
+**Note**: These are optional recommendations to enhance productivity - adapt them to your workflow.
+
 ## Project Overview
 VetScan Pro 3000 - Educational veterinary medical scanner simulation game with multiple implementations:
 - **Standalone HTML versions**: 10+ self-contained HTML files requiring no build process
@@ -163,10 +167,22 @@ screenshot = get_viewport_screenshot(max_size=1024)  # Render current view
 
 ## Version 7 Technical Details
 
+### ⚠️ WICHTIG: Versionsnummern bei jedem Deployment
+**Bei JEDEM Deployment MUSS die Versionsnummer erhöht werden!**
+- **Format**: Major.Minor.Patch (z.B. 7.0.2)
+- **Build**: YYYY.MM.DD.XXX (z.B. 2025.08.23.002)
+- **Orte zum Updaten**:
+  1. HTML `<title>` Tag
+  2. Header im HTML Body
+  3. JavaScript `const VERSION`
+  4. JavaScript `const BUILD`
+  5. Status Badge im UI
+  6. Debug Info Panel
+
 ### CDN Configuration
-- **Three.js**: r128 from official threejs.org CDN (stable)
+- **Three.js**: r128 from unpkg CDN (funktioniert garantiert!)
 - **Loaders**: GLTFLoader, DRACOLoader, OrbitControls
-- **Compatibility**: CylinderGeometry used (CapsuleGeometry not in r128)
+- **Compatibility**: Using unpkg instead of cdnjs (cdnjs lacks example files)
 
 ### Progressive Loading System
 1. Attempts to load high-quality GLB first
