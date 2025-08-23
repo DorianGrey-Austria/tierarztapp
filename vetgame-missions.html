@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dr. Paws - Tierarzt Abenteuer 🏥</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        
+        * {
+            font-family: 'Fredoka', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (min-width: 640px) {
+            .glass-card {
+                border-radius: 30px;
+            }
+        }
+        
+        .option-button {
+            background: linear-gradient(135deg, #FFE5EC 0%, #FFD4E1 100%);
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            transform: scale(1);
+            min-height: 100px;
+        }
+        
+        @media (hover: hover) {
+            .option-button:hover {
+                transform: scale(1.05);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                border-color: #FF69B4;
+            }
+        }
+        
+        .option-button:active {
+            transform: scale(0.98);
+        }
+        
+        .examine-button {
+            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+            border: 3px solid #00BCD4;
+        }
+        
+        @media (hover: hover) {
+            .examine-button:hover {
+                transform: scale(1.05);
+                box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3);
+            }
+        }
+        
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes emergency {
+            0%, 100% { 
+                background: rgba(255, 0, 0, 0.1);
+                transform: scale(1);
+            }
+            50% { 
+                background: rgba(255, 0, 0, 0.2);
+                transform: scale(1.02);
+            }
+        }
+        
+        .patient-sick {
+            animation: wobble 2s ease-in-out infinite;
+            filter: saturate(0.7);
+        }
+        
+        .patient-neutral {
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .patient-happy {
+            animation: bounce 1s ease-in-out;
+            filter: brightness(1.2);
+        }
+        
+        .patient-wrong {
+            animation: shake 0.5s ease-in-out;
+            filter: saturate(0.5);
+        }
+        
+        .patient-emergency {
+            animation: emergency 1s ease-in-out infinite;
+        }
+        
+        .speech-bubble {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @media (min-width: 640px) {
+            .speech-bubble {
+                padding: 20px;
+            }
+        }
+        
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 20px solid white;
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #FFD700;
+            animation: confetti-fall 3s linear;
+            pointer-events: none;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .score-popup {
+            position: fixed;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: score-float 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @media (min-width: 640px) {
+            .score-popup {
+                font-size: 3rem;
+            }
+        }
+        
+        @keyframes score-float {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: translateY(-50px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0.8);
+                opacity: 0;
+            }
+        }
+        
+        .emergency-badge {
+            background: linear-gradient(135deg, #FF4444 0%, #CC0000 100%);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .treatment-result {
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* Ensure proper scrolling on mobile */
+        html, body {
+            overflow-x: hidden;
+        }
+        
+        #app {
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+    <div id="app" class="min-h-screen flex items-center justify-center p-3 sm:p-4 lg:p-6">
+        <!-- Start Screen -->
+        <div id="startScreen" class="glass-card p-6 sm:p-8 md:p-10 lg:p-12 text-center w-full max-w-lg sm:max-w-xl md:max-w-2xl mx-auto">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-purple-800 mb-3 sm:mb-4">Dr. Paws 🏥</h1>
+            <p class="text-lg sm:text-xl md:text-2xl text-purple-600 mb-4 sm:mb-6 md:mb-8">Tierarzt Abenteuer</p>
+            <div class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-4 sm:mb-6 md:mb-8">🐾</div>
+            <p class="text-base sm:text-lg text-gray-700 mb-3 sm:mb-4">
+                Hilf kranken Tieren und werde zum besten Tierarzt der Stadt!
+            </p>
+            <p class="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">
+                5 spannende Fälle warten auf dich - von einfach bis Notfall!
+            </p>
+            <button onclick="startGame()" 
+                    class="w-full sm:w-auto px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg sm:text-xl md:text-2xl font-bold rounded-full hover:scale-105 transform transition shadow-xl">
+                Spiel Starten! 🎮
+            </button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="hidden w-full max-w-full sm:max-w-3xl md:max-w-4xl lg:max-w-5xl mx-auto">
+            <!-- Header with Score -->
+            <div class="glass-card p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+                <div class="text-center sm:text-left">
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-purple-800">
+                        Mission <span id="missionNumber">1</span> von 5
+                        <span id="urgencyBadge"></span>
+                    </h2>
+                    <p class="text-sm sm:text-base text-purple-600">Patient: <span id="patientName">Luna</span></p>
+                </div>
+                <div class="text-center sm:text-right">
+                    <div class="text-2xl sm:text-3xl font-bold text-yellow-500">
+                        <span id="score">0</span> ⭐
+                    </div>
+                    <p class="text-xs sm:text-sm text-gray-600">Gesamtpunkte</p>
+                </div>
+            </div>
+
+            <!-- Patient Display -->
+            <div class="glass-card p-4 sm:p-6 md:p-8 mb-4 sm:mb-5 md:mb-6">
+                <div class="text-center">
+                    <div id="patientEmoji" class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl mb-4 sm:mb-5 md:mb-6 patient-sick inline-block">🐱</div>
+                    
+                    <div class="speech-bubble mb-4 sm:mb-5 md:mb-6 w-full max-w-full sm:max-w-2xl md:max-w-3xl mx-auto">
+                        <p id="symptoms" class="text-sm sm:text-base md:text-lg text-gray-700">
+                            <!-- Symptoms will be inserted here -->
+                        </p>
+                        <div id="additionalSymptoms" class="hidden mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
+                            <p class="text-xs sm:text-sm font-bold text-blue-600 mb-2">Zusätzliche Untersuchung:</p>
+                            <p id="additionalSymptomsText" class="text-sm sm:text-base text-gray-700"></p>
+                        </div>
+                    </div>
+
+                    <!-- Examine Button -->
+                    <div id="examineButtonContainer" class="mb-4 sm:mb-5 md:mb-6">
+                        <button onclick="requestAdditionalExamination()" 
+                                class="examine-button w-full sm:w-auto px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base text-cyan-700 hover:scale-105 transform transition">
+                            🔍 Weitere Untersuchung (-10 Punkte)
+                        </button>
+                    </div>
+
+                    <!-- Treatment Result (initially hidden) -->
+                    <div id="treatmentResult" class="hidden treatment-result">
+                        <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-xl mb-4 sm:mb-5 md:mb-6">
+                            <p id="resultText" class="text-base sm:text-lg md:text-xl mb-3 sm:mb-4"></p>
+                            <div id="factBox" class="hidden bg-blue-50 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4">
+                                <p class="text-xs sm:text-sm font-bold text-blue-800 mb-1 sm:mb-2">💡 Wusstest du?</p>
+                                <p id="factText" class="text-xs sm:text-sm text-gray-700"></p>
+                            </div>
+                            <button id="nextButton" onclick="nextMission()" 
+                                    class="w-full sm:w-auto px-6 sm:px-7 md:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-full hover:scale-105 transform transition">
+                                Nächster Patient →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment Options -->
+            <div id="optionsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div id="successScreen" class="hidden glass-card p-6 sm:p-8 md:p-10 lg:p-12 text-center w-full max-w-lg sm:max-w-xl md:max-w-2xl mx-auto">
+            <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-green-600 mb-3 sm:mb-4">Alle Missionen Abgeschlossen! 🎉</h1>
+            <div class="text-5xl sm:text-6xl md:text-7xl lg:text-8xl mb-4 sm:mb-5 md:mb-6">🏆</div>
+            <p class="text-lg sm:text-xl md:text-2xl text-gray-700 mb-3 sm:mb-4">
+                Du bist ein echter Tierarzt-Held!
+            </p>
+            <div class="text-2xl sm:text-3xl font-bold text-yellow-500 mb-3 sm:mb-4">
+                Gesamtpunkte: <span id="finalScore">0</span> ⭐
+            </div>
+            <div id="performanceRating" class="text-base sm:text-lg md:text-xl mb-6 sm:mb-8"></div>
+            <button onclick="resetGame()" 
+                    class="w-full sm:w-auto px-6 sm:px-7 md:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base sm:text-lg md:text-xl font-bold rounded-full hover:scale-105 transform transition">
+                Nochmal spielen! 🔄
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            currentMission: 1,
+            score: 0,
+            additionalExamUsed: false,
+            missionsCompleted: []
+        };
+
+        // Load saved progress
+        function loadProgress() {
+            const saved = localStorage.getItem('vetGameProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                gameState.score = data.score || 0;
+                gameState.missionsCompleted = data.missionsCompleted || [];
+            }
+        }
+
+        // Save progress
+        function saveProgress() {
+            localStorage.setItem('vetGameProgress', JSON.stringify({
+                score: gameState.score,
+                missionsCompleted: gameState.missionsCompleted
+            }));
+        }
+
+        // Mission Data - Wissenschaftlich fundiert
+        const missions = {
+            1: {
+                patient: "Luna die Katze",
+                emoji: "🐱",
+                urgency: "normal",
+                symptoms: "Luna kratzt sich ständig am Ohr und schüttelt oft den Kopf. Sie miaut mehr als sonst und scheint unruhig zu sein.",
+                additionalSymptoms: "Bei genauerer Untersuchung siehst du eine dunkelbraune, krümelige Masse im Ohr. Luna zuckt zurück, wenn du das Ohr berührst.",
+                fact: "Ohrmilben sind winzige Parasiten, die bei Katzen sehr häufig vorkommen. Sie ernähren sich von Hautschuppen und Ohrenschmalz. Ohne Behandlung können sie zu schweren Entzündungen führen!",
+                treatments: [
+                    {
+                        text: "Ohrentropfen gegen Milben",
+                        icon: "💧",
+                        description: "Antiparasitäre Behandlung",
+                        result: "perfect",
+                        feedback: "Perfekt! 🎉 Die Ohrmilben-Tropfen wirken sofort. Luna wird in wenigen Tagen beschwerdefrei sein!",
+                        points: 100
+                    },
+                    {
+                        text: "Antibiotika Tabletten",
+                        icon: "💊",
+                        description: "Gegen bakterielle Infektionen",
+                        result: "bad",
+                        feedback: "Leider falsch! 😟 Antibiotika helfen nicht gegen Milben. Luna kratzt sich weiter.",
+                        points: 0
+                    },
+                    {
+                        text: "Ohren nur reinigen",
+                        icon: "🧽",
+                        description: "Sanfte Reinigung",
+                        result: "okay",
+                        feedback: "Teilweise richtig! 🤔 Die Reinigung hilft etwas, aber die Milben bleiben ohne Medikamente.",
+                        points: 50
+                    },
+                    {
+                        text: "Kortison-Salbe",
+                        icon: "🧴",
+                        description: "Gegen Entzündungen",
+                        result: "partial",
+                        feedback: "Nicht optimal! Die Salbe lindert den Juckreiz kurz, bekämpft aber nicht die Ursache.",
+                        points: 25
+                    }
+                ]
+            },
+            2: {
+                patient: "Max der Hund",
+                emoji: "🐕",
+                urgency: "normal",
+                symptoms: "Max hat einen trockenen, bellenden Husten, der sich anhört wie eine Robbe. Er ist sonst fit, frisst normal, aber der Husten wird schlimmer.",
+                additionalSymptoms: "Der Husten verschlimmert sich bei Aufregung und beim Ziehen an der Leine. Max hatte Kontakt zu anderen Hunden im Park. Leichtes Fieber von 39.5°C.",
+                fact: "Zwingerhusten ist hochansteckend und verbreitet sich schnell in Hundeparks! Die Krankheit heißt so, weil sie oft in Tierheimen auftritt. Eine Impfung kann schützen!",
+                treatments: [
+                    {
+                        text: "Wurmkur geben",
+                        icon: "🪱",
+                        description: "Gegen Parasiten",
+                        result: "bad",
+                        feedback: "Falsch! 😟 Würmer verursachen keinen bellenden Husten. Max hustet weiter.",
+                        points: 0
+                    },
+                    {
+                        text: "Antibiotika + Hustenstiller",
+                        icon: "💊💧",
+                        description: "Kombinationstherapie",
+                        result: "perfect",
+                        feedback: "Perfekt! 🎉 Diese Kombination bekämpft die bakterielle Infektion und lindert den Husten!",
+                        points: 100
+                    },
+                    {
+                        text: "Nur Hustensaft",
+                        icon: "🥤",
+                        description: "Symptomlinderung",
+                        result: "partial",
+                        feedback: "Teilweise richtig. Der Husten wird etwas besser, aber die Infektion bleibt.",
+                        points: 25
+                    },
+                    {
+                        text: "Inhalation + Ruhe",
+                        icon: "💨",
+                        description: "Unterstützende Therapie",
+                        result: "okay",
+                        feedback: "Gut gedacht! Das hilft, reicht aber allein nicht aus gegen die Infektion.",
+                        points: 50
+                    }
+                ]
+            },
+            3: {
+                patient: "Bella das Pferd",
+                emoji: "🐴",
+                urgency: "emergency",
+                symptoms: "Bella ist sehr unruhig, schaut immer wieder zu ihrem Bauch, scharrt mit den Hufen und will sich hinlegen und wälzen. Sie schwitzt stark!",
+                additionalSymptoms: "Kein Kotabsatz seit 12 Stunden! Darmgeräusche fehlen komplett. Puls bei 80 (normal: 28-44). Bella hat gestern zu viel frisches Gras gefressen.",
+                fact: "Kolik ist die häufigste Todesursache bei Pferden! Etwa 10% aller Pferde erleiden jährlich eine Kolik. Bei schneller Behandlung überleben aber 80-90% der Fälle!",
+                treatments: [
+                    {
+                        text: "Beruhigungsmittel",
+                        icon: "😴",
+                        description: "Sedierung",
+                        result: "bad",
+                        feedback: "Gefährlich! 😱 Beruhigungsmittel können die Symptome verschleiern. Bella braucht dringend Hilfe!",
+                        points: 0
+                    },
+                    {
+                        text: "Antibiotika",
+                        icon: "💊",
+                        description: "Gegen Infektionen",
+                        result: "bad",
+                        feedback: "Falsch! 😟 Antibiotika helfen nicht bei Kolik. Zeit ist kritisch!",
+                        points: 0
+                    },
+                    {
+                        text: "Krampflöser + NOTARZT",
+                        icon: "🚨💉",
+                        description: "Notfallbehandlung",
+                        result: "perfect",
+                        feedback: "PERFEKT! 🚨 Krampflöser lindern akut, und der Notarzt kann Bella retten! Schnelles Handeln rettet Leben!",
+                        points: 100
+                    },
+                    {
+                        text: "Nur Schmerzmittel",
+                        icon: "💉",
+                        description: "Schmerzlinderung",
+                        result: "partial",
+                        feedback: "Nur teilweise richtig! Schmerzmittel helfen kurz, aber ohne weitere Behandlung ist es gefährlich!",
+                        points: 25
+                    }
+                ]
+            },
+            4: {
+                patient: "Mimi die Katze",
+                emoji: "🐈",
+                urgency: "emergency",
+                symptoms: "Mimi rennt ständig zum Katzenklo, aber es kommt nichts oder nur ein paar Tropfen. Sie miaut dabei schmerzhaft und leckt sich ständig am Bauch.",
+                additionalSymptoms: "ALARMIEREND: Nur tröpfchenweise blutiger Urin! Mimi ist ein kastrierter Kater. Der Bauch ist hart und schmerzhaft. Mimi wird zunehmend apathisch!",
+                fact: "FLUTD (Harnwegsverschluss) ist ein absoluter NOTFALL bei Katern! Innerhalb von 24-48 Stunden kann es zu Nierenversagen kommen. Kastrierte Kater sind besonders gefährdet!",
+                treatments: [
+                    {
+                        text: "Blasentee + Warten",
+                        icon: "☕",
+                        description: "Hausmittel",
+                        result: "bad",
+                        feedback: "GEFÄHRLICH! ⚠️ Das ist ein Notfall! Ohne sofortige Behandlung kann Mimi sterben!",
+                        points: 0
+                    },
+                    {
+                        text: "SOFORT Katheter + Klinik",
+                        icon: "🏥🚨",
+                        description: "Notfallbehandlung",
+                        result: "perfect",
+                        feedback: "LEBENSRETTEND! 🚨 Der Katheter befreit die Blase sofort! Mimi ist gerettet! Jede Minute zählt bei diesem Notfall!",
+                        points: 100
+                    },
+                    {
+                        text: "Schmerzmittel + Antibiotika",
+                        icon: "💊💉",
+                        description: "Medikamente",
+                        result: "partial",
+                        feedback: "Nicht ausreichend! Die Medikamente helfen etwas, aber der Verschluss muss SOFORT behoben werden!",
+                        points: 25
+                    },
+                    {
+                        text: "Spezialfutter + Ruhe",
+                        icon: "🍖",
+                        description: "Diätmanagement",
+                        result: "bad",
+                        feedback: "Viel zu langsam! 😱 Das ist ein NOTFALL! Mimi braucht SOFORT einen Katheter!",
+                        points: 0
+                    }
+                ]
+            },
+            5: {
+                patient: "Bruno der Hund",
+                emoji: "🐕‍🦺",
+                urgency: "emergency",
+                symptoms: "Bruno hat einen stark aufgeblähten Bauch, würgt ständig aber es kommt nichts raus. Er ist sehr unruhig, hechelt stark und der Bauch wird immer dicker!",
+                additionalSymptoms: "KRITISCH: Bruno hat vor 30 Minuten eine große Portion gefressen und danach gespielt! Zahnfleisch ist blass, Puls rast bei 180! Der Bauch ist hart wie ein Ballon!",
+                fact: "Magendrehung (GDV) ist ein absoluter NOTFALL! Große Hunde mit tiefem Brustkorb sind besonders gefährdet. Ohne OP innerhalb von 1-2 Stunden stirbt der Hund! Nie nach dem Fressen toben lassen!",
+                treatments: [
+                    {
+                        text: "Abwarten + Tee",
+                        icon: "⏰",
+                        description: "Beobachten",
+                        result: "bad",
+                        feedback: "TÖDLICHER FEHLER! ☠️ Magendrehung ist ein absoluter Notfall! Ohne OP stirbt Bruno!",
+                        points: 0
+                    },
+                    {
+                        text: "Brechmittel geben",
+                        icon: "🤮",
+                        description: "Erbrechen auslösen",
+                        result: "bad",
+                        feedback: "GEFÄHRLICH! ⚠️ Bei Magendrehung kann nichts raus! Das verschlimmert alles!",
+                        points: 0
+                    },
+                    {
+                        text: "Massage + Bewegung",
+                        icon: "🏃",
+                        description: "Aktivierung",
+                        result: "bad",
+                        feedback: "FALSCH! 😱 Bewegung macht es schlimmer! Bruno braucht SOFORT eine OP!",
+                        points: 0
+                    },
+                    {
+                        text: "NOTFALL-OP SOFORT!",
+                        icon: "🚑⚕️",
+                        description: "Sofortige Operation",
+                        result: "perfect",
+                        feedback: "LEBENSRETTEND! 🚨 Sofortige OP rettet Brunos Leben! Bei Magendrehung zählt jede Minute! Großartige Entscheidung!",
+                        points: 100
+                    }
+                ]
+            }
+        };
+
+        // Sound Effects (using Web Audio API)
+        function playSound(type) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                if (type === 'success') {
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.value = 0.1;
+                } else if (type === 'wrong') {
+                    oscillator.frequency.value = 300;
+                    gainNode.gain.value = 0.1;
+                } else if (type === 'okay') {
+                    oscillator.frequency.value = 500;
+                    gainNode.gain.value = 0.1;
+                } else if (type === 'perfect') {
+                    // Play a little melody for perfect
+                    oscillator.frequency.value = 600;
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2);
+                    gainNode.gain.value = 0.1;
+                }
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                // Silent fail for audio
+            }
+        }
+
+        // Confetti Effect
+        function createConfetti() {
+            const colors = ['#FFD700', '#FF69B4', '#00CED1', '#FF6347', '#7FFF00'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        // Score Popup Animation
+        function showScorePopup(points, x, y) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.textContent = points > 0 ? `+${points}` : '0';
+            
+            // Adjust position for mobile
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Ensure popup stays within viewport
+            x = Math.min(x, viewportWidth - 100);
+            x = Math.max(x, 50);
+            y = Math.min(y, viewportHeight - 100);
+            
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            
+            if (points === 100) {
+                popup.style.color = '#00FF00';
+                popup.textContent = `+${points} PERFEKT!`;
+            } else if (points === 50) {
+                popup.style.color = '#FFA500';
+            } else if (points === 25) {
+                popup.style.color = '#FFD700';
+            } else {
+                popup.style.color = '#FF0000';
+                popup.textContent = 'FALSCH!';
+            }
+            
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 2000);
+        }
+
+        // Request Additional Examination
+        function requestAdditionalExamination() {
+            if (gameState.additionalExamUsed) return;
+            
+            gameState.score = Math.max(0, gameState.score - 10);
+            gameState.additionalExamUsed = true;
+            
+            const mission = missions[gameState.currentMission];
+            document.getElementById('additionalSymptoms').classList.remove('hidden');
+            document.getElementById('additionalSymptomsText').textContent = mission.additionalSymptoms;
+            document.getElementById('examineButtonContainer').classList.add('hidden');
+            document.getElementById('score').textContent = gameState.score;
+            
+            playSound('okay');
+            saveProgress();
+        }
+
+        // Start Game
+        function startGame() {
+            loadProgress();
+            gameState.currentMission = 1;
+            gameState.additionalExamUsed = false;
+            
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            updateDisplay();
+        }
+
+        // Update Display
+        function updateDisplay() {
+            const mission = missions[gameState.currentMission];
+            if (!mission) {
+                showSuccessScreen();
+                return;
+            }
+            
+            document.getElementById('missionNumber').textContent = gameState.currentMission;
+            document.getElementById('patientName').textContent = mission.patient;
+            document.getElementById('patientEmoji').textContent = mission.emoji;
+            document.getElementById('symptoms').textContent = mission.symptoms;
+            document.getElementById('score').textContent = gameState.score;
+            
+            // Reset additional symptoms
+            document.getElementById('additionalSymptoms').classList.add('hidden');
+            document.getElementById('examineButtonContainer').classList.remove('hidden');
+            gameState.additionalExamUsed = false;
+            
+            // Update urgency badge
+            const urgencyBadge = document.getElementById('urgencyBadge');
+            if (mission.urgency === 'emergency') {
+                urgencyBadge.innerHTML = '<span class="emergency-badge">NOTFALL!</span>';
+                document.getElementById('patientEmoji').classList.add('patient-emergency');
+            } else {
+                urgencyBadge.innerHTML = '';
+                document.getElementById('patientEmoji').classList.remove('patient-emergency');
+            }
+            
+            // Update treatment options with responsive classes
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = mission.treatments.map((treatment, index) => `
+                <button onclick="selectTreatment(${index})" class="option-button p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl">
+                    <div class="text-3xl sm:text-4xl mb-2">${treatment.icon}</div>
+                    <p class="text-base sm:text-lg font-semibold text-purple-800">${treatment.text}</p>
+                    <p class="text-xs sm:text-sm text-gray-600">${treatment.description}</p>
+                </button>
+            `).join('');
+        }
+
+        // Select Treatment
+        function selectTreatment(index) {
+            const mission = missions[gameState.currentMission];
+            const treatment = mission.treatments[index];
+            const patientEmoji = document.getElementById('patientEmoji');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const treatmentResult = document.getElementById('treatmentResult');
+            const resultText = document.getElementById('resultText');
+            const examineContainer = document.getElementById('examineButtonContainer');
+            
+            // Hide options and examine button
+            optionsContainer.classList.add('hidden');
+            examineContainer.classList.add('hidden');
+            
+            // Update score
+            gameState.score += treatment.points;
+            document.getElementById('score').textContent = gameState.score;
+            
+            // Show score popup with touch event handling
+            const rect = event.target ? event.target.getBoundingClientRect() : 
+                         { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0 };
+            showScorePopup(treatment.points, rect.left + rect.width / 2, rect.top);
+            
+            // Update patient mood based on treatment
+            patientEmoji.classList.remove('patient-sick', 'patient-neutral', 'patient-happy', 'patient-wrong', 'patient-emergency');
+            
+            if (treatment.result === 'perfect') {
+                patientEmoji.classList.add('patient-happy');
+                playSound('perfect');
+                createConfetti();
+                resultText.innerHTML = `
+                    <span class="text-green-600 text-lg sm:text-xl md:text-2xl font-bold">${treatment.feedback}</span>
+                    <div class="text-2xl sm:text-3xl md:text-4xl mt-3 sm:mt-4">✨ ${treatment.points} Punkte! ✨</div>
+                `;
+                
+                // Show fact
+                document.getElementById('factBox').classList.remove('hidden');
+                document.getElementById('factText').textContent = mission.fact;
+                
+            } else if (treatment.result === 'okay') {
+                patientEmoji.classList.add('patient-neutral');
+                playSound('okay');
+                resultText.innerHTML = `
+                    <span class="text-orange-500 text-lg sm:text-xl md:text-2xl font-bold">${treatment.feedback}</span>
+                    <div class="text-xl sm:text-2xl md:text-3xl mt-3 sm:mt-4">🌟 ${treatment.points} Punkte</div>
+                `;
+                document.getElementById('factBox').classList.remove('hidden');
+                document.getElementById('factText').textContent = mission.fact;
+                
+            } else if (treatment.result === 'partial') {
+                patientEmoji.classList.add('patient-neutral');
+                playSound('okay');
+                resultText.innerHTML = `
+                    <span class="text-yellow-600 text-lg sm:text-xl md:text-2xl font-bold">${treatment.feedback}</span>
+                    <div class="text-lg sm:text-xl md:text-2xl mt-3 sm:mt-4">⭐ ${treatment.points} Punkte</div>
+                `;
+                document.getElementById('factBox').classList.remove('hidden');
+                document.getElementById('factText').textContent = mission.fact;
+                
+            } else {
+                patientEmoji.classList.add('patient-wrong');
+                playSound('wrong');
+                resultText.innerHTML = `
+                    <span class="text-red-500 text-lg sm:text-xl md:text-2xl font-bold">${treatment.feedback}</span>
+                    <div class="text-lg sm:text-xl md:text-2xl mt-3 sm:mt-4">😔 Keine Punkte</div>
+                `;
+                document.getElementById('factBox').classList.add('hidden');
+            }
+            
+            // Show result
+            treatmentResult.classList.remove('hidden');
+            
+            // Save progress
+            gameState.missionsCompleted.push({
+                mission: gameState.currentMission,
+                points: treatment.points,
+                result: treatment.result
+            });
+            saveProgress();
+        }
+
+        // Next Mission
+        function nextMission() {
+            gameState.currentMission++;
+            
+            // Reset UI
+            document.getElementById('treatmentResult').classList.add('hidden');
+            document.getElementById('optionsContainer').classList.remove('hidden');
+            document.getElementById('patientEmoji').className = 'text-6xl sm:text-7xl md:text-8xl lg:text-9xl mb-4 sm:mb-5 md:mb-6 patient-sick inline-block';
+            document.getElementById('factBox').classList.add('hidden');
+            
+            if (gameState.currentMission > 5) {
+                showSuccessScreen();
+            } else {
+                updateDisplay();
+            }
+        }
+
+        // Show Success Screen
+        function showSuccessScreen() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('successScreen').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = gameState.score;
+            
+            // Calculate performance rating
+            const maxScore = 500; // 5 missions × 100 points
+            const percentage = (gameState.score / maxScore) * 100;
+            const ratingElement = document.getElementById('performanceRating');
+            
+            if (percentage >= 90) {
+                ratingElement.innerHTML = '<span class="text-green-600">🏆 Meister-Tierarzt! Absolut perfekt!</span>';
+            } else if (percentage >= 70) {
+                ratingElement.innerHTML = '<span class="text-blue-600">🥈 Sehr gut! Du bist ein toller Tierarzt!</span>';
+            } else if (percentage >= 50) {
+                ratingElement.innerHTML = '<span class="text-yellow-600">🥉 Gut gemacht! Weiter üben!</span>';
+            } else {
+                ratingElement.innerHTML = '<span class="text-orange-600">📚 Noch viel zu lernen, aber du schaffst das!</span>';
+            }
+            
+            createConfetti();
+            playSound('perfect');
+        }
+
+        // Reset Game
+        function resetGame() {
+            gameState = {
+                currentMission: 1,
+                score: 0,
+                additionalExamUsed: false,
+                missionsCompleted: []
+            };
+            
+            // Clear saved progress
+            localStorage.removeItem('vetGameProgress');
+            
+            // Reset UI
+            document.getElementById('successScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('treatmentResult').classList.add('hidden');
+            document.getElementById('optionsContainer').classList.remove('hidden');
+            document.getElementById('patientEmoji').className = 'text-6xl sm:text-7xl md:text-8xl lg:text-9xl mb-4 sm:mb-5 md:mb-6 patient-sick inline-block';
+        }
+
+        // Initialize
+        window.onload = function() {
+            // Preload by showing start screen
+            document.getElementById('startScreen').classList.remove('hidden');
+        };
+    </script>
+</body>
+</html>

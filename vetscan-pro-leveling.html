@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Tierarzt Karriere Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Orbitron:wght@700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .level-bar-container {
+            position: relative;
+            height: 32px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.3) 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .level-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #dc2626);
+            border-radius: 14px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .level-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .skill-node {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            border: 3px solid #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .skill-node.unlocked {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-color: #d97706;
+            animation: unlock-pulse 0.5s ease;
+        }
+        
+        .skill-node.available {
+            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+            border-color: #3b82f6;
+            animation: pulse-available 2s infinite;
+        }
+        
+        @keyframes unlock-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes pulse-available {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0); }
+        }
+        
+        .minigame-container {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .heartbeat-bar {
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+        
+        .beat-marker {
+            position: absolute;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, #ef4444, transparent);
+            animation: move-beat 2s linear infinite;
+        }
+        
+        @keyframes move-beat {
+            from { left: 100%; }
+            to { left: -4px; }
+        }
+        
+        .hit-zone {
+            position: absolute;
+            left: 20%;
+            width: 60px;
+            height: 100%;
+            background: rgba(34, 197, 94, 0.2);
+            border-left: 2px solid #22c55e;
+            border-right: 2px solid #22c55e;
+        }
+        
+        .combo-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            animation: combo-pulse 0.5s ease;
+        }
+        
+        @keyframes combo-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .daily-task {
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .daily-task.completed {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-color: #10b981;
+        }
+        
+        .daily-task:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .achievement-card {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 8px;
+            display: inline-block;
+            animation: achievement-appear 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .achievement-card::before {
+            content: '✨';
+            position: absolute;
+            font-size: 60px;
+            opacity: 0.1;
+            right: -10px;
+            top: -10px;
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes achievement-appear {
+            from { opacity: 0; transform: scale(0); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .clinic-room {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            border: 3px solid #6366f1;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .clinic-room.locked {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-color: #9ca3af;
+            opacity: 0.6;
+        }
+        
+        .clinic-room:not(.locked):hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .encyclopedia-entry {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            border-left: 4px solid #6366f1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .encyclopedia-entry.locked {
+            background: #f9fafb;
+            border-left-color: #d1d5db;
+            color: #9ca3af;
+        }
+        
+        .encyclopedia-entry:not(.locked):hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .season-progress {
+            background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+            height: 6px;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .season-progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: var(--progress);
+            background: white;
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .energy-bar {
+            width: 120px;
+            height: 24px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .special-event-banner {
+            background: linear-gradient(135deg, #dc2626 0%, #7c2d12 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            margin: 20px 0;
+            animation: event-pulse 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        @keyframes event-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .special-event-banner::before {
+            content: '🚨';
+            position: absolute;
+            font-size: 100px;
+            opacity: 0.1;
+            right: 20px;
+            top: -20px;
+            animation: rotate 4s linear infinite;
+        }
+        
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+        }
+        
+        .floating-xp {
+            position: fixed;
+            font-weight: bold;
+            font-size: 24px;
+            color: #fbbf24;
+            pointer-events: none;
+            animation: float-up 2s ease-out forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes float-up {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(-100px);
+            }
+        }
+        
+        .lootbox {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #fbbf24 0%, #dc2626 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            animation: lootbox-shake 0.5s ease infinite;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes lootbox-shake {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        
+        .boss-health-bar {
+            width: 100%;
+            height: 40px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            border: 3px solid #dc2626;
+        }
+        
+        .boss-health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .multiplayer-indicator {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .mentor-badge {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen p-4">
+        <!-- Advanced Header with Level System -->
+        <header class="game-panel p-6 mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Player Info & Level -->
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="relative">
+                            <div class="text-5xl">👨‍⚕️</div>
+                            <div class="absolute -bottom-1 -right-1 bg-yellow-400 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                                <span id="playerLevel">1</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-purple-600">Dr. <span id="playerName">Schmidt</span></h1>
+                            <p class="text-gray-600 text-sm" id="playerTitle">Praktikant</p>
+                        </div>
+                    </div>
+                    
+                    <!-- XP Bar -->
+                    <div class="level-bar-container">
+                        <div class="level-bar-fill" id="xpBar" style="width: 0%"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                            <span id="xpText">0 / 100 XP</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Next Unlock Preview -->
+                    <div class="mt-2 text-sm text-gray-600">
+                        Nächstes Freischalten: <span class="font-bold text-purple-600" id="nextUnlock">Temperatur-Tool (Level 2)</span>
+                    </div>
+                </div>
+                
+                <!-- Resources & Stats -->
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <!-- Energy -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">⚡</span>
+                        <div class="energy-bar">
+                            <div class="energy-fill" id="energyBar" style="width: 100%">
+                                <span id="energyText">100/100</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lives -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-2xl">❤️</span>
+                        <span class="font-bold text-red-500" id="lives">5</span>
+                    </div>
+                    
+                    <!-- Coins -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-2xl">💰</span>
+                        <span class="font-bold text-yellow-600" id="coins">1000</span>
+                    </div>
+                    
+                    <!-- Gems -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-2xl">💎</span>
+                        <span class="font-bold text-purple-600" id="gems">10</span>
+                    </div>
+                    
+                    <!-- Skill Points -->
+                    <div class="flex items-center gap-1">
+                        <span class="text-2xl">⭐</span>
+                        <span class="font-bold text-blue-600" id="skillPoints">0</span>
+                    </div>
+                </div>
+                
+                <!-- Combo & Streaks -->
+                <div class="text-right">
+                    <div class="flex items-center justify-end gap-4">
+                        <!-- Combo -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-gray-600">Combo:</span>
+                            <span class="text-2xl font-bold text-orange-500" id="comboCount">0x</span>
+                        </div>
+                        
+                        <!-- Daily Streak -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl">🔥</span>
+                            <span class="font-bold" id="dailyStreak">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Season Progress -->
+                    <div class="mt-3">
+                        <div class="text-xs text-gray-600 mb-1">Season 1: Frühlings-Erwachen</div>
+                        <div class="season-progress" style="--progress: 25%"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Special Event Banner (if active) -->
+        <div class="special-event-banner" id="eventBanner" style="display: none;">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold">🚨 NOTFALL-EVENT!</h3>
+                    <p id="eventDescription">Ein Welpe wurde angefahren! Rette ihn innerhalb von 5 Minuten!</p>
+                </div>
+                <div class="text-3xl font-bold" id="eventTimer">5:00</div>
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Panel - Main Game -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 3D Examination Area -->
+                <div class="game-panel p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold">🏥 Untersuchungsraum</h2>
+                        <div class="flex gap-2">
+                            <button onclick="toggleTool('stethoscope')" class="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm" id="tool-stethoscope">
+                                🩺 Stethoskop
+                            </button>
+                            <button onclick="toggleTool('thermometer')" class="px-3 py-1 bg-gray-300 text-gray-500 rounded-lg text-sm" id="tool-thermometer" disabled>
+                                🌡️ Locked (Lv.2)
+                            </button>
+                            <button onclick="toggleTool('xray')" class="px-3 py-1 bg-gray-300 text-gray-500 rounded-lg text-sm" id="tool-xray" disabled>
+                                🦴 Locked (Lv.5)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="relative bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl overflow-hidden" style="height: 400px;">
+                        <canvas id="canvas3d"></canvas>
+                        
+                        <!-- Interactive Zones (dynamic based on level) -->
+                        <div id="interactiveZones"></div>
+                        
+                        <!-- Patient Info Overlay -->
+                        <div class="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-lg">
+                            <div class="flex items-center gap-2">
+                                <span class="text-3xl" id="patientEmoji">🐕</span>
+                                <div>
+                                    <div class="font-bold" id="patientName">Bello</div>
+                                    <div class="text-xs text-gray-600" id="patientInfo">Level 1 Fall</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Boss Health (for boss battles) -->
+                        <div class="absolute bottom-4 left-4 right-4" id="bossHealthContainer" style="display: none;">
+                            <div class="boss-health-bar">
+                                <div class="boss-health-fill" id="bossHealth" style="width: 100%">
+                                    <span>Boss: Mysteriöse Krankheit</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mini-Game Area -->
+                <div class="game-panel p-6" id="minigamePanel" style="display: none;">
+                    <h3 class="text-lg font-bold mb-4">🎮 Herzschlag-Rhythmus</h3>
+                    <div class="minigame-container">
+                        <div class="heartbeat-bar">
+                            <div class="hit-zone"></div>
+                            <div class="beat-marker" id="beat1"></div>
+                            <div class="beat-marker" id="beat2" style="animation-delay: 0.5s"></div>
+                            <div class="beat-marker" id="beat3" style="animation-delay: 1s"></div>
+                            <div class="beat-marker" id="beat4" style="animation-delay: 1.5s"></div>
+                        </div>
+                        <div class="combo-counter" id="comboDisplay">
+                            Combo: 0x
+                        </div>
+                        <div class="text-center mt-4">
+                            <button onclick="hitBeat()" class="px-8 py-3 bg-red-500 text-white rounded-xl text-xl font-bold hover:bg-red-600 transition">
+                                💓 HIT!
+                            </button>
+                        </div>
+                        <div class="mt-4 text-center text-white">
+                            <p>Drücke im richtigen Moment für perfekte Treffer!</p>
+                            <p class="text-sm mt-2">Perfekt: +10 XP | Gut: +5 XP | Verpasst: -1 Leben</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skill Tree -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">🌳 Fähigkeiten-Baum</h3>
+                    <div class="flex justify-center">
+                        <div class="relative">
+                            <!-- Base Skills -->
+                            <div class="flex gap-4 justify-center mb-4">
+                                <div class="skill-node unlocked" onclick="selectSkill('basic-diagnosis')">
+                                    <span class="text-2xl">🔍</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 5 Skills -->
+                            <div class="flex gap-8 justify-center mb-4">
+                                <div class="skill-node available" onclick="selectSkill('surgery')">
+                                    <span class="text-2xl">🔪</span>
+                                </div>
+                                <div class="skill-node" onclick="selectSkill('laboratory')">
+                                    <span class="text-2xl">🧪</span>
+                                </div>
+                                <div class="skill-node" onclick="selectSkill('emergency')">
+                                    <span class="text-2xl">🚑</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Level 10+ Skills -->
+                            <div class="flex gap-4 justify-center">
+                                <div class="skill-node locked">
+                                    <span class="text-2xl">🦴</span>
+                                </div>
+                                <div class="skill-node locked">
+                                    <span class="text-2xl">🧬</span>
+                                </div>
+                                <div class="skill-node locked">
+                                    <span class="text-2xl">💉</span>
+                                </div>
+                                <div class="skill-node locked">
+                                    <span class="text-2xl">🔬</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-600">Skill-Punkte verfügbar: <span class="font-bold text-purple-600" id="availableSkillPoints">0</span></p>
+                        <button onclick="resetSkills()" class="mt-2 text-sm text-blue-600 hover:underline">Skills zurücksetzen (50 💎)</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Middle Panel - Tasks & Progress -->
+            <div class="space-y-6">
+                <!-- Daily Tasks -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">📅 Tägliche Aufgaben</h3>
+                    <div id="dailyTasks">
+                        <div class="daily-task" onclick="claimTask(1)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold">Erste Hilfe</div>
+                                    <div class="text-sm text-gray-600">Behandle 3 Tiere</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-500">0/3</div>
+                                    <div class="text-xs font-bold text-yellow-600">+50 XP</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="daily-task" onclick="claimTask(2)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold">Perfektionist</div>
+                                    <div class="text-sm text-gray-600">Perfekte Diagnose</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-500">0/1</div>
+                                    <div class="text-xs font-bold text-purple-600">+1 💎</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="daily-task" onclick="claimTask(3)">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-bold">Kombo-Meister</div>
+                                    <div class="text-sm text-gray-600">5x Combo erreichen</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-500">0/1</div>
+                                    <div class="text-xs font-bold text-blue-600">Lootbox</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Challenge -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-purple-600">Wochen-Challenge</span>
+                            <span class="text-sm text-gray-500">2d 14h</span>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-3">
+                            <div class="text-sm font-bold">Notfall-Woche</div>
+                            <div class="text-xs text-gray-600">Rette 20 Notfälle</div>
+                            <div class="mt-2 bg-purple-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full" style="width: 35%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">7/20</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Achievements -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">🏆 Erfolge</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="achievement-card">
+                            <div class="text-2xl text-center">🎯</div>
+                            <div class="text-xs text-center mt-1">Erste Diagnose</div>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="text-2xl text-center">⚡</div>
+                            <div class="text-xs text-center mt-1">Blitz-Heiler</div>
+                        </div>
+                        <div class="achievement-card opacity-30">
+                            <div class="text-2xl text-center">🔒</div>
+                            <div class="text-xs text-center mt-1">???</div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="text-sm text-blue-600 hover:underline">Alle 150 Erfolge →</a>
+                    </div>
+                </div>
+                
+                <!-- Lootbox (when available) -->
+                <div class="game-panel p-6 text-center" id="lootboxPanel" style="display: none;">
+                    <h3 class="text-lg font-bold mb-4">🎁 Lootbox verfügbar!</h3>
+                    <div class="flex justify-center">
+                        <div class="lootbox" onclick="openLootbox()">
+                            📦
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-3">Klicke zum Öffnen!</p>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Clinic & Encyclopedia -->
+            <div class="space-y-6">
+                <!-- Clinic Management -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">🏥 Meine Klinik</h3>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="clinic-room" onclick="upgradeRoom('treatment')">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🏥</div>
+                                <div class="text-xs font-bold">Behandlung</div>
+                                <div class="text-xs text-gray-600">Level 1</div>
+                            </div>
+                        </div>
+                        
+                        <div class="clinic-room locked" onclick="upgradeRoom('lab')">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🧪</div>
+                                <div class="text-xs font-bold">Labor</div>
+                                <div class="text-xs text-gray-600">Lv.5</div>
+                            </div>
+                        </div>
+                        
+                        <div class="clinic-room locked" onclick="upgradeRoom('surgery')">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🔪</div>
+                                <div class="text-xs font-bold">OP-Saal</div>
+                                <div class="text-xs text-gray-600">Lv.10</div>
+                            </div>
+                        </div>
+                        
+                        <div class="clinic-room locked" onclick="upgradeRoom('xray')">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">🦴</div>
+                                <div class="text-xs font-bold">Röntgen</div>
+                                <div class="text-xs text-gray-600">Lv.15</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Staff -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-sm">Personal</span>
+                            <button class="text-xs text-blue-600 hover:underline">Einstellen →</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <div class="text-center">
+                                <div class="text-2xl">👩‍⚕️</div>
+                                <div class="text-xs">Assistent</div>
+                            </div>
+                            <div class="text-center opacity-30">
+                                <div class="text-2xl">➕</div>
+                                <div class="text-xs">Lv.20</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Encyclopedia -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">📚 Tier-Enzyklopädie</h3>
+                    <div class="max-h-64 overflow-y-auto">
+                        <div class="encyclopedia-entry" onclick="viewEntry('dog')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🐕</span>
+                                    <div>
+                                        <div class="font-bold text-sm">Hund</div>
+                                        <div class="text-xs text-gray-600">5/10 Krankheiten</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-400">50%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="encyclopedia-entry" onclick="viewEntry('cat')">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🐈</span>
+                                    <div>
+                                        <div class="font-bold text-sm">Katze</div>
+                                        <div class="text-xs text-gray-600">3/10 Krankheiten</div>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-400">30%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="encyclopedia-entry locked">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl">🔒</span>
+                                    <div>
+                                        <div class="font-bold text-sm">???</div>
+                                        <div class="text-xs">Level 4</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 text-center">
+                        <div class="text-xs text-gray-600">Gesamt: 12/200 Tiere</div>
+                        <div class="bg-gray-200 rounded-full h-2 mt-1">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 6%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Multiplayer -->
+                <div class="game-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">👥 Multiplayer</h3>
+                    <div class="space-y-3">
+                        <button onclick="startCoop()" class="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                            🤝 Koop-Modus
+                        </button>
+                        <button onclick="startVersus()" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                            ⚔️ Versus-Modus
+                        </button>
+                        <button onclick="becomeMentor()" class="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition">
+                            🎓 Mentor werden
+                        </button>
+                    </div>
+                    
+                    <!-- Online Status -->
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="multiplayer-indicator">
+                            <span class="w-2 h-2 bg-white rounded-full"></span>
+                            <span class="text-sm">12 Spieler online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Floating Notifications -->
+        <div id="notifications"></div>
+    </div>
+
+    <script>
+        // Enhanced Game State with RPG Elements
+        let gameState = {
+            // Player Stats
+            player: {
+                name: 'Schmidt',
+                level: 1,
+                xp: 0,
+                xpRequired: 100,
+                title: 'Praktikant',
+                energy: 100,
+                maxEnergy: 100,
+                lives: 5,
+                coins: 1000,
+                gems: 10,
+                skillPoints: 0
+            },
+            
+            // Progress Tracking
+            stats: {
+                totalPatientsTreated: 0,
+                perfectDiagnoses: 0,
+                currentCombo: 0,
+                bestCombo: 0,
+                dailyStreak: 0,
+                totalXpEarned: 0,
+                bossesDefeated: 0
+            },
+            
+            // Unlocks & Skills
+            unlockedTools: ['stethoscope'],
+            unlockedAnimals: ['dog', 'cat'],
+            unlockedDiseases: ['cold', 'stomach'],
+            skills: {
+                basicDiagnosis: true,
+                surgery: false,
+                laboratory: false,
+                emergency: false
+            },
+            
+            // Clinic
+            clinic: {
+                treatmentLevel: 1,
+                labLevel: 0,
+                surgeryLevel: 0,
+                xrayLevel: 0,
+                staff: ['assistant1']
+            },
+            
+            // Collections
+            achievements: [],
+            encyclopedia: {},
+            dailyTasksCompleted: [],
+            
+            // Current Session
+            currentPatient: null,
+            currentMinigame: null,
+            currentEvent: null,
+            isBossBattle: false
+        };
+
+        // Level progression data
+        const levelData = {
+            titles: [
+                'Praktikant', 'Junior-Assistent', 'Assistent', 'Tierarzt-Helfer', 'Junior-Tierarzt',
+                'Tierarzt', 'Senior-Tierarzt', 'Spezialist', 'Oberarzt', 'Chefarzt',
+                'Klinikleiter', 'Regional-Direktor', 'Forschungsleiter', 'Professor', 'Legendär'
+            ],
+            
+            unlocks: {
+                2: { tool: 'thermometer', desc: 'Temperatur-Messung' },
+                3: { animal: 'rabbit', desc: 'Kaninchen-Patienten' },
+                5: { tool: 'xray', room: 'lab', desc: 'Röntgen & Labor' },
+                7: { feature: 'medications', desc: 'Medikamenten-Dosierung' },
+                10: { room: 'surgery', event: 'boss1', desc: 'OP-Saal & Boss-Kampf' },
+                15: { animal: 'exotic', desc: 'Exotische Tiere' },
+                20: { feature: 'research', desc: 'Forschungslabor' },
+                25: { animal: 'farm', desc: 'Nutztiere' },
+                30: { event: 'boss2', desc: 'Epidemie-Event' },
+                40: { feature: 'wildlife', desc: 'Wildtier-Rettung' },
+                50: { achievement: 'legendary', desc: 'Legendärer Status' }
+            }
+        };
+
+        // Daily tasks database
+        const dailyTasks = [
+            { id: 1, name: 'Erste Hilfe', desc: 'Behandle 3 Tiere', target: 3, reward: { xp: 50 } },
+            { id: 2, name: 'Perfektionist', desc: 'Perfekte Diagnose', target: 1, reward: { gems: 1 } },
+            { id: 3, name: 'Kombo-Meister', desc: '5x Combo erreichen', target: 5, reward: { lootbox: true } },
+            { id: 4, name: 'Schnell-Heiler', desc: 'Diagnose in 30 Sek', target: 30, reward: { coins: 200 } },
+            { id: 5, name: 'Lernwillig', desc: 'Lexikon-Eintrag lesen', target: 1, reward: { xp: 25 } }
+        ];
+
+        // Special events
+        const specialEvents = [
+            {
+                id: 'emergency_puppy',
+                name: 'Notfall: Verletzter Welpe',
+                description: 'Ein Welpe wurde angefahren! Rette ihn innerhalb von 5 Minuten!',
+                timeLimit: 300,
+                levelRequired: 3,
+                rewards: { xp: 200, gems: 3, achievement: 'lifesaver' }
+            },
+            {
+                id: 'epidemic',
+                name: 'Epidemie im Tierheim',
+                description: 'Mehrere Tiere sind krank! Behandle sie alle!',
+                patientsCount: 5,
+                levelRequired: 10,
+                rewards: { xp: 500, coins: 1000, achievement: 'epidemic_hero' }
+            }
+        ];
+
+        // 3D Scene
+        let scene, camera, renderer, animalModel;
+        
+        function init3D() {
+            const canvas = document.getElementById('canvas3d');
+            const container = canvas.parentElement;
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f9ff);
+            
+            camera = new THREE.PerspectiveCamera(
+                75,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            scene.add(directionalLight);
+            
+            createAnimalModel();
+            animate();
+        }
+        
+        function createAnimalModel() {
+            const group = new THREE.Group();
+            
+            // Enhanced model based on level
+            const bodyGeometry = new THREE.BoxGeometry(2.5, 1.2, 1.2);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: gameState.player.level > 10 ? 0xffd700 : 0x8b4513,
+                emissive: 0x442211,
+                shininess: 30
+            });
+            
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            group.add(body);
+            
+            // Add more details based on level
+            if (gameState.player.level >= 5) {
+                // Add detailed features
+                const headGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+                const head = new THREE.Mesh(headGeometry, bodyMaterial);
+                head.position.set(1.5, 0.3, 0);
+                group.add(head);
+            }
+            
+            animalModel = group;
+            scene.add(animalModel);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (animalModel) {
+                animalModel.rotation.y += 0.005;
+                
+                // Special effects for boss battles
+                if (gameState.isBossBattle) {
+                    animalModel.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
+                }
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Level & XP System
+        function gainXP(amount) {
+            gameState.player.xp += amount;
+            gameState.stats.totalXpEarned += amount;
+            
+            // Show floating XP
+            showFloatingXP(amount);
+            
+            // Check level up
+            while (gameState.player.xp >= gameState.player.xpRequired) {
+                levelUp();
+            }
+            
+            updateUI();
+        }
+        
+        function levelUp() {
+            gameState.player.xp -= gameState.player.xpRequired;
+            gameState.player.level++;
+            gameState.player.xpRequired = Math.floor(gameState.player.xpRequired * 1.5);
+            gameState.player.skillPoints++;
+            
+            // Update title
+            const titleIndex = Math.min(Math.floor(gameState.player.level / 5), levelData.titles.length - 1);
+            gameState.player.title = levelData.titles[titleIndex];
+            
+            // Check unlocks
+            checkUnlocks(gameState.player.level);
+            
+            // Show level up notification
+            showNotification(`🎉 LEVEL UP! Du bist jetzt Level ${gameState.player.level}!`, 'success');
+            
+            // Special rewards
+            if (gameState.player.level % 5 === 0) {
+                gameState.player.gems += 5;
+                showNotification(`💎 Bonus: +5 Edelsteine!`, 'reward');
+            }
+            
+            if (gameState.player.level % 10 === 0) {
+                triggerBossBattle();
+            }
+        }
+        
+        function checkUnlocks(level) {
+            const unlock = levelData.unlocks[level];
+            if (!unlock) return;
+            
+            if (unlock.tool) {
+                gameState.unlockedTools.push(unlock.tool);
+                document.getElementById(`tool-${unlock.tool}`).disabled = false;
+                document.getElementById(`tool-${unlock.tool}`).classList.remove('bg-gray-300', 'text-gray-500');
+                document.getElementById(`tool-${unlock.tool}`).classList.add('bg-blue-500', 'text-white');
+            }
+            
+            if (unlock.room) {
+                // Unlock clinic room
+                const roomElements = document.querySelectorAll('.clinic-room');
+                roomElements.forEach(room => {
+                    if (room.textContent.includes(unlock.room)) {
+                        room.classList.remove('locked');
+                    }
+                });
+            }
+            
+            if (unlock.animal) {
+                gameState.unlockedAnimals.push(unlock.animal);
+            }
+            
+            showNotification(`🔓 Freigeschaltet: ${unlock.desc}!`, 'unlock');
+            document.getElementById('nextUnlock').textContent = getNextUnlock();
+        }
+        
+        function getNextUnlock() {
+            for (let level in levelData.unlocks) {
+                if (parseInt(level) > gameState.player.level) {
+                    return `${levelData.unlocks[level].desc} (Level ${level})`;
+                }
+            }
+            return 'Maximales Level erreicht!';
+        }
+        
+        // Mini-Games
+        let minigameCombo = 0;
+        let beatInterval;
+        
+        function startHeartbeatMinigame() {
+            document.getElementById('minigamePanel').style.display = 'block';
+            minigameCombo = 0;
+            updateComboDisplay();
+            
+            // Start beat generation
+            beatInterval = setInterval(generateBeat, 2000 / (1 + gameState.player.level * 0.1));
+        }
+        
+        function hitBeat() {
+            // Check if any beat is in hit zone
+            const beats = document.querySelectorAll('.beat-marker');
+            let hit = false;
+            
+            beats.forEach(beat => {
+                const rect = beat.getBoundingClientRect();
+                const hitZone = document.querySelector('.hit-zone').getBoundingClientRect();
+                
+                if (rect.left > hitZone.left && rect.left < hitZone.right) {
+                    hit = true;
+                    minigameCombo++;
+                    
+                    // Calculate score based on accuracy
+                    const center = hitZone.left + hitZone.width / 2;
+                    const distance = Math.abs(rect.left - center);
+                    const accuracy = 1 - (distance / (hitZone.width / 2));
+                    
+                    if (accuracy > 0.8) {
+                        gainXP(10);
+                        showNotification('PERFEKT!', 'success');
+                    } else if (accuracy > 0.5) {
+                        gainXP(5);
+                        showNotification('GUT!', 'info');
+                    } else {
+                        gainXP(2);
+                        showNotification('OK', 'warning');
+                    }
+                    
+                    beat.style.display = 'none';
+                    setTimeout(() => beat.style.display = 'block', 2000);
+                }
+            });
+            
+            if (!hit) {
+                minigameCombo = 0;
+                gameState.player.lives--;
+                showNotification('VERPASST!', 'error');
+            }
+            
+            gameState.stats.currentCombo = minigameCombo;
+            if (minigameCombo > gameState.stats.bestCombo) {
+                gameState.stats.bestCombo = minigameCombo;
+            }
+            
+            updateComboDisplay();
+            updateUI();
+        }
+        
+        function updateComboDisplay() {
+            document.getElementById('comboDisplay').textContent = `Combo: ${minigameCombo}x`;
+            document.getElementById('comboCount').textContent = `${gameState.stats.currentCombo}x`;
+        }
+        
+        // Daily Tasks
+        function updateDailyTasks() {
+            const container = document.getElementById('dailyTasks');
+            container.innerHTML = '';
+            
+            dailyTasks.slice(0, 3).forEach(task => {
+                const completed = gameState.dailyTasksCompleted.includes(task.id);
+                const div = document.createElement('div');
+                div.className = `daily-task ${completed ? 'completed' : ''}`;
+                div.onclick = () => claimTask(task.id);
+                
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-bold">${task.name}</div>
+                            <div class="text-sm text-gray-600">${task.desc}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-500">${completed ? '✓' : `0/${task.target}`}</div>
+                            <div class="text-xs font-bold ${completed ? 'text-green-600' : 'text-yellow-600'}">
+                                ${formatReward(task.reward)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+        
+        function formatReward(reward) {
+            if (reward.xp) return `+${reward.xp} XP`;
+            if (reward.gems) return `+${reward.gems} 💎`;
+            if (reward.coins) return `+${reward.coins} 💰`;
+            if (reward.lootbox) return 'Lootbox';
+            return '';
+        }
+        
+        function claimTask(taskId) {
+            if (gameState.dailyTasksCompleted.includes(taskId)) {
+                showNotification('Aufgabe bereits abgeschlossen!', 'info');
+                return;
+            }
+            
+            // For demo: instantly complete
+            gameState.dailyTasksCompleted.push(taskId);
+            const task = dailyTasks.find(t => t.id === taskId);
+            
+            if (task.reward.xp) gainXP(task.reward.xp);
+            if (task.reward.gems) gameState.player.gems += task.reward.gems;
+            if (task.reward.coins) gameState.player.coins += task.reward.coins;
+            if (task.reward.lootbox) showLootbox();
+            
+            updateDailyTasks();
+            updateUI();
+            showNotification('Aufgabe abgeschlossen!', 'success');
+        }
+        
+        // Lootbox System
+        function showLootbox() {
+            document.getElementById('lootboxPanel').style.display = 'block';
+        }
+        
+        function openLootbox() {
+            const rewards = [
+                { type: 'xp', amount: Math.floor(Math.random() * 100) + 50 },
+                { type: 'coins', amount: Math.floor(Math.random() * 500) + 100 },
+                { type: 'gems', amount: Math.floor(Math.random() * 3) + 1 },
+                { type: 'energy', amount: 50 }
+            ];
+            
+            const reward = rewards[Math.floor(Math.random() * rewards.length)];
+            
+            switch(reward.type) {
+                case 'xp': 
+                    gainXP(reward.amount);
+                    showNotification(`🎁 +${reward.amount} XP!`, 'reward');
+                    break;
+                case 'coins':
+                    gameState.player.coins += reward.amount;
+                    showNotification(`🎁 +${reward.amount} Münzen!`, 'reward');
+                    break;
+                case 'gems':
+                    gameState.player.gems += reward.amount;
+                    showNotification(`🎁 +${reward.amount} Edelsteine!`, 'reward');
+                    break;
+                case 'energy':
+                    gameState.player.energy = Math.min(gameState.player.maxEnergy, gameState.player.energy + reward.amount);
+                    showNotification(`🎁 +${reward.amount} Energie!`, 'reward');
+                    break;
+            }
+            
+            document.getElementById('lootboxPanel').style.display = 'none';
+            updateUI();
+        }
+        
+        // Boss Battles
+        function triggerBossBattle() {
+            gameState.isBossBattle = true;
+            
+            const bosses = [
+                { name: 'Mysteriöse Krankheit', health: 100, level: 10 },
+                { name: 'Epidemie-Ausbruch', health: 200, level: 20 },
+                { name: 'Mutations-Virus', health: 300, level: 30 }
+            ];
+            
+            const boss = bosses[Math.floor(gameState.player.level / 10) - 1];
+            if (!boss) return;
+            
+            document.getElementById('bossHealthContainer').style.display = 'block';
+            showNotification(`⚠️ BOSS-KAMPF: ${boss.name}!`, 'boss');
+            
+            // Special boss mechanics
+            startBossBattle(boss);
+        }
+        
+        function startBossBattle(boss) {
+            let bossHealth = boss.health;
+            
+            const interval = setInterval(() => {
+                // Simulate battle progress
+                bossHealth -= 10;
+                const healthPercent = (bossHealth / boss.health) * 100;
+                document.getElementById('bossHealth').style.width = healthPercent + '%';
+                
+                if (bossHealth <= 0) {
+                    clearInterval(interval);
+                    defeatedBoss(boss);
+                }
+            }, 1000);
+        }
+        
+        function defeatedBoss(boss) {
+            gameState.isBossBattle = false;
+            gameState.stats.bossesDefeated++;
+            
+            document.getElementById('bossHealthContainer').style.display = 'none';
+            
+            // Epic rewards
+            gainXP(500);
+            gameState.player.gems += 10;
+            gameState.player.coins += 2000;
+            
+            showNotification(`🏆 BOSS BESIEGT! ${boss.name} wurde bezwungen!`, 'epic');
+            
+            // Unlock special achievement
+            unlockAchievement('boss_slayer');
+        }
+        
+        // Special Events
+        function checkForSpecialEvent() {
+            if (Math.random() < 0.1 && gameState.player.level >= 3) {
+                const availableEvents = specialEvents.filter(e => e.levelRequired <= gameState.player.level);
+                if (availableEvents.length > 0) {
+                    const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+                    startSpecialEvent(event);
+                }
+            }
+        }
+        
+        function startSpecialEvent(event) {
+            gameState.currentEvent = event;
+            
+            document.getElementById('eventBanner').style.display = 'block';
+            document.getElementById('eventDescription').textContent = event.description;
+            
+            if (event.timeLimit) {
+                let timeLeft = event.timeLimit;
+                const timerInterval = setInterval(() => {
+                    timeLeft--;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    document.getElementById('eventTimer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        failEvent();
+                    }
+                }, 1000);
+            }
+        }
+        
+        function completeEvent() {
+            const event = gameState.currentEvent;
+            if (!event) return;
+            
+            gainXP(event.rewards.xp);
+            if (event.rewards.gems) gameState.player.gems += event.rewards.gems;
+            if (event.rewards.coins) gameState.player.coins += event.rewards.coins;
+            if (event.rewards.achievement) unlockAchievement(event.rewards.achievement);
+            
+            document.getElementById('eventBanner').style.display = 'none';
+            showNotification('🎉 Event abgeschlossen!', 'success');
+            
+            gameState.currentEvent = null;
+        }
+        
+        function failEvent() {
+            document.getElementById('eventBanner').style.display = 'none';
+            showNotification('❌ Event fehlgeschlagen!', 'error');
+            gameState.currentEvent = null;
+        }
+        
+        // Skills System
+        function selectSkill(skillId) {
+            if (gameState.player.skillPoints <= 0) {
+                showNotification('Keine Skill-Punkte verfügbar!', 'warning');
+                return;
+            }
+            
+            if (gameState.skills[skillId]) {
+                showNotification('Skill bereits freigeschaltet!', 'info');
+                return;
+            }
+            
+            gameState.skills[skillId] = true;
+            gameState.player.skillPoints--;
+            
+            // Update UI
+            event.target.classList.remove('available');
+            event.target.classList.add('unlocked');
+            
+            showNotification(`✨ Skill freigeschaltet: ${skillId}!`, 'success');
+            updateUI();
+        }
+        
+        function resetSkills() {
+            if (gameState.player.gems < 50) {
+                showNotification('Nicht genug Edelsteine!', 'error');
+                return;
+            }
+            
+            gameState.player.gems -= 50;
+            gameState.player.skillPoints = gameState.player.level;
+            
+            // Reset all skills except basic
+            for (let skill in gameState.skills) {
+                if (skill !== 'basicDiagnosis') {
+                    gameState.skills[skill] = false;
+                }
+            }
+            
+            showNotification('Skills zurückgesetzt!', 'success');
+            updateUI();
+        }
+        
+        // Achievements
+        function unlockAchievement(achievementId) {
+            if (gameState.achievements.includes(achievementId)) return;
+            
+            gameState.achievements.push(achievementId);
+            showNotification(`🏆 Erfolg freigeschaltet!`, 'achievement');
+            
+            // Bonus rewards
+            gainXP(50);
+            gameState.player.gems++;
+        }
+        
+        // UI Updates
+        function updateUI() {
+            // Player stats
+            document.getElementById('playerLevel').textContent = gameState.player.level;
+            document.getElementById('playerTitle').textContent = gameState.player.title;
+            
+            // XP Bar
+            const xpPercent = (gameState.player.xp / gameState.player.xpRequired) * 100;
+            document.getElementById('xpBar').style.width = xpPercent + '%';
+            document.getElementById('xpText').textContent = `${gameState.player.xp} / ${gameState.player.xpRequired} XP`;
+            
+            // Resources
+            document.getElementById('energyBar').style.width = (gameState.player.energy / gameState.player.maxEnergy * 100) + '%';
+            document.getElementById('energyText').textContent = `${gameState.player.energy}/${gameState.player.maxEnergy}`;
+            document.getElementById('lives').textContent = gameState.player.lives;
+            document.getElementById('coins').textContent = gameState.player.coins;
+            document.getElementById('gems').textContent = gameState.player.gems;
+            document.getElementById('skillPoints').textContent = gameState.player.skillPoints;
+            document.getElementById('availableSkillPoints').textContent = gameState.player.skillPoints;
+            
+            // Stats
+            document.getElementById('comboCount').textContent = `${gameState.stats.currentCombo}x`;
+            document.getElementById('dailyStreak').textContent = gameState.stats.dailyStreak;
+        }
+        
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-4 p-4 rounded-xl shadow-2xl text-white font-bold z-50 animate-bounce`;
+            
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500',
+                reward: 'bg-purple-500',
+                unlock: 'bg-indigo-500',
+                achievement: 'bg-yellow-400',
+                boss: 'bg-red-700',
+                epic: 'bg-gradient-to-r from-purple-600 to-pink-600'
+            };
+            
+            notification.classList.add(colors[type] || colors.info);
+            notification.textContent = message;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s ease';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+        
+        function showFloatingXP(amount) {
+            const xp = document.createElement('div');
+            xp.className = 'floating-xp';
+            xp.textContent = `+${amount} XP`;
+            xp.style.left = Math.random() * window.innerWidth + 'px';
+            xp.style.top = (window.innerHeight / 2) + 'px';
+            
+            document.body.appendChild(xp);
+            
+            setTimeout(() => xp.remove(), 2000);
+        }
+        
+        // Multiplayer stubs
+        function startCoop() {
+            showNotification('Koop-Modus kommt bald!', 'info');
+        }
+        
+        function startVersus() {
+            showNotification('Versus-Modus kommt bald!', 'info');
+        }
+        
+        function becomeMentor() {
+            if (gameState.player.level < 20) {
+                showNotification('Mentor-Status ab Level 20!', 'warning');
+                return;
+            }
+            showNotification('Mentor-System kommt bald!', 'info');
+        }
+        
+        // Clinic upgrades
+        function upgradeRoom(roomType) {
+            const costs = {
+                treatment: 500,
+                lab: 1000,
+                surgery: 2000,
+                xray: 3000
+            };
+            
+            if (gameState.player.coins < costs[roomType]) {
+                showNotification('Nicht genug Münzen!', 'error');
+                return;
+            }
+            
+            gameState.player.coins -= costs[roomType];
+            gameState.clinic[roomType + 'Level']++;
+            
+            showNotification(`${roomType} ausgebaut!`, 'success');
+            updateUI();
+        }
+        
+        // Encyclopedia
+        function viewEntry(animalType) {
+            if (!gameState.unlockedAnimals.includes(animalType)) {
+                showNotification('Noch nicht freigeschaltet!', 'warning');
+                return;
+            }
+            
+            // Show detailed info (placeholder)
+            showNotification(`${animalType} Enzyklopädie geöffnet!`, 'info');
+        }
+        
+        // Initialize Game
+        window.addEventListener('load', () => {
+            init3D();
+            updateUI();
+            updateDailyTasks();
+            
+            // Start game loops
+            setInterval(() => {
+                // Energy regeneration
+                if (gameState.player.energy < gameState.player.maxEnergy) {
+                    gameState.player.energy++;
+                    updateUI();
+                }
+                
+                // Check for events
+                checkForSpecialEvent();
+            }, 5000);
+            
+            // Welcome message
+            showNotification('Willkommen zum Tierarzt-Karriere Simulator!', 'success');
+            showNotification(`Du bist Level ${gameState.player.level} - ${gameState.player.title}`, 'info');
+            
+            // Demo: Start with heartbeat minigame
+            setTimeout(() => {
+                showNotification('Tutorial: Probiere das Herzschlag-Minispiel!', 'info');
+                startHeartbeatMinigame();
+            }, 3000);
+        });
+        
+        // Auto-save
+        setInterval(() => {
+            localStorage.setItem('vetProGameState', JSON.stringify(gameState));
+        }, 10000);
+    </script>
+</body>
+</html>

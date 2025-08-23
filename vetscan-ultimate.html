@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Ultimate - 3D Veterinär Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .orbitron {
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px rgba(34, 211, 238, 0.5),
+                        0 0 20px rgba(34, 211, 238, 0.3),
+                        0 0 30px rgba(34, 211, 238, 0.2);
+        }
+        
+        .hologram-effect {
+            background: linear-gradient(45deg, 
+                rgba(34, 211, 238, 0.1) 0%,
+                rgba(34, 211, 238, 0.3) 50%,
+                rgba(34, 211, 238, 0.1) 100%);
+            animation: hologram 3s ease-in-out infinite;
+        }
+        
+        @keyframes hologram {
+            0%, 100% { opacity: 0.8; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-2px); }
+        }
+        
+        .scanner-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent 0%,
+                rgba(34, 211, 238, 0.8) 50%,
+                transparent 100%);
+            animation: scan 2s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+        
+        .pulse-dot {
+            width: 12px;
+            height: 12px;
+            background: #22d3ee;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+        
+        .level-bar {
+            height: 8px;
+            background: rgba(34, 211, 238, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .level-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #22d3ee, #06b6d4);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+        
+        .skill-badge {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 2px solid #22d3ee;
+            border-radius: 12px;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.3);
+        }
+        
+        .diagnostic-tool {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(34, 211, 238, 0.3);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .diagnostic-tool:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(34, 211, 238, 0.4);
+            border-color: #22d3ee;
+        }
+        
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+            animation: slideIn 0.5s ease, slideOut 0.5s ease 3s forwards;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+        
+        .organ-highlight {
+            fill: rgba(34, 211, 238, 0.3);
+            stroke: #22d3ee;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .organ-highlight:hover {
+            fill: rgba(34, 211, 238, 0.5);
+            stroke-width: 3;
+        }
+        
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(34, 211, 238, 0.2);
+            border-top: 4px solid #22d3ee;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-950">
+    <div id="app" class="min-h-screen p-4">
+        <!-- Header mit Spieler-Stats -->
+        <header class="glass-panel p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="text-4xl">👨‍⚕️</div>
+                    <div>
+                        <h1 class="orbitron text-2xl font-bold text-cyan-300 neon-text">VetScan Ultimate</h1>
+                        <p class="text-gray-400 text-sm" id="playerName">Dr. Schmidt</p>
+                    </div>
+                </div>
+                
+                <!-- Level & XP -->
+                <div class="flex-1 max-w-md">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-cyan-300 text-sm font-semibold">Level <span id="playerLevel">1</span></span>
+                        <span class="text-gray-400 text-xs"><span id="currentXP">0</span> / <span id="requiredXP">100</span> XP</span>
+                    </div>
+                    <div class="level-bar">
+                        <div class="level-progress" id="xpBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Ressourcen -->
+                <div class="flex gap-4">
+                    <div class="skill-badge">
+                        <span>💰</span>
+                        <span class="text-cyan-300 font-bold" id="credits">1000</span>
+                    </div>
+                    <div class="skill-badge">
+                        <span>⭐</span>
+                        <span class="text-yellow-300 font-bold" id="reputation">100</span>
+                    </div>
+                    <div class="skill-badge">
+                        <span>🏆</span>
+                        <span class="text-purple-300 font-bold" id="achievements">0</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hauptbereich -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 3D Viewer -->
+            <div class="lg:col-span-2 glass-panel p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-cyan-300">3D-Untersuchung</h2>
+                    <div class="flex gap-2">
+                        <button onclick="switchView('normal')" class="px-4 py-2 bg-gray-800 text-cyan-300 rounded-lg hover:bg-gray-700 transition">Normal</button>
+                        <button onclick="switchView('xray')" class="px-4 py-2 bg-gray-800 text-cyan-300 rounded-lg hover:bg-gray-700 transition">Röntgen</button>
+                        <button onclick="switchView('mri')" class="px-4 py-2 bg-gray-800 text-cyan-300 rounded-lg hover:bg-gray-700 transition">MRT</button>
+                    </div>
+                </div>
+                
+                <div class="relative bg-gray-900 rounded-xl overflow-hidden" style="height: 500px;">
+                    <div class="scanner-line"></div>
+                    <canvas id="canvas3d"></canvas>
+                    
+                    <!-- Organ-Info Overlay -->
+                    <div id="organInfo" class="absolute top-4 left-4 glass-panel p-3 rounded-lg hidden">
+                        <h3 class="text-cyan-300 font-bold mb-1" id="organName">Herz</h3>
+                        <p class="text-gray-400 text-sm" id="organStatus">Status: Normal</p>
+                        <div class="mt-2 text-xs text-gray-500" id="organDetails"></div>
+                    </div>
+                </div>
+                
+                <!-- Diagnose-Tools -->
+                <div class="grid grid-cols-4 gap-3 mt-4">
+                    <div class="diagnostic-tool text-center" onclick="useTool('stethoscope')">
+                        <div class="text-2xl mb-1">🩺</div>
+                        <div class="text-xs text-gray-400">Stethoskop</div>
+                    </div>
+                    <div class="diagnostic-tool text-center" onclick="useTool('thermometer')">
+                        <div class="text-2xl mb-1">🌡️</div>
+                        <div class="text-xs text-gray-400">Thermometer</div>
+                    </div>
+                    <div class="diagnostic-tool text-center" onclick="useTool('bloodtest')">
+                        <div class="text-2xl mb-1">💉</div>
+                        <div class="text-xs text-gray-400">Bluttest</div>
+                    </div>
+                    <div class="diagnostic-tool text-center" onclick="useTool('ultrasound')">
+                        <div class="text-2xl mb-1">📡</div>
+                        <div class="text-xs text-gray-400">Ultraschall</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rechte Sidebar -->
+            <div class="space-y-6">
+                <!-- Patient Info -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-lg font-bold text-cyan-300 mb-4">Patient</h3>
+                    <div class="text-center mb-4">
+                        <div class="text-6xl mb-2" id="patientEmoji">🐕</div>
+                        <h4 class="text-white font-semibold" id="patientName">Max</h4>
+                        <p class="text-gray-400 text-sm" id="patientInfo">Golden Retriever, 5 Jahre</p>
+                    </div>
+                    
+                    <!-- Vitalwerte -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">❤️ Herzrate</span>
+                            <span class="text-cyan-300 font-mono" id="heartRate">-- BPM</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">🌡️ Temperatur</span>
+                            <span class="text-cyan-300 font-mono" id="temperature">-- °C</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">💨 Atmung</span>
+                            <span class="text-cyan-300 font-mono" id="respiration">-- /min</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-400 text-sm">🩸 Blutdruck</span>
+                            <span class="text-cyan-300 font-mono" id="bloodPressure">--/-- mmHg</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Symptome -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-lg font-bold text-cyan-300 mb-4">Symptome</h3>
+                    <div class="space-y-2" id="symptomsList">
+                        <div class="text-gray-400 text-sm">Untersuche den Patienten...</div>
+                    </div>
+                </div>
+                
+                <!-- Diagnose -->
+                <div class="glass-panel p-6">
+                    <h3 class="text-lg font-bold text-cyan-300 mb-4">Diagnose</h3>
+                    <select id="diagnosisSelect" class="w-full bg-gray-800 text-cyan-300 rounded-lg px-4 py-2 mb-3">
+                        <option value="">Wähle Diagnose...</option>
+                        <optgroup label="Häufige Erkrankungen">
+                            <option value="gastritis">Gastritis</option>
+                            <option value="arthritis">Arthritis</option>
+                            <option value="otitis">Ohrenentzündung</option>
+                        </optgroup>
+                        <optgroup label="Notfälle">
+                            <option value="magendrehung">Magendrehung</option>
+                            <option value="vergiftung">Vergiftung</option>
+                        </optgroup>
+                    </select>
+                    <button onclick="submitDiagnosis()" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold py-3 rounded-lg hover:from-cyan-600 hover:to-blue-600 transition">
+                        Diagnose stellen
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Karriere-Fortschritt -->
+        <div class="glass-panel p-6 mt-6">
+            <h3 class="text-lg font-bold text-cyan-300 mb-4">Karriere-Fortschritt</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-3xl mb-1">🎓</div>
+                    <div class="text-cyan-300 font-bold" id="totalCases">0</div>
+                    <div class="text-gray-400 text-xs">Fälle behandelt</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-1">✅</div>
+                    <div class="text-green-400 font-bold" id="successRate">0%</div>
+                    <div class="text-gray-400 text-xs">Erfolgsrate</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-1">⏱️</div>
+                    <div class="text-yellow-300 font-bold" id="avgTime">--</div>
+                    <div class="text-gray-400 text-xs">Ø Diagnosezeit</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl mb-1">🏥</div>
+                    <div class="text-purple-300 font-bold" id="clinicLevel">1</div>
+                    <div class="text-gray-400 text-xs">Klinik-Level</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Achievement Popup (hidden by default) -->
+    <div id="achievementPopup" class="achievement-popup hidden">
+        <div class="flex items-center gap-3">
+            <div class="text-2xl">🏆</div>
+            <div>
+                <div class="font-bold" id="achievementTitle">Erfolg freigeschaltet!</div>
+                <div class="text-sm opacity-90" id="achievementDesc">Beschreibung</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let gameState = {
+            player: {
+                name: 'Dr. Schmidt',
+                level: 1,
+                xp: 0,
+                xpRequired: 100,
+                credits: 1000,
+                reputation: 100,
+                achievements: [],
+                skills: {
+                    diagnosis: 1,
+                    surgery: 0,
+                    emergency: 0,
+                    exotic: 0
+                }
+            },
+            stats: {
+                totalCases: 0,
+                successfulCases: 0,
+                totalTime: 0,
+                clinicLevel: 1
+            },
+            currentPatient: null,
+            currentSymptoms: [],
+            toolsUsed: [],
+            startTime: null
+        };
+
+        // 3D Scene Setup
+        let scene, camera, renderer, animalModel;
+        let currentView = 'normal';
+        
+        function init3D() {
+            const canvas = document.getElementById('canvas3d');
+            const container = canvas.parentElement;
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f172a);
+            scene.fog = new THREE.Fog(0x0f172a, 10, 50);
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(
+                75,
+                container.clientWidth / container.clientHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 2, 5);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0x404040, 2);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0x22d3ee, 1);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0x22d3ee, 1, 100);
+            pointLight.position.set(0, 5, 0);
+            scene.add(pointLight);
+            
+            // Create simple animal model (dog)
+            createAnimalModel();
+            
+            // Animation loop
+            animate();
+            
+            // Handle resize
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        function createAnimalModel() {
+            const geometry = new THREE.Group();
+            
+            // Body
+            const bodyGeometry = new THREE.BoxGeometry(2, 1, 1);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x8b4513,
+                emissive: 0x111111,
+                specular: 0x222222,
+                shininess: 30
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            geometry.add(body);
+            
+            // Head
+            const headGeometry = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.set(1.2, 0.3, 0);
+            head.castShadow = true;
+            geometry.add(head);
+            
+            // Legs
+            const legGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.8);
+            const legMaterial = new THREE.MeshPhongMaterial({ color: 0x654321 });
+            
+            for (let i = 0; i < 4; i++) {
+                const leg = new THREE.Mesh(legGeometry, legMaterial);
+                const x = i < 2 ? 0.7 : -0.7;
+                const z = i % 2 === 0 ? 0.3 : -0.3;
+                leg.position.set(x, -0.8, z);
+                leg.castShadow = true;
+                geometry.add(leg);
+            }
+            
+            // Tail
+            const tailGeometry = new THREE.ConeGeometry(0.2, 0.8, 8);
+            const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+            tail.position.set(-1.3, 0.2, 0);
+            tail.rotation.z = -Math.PI / 4;
+            geometry.add(tail);
+            
+            animalModel = geometry;
+            scene.add(animalModel);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate model
+            if (animalModel) {
+                animalModel.rotation.y += 0.005;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        function onWindowResize() {
+            const container = renderer.domElement.parentElement;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        function switchView(view) {
+            currentView = view;
+            
+            if (!animalModel) return;
+            
+            // Change material based on view
+            animalModel.traverse((child) => {
+                if (child.isMesh) {
+                    switch(view) {
+                        case 'xray':
+                            child.material = new THREE.MeshBasicMaterial({
+                                color: 0xffffff,
+                                wireframe: true,
+                                opacity: 0.3,
+                                transparent: true
+                            });
+                            break;
+                        case 'mri':
+                            child.material = new THREE.MeshPhongMaterial({
+                                color: 0x00ff00,
+                                emissive: 0x002200,
+                                opacity: 0.7,
+                                transparent: true
+                            });
+                            break;
+                        default:
+                            child.material = new THREE.MeshPhongMaterial({
+                                color: 0x8b4513,
+                                emissive: 0x111111
+                            });
+                    }
+                }
+            });
+        }
+        
+        // Game Functions
+        function generatePatient() {
+            const animals = [
+                { emoji: '🐕', name: 'Max', type: 'Golden Retriever', age: 5 },
+                { emoji: '🐈', name: 'Luna', type: 'Perserkatze', age: 3 },
+                { emoji: '🐰', name: 'Hopsi', type: 'Zwergkaninchen', age: 2 },
+                { emoji: '🦜', name: 'Coco', type: 'Papagei', age: 8 }
+            ];
+            
+            const conditions = [
+                { 
+                    id: 'gastritis', 
+                    name: 'Gastritis',
+                    symptoms: ['Erbrechen', 'Appetitlosigkeit', 'Bauchschmerzen'],
+                    vitals: { heartRate: 110, temperature: 38.9, respiration: 25, bloodPressure: '130/85' }
+                },
+                {
+                    id: 'arthritis',
+                    name: 'Arthritis',
+                    symptoms: ['Lahmheit', 'Gelenkschwellung', 'Bewegungsunlust'],
+                    vitals: { heartRate: 95, temperature: 38.5, respiration: 20, bloodPressure: '125/80' }
+                },
+                {
+                    id: 'otitis',
+                    name: 'Ohrenentzündung',
+                    symptoms: ['Kopfschütteln', 'Kratzen am Ohr', 'Übler Geruch'],
+                    vitals: { heartRate: 100, temperature: 39.2, respiration: 22, bloodPressure: '120/75' }
+                }
+            ];
+            
+            const patient = animals[Math.floor(Math.random() * animals.length)];
+            const condition = conditions[Math.floor(Math.random() * conditions.length)];
+            
+            gameState.currentPatient = {
+                ...patient,
+                condition: condition,
+                vitals: { ...condition.vitals }
+            };
+            
+            gameState.currentSymptoms = [];
+            gameState.toolsUsed = [];
+            gameState.startTime = Date.now();
+            
+            updatePatientDisplay();
+        }
+        
+        function updatePatientDisplay() {
+            const patient = gameState.currentPatient;
+            if (!patient) return;
+            
+            document.getElementById('patientEmoji').textContent = patient.emoji;
+            document.getElementById('patientName').textContent = patient.name;
+            document.getElementById('patientInfo').textContent = `${patient.type}, ${patient.age} Jahre`;
+            
+            // Reset vitals
+            document.getElementById('heartRate').textContent = '-- BPM';
+            document.getElementById('temperature').textContent = '-- °C';
+            document.getElementById('respiration').textContent = '-- /min';
+            document.getElementById('bloodPressure').textContent = '--/-- mmHg';
+            
+            // Clear symptoms
+            document.getElementById('symptomsList').innerHTML = '<div class="text-gray-400 text-sm">Untersuche den Patienten...</div>';
+        }
+        
+        function useTool(tool) {
+            if (!gameState.currentPatient) return;
+            
+            if (gameState.toolsUsed.includes(tool)) {
+                showNotification('Tool bereits verwendet!', 'warning');
+                return;
+            }
+            
+            gameState.toolsUsed.push(tool);
+            const patient = gameState.currentPatient;
+            
+            switch(tool) {
+                case 'stethoscope':
+                    document.getElementById('heartRate').textContent = `${patient.vitals.heartRate} BPM`;
+                    document.getElementById('respiration').textContent = `${patient.vitals.respiration} /min`;
+                    addSymptom('Herzgeräusche untersucht');
+                    gainXP(5);
+                    break;
+                    
+                case 'thermometer':
+                    document.getElementById('temperature').textContent = `${patient.vitals.temperature} °C`;
+                    if (patient.vitals.temperature > 39) {
+                        addSymptom('Fieber festgestellt');
+                    }
+                    gainXP(5);
+                    break;
+                    
+                case 'bloodtest':
+                    document.getElementById('bloodPressure').textContent = patient.vitals.bloodPressure;
+                    addSymptom('Blutbild analysiert');
+                    gainXP(10);
+                    break;
+                    
+                case 'ultrasound':
+                    // Reveal condition-specific symptoms
+                    if (patient.condition && patient.condition.symptoms) {
+                        patient.condition.symptoms.forEach(symptom => addSymptom(symptom));
+                    }
+                    gainXP(15);
+                    break;
+            }
+        }
+        
+        function addSymptom(symptom) {
+            if (!gameState.currentSymptoms.includes(symptom)) {
+                gameState.currentSymptoms.push(symptom);
+                updateSymptomsDisplay();
+            }
+        }
+        
+        function updateSymptomsDisplay() {
+            const list = document.getElementById('symptomsList');
+            list.innerHTML = gameState.currentSymptoms.map(symptom => 
+                `<div class="flex items-center gap-2">
+                    <div class="pulse-dot"></div>
+                    <span class="text-gray-300 text-sm">${symptom}</span>
+                </div>`
+            ).join('');
+        }
+        
+        function submitDiagnosis() {
+            const selected = document.getElementById('diagnosisSelect').value;
+            if (!selected) {
+                showNotification('Bitte wähle eine Diagnose!', 'error');
+                return;
+            }
+            
+            const correct = gameState.currentPatient && 
+                           gameState.currentPatient.condition && 
+                           gameState.currentPatient.condition.id === selected;
+            
+            const timeSpent = Math.floor((Date.now() - gameState.startTime) / 1000);
+            
+            gameState.stats.totalCases++;
+            gameState.stats.totalTime += timeSpent;
+            
+            if (correct) {
+                gameState.stats.successfulCases++;
+                const xpEarned = 50 + Math.max(0, 30 - timeSpent); // Bonus für schnelle Diagnose
+                const creditsEarned = 100 + Math.floor(Math.random() * 50);
+                
+                gainXP(xpEarned);
+                gameState.player.credits += creditsEarned;
+                gameState.player.reputation += 5;
+                
+                showNotification(`✅ Korrekte Diagnose! +${xpEarned} XP, +${creditsEarned} 💰`, 'success');
+                
+                // Check achievements
+                checkAchievements();
+            } else {
+                gameState.player.reputation = Math.max(0, gameState.player.reputation - 10);
+                showNotification('❌ Falsche Diagnose. Versuche es erneut!', 'error');
+            }
+            
+            updateStats();
+            
+            // Generate new patient after delay
+            setTimeout(generatePatient, 2000);
+        }
+        
+        function gainXP(amount) {
+            gameState.player.xp += amount;
+            
+            // Level up check
+            while (gameState.player.xp >= gameState.player.xpRequired) {
+                gameState.player.xp -= gameState.player.xpRequired;
+                gameState.player.level++;
+                gameState.player.xpRequired = gameState.player.level * 100;
+                
+                showAchievement('Level Up!', `Du bist jetzt Level ${gameState.player.level}!`);
+            }
+            
+            updatePlayerStats();
+        }
+        
+        function updatePlayerStats() {
+            document.getElementById('playerLevel').textContent = gameState.player.level;
+            document.getElementById('currentXP').textContent = gameState.player.xp;
+            document.getElementById('requiredXP').textContent = gameState.player.xpRequired;
+            document.getElementById('credits').textContent = gameState.player.credits;
+            document.getElementById('reputation').textContent = gameState.player.reputation;
+            document.getElementById('achievements').textContent = gameState.player.achievements.length;
+            
+            const xpPercent = (gameState.player.xp / gameState.player.xpRequired) * 100;
+            document.getElementById('xpBar').style.width = xpPercent + '%';
+        }
+        
+        function updateStats() {
+            document.getElementById('totalCases').textContent = gameState.stats.totalCases;
+            
+            const successRate = gameState.stats.totalCases > 0 
+                ? Math.round((gameState.stats.successfulCases / gameState.stats.totalCases) * 100)
+                : 0;
+            document.getElementById('successRate').textContent = successRate + '%';
+            
+            const avgTime = gameState.stats.totalCases > 0
+                ? Math.round(gameState.stats.totalTime / gameState.stats.totalCases)
+                : 0;
+            document.getElementById('avgTime').textContent = avgTime + 's';
+            
+            // Update clinic level based on reputation
+            gameState.stats.clinicLevel = Math.floor(gameState.player.reputation / 100) + 1;
+            document.getElementById('clinicLevel').textContent = gameState.stats.clinicLevel;
+        }
+        
+        function checkAchievements() {
+            const achievements = [
+                { id: 'first_diagnosis', name: 'Erste Diagnose', desc: 'Stelle deine erste korrekte Diagnose', condition: () => gameState.stats.successfulCases === 1 },
+                { id: 'fast_diagnosis', name: 'Blitzdiagnose', desc: 'Diagnose in unter 10 Sekunden', condition: () => (Date.now() - gameState.startTime) < 10000 },
+                { id: 'perfect_10', name: 'Perfekte 10', desc: '10 korrekte Diagnosen in Folge', condition: () => gameState.stats.successfulCases >= 10 },
+                { id: 'level_5', name: 'Erfahrener Veterinär', desc: 'Erreiche Level 5', condition: () => gameState.player.level >= 5 },
+                { id: 'rich_doc', name: 'Wohlhabender Arzt', desc: 'Sammle 5000 Credits', condition: () => gameState.player.credits >= 5000 }
+            ];
+            
+            achievements.forEach(achievement => {
+                if (!gameState.player.achievements.includes(achievement.id) && achievement.condition()) {
+                    gameState.player.achievements.push(achievement.id);
+                    showAchievement(achievement.name, achievement.desc);
+                    gainXP(25);
+                }
+            });
+        }
+        
+        function showAchievement(title, desc) {
+            const popup = document.getElementById('achievementPopup');
+            document.getElementById('achievementTitle').textContent = title;
+            document.getElementById('achievementDesc').textContent = desc;
+            
+            popup.classList.remove('hidden');
+            setTimeout(() => {
+                popup.classList.add('hidden');
+            }, 4000);
+        }
+        
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 animate-pulse';
+            
+            switch(type) {
+                case 'success':
+                    notification.className += ' bg-green-600 text-white';
+                    break;
+                case 'error':
+                    notification.className += ' bg-red-600 text-white';
+                    break;
+                case 'warning':
+                    notification.className += ' bg-yellow-600 text-white';
+                    break;
+                default:
+                    notification.className += ' bg-blue-600 text-white';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        // Initialize game
+        window.addEventListener('load', () => {
+            init3D();
+            generatePatient();
+            updatePlayerStats();
+            updateStats();
+        });
+        
+        // Save game state to localStorage periodically
+        setInterval(() => {
+            localStorage.setItem('vetScanGameState', JSON.stringify(gameState));
+        }, 5000);
+        
+        // Load saved game state if exists
+        const savedState = localStorage.getItem('vetScanGameState');
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                // Merge with default state to ensure all properties exist
+                gameState = { ...gameState, ...parsed };
+            } catch (e) {
+                console.error('Failed to load saved game state');
+            }
+        }
+    </script>
+</body>
+</html>

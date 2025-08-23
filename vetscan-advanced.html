@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro 3000 - Advanced Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px currentColor; }
+            50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+        .urgency-critical {
+            animation: pulse 0.5s ease-in-out infinite;
+            border-color: #ef4444;
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip-trigger:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-cyan-300 font-mono">
+    <div id="root" class="min-h-screen">
+        <!-- Loading Screen -->
+        <div class="flex items-center justify-center min-h-screen">
+            <div class="text-center">
+                <div class="animate-spin text-cyan-400 text-6xl mb-4">⚙</div>
+                <p class="text-xl">VetScan Pro 3000 Advanced lädt...</p>
+                <p class="text-sm text-cyan-600 mt-2">Medizinische Datenbank wird initialisiert...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // MEDIZINISCHE DATENBASIS
+        // ============================================
+        
+        const vitalNormalRanges = {
+            hund: {
+                heartRate: { min: 70, max: 120, unit: 'BPM', description: 'Kleine Rassen: 100-120, Große: 70-100' },
+                temperature: { min: 37.8, max: 39.2, unit: '°C', description: 'Rektal gemessen' },
+                bloodPressure: { min: 110, max: 160, unit: 'mmHg', description: 'Systolisch' },
+                oxygenLevel: { min: 95, max: 100, unit: '%', description: 'SpO₂' },
+                respirationRate: { min: 10, max: 30, unit: '/min', description: 'In Ruhe' },
+                bloodGlucose: { min: 80, max: 120, unit: 'mg/dl', description: 'Nüchtern' }
+            },
+            katze: {
+                heartRate: { min: 140, max: 220, unit: 'BPM', description: 'Ruhe: 160-180' },
+                temperature: { min: 38.1, max: 39.2, unit: '°C', description: 'Rektal' },
+                bloodPressure: { min: 120, max: 170, unit: 'mmHg', description: 'Systolisch' },
+                oxygenLevel: { min: 95, max: 100, unit: '%', description: 'SpO₂' },
+                respirationRate: { min: 20, max: 30, unit: '/min', description: 'Bis 40 normal' },
+                bloodGlucose: { min: 80, max: 120, unit: 'mg/dl', description: 'Nüchtern' }
+            },
+            pferd: {
+                heartRate: { min: 28, max: 44, unit: 'BPM', description: 'Ø 32-42' },
+                temperature: { min: 37.2, max: 38.3, unit: '°C', description: 'Rektal' },
+                bloodPressure: { min: 120, max: 180, unit: 'mmHg', description: 'Systolisch' },
+                oxygenLevel: { min: 95, max: 100, unit: '%', description: 'SpO₂' },
+                respirationRate: { min: 8, max: 16, unit: '/min', description: 'In Ruhe' },
+                bloodGlucose: { min: 70, max: 135, unit: 'mg/dl', description: 'Nüchtern' }
+            },
+            kaninchen: {
+                heartRate: { min: 180, max: 250, unit: 'BPM', description: 'Bis 325 bei Stress' },
+                temperature: { min: 38.5, max: 40.0, unit: '°C', description: 'Rektal' },
+                bloodPressure: { min: 75, max: 134, unit: 'mmHg', description: 'Systolisch' },
+                oxygenLevel: { min: 95, max: 100, unit: '%', description: 'SpO₂' },
+                respirationRate: { min: 30, max: 60, unit: '/min', description: 'Bis 100 bei Stress' },
+                bloodGlucose: { min: 75, max: 155, unit: 'mg/dl', description: 'Nüchtern' }
+            }
+        };
+
+        const diseaseDatabase = {
+            gdv: {
+                name: "Gastric Dilatation-Volvulus (Magendrehung)",
+                urgency: "NOTFALL",
+                icon: "🚨",
+                vitalChanges: {
+                    heartRate: { modifier: 2.0, variance: 0.3 },
+                    bloodPressure: { modifier: 0.6, variance: 0.1 },
+                    temperature: { modifier: 1.15, variance: 0.05 },
+                    respirationRate: { modifier: 1.8, variance: 0.2 },
+                    oxygenLevel: { modifier: 0.85, variance: 0.05 },
+                    bloodGlucose: { modifier: 1.5, variance: 0.2 }
+                },
+                vetAnalysis: {
+                    diagnosis: "270° Torsion im Uhrzeigersinn detektiert. Magendilatation mit Gasakkumulation. Milztorsion sekundär.",
+                    labValues: "Laktat: 8.2 mmol/L (Ref: <2.5), pH: 7.1 (metabolische Azidose), Hämatokrit: 55%",
+                    treatment: "SOFORT: 1) Schocklagerung 2) IV-Zugänge 3) Kristalloide 90ml/kg/h 4) Trokarisierung 5) OP",
+                    medication: "Lidocain-CRI 50μg/kg/min, Metoclopramid 0.5mg/kg, Maropitant 1mg/kg",
+                    prognosis: "Ohne OP: 0% Überlebenschance. Mit OP <6h: 85% Erfolg."
+                },
+                assistantExplanation: {
+                    whatHappened: "Der Magen hat sich wie ein Luftballon aufgebläht und verdreht - wie ein abgeknickter Gartenschlauch.",
+                    whyDangerous: "Der verdrehte Magen drückt auf alle Organe. Der Hund kann in 1-2 Stunden sterben!",
+                    whatToDo: [
+                        "SOFORT Tierarzt anrufen - jede Minute zählt!",
+                        "Vorderbeine erhöht lagern",
+                        "KEIN Wasser geben",
+                        "Beruhigend auf Hund einreden"
+                    ],
+                    prevention: "Große Hunde nicht nach dem Fressen toben lassen. Anti-Schling-Napf verwenden."
+                }
+            },
+            diabetes: {
+                name: "Diabetes mellitus Typ 1",
+                urgency: "CHRONISCH",
+                icon: "💉",
+                vitalChanges: {
+                    heartRate: { modifier: 1.2, variance: 0.1 },
+                    bloodPressure: { modifier: 0.9, variance: 0.05 },
+                    temperature: { modifier: 1.0, variance: 0.02 },
+                    respirationRate: { modifier: 1.3, variance: 0.1 },
+                    oxygenLevel: { modifier: 0.95, variance: 0.03 },
+                    bloodGlucose: { modifier: 4.0, variance: 1.0 }
+                },
+                vetAnalysis: {
+                    diagnosis: "Absolute Insulindefizienz. Beta-Zell-Destruktion im Pankreas.",
+                    labValues: "Glukose: 428 mg/dl, Fruktosamin: 580 μmol/L, Ketonurie: +++",
+                    treatment: "Insulintherapie: Caninsulin 0.5 IU/kg BID initial. Glukosekurve alle 2 Wochen.",
+                    medication: "Langzeit-Insulin (Glargin/Detemir)",
+                    prognosis: "Mit guter Einstellung normale Lebenserwartung."
+                },
+                assistantExplanation: {
+                    whatHappened: "Die Bauchspeicheldrüse produziert kein Insulin mehr - der 'Schlüssel' für Zucker fehlt.",
+                    whyDangerous: "Zu viel Zucker macht das Blut dickflüssig. Der Hund trinkt und pinkelt ständig.",
+                    whatToDo: [
+                        "Insulin-Spritzen GENAU nach Plan",
+                        "Fütterungszeiten einhalten",
+                        "Blutzucker regelmäßig messen",
+                        "Bei Schwäche: Honig ins Zahnfleisch"
+                    ],
+                    prevention: "Übergewicht vermeiden! Regelmäßige Bewegung. Spezialfutter für Diabetiker."
+                }
+            },
+            flutd: {
+                name: "Feline Lower Urinary Tract Disease",
+                urgency: "NOTFALL",
+                icon: "⚠️",
+                vitalChanges: {
+                    heartRate: { modifier: 1.4, variance: 0.1 },
+                    bloodPressure: { modifier: 1.2, variance: 0.1 },
+                    temperature: { modifier: 1.05, variance: 0.02 },
+                    respirationRate: { modifier: 1.3, variance: 0.1 },
+                    oxygenLevel: { modifier: 0.98, variance: 0.02 },
+                    bloodGlucose: { modifier: 1.1, variance: 0.05 }
+                },
+                vetAnalysis: {
+                    diagnosis: "Urethraobstruktion durch Struvitkristalle. Blasenwandverdickung 8mm.",
+                    labValues: "Kreatinin: 5.2 mg/dl, Harnstoff: 180 mg/dl, K⁺: 6.8 mmol/L",
+                    treatment: "Katheterisierung unter Sedation. Blasenspülung mit Ringer.",
+                    medication: "Buprenorphin 0.02mg/kg, Prazosin 0.5mg/kg",
+                    prognosis: "Nach Deobstruktion gut. Re-Obstruktion: 30% in 6 Monaten"
+                },
+                assistantExplanation: {
+                    whatHappened: "Die Harnröhre ist durch Kristalle verstopft - wie Sand im Gartenschlauch.",
+                    whyDangerous: "Die Blase kann platzen! Nach 48h können die Nieren versagen.",
+                    whatToDo: [
+                        "SOFORT zum Tierarzt - auch nachts!",
+                        "Katze NICHT drücken",
+                        "Warme Umgebung schaffen",
+                        "Katzenklo kontrollieren"
+                    ],
+                    prevention: "Viel Wasser! Trinkbrunnen. Nassfutter. Stress reduzieren."
+                }
+            },
+            kolik: {
+                name: "Kolik (Bauchschmerzen)",
+                urgency: "NOTFALL",
+                icon: "🐴",
+                vitalChanges: {
+                    heartRate: { modifier: 2.5, variance: 0.3 },
+                    bloodPressure: { modifier: 0.8, variance: 0.1 },
+                    temperature: { modifier: 1.1, variance: 0.05 },
+                    respirationRate: { modifier: 2.0, variance: 0.2 },
+                    oxygenLevel: { modifier: 0.95, variance: 0.03 },
+                    bloodGlucose: { modifier: 1.3, variance: 0.1 }
+                },
+                vetAnalysis: {
+                    diagnosis: "Spastische Kolik mit Meteorismus. V.a. Verlagerung.",
+                    labValues: "Laktat: 4.8 mmol/L, PCV: 48%, TP: 8.2 g/dl",
+                    treatment: "Buscopan 0.3mg/kg IV, Metamizol 25mg/kg IV",
+                    medication: "Flunixin 1.1mg/kg IV, Xylazin 0.5mg/kg",
+                    prognosis: "Spastische Kolik: 95% konservativ. Verlagerung: OP 70%"
+                },
+                assistantExplanation: {
+                    whatHappened: "Der Darm hat Krämpfe oder hat sich verdreht.",
+                    whyDangerous: "Pferde können nicht erbrechen. Der Darm kann absterben!",
+                    whatToDo: [
+                        "Pferd FÜHREN - langsam Schritt",
+                        "NICHT wälzen lassen",
+                        "KEIN Futter!",
+                        "Puls kontrollieren"
+                    ],
+                    prevention: "Regelmäßige Fütterung. Langsame Futterumstellung. Bewegung."
+                }
+            },
+            gi_stasis: {
+                name: "Gastrointestinale Stasis",
+                urgency: "DRINGEND",
+                icon: "🐰",
+                vitalChanges: {
+                    heartRate: { modifier: 0.8, variance: 0.1 },
+                    bloodPressure: { modifier: 0.85, variance: 0.05 },
+                    temperature: { modifier: 0.95, variance: 0.02 },
+                    respirationRate: { modifier: 0.7, variance: 0.1 },
+                    oxygenLevel: { modifier: 0.97, variance: 0.02 },
+                    bloodGlucose: { modifier: 0.6, variance: 0.1 }
+                },
+                vetAnalysis: {
+                    diagnosis: "Ileus mit Magenüberladung. Caecum atone.",
+                    labValues: "Glukose: 45 mg/dl, Triglyceride erhöht",
+                    treatment: "Infusion s.c. 100ml/kg/Tag, Critical Care",
+                    medication: "Metoclopramid 0.5mg/kg, Simethicon 20mg/kg",
+                    prognosis: "Bei früher Behandlung gut. Nach 48h kritisch"
+                },
+                assistantExplanation: {
+                    whatHappened: "Der Darm hat aufgehört zu arbeiten - wie ein Motor der nicht läuft.",
+                    whyDangerous: "Kaninchen müssen IMMER fressen! Nach 12h beginnt Leberversagen.",
+                    whatToDo: [
+                        "SOFORT Päppelbrei füttern",
+                        "Bauchmassage im Uhrzeigersinn",
+                        "Wärmflasche an Bauch",
+                        "Alle 2h kleine Mengen"
+                    ],
+                    prevention: "Immer Heu! Keine plötzliche Futterumstellung. Bewegung."
+                }
+            },
+            fraktur: {
+                name: "Fraktur - Femur/Tibia",
+                urgency: "DRINGEND",
+                icon: "🦴",
+                vitalChanges: {
+                    heartRate: { modifier: 1.4, variance: 0.2 },
+                    bloodPressure: { modifier: 1.3, variance: 0.1 },
+                    temperature: { modifier: 1.1, variance: 0.1 },
+                    respirationRate: { modifier: 1.3, variance: 0.2 },
+                    oxygenLevel: { modifier: 0.98, variance: 0.02 },
+                    bloodGlucose: { modifier: 1.2, variance: 0.1 }
+                },
+                vetAnalysis: {
+                    diagnosis: "Fraktur mit 15° Achsenabweichung. Weichteilschwellung.",
+                    labValues: "CK erhöht, Leukozytose",
+                    treatment: "Immobilisierung, Röntgen, Osteosynthese",
+                    medication: "Metamizol 25mg/kg, Meloxicam 0.2mg/kg",
+                    prognosis: "Mit OP sehr gut. Heilung 6-8 Wochen"
+                },
+                assistantExplanation: {
+                    whatHappened: "Der Knochen ist gebrochen - wie ein geknickter Stock.",
+                    whyDangerous: "Scharfe Knochenenden können Gefäße verletzen.",
+                    whatToDo: [
+                        "NICHT bewegen lassen",
+                        "Bein stabilisieren",
+                        "Vorsichtiger Transport",
+                        "Schmerzmittel nach Anweisung"
+                    ],
+                    prevention: "Vorsicht im Straßenverkehr. Keine hohen Sprünge."
+                }
+            }
+        };
+
+        // ============================================
+        // GAMIFICATION SYSTEM
+        // ============================================
+        
+        class VetCareerSystem {
+            constructor() {
+                this.experience = parseInt(localStorage.getItem('vetXP') || '0');
+                this.level = this.calculateLevel();
+                this.achievements = JSON.parse(localStorage.getItem('vetAchievements') || '[]');
+                this.treatedAnimals = JSON.parse(localStorage.getItem('vetTreatedAnimals') || '[]');
+                this.stats = JSON.parse(localStorage.getItem('vetStats') || '{"totalCases":0,"perfectDiagnoses":0,"emergenciesSaved":0}');
+            }
+
+            levelProgression = [
+                { level: 'Praktikant', xpRequired: 0, icon: '🎓' },
+                { level: 'Assistenz-TFA', xpRequired: 100, icon: '👨‍⚕️' },
+                { level: 'TFA', xpRequired: 500, icon: '💉' },
+                { level: 'Leitende TFA', xpRequired: 1000, icon: '⭐' },
+                { level: 'Junior-Veterinär', xpRequired: 2000, icon: '🏥' },
+                { level: 'Veterinär', xpRequired: 5000, icon: '👨‍⚕️' },
+                { level: 'Spezialist', xpRequired: 10000, icon: '🏆' }
+            ];
+
+            calculateLevel() {
+                for (let i = this.levelProgression.length - 1; i >= 0; i--) {
+                    if (this.experience >= this.levelProgression[i].xpRequired) {
+                        return this.levelProgression[i];
+                    }
+                }
+                return this.levelProgression[0];
+            }
+
+            addExperience(xp) {
+                this.experience += xp;
+                localStorage.setItem('vetXP', this.experience);
+                const newLevel = this.calculateLevel();
+                if (newLevel.level !== this.level.level) {
+                    this.showLevelUp(newLevel);
+                }
+                this.level = newLevel;
+                return xp;
+            }
+
+            showLevelUp(newLevel) {
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-lg slide-in z-50';
+                notification.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${newLevel.icon}</span>
+                        <div>
+                            <p class="font-bold">LEVEL UP!</p>
+                            <p>Du bist jetzt: ${newLevel.level}</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            unlockAchievement(id, name, icon) {
+                if (!this.achievements.includes(id)) {
+                    this.achievements.push(id);
+                    localStorage.setItem('vetAchievements', JSON.stringify(this.achievements));
+                    this.showAchievement(name, icon);
+                    this.addExperience(25);
+                }
+            }
+
+            showAchievement(name, icon) {
+                const notification = document.createElement('div');
+                notification.className = 'fixed top-4 left-4 bg-yellow-600 text-white p-4 rounded-lg shadow-lg slide-in z-50';
+                notification.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${icon}</span>
+                        <div>
+                            <p class="font-bold">ACHIEVEMENT!</p>
+                            <p>${name}</p>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            updateStats(type) {
+                this.stats[type] = (this.stats[type] || 0) + 1;
+                localStorage.setItem('vetStats', JSON.stringify(this.stats));
+
+                // Check for achievements
+                if (this.stats.totalCases === 1) {
+                    this.unlockAchievement('first_case', 'Erster Patient', '🏥');
+                }
+                if (this.stats.perfectDiagnoses === 5) {
+                    this.unlockAchievement('perfect_5', 'Perfektionist', '⭐');
+                }
+                if (this.stats.emergenciesSaved === 3) {
+                    this.unlockAchievement('emergency_hero', 'Notfall-Held', '🚨');
+                }
+            }
+        }
+
+        // ============================================
+        // HAUPTANWENDUNG
+        // ============================================
+        
+        const app = {
+            stage: 'menu',
+            mode: 'assistant', // 'assistant' oder 'vet'
+            selectedAnimalType: 'hund',
+            selectedDisease: '',
+            uploadedImage: null,
+            scanProgress: 0,
+            vitals: {},
+            careerSystem: new VetCareerSystem(),
+            currentCase: null,
+            timer: null,
+            timeElapsed: 0
+        };
+
+        // Hilfsfunktionen
+        function generateVitals(animal, disease) {
+            const normalRanges = vitalNormalRanges[animal];
+            const diseaseData = diseaseDatabase[disease];
+            const vitals = {};
+
+            Object.keys(normalRanges).forEach(vital => {
+                const normal = normalRanges[vital];
+                const modifier = diseaseData?.vitalChanges[vital] || { modifier: 1, variance: 0 };
+                
+                const baseValue = (normal.min + normal.max) / 2;
+                const variance = (Math.random() - 0.5) * modifier.variance;
+                const finalValue = baseValue * modifier.modifier * (1 + variance);
+                
+                // Clamp to reasonable ranges
+                const clampedValue = Math.max(
+                    normal.min * 0.5,
+                    Math.min(normal.max * 2, finalValue)
+                );
+                
+                vitals[vital] = {
+                    value: vital === 'temperature' ? 
+                        clampedValue.toFixed(1) : 
+                        Math.round(clampedValue),
+                    unit: normal.unit,
+                    normal: normal,
+                    status: evaluateVitalStatus(clampedValue, normal)
+                };
+            });
+
+            return vitals;
+        }
+
+        function evaluateVitalStatus(value, normal) {
+            const range = normal.max - normal.min;
+            const warningThreshold = range * 0.15;
+            
+            if (value >= normal.min && value <= normal.max) {
+                return { level: 'normal', color: 'text-green-400', bgColor: 'bg-green-900/30', icon: '✓' };
+            } else if (value < normal.min - warningThreshold || value > normal.max + warningThreshold) {
+                return { level: 'kritisch', color: 'text-red-400', bgColor: 'bg-red-900/30', icon: '⚠️' };
+            } else {
+                return { level: 'warnung', color: 'text-orange-400', bgColor: 'bg-orange-900/30', icon: '!' };
+            }
+        }
+
+        function startTimer() {
+            app.timeElapsed = 0;
+            app.timer = setInterval(() => {
+                app.timeElapsed++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (app.timer) {
+                clearInterval(app.timer);
+                app.timer = null;
+            }
+        }
+
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                const minutes = Math.floor(app.timeElapsed / 60);
+                const seconds = app.timeElapsed % 60;
+                timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        function calculateXP(correct, timeBonus, emergency) {
+            let xp = 0;
+            if (correct) xp += 50;
+            if (timeBonus) xp += 20;
+            if (emergency) xp += 30;
+            return xp;
+        }
+
+        // Render-Funktionen
+        function render() {
+            const root = document.getElementById('root');
+            
+            if (app.stage === 'menu') {
+                renderMenu(root);
+            } else if (app.stage === 'input') {
+                renderInput(root);
+            } else if (app.stage === 'scanning') {
+                renderScanning(root);
+            } else if (app.stage === 'results') {
+                renderResults(root);
+            }
+        }
+
+        function renderMenu(root) {
+            root.innerHTML = `
+                <div class="min-h-screen bg-gray-950 relative flex items-center justify-center">
+                    <div class="max-w-4xl w-full p-8">
+                        <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-8 border border-cyan-800 shadow-2xl">
+                            <div class="text-center mb-8">
+                                <h1 class="text-4xl font-bold text-cyan-400 mb-2">VetScan Pro 3000</h1>
+                                <p class="text-xl text-cyan-600">Advanced Edition</p>
+                                <div class="mt-4 flex justify-center gap-4">
+                                    <span class="text-sm">Level: ${app.careerSystem.level.level} ${app.careerSystem.level.icon}</span>
+                                    <span class="text-sm">XP: ${app.careerSystem.experience}</span>
+                                    <span class="text-sm">Fälle: ${app.careerSystem.stats.totalCases}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div>
+                                    <h2 class="text-lg font-bold mb-4 text-cyan-400">Wähle deinen Modus:</h2>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <button onclick="selectMode('assistant')" class="p-6 bg-gray-800 hover:bg-gray-700 rounded-lg border-2 ${app.mode === 'assistant' ? 'border-cyan-400' : 'border-gray-700'} transition-all">
+                                            <span class="text-3xl block mb-2">👨‍⚕️</span>
+                                            <p class="font-bold">Assistenz-Modus</p>
+                                            <p class="text-sm text-gray-400 mt-2">Einfache Erklärungen und klare Anweisungen</p>
+                                        </button>
+                                        <button onclick="selectMode('vet')" class="p-6 bg-gray-800 hover:bg-gray-700 rounded-lg border-2 ${app.mode === 'vet' ? 'border-cyan-400' : 'border-gray-700'} transition-all">
+                                            <span class="text-3xl block mb-2">🔬</span>
+                                            <p class="font-bold">Veterinär-Modus</p>
+                                            <p class="text-sm text-gray-400 mt-2">Wissenschaftliche Analyse mit Laborwerten</p>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <button onclick="startGame()" class="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-gray-900 font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                                    SPIEL STARTEN
+                                </button>
+                                
+                                <div class="grid grid-cols-3 gap-4 mt-6">
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <span class="text-2xl">🏆</span>
+                                        <p class="text-xs mt-1">Achievements</p>
+                                        <p class="font-bold">${app.careerSystem.achievements.length}</p>
+                                    </div>
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <span class="text-2xl">⭐</span>
+                                        <p class="text-xs mt-1">Perfekt</p>
+                                        <p class="font-bold">${app.careerSystem.stats.perfectDiagnoses || 0}</p>
+                                    </div>
+                                    <div class="bg-gray-800 p-3 rounded text-center">
+                                        <span class="text-2xl">🚨</span>
+                                        <p class="text-xs mt-1">Notfälle</p>
+                                        <p class="font-bold">${app.careerSystem.stats.emergenciesSaved || 0}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInput(root) {
+            const diseases = [
+                { value: '', label: '-- Bitte wählen --' },
+                { value: 'gdv', label: 'GDV - Magendrehung (NOTFALL!)', icon: '🚨' },
+                { value: 'diabetes', label: 'Diabetes mellitus', icon: '💉' },
+                { value: 'flutd', label: 'FLUTD - Harnwegserkrankung', icon: '⚠️' },
+                { value: 'kolik', label: 'Kolik (NOTFALL!)', icon: '🐴' },
+                { value: 'gi_stasis', label: 'GI Stasis - Verdauungsstillstand', icon: '🐰' },
+                { value: 'fraktur', label: 'Fraktur - Femur/Tibia', icon: '🦴' }
+            ];
+
+            root.innerHTML = `
+                <div class="min-h-screen bg-gray-950 relative">
+                    <!-- Header -->
+                    <div class="border-b border-cyan-800 bg-gray-900/80 backdrop-blur-sm">
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <h1 class="text-2xl font-bold text-cyan-400">⚡ VetScan Pro 3000</h1>
+                                <div class="text-xs text-cyan-600">Advanced | ${app.mode === 'vet' ? 'Veterinär' : 'Assistenz'}-Modus</div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm">${app.careerSystem.level.icon} ${app.careerSystem.level.level}</span>
+                                <span class="text-sm">XP: ${app.careerSystem.experience}</span>
+                                <button onclick="backToMenu()" class="text-sm hover:text-cyan-400">Menü</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="p-8">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-8 border border-cyan-800 shadow-2xl">
+                                <h2 class="text-xl font-bold mb-6">🏥 PATIENT AUFNEHMEN</h2>
+                                
+                                <div class="space-y-6">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm mb-2 text-cyan-400">TIERART:</label>
+                                            <select id="animalType" onchange="updateAnimalType(this.value)" class="w-full p-3 bg-gray-800 border border-cyan-700 rounded text-cyan-300">
+                                                <option value="hund">🐕 Hund</option>
+                                                <option value="katze">🐈 Katze</option>
+                                                <option value="pferd">🐴 Pferd</option>
+                                                <option value="kaninchen">🐰 Kaninchen</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm mb-2 text-cyan-400">VERDACHTSDIAGNOSE:</label>
+                                            <select id="disease" onchange="updateDisease(this.value)" class="w-full p-3 bg-gray-800 border border-cyan-700 rounded text-cyan-300">
+                                                ${diseases.map(d => 
+                                                    `<option value="${d.value}">${d.icon || ''} ${d.label}</option>`
+                                                ).join('')}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-2 text-cyan-400">PATIENT SCAN-BILD:</label>
+                                        <div class="border-2 border-dashed border-cyan-700 rounded-lg p-8 text-center hover:border-cyan-400 transition-colors bg-gray-800/50">
+                                            <input type="file" id="imageUpload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                                            <label for="imageUpload" class="cursor-pointer">
+                                                <div id="imagePreview">
+                                                    <div class="text-6xl mb-2">📷</div>
+                                                    <p>KLICKEN FÜR BILD-UPLOAD</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div id="urgencyWarning" class="hidden p-4 bg-red-900/30 border border-red-600 rounded-lg">
+                                        <p class="font-bold text-red-400">⚠️ NOTFALL ERKANNT!</p>
+                                        <p class="text-sm">Dieser Fall erfordert sofortiges Handeln. Die Zeit läuft!</p>
+                                    </div>
+
+                                    <button id="scanBtn" onclick="startScan()" disabled class="w-full py-4 rounded font-bold bg-gray-700 text-gray-500 cursor-not-allowed">
+                                        SCAN INITIALISIEREN
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderScanning(root) {
+            root.innerHTML = `
+                <div class="min-h-screen bg-gray-950 relative">
+                    <!-- Header -->
+                    <div class="border-b border-cyan-800 bg-gray-900/80 backdrop-blur-sm">
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <h1 class="text-2xl font-bold text-cyan-400">⚡ VetScan Pro 3000</h1>
+                            </div>
+                            ${app.currentCase?.urgency === 'NOTFALL' ? `
+                                <div class="text-red-400 font-bold animate-pulse">
+                                    ⏱️ NOTFALL-TIMER: <span id="timer">0:00</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-8 border border-cyan-800">
+                                <h2 class="text-xl font-bold mb-6">
+                                    <span class="animate-spin inline-block">⚙</span> MEDIZINISCHER SCAN LÄUFT...
+                                </h2>
+                                
+                                ${app.uploadedImage ? `
+                                    <div class="relative overflow-hidden rounded-lg mb-6">
+                                        <img src="${app.uploadedImage}" class="w-full opacity-50">
+                                        <div class="absolute inset-0 bg-gradient-to-b from-cyan-400/20 to-transparent" 
+                                             style="transform: translateY(${100 - app.scanProgress}%); transition: transform 0.1s linear;">
+                                        </div>
+                                        <div class="absolute top-4 left-4 bg-gray-900/80 p-2 rounded">
+                                            <p class="text-xs text-cyan-400">Analysiere: ${app.selectedAnimalType.toUpperCase()}</p>
+                                            <p class="text-xs text-cyan-600">Verdacht: ${diseaseDatabase[app.selectedDisease]?.name || 'Unbekannt'}</p>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                
+                                <div class="space-y-4">
+                                    <div class="space-y-2">
+                                        <div class="flex justify-between text-sm">
+                                            <span>SCAN-FORTSCHRITT</span>
+                                            <span>${app.scanProgress}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-800 rounded-full h-4 overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400" 
+                                                 style="width: ${app.scanProgress}%; transition: width 0.1s linear;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-3 gap-4 text-center">
+                                        <div class="bg-gray-800 p-3 rounded border border-cyan-700">
+                                            <p class="text-xs text-cyan-600">VITALWERTE</p>
+                                            <p class="text-lg font-bold ${app.scanProgress > 30 ? 'text-green-400' : 'text-gray-600'}">
+                                                ${app.scanProgress > 30 ? '✓' : '...'}
+                                            </p>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded border border-cyan-700">
+                                            <p class="text-xs text-cyan-600">LABORWERTE</p>
+                                            <p class="text-lg font-bold ${app.scanProgress > 60 ? 'text-green-400' : 'text-gray-600'}">
+                                                ${app.scanProgress > 60 ? '✓' : '...'}
+                                            </p>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded border border-cyan-700">
+                                            <p class="text-xs text-cyan-600">DIAGNOSE</p>
+                                            <p class="text-lg font-bold ${app.scanProgress > 90 ? 'text-green-400' : 'text-gray-600'}">
+                                                ${app.scanProgress > 90 ? '✓' : '...'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Scan Animation
+            if (app.scanProgress < 100) {
+                setTimeout(() => {
+                    app.scanProgress += 2;
+                    if (app.scanProgress >= 100) {
+                        app.stage = 'results';
+                        app.vitals = generateVitals(app.selectedAnimalType, app.selectedDisease);
+                        stopTimer();
+                        
+                        // Calculate XP
+                        const isEmergency = diseaseDatabase[app.selectedDisease]?.urgency === 'NOTFALL';
+                        const timeBonus = app.timeElapsed < 60;
+                        const xp = calculateXP(true, timeBonus, isEmergency);
+                        app.careerSystem.addExperience(xp);
+                        app.careerSystem.updateStats('totalCases');
+                        
+                        if (isEmergency) {
+                            app.careerSystem.updateStats('emergenciesSaved');
+                        }
+                    }
+                    render();
+                }, 50);
+            }
+        }
+
+        function renderResults(root) {
+            const disease = diseaseDatabase[app.selectedDisease];
+            const isVetMode = app.mode === 'vet';
+            const analysis = isVetMode ? disease?.vetAnalysis : disease?.assistantExplanation;
+
+            root.innerHTML = `
+                <div class="min-h-screen bg-gray-950 relative">
+                    <!-- Header -->
+                    <div class="border-b border-cyan-800 bg-gray-900/80 backdrop-blur-sm">
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <h1 class="text-2xl font-bold text-cyan-400">⚡ VetScan Pro 3000</h1>
+                            </div>
+                            <div class="text-green-400">
+                                ✓ ANALYSE ABGESCHLOSSEN ${app.timeElapsed ? `(${Math.floor(app.timeElapsed/60)}:${(app.timeElapsed%60).toString().padStart(2,'0')})` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="max-w-6xl mx-auto">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <!-- Left: Diagnosis -->
+                                <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-6 border border-cyan-800">
+                                    <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                        ${disease?.icon || '🏥'} ${disease?.name || 'Diagnose'}
+                                        ${disease?.urgency === 'NOTFALL' ? '<span class="ml-2 px-2 py-1 bg-red-600 text-white text-xs rounded animate-pulse">NOTFALL</span>' : ''}
+                                    </h2>
+                                    
+                                    ${app.uploadedImage ? `<img src="${app.uploadedImage}" class="w-full rounded mb-4">` : ''}
+                                    
+                                    <div class="space-y-4">
+                                        ${isVetMode ? `
+                                            <!-- Wissenschaftliche Analyse -->
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">DIAGNOSE:</p>
+                                                <p class="text-sm">${analysis?.diagnosis || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">LABORWERTE:</p>
+                                                <p class="text-sm font-mono">${analysis?.labValues || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">BEHANDLUNG:</p>
+                                                <p class="text-sm">${analysis?.treatment || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">MEDIKATION:</p>
+                                                <p class="text-sm font-mono">${analysis?.medication || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">PROGNOSE:</p>
+                                                <p class="text-sm">${analysis?.prognosis || 'Keine Daten'}</p>
+                                            </div>
+                                        ` : `
+                                            <!-- Vereinfachte Erklärung -->
+                                            <div class="bg-gray-800 p-4 rounded border border-cyan-700">
+                                                <p class="text-xs text-cyan-600 mb-2">WAS IST PASSIERT?</p>
+                                                <p class="text-sm">${analysis?.whatHappened || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-orange-700">
+                                                <p class="text-xs text-orange-600 mb-2">WARUM IST DAS GEFÄHRLICH?</p>
+                                                <p class="text-sm text-orange-300">${analysis?.whyDangerous || 'Keine Daten'}</p>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-green-700">
+                                                <p class="text-xs text-green-600 mb-2">WAS MUSS ICH TUN?</p>
+                                                <ul class="text-sm text-green-300 space-y-1">
+                                                    ${(analysis?.whatToDo || []).map(step => 
+                                                        `<li>• ${step}</li>`
+                                                    ).join('')}
+                                                </ul>
+                                            </div>
+                                            <div class="bg-gray-800 p-4 rounded border border-blue-700">
+                                                <p class="text-xs text-blue-600 mb-2">PRÄVENTION:</p>
+                                                <p class="text-sm text-blue-300">${analysis?.prevention || 'Keine Daten'}</p>
+                                            </div>
+                                        `}
+                                    </div>
+                                </div>
+
+                                <!-- Right: Vitals -->
+                                <div class="space-y-4">
+                                    <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-6 border border-cyan-800">
+                                        <h3 class="text-lg font-bold mb-4">❤️ VITALPARAMETER</h3>
+                                        
+                                        <div class="space-y-3">
+                                            ${Object.entries(app.vitals).map(([key, vital]) => {
+                                                const labels = {
+                                                    heartRate: '❤️ HERZFREQUENZ',
+                                                    temperature: '🌡️ TEMPERATUR',
+                                                    bloodPressure: '💉 BLUTDRUCK',
+                                                    oxygenLevel: '💨 O₂ SÄTTIGUNG',
+                                                    respirationRate: '🫁 ATEMFREQUENZ',
+                                                    bloodGlucose: '🩸 BLUTZUCKER'
+                                                };
+                                                
+                                                return `
+                                                    <div class="bg-gray-800 p-3 rounded border ${
+                                                        vital.status.level === 'normal' ? 'border-green-700' : 
+                                                        vital.status.level === 'warnung' ? 'border-orange-700' : 
+                                                        'border-red-700 urgency-critical'
+                                                    } ${vital.status.bgColor} tooltip-trigger relative">
+                                                        <div class="flex justify-between items-center">
+                                                            <div>
+                                                                <div class="text-xs text-gray-400">${labels[key]}</div>
+                                                                <div class="text-xl font-bold ${vital.status.color}">
+                                                                    ${vital.status.icon} ${vital.value} ${vital.unit}
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-right">
+                                                                <div class="text-xs text-gray-500">Normal</div>
+                                                                <div class="text-xs">${vital.normal.min}-${vital.normal.max}</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="tooltip absolute left-0 top-full mt-2 p-2 bg-gray-900 rounded text-xs z-10 w-64">
+                                                            ${vital.normal.description}
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- XP Reward -->
+                                    <div class="bg-gray-900/60 backdrop-blur-md rounded-lg p-4 border border-yellow-600">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-yellow-400 font-bold">XP ERHALTEN:</span>
+                                            <span class="text-2xl text-yellow-400">+${app.careerSystem.experience - parseInt(localStorage.getItem('vetXP') || '0') + app.careerSystem.experience} XP</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Actions -->
+                                    <div class="flex gap-4">
+                                        <button onclick="startNewCase()" class="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-gray-900 font-bold rounded">
+                                            NEUER PATIENT
+                                        </button>
+                                        <button onclick="backToMenu()" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded">
+                                            HAUPTMENÜ
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event Handler
+        function selectMode(mode) {
+            app.mode = mode;
+            render();
+        }
+
+        function startGame() {
+            app.stage = 'input';
+            render();
+        }
+
+        function backToMenu() {
+            app.stage = 'menu';
+            app.selectedDisease = '';
+            app.uploadedImage = null;
+            stopTimer();
+            render();
+        }
+
+        function updateAnimalType(value) {
+            app.selectedAnimalType = value;
+        }
+
+        function updateDisease(value) {
+            app.selectedDisease = value;
+            const disease = diseaseDatabase[value];
+            const urgencyWarning = document.getElementById('urgencyWarning');
+            
+            if (disease?.urgency === 'NOTFALL') {
+                urgencyWarning.classList.remove('hidden');
+            } else {
+                urgencyWarning.classList.add('hidden');
+            }
+            
+            updateScanButton();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    app.uploadedImage = e.target.result;
+                    document.getElementById('imagePreview').innerHTML = `
+                        <img src="${e.target.result}" class="max-h-48 mx-auto rounded mb-2">
+                        <p class="text-green-400 text-sm">✓ BILD ERFOLGREICH GELADEN</p>
+                    `;
+                    updateScanButton();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateScanButton() {
+            const btn = document.getElementById('scanBtn');
+            if (app.selectedDisease && app.uploadedImage) {
+                btn.disabled = false;
+                btn.className = 'w-full py-4 rounded font-bold bg-cyan-600 hover:bg-cyan-500 text-gray-900 shadow-lg cursor-pointer transition-all transform hover:scale-105';
+            } else {
+                btn.disabled = true;
+                btn.className = 'w-full py-4 rounded font-bold bg-gray-700 text-gray-500 cursor-not-allowed';
+            }
+        }
+
+        function startScan() {
+            if (app.selectedDisease && app.uploadedImage) {
+                app.stage = 'scanning';
+                app.scanProgress = 0;
+                app.currentCase = diseaseDatabase[app.selectedDisease];
+                
+                if (app.currentCase?.urgency === 'NOTFALL') {
+                    startTimer();
+                }
+                
+                render();
+            }
+        }
+
+        function startNewCase() {
+            app.stage = 'input';
+            app.selectedDisease = '';
+            app.uploadedImage = null;
+            app.scanProgress = 0;
+            app.vitals = {};
+            render();
+        }
+
+        // Initial render
+        setTimeout(() => {
+            render();
+        }, 1500);
+    </script>
+</body>
+</html>

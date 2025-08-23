@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Story - Tierarzt Abenteuer mit Herz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Pacifico&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+        
+        .story-panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .character-card {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 16px;
+            padding: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+        
+        .character-mood {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 20px;
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .dialogue-bubble {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .dialogue-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 30px;
+            width: 0;
+            height: 0;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 12px solid white;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .mission-card {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mission-card::before {
+            content: '🎯';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            font-size: 80px;
+            opacity: 0.1;
+        }
+        
+        .clinic-room {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            border-radius: 16px;
+            padding: 20px;
+            min-height: 200px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .clinic-room:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .equipment-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .equipment-item:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-option {
+            background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 8px 0;
+        }
+        
+        .quiz-option:hover {
+            transform: translateX(8px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+        }
+        
+        .quiz-option.correct {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            animation: pulse 0.5s ease;
+        }
+        
+        .quiz-option.wrong {
+            background: linear-gradient(135deg, #ff7675 0%, #d63031 100%);
+            animation: shake 0.5s ease;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .lexicon-entry {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 8px 0;
+            border-left: 4px solid #6c5ce7;
+            transition: all 0.3s ease;
+        }
+        
+        .lexicon-entry:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .minigame-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+        }
+        
+        .heartbeat-line {
+            stroke: #e74c3c;
+            stroke-width: 3;
+            fill: none;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { stroke-opacity: 0.8; }
+            50% { stroke-opacity: 1; stroke-width: 4; }
+        }
+        
+        .blood-cell {
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle, #e74c3c 0%, #c0392b 100%);
+            border-radius: 50%;
+            position: absolute;
+            animation: float-cells 4s ease-in-out infinite;
+        }
+        
+        @keyframes float-cells {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+        
+        .notification-badge {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            animation: bounce-badge 2s ease-in-out infinite;
+        }
+        
+        @keyframes bounce-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="min-h-screen p-4">
+        <!-- Header -->
+        <header class="story-panel p-6 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h1 class="pacifico text-4xl text-purple-600 mb-2">Dr. Pfötchen's Tierklinik</h1>
+                    <p class="text-gray-600">Kapitel <span id="chapterNum">1</span>: <span id="chapterTitle">Der erste Tag</span></p>
+                </div>
+                
+                <div class="flex gap-6">
+                    <div class="text-center">
+                        <div class="text-2xl mb-1">❤️</div>
+                        <div class="font-bold text-red-500" id="lives">5</div>
+                        <div class="text-xs text-gray-500">Leben</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-1">⭐</div>
+                        <div class="font-bold text-yellow-500" id="stars">0</div>
+                        <div class="text-xs text-gray-500">Sterne</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-1">🏆</div>
+                        <div class="font-bold text-purple-500" id="trophies">0</div>
+                        <div class="text-xs text-gray-500">Trophäen</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-1">💰</div>
+                        <div class="font-bold text-green-500" id="coins">500</div>
+                        <div class="text-xs text-gray-500">Münzen</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Story Area -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Story & Characters -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Current Mission -->
+                <div class="mission-card">
+                    <h3 class="text-xl font-bold mb-2">🎯 Aktuelle Mission</h3>
+                    <p class="text-lg mb-3" id="missionText">Hilf Bello, dem kranken Golden Retriever!</p>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1 bg-white bg-opacity-20 rounded-full h-3">
+                            <div class="bg-white rounded-full h-3 transition-all duration-500" id="missionProgress" style="width: 0%"></div>
+                        </div>
+                        <span class="text-sm font-bold"><span id="missionCurrent">0</span>/<span id="missionTotal">3</span></span>
+                    </div>
+                </div>
+                
+                <!-- Story Scene -->
+                <div class="story-panel p-6">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <!-- Patient Character -->
+                        <div class="character-card" id="patientCard">
+                            <div class="character-mood" id="patientMood">😢</div>
+                            <div class="text-6xl text-center mb-2" id="patientAvatar">🐕</div>
+                            <h4 class="font-bold text-center" id="patientName">Bello</h4>
+                            <p class="text-sm text-center text-gray-600" id="patientDesc">Golden Retriever, 6 Jahre</p>
+                        </div>
+                        
+                        <!-- Owner Character -->
+                        <div class="character-card" id="ownerCard">
+                            <div class="character-mood" id="ownerMood">😟</div>
+                            <div class="text-6xl text-center mb-2" id="ownerAvatar">👧</div>
+                            <h4 class="font-bold text-center" id="ownerName">Emma</h4>
+                            <p class="text-sm text-center text-gray-600" id="ownerDesc">Besorgte Besitzerin</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Dialogue -->
+                    <div class="dialogue-bubble" id="dialogueBubble">
+                        <p id="dialogueText">Bitte helfen Sie Bello! Er hat seit gestern nichts gefressen und wirkt so schwach...</p>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <button onclick="startExamination()" class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-3 rounded-xl hover:from-blue-600 hover:to-cyan-600 transition">
+                            🔍 Untersuchen
+                        </button>
+                        <button onclick="showComfortOptions()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-xl hover:from-purple-600 hover:to-pink-600 transition">
+                            💬 Beruhigen
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Mini Games Section -->
+                <div class="minigame-container" id="minigameArea" style="display: none;">
+                    <h3 class="text-xl font-bold mb-4">🔬 Diagnose-Minispiel</h3>
+                    <div id="minigameContent"></div>
+                </div>
+            </div>
+            
+            <!-- Right Panel - Clinic & Education -->
+            <div class="space-y-6">
+                <!-- Clinic Management -->
+                <div class="story-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">🏥 Meine Klinik</h3>
+                    
+                    <!-- Clinic Rooms -->
+                    <div class="space-y-3 mb-4">
+                        <div class="clinic-room">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-white">Behandlungsraum</span>
+                                <span class="notification-badge" id="room1Badge" style="display: none;">!</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="equipment-item">
+                                    <div class="text-2xl">🩺</div>
+                                    <div class="text-xs">Basic</div>
+                                </div>
+                                <div class="equipment-item opacity-50">
+                                    <div class="text-2xl">🔬</div>
+                                    <div class="text-xs">Locked</div>
+                                </div>
+                                <div class="equipment-item opacity-50">
+                                    <div class="text-2xl">💉</div>
+                                    <div class="text-xs">Locked</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="clinic-room opacity-50">
+                            <div class="text-center text-white">
+                                <div class="text-3xl mb-2">🔒</div>
+                                <div>OP-Saal</div>
+                                <div class="text-sm">Ab Level 5</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upgrade Button -->
+                    <button onclick="openShop()" class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 transition">
+                        🛒 Shop & Upgrades
+                    </button>
+                </div>
+                
+                <!-- Educational Quiz -->
+                <div class="story-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">📚 Wissens-Quiz</h3>
+                    <div id="quizContainer">
+                        <p class="mb-3" id="quizQuestion">Was ist die normale Körpertemperatur bei Hunden?</p>
+                        <div id="quizOptions">
+                            <div class="quiz-option" onclick="checkAnswer(0)">37.5 - 39.0°C</div>
+                            <div class="quiz-option" onclick="checkAnswer(1)">35.0 - 37.0°C</div>
+                            <div class="quiz-option" onclick="checkAnswer(2)">39.5 - 41.0°C</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lexicon -->
+                <div class="story-panel p-6">
+                    <h3 class="text-lg font-bold mb-4">📖 Tierarzt-Lexikon</h3>
+                    <div class="space-y-2 max-h-64 overflow-y-auto" id="lexiconList">
+                        <div class="lexicon-entry">
+                            <h4 class="font-bold text-purple-600">Gastritis</h4>
+                            <p class="text-sm text-gray-600">Magenschleimhautentzündung bei Tieren</p>
+                        </div>
+                        <div class="lexicon-entry opacity-50">
+                            <h4 class="font-bold text-gray-400">??? 🔒</h4>
+                            <p class="text-sm text-gray-400">Noch nicht entdeckt</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Navigation -->
+        <div class="story-panel p-4 mt-6">
+            <div class="flex justify-between items-center">
+                <button onclick="previousChapter()" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition" id="prevBtn" disabled>
+                    ← Vorheriges Kapitel
+                </button>
+                
+                <div class="flex gap-2">
+                    <span class="w-3 h-3 bg-purple-500 rounded-full" id="progress1"></span>
+                    <span class="w-3 h-3 bg-gray-300 rounded-full" id="progress2"></span>
+                    <span class="w-3 h-3 bg-gray-300 rounded-full" id="progress3"></span>
+                    <span class="w-3 h-3 bg-gray-300 rounded-full" id="progress4"></span>
+                    <span class="w-3 h-3 bg-gray-300 rounded-full" id="progress5"></span>
+                </div>
+                
+                <button onclick="nextChapter()" class="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition" id="nextBtn" disabled>
+                    Nächstes Kapitel →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Story Game State
+        let storyState = {
+            chapter: 1,
+            lives: 5,
+            stars: 0,
+            trophies: 0,
+            coins: 500,
+            currentMission: {
+                id: 'help_bello',
+                progress: 0,
+                total: 3,
+                completed: false
+            },
+            unlockedEquipment: ['stethoscope'],
+            lexiconEntries: ['gastritis'],
+            charactersMetL: [],
+            quizStreak: 0
+        };
+
+        // Story Chapters
+        const chapters = [
+            {
+                id: 1,
+                title: 'Der erste Tag',
+                patients: [
+                    {
+                        name: 'Bello',
+                        type: 'Golden Retriever',
+                        avatar: '🐕',
+                        condition: 'gastritis',
+                        owner: { name: 'Emma', avatar: '👧', personality: 'worried' },
+                        dialogue: [
+                            'Bitte helfen Sie Bello! Er hat seit gestern nichts gefressen...',
+                            'Er ist normalerweise so lebhaft, aber jetzt liegt er nur da.',
+                            'Können Sie herausfinden, was mit ihm los ist?'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: 'Notfall in der Nacht',
+                patients: [
+                    {
+                        name: 'Minka',
+                        type: 'Perserkatze',
+                        avatar: '🐈',
+                        condition: 'urinary_blockage',
+                        owner: { name: 'Herr Schmidt', avatar: '👨', personality: 'panicked' },
+                        dialogue: [
+                            'ES IST EIN NOTFALL! Minka kann nicht mehr pinkeln!',
+                            'Sie miaut die ganze Zeit und versteckt sich.',
+                            'Bitte, Sie müssen ihr helfen!'
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: 'Das verletzte Wildtier',
+                patients: [
+                    {
+                        name: 'Unbekannt',
+                        type: 'Igel',
+                        avatar: '🦔',
+                        condition: 'wound',
+                        owner: { name: 'Förster Klaus', avatar: '👨‍🌾', personality: 'calm' },
+                        dialogue: [
+                            'Ich habe diesen kleinen Kerl im Wald gefunden.',
+                            'Er hat eine Verletzung am Bein und braucht Hilfe.',
+                            'Können Sie Wildtiere behandeln?'
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        // Quiz Questions Database
+        const quizQuestions = [
+            {
+                question: 'Was ist die normale Körpertemperatur bei Hunden?',
+                options: ['37.5 - 39.0°C', '35.0 - 37.0°C', '39.5 - 41.0°C'],
+                correct: 0,
+                explanation: 'Die normale Körpertemperatur bei Hunden liegt zwischen 37.5 und 39.0°C.'
+            },
+            {
+                question: 'Welches Lebensmittel ist giftig für Hunde?',
+                options: ['Karotten', 'Schokolade', 'Reis'],
+                correct: 1,
+                explanation: 'Schokolade enthält Theobromin, was für Hunde giftig ist.'
+            },
+            {
+                question: 'Wie oft sollte ein Hund entwurmt werden?',
+                options: ['Einmal im Jahr', 'Alle 3-4 Monate', 'Nur bei Befall'],
+                correct: 1,
+                explanation: 'Erwachsene Hunde sollten alle 3-4 Monate entwurmt werden.'
+            },
+            {
+                question: 'Was bedeutet es, wenn eine Katze schnurrt?',
+                options: ['Immer Zufriedenheit', 'Kann auch Stress bedeuten', 'Nur Hunger'],
+                correct: 1,
+                explanation: 'Katzen schnurren nicht nur bei Zufriedenheit, sondern auch bei Stress oder Schmerzen.'
+            }
+        ];
+
+        let currentQuizQuestion = 0;
+        let currentPatientDialogue = 0;
+
+        // Initialize Story
+        function initStory() {
+            loadChapter(1);
+            updateUI();
+            startNewQuiz();
+        }
+
+        function loadChapter(chapterNum) {
+            const chapter = chapters[chapterNum - 1];
+            if (!chapter) return;
+            
+            storyState.chapter = chapterNum;
+            document.getElementById('chapterNum').textContent = chapterNum;
+            document.getElementById('chapterTitle').textContent = chapter.title;
+            
+            // Load first patient of chapter
+            const patient = chapter.patients[0];
+            loadPatient(patient);
+            
+            // Update progress dots
+            for (let i = 1; i <= 5; i++) {
+                const dot = document.getElementById(`progress${i}`);
+                if (dot) {
+                    if (i <= chapterNum) {
+                        dot.className = 'w-3 h-3 bg-purple-500 rounded-full';
+                    } else {
+                        dot.className = 'w-3 h-3 bg-gray-300 rounded-full';
+                    }
+                }
+            }
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = chapterNum <= 1;
+            document.getElementById('nextBtn').disabled = !storyState.currentMission.completed;
+        }
+
+        function loadPatient(patient) {
+            // Update patient card
+            document.getElementById('patientAvatar').textContent = patient.avatar;
+            document.getElementById('patientName').textContent = patient.name;
+            document.getElementById('patientDesc').textContent = patient.type;
+            document.getElementById('patientMood').textContent = '😢';
+            
+            // Update owner card
+            document.getElementById('ownerAvatar').textContent = patient.owner.avatar;
+            document.getElementById('ownerName').textContent = patient.owner.name;
+            document.getElementById('ownerDesc').textContent = 'Besorgte/r Besitzer/in';
+            document.getElementById('ownerMood').textContent = patient.owner.personality === 'panicked' ? '😰' : '😟';
+            
+            // Show first dialogue
+            currentPatientDialogue = 0;
+            showDialogue(patient.dialogue[0]);
+            
+            // Reset mission
+            storyState.currentMission = {
+                id: `help_${patient.name.toLowerCase()}`,
+                progress: 0,
+                total: 3,
+                completed: false
+            };
+            updateMissionProgress();
+        }
+
+        function showDialogue(text) {
+            document.getElementById('dialogueText').textContent = text;
+            const bubble = document.getElementById('dialogueBubble');
+            bubble.style.animation = 'none';
+            setTimeout(() => {
+                bubble.style.animation = 'fadeInUp 0.5s ease';
+            }, 10);
+        }
+
+        function startExamination() {
+            // Show minigame area
+            document.getElementById('minigameArea').style.display = 'block';
+            
+            // Load examination minigame
+            loadExaminationMinigame();
+            
+            // Update mission progress
+            updateMissionStep(1);
+        }
+
+        function loadExaminationMinigame() {
+            const content = document.getElementById('minigameContent');
+            content.innerHTML = `
+                <div class="bg-gray-100 rounded-xl p-6">
+                    <h4 class="font-bold mb-4">Höre das Herz ab</h4>
+                    
+                    <!-- Heartbeat visualization -->
+                    <svg width="100%" height="100" class="mb-4">
+                        <polyline class="heartbeat-line" points="0,50 20,50 30,20 40,80 50,30 60,60 80,50 100,50 120,50 130,20 140,80 150,30 160,60 180,50 200,50"></polyline>
+                    </svg>
+                    
+                    <div class="grid grid-cols-3 gap-4">
+                        <button onclick="diagnoseHeart('normal')" class="bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
+                            Normal
+                        </button>
+                        <button onclick="diagnoseHeart('fast')" class="bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600">
+                            Zu schnell
+                        </button>
+                        <button onclick="diagnoseHeart('irregular')" class="bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">
+                            Unregelmäßig
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function diagnoseHeart(diagnosis) {
+            if (diagnosis === 'fast') {
+                showDialogue('Gut erkannt! Der Herzschlag ist erhöht. Das könnte auf Stress oder Schmerzen hindeuten.');
+                updateMissionStep(2);
+                
+                // Next minigame
+                setTimeout(() => {
+                    loadTemperatureMinigame();
+                }, 2000);
+            } else {
+                storyState.lives--;
+                updateUI();
+                showDialogue('Hmm, das scheint nicht richtig zu sein. Hör nochmal genauer hin!');
+            }
+        }
+
+        function loadTemperatureMinigame() {
+            const content = document.getElementById('minigameContent');
+            content.innerHTML = `
+                <div class="bg-gray-100 rounded-xl p-6">
+                    <h4 class="font-bold mb-4">Miss die Temperatur</h4>
+                    
+                    <div class="relative h-64 w-20 mx-auto bg-gray-300 rounded-full">
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-red-500 to-orange-400 rounded-b-full transition-all duration-1000" 
+                             id="thermometerFill" style="height: 0%"></div>
+                        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 text-white font-bold text-2xl" id="tempReading">--°C</div>
+                    </div>
+                    
+                    <button onclick="measureTemperature()" class="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
+                        Temperatur messen
+                    </button>
+                </div>
+            `;
+        }
+
+        function measureTemperature() {
+            const temp = 39.8; // Elevated temperature
+            const fill = document.getElementById('thermometerFill');
+            const reading = document.getElementById('tempReading');
+            
+            // Animate thermometer
+            fill.style.height = '75%';
+            setTimeout(() => {
+                reading.textContent = temp + '°C';
+                showDialogue(`Die Temperatur ist ${temp}°C - das ist erhöht! Normal wäre 37.5-39.0°C.`);
+                updateMissionStep(3);
+                completeMission();
+            }, 1000);
+        }
+
+        function showComfortOptions() {
+            const content = document.getElementById('minigameContent');
+            content.innerHTML = `
+                <div class="bg-gray-100 rounded-xl p-6">
+                    <h4 class="font-bold mb-4">Wie möchtest du den Patienten beruhigen?</h4>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="comfortAction('pet')" class="p-4 bg-pink-100 rounded-lg hover:bg-pink-200">
+                            <div class="text-3xl mb-2">🤚</div>
+                            <div>Streicheln</div>
+                        </button>
+                        <button onclick="comfortAction('treat')" class="p-4 bg-yellow-100 rounded-lg hover:bg-yellow-200">
+                            <div class="text-3xl mb-2">🦴</div>
+                            <div>Leckerli geben</div>
+                        </button>
+                        <button onclick="comfortAction('talk')" class="p-4 bg-blue-100 rounded-lg hover:bg-blue-200">
+                            <div class="text-3xl mb-2">💬</div>
+                            <div>Beruhigend sprechen</div>
+                        </button>
+                        <button onclick="comfortAction('toy')" class="p-4 bg-green-100 rounded-lg hover:bg-green-200">
+                            <div class="text-3xl mb-2">🎾</div>
+                            <div>Spielzeug zeigen</div>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('minigameArea').style.display = 'block';
+        }
+
+        function comfortAction(action) {
+            const responses = {
+                'pet': 'Das Streicheln beruhigt den Patienten sichtlich. Gut gemacht!',
+                'treat': 'Vorsicht! Bei Magenproblemen sollten wir erstmal keine Leckerlis geben.',
+                'talk': 'Deine beruhigende Stimme hilft dem Patienten, sich zu entspannen.',
+                'toy': 'Das Spielzeug lenkt den Patienten ab - eine gute Idee!'
+            };
+            
+            showDialogue(responses[action]);
+            
+            if (action !== 'treat') {
+                document.getElementById('patientMood').textContent = '😌';
+                storyState.stars += 5;
+                updateUI();
+            }
+        }
+
+        function updateMissionStep(step) {
+            storyState.currentMission.progress = step;
+            updateMissionProgress();
+        }
+
+        function updateMissionProgress() {
+            const mission = storyState.currentMission;
+            document.getElementById('missionCurrent').textContent = mission.progress;
+            document.getElementById('missionTotal').textContent = mission.total;
+            const percent = (mission.progress / mission.total) * 100;
+            document.getElementById('missionProgress').style.width = percent + '%';
+        }
+
+        function completeMission() {
+            storyState.currentMission.completed = true;
+            document.getElementById('patientMood').textContent = '😊';
+            document.getElementById('ownerMood').textContent = '😄';
+            
+            showDialogue('Vielen Dank, Doktor! Sie haben Bello gerettet! Hier ist Ihre Belohnung.');
+            
+            // Rewards
+            storyState.coins += 200;
+            storyState.stars += 20;
+            storyState.trophies++;
+            
+            // Unlock next chapter button
+            document.getElementById('nextBtn').disabled = false;
+            
+            updateUI();
+            
+            // Show achievement
+            showAchievement('Mission Abgeschlossen!', 'Du hast Bello erfolgreich behandelt!');
+        }
+
+        function checkAnswer(index) {
+            const question = quizQuestions[currentQuizQuestion];
+            const options = document.querySelectorAll('.quiz-option');
+            
+            if (index === question.correct) {
+                options[index].classList.add('correct');
+                storyState.stars += 10;
+                storyState.quizStreak++;
+                
+                setTimeout(() => {
+                    showDialogue('Richtig! ' + question.explanation);
+                    startNewQuiz();
+                }, 1000);
+            } else {
+                options[index].classList.add('wrong');
+                options[question.correct].classList.add('correct');
+                storyState.quizStreak = 0;
+                
+                setTimeout(() => {
+                    showDialogue('Falsch. ' + question.explanation);
+                    startNewQuiz();
+                }, 2000);
+            }
+            
+            updateUI();
+        }
+
+        function startNewQuiz() {
+            currentQuizQuestion = Math.floor(Math.random() * quizQuestions.length);
+            const question = quizQuestions[currentQuizQuestion];
+            
+            document.getElementById('quizQuestion').textContent = question.question;
+            const container = document.getElementById('quizOptions');
+            container.innerHTML = question.options.map((option, index) => 
+                `<div class="quiz-option" onclick="checkAnswer(${index})">${option}</div>`
+            ).join('');
+        }
+
+        function openShop() {
+            alert('Shop-Feature kommt bald! Hier kannst du neue Ausrüstung kaufen und deine Klinik ausbauen.');
+        }
+
+        function previousChapter() {
+            if (storyState.chapter > 1) {
+                loadChapter(storyState.chapter - 1);
+            }
+        }
+
+        function nextChapter() {
+            if (storyState.chapter < chapters.length) {
+                loadChapter(storyState.chapter + 1);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('lives').textContent = storyState.lives;
+            document.getElementById('stars').textContent = storyState.stars;
+            document.getElementById('trophies').textContent = storyState.trophies;
+            document.getElementById('coins').textContent = storyState.coins;
+        }
+
+        function showAchievement(title, message) {
+            const achievement = document.createElement('div');
+            achievement.className = 'fixed top-20 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-xl shadow-2xl z-50';
+            achievement.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="text-3xl">🏆</div>
+                    <div>
+                        <div class="font-bold">${title}</div>
+                        <div class="text-sm">${message}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(achievement);
+            
+            setTimeout(() => {
+                achievement.style.animation = 'fadeInUp 0.5s ease reverse';
+                setTimeout(() => achievement.remove(), 500);
+            }, 3000);
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            try {
+                // Load saved state if exists
+                const savedState = localStorage.getItem('vetStoryState');
+                if (savedState) {
+                    const parsed = JSON.parse(savedState);
+                    storyState = { ...storyState, ...parsed };
+                    console.log('Game state loaded successfully');
+                }
+                initStory();
+            } catch (error) {
+                console.error('Error loading game:', error);
+                initStory(); // Start fresh if loading fails
+            }
+        });
+        
+        // Auto-save with error handling
+        setInterval(() => {
+            try {
+                localStorage.setItem('vetStoryState', JSON.stringify(storyState));
+            } catch (error) {
+                console.error('Error saving game state:', error);
+            }
+        }, 5000);
+        
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Game error:', event.error);
+            // Don't crash the game, just log the error
+            return true;
+        });
+    </script>
+</body>
+</html>
