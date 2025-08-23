@@ -38,7 +38,7 @@ const tests = [
         return true;
       } catch (error) {
         console.log(`❌ Blender MCP: Failed - ${error.message}`);
-        console.log('   💡 Solution: Install with "npm install -g blender-mcp"');
+        console.log('   💡 Solution: Install with "uvx blender-mcp" and configure Cursor MCP');
         return false;
       }
     }

@@ -6,14 +6,26 @@
 
 ### **Step 1: Blender MCP installieren**
 ```bash
-npm install -g blender-mcp
+# Blender MCP verwendet uvx (nicht npm!)
+uvx blender-mcp --help
+# Should show: "BlenderMCP server starting up"
 ```
+
+### **Step 1.5: Blender Addon installieren**
+1. **Addon ist bereits in Projekt-Assets:** `assets/blender-mcp-addon.py`
+2. **Öffne Blender**
+3. **Edit > Preferences > Add-ons** 
+4. **"Install..." > Wähle `assets/blender-mcp-addon.py`**
+5. **Aktiviere "Interface: Blender MCP"**
+6. **Blender NICHT schließen** (MCP Server braucht Verbindung)
 
 ### **Step 2: Cursor MCP konfigurieren**
 1. **Öffne Cursor Settings** (Cmd + ,)
 2. **Klicke "MCP" in der linken Sidebar** 
-3. **Klicke "+ MCP Server"**
-4. **LÖSCHE den gesamten Inhalt und kopiere EXAKT diesen JSON-Code:**
+3. **Bearbeite deine bestehende mcp.json (NICHT überschreiben!)**
+4. **Füge blender-mcp zu deiner bestehenden Config hinzu:**
+
+**WICHTIG:** Ersetze nur den `blender-mcp` Teil, behalte `godot-mcp`!
 
 ---
 
@@ -47,8 +59,8 @@ npm install -g blender-mcp
       ]
     },
     "blender-mcp": {
-      "command": "npx",
-      "args": ["-y", "blender-mcp"],
+      "command": "uvx",
+      "args": ["blender-mcp"],
       "env": {
         "BLENDER_PATH": "/Applications/Blender.app/Contents/MacOS/Blender",
         "PROJECT_ROOT": "/Users/doriangrey/Desktop/coding/tierarztspiel",
