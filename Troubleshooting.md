@@ -59,6 +59,42 @@
 
 **Implementation**: Landing Page HTML Update in deploy.yml
 
+---
+
+## 🚨 Three.js CDN OrbitControls Error (2025-08-23)
+
+### 🔴 Problem
+- **Error**: `Uncaught TypeError: THREE.OrbitControls is not a constructor`
+- **Ursache**: Three.js r128 CDN example files registrieren sich als globale Variablen, nicht unter THREE namespace
+- **Betroffen**: OrbitControls, GLTFLoader, DRACOLoader
+
+### ✅ Lösung - OPUS POWER FIX
+
+#### Root Cause:
+Bei Three.js r128 via cdnjs sind die Example-Klassen **global** verfügbar:
+- `OrbitControls` (nicht `THREE.OrbitControls`)
+- `GLTFLoader` (nicht `THREE.GLTFLoader`)
+- `DRACOLoader` (nicht `THREE.DRACOLoader`)
+
+#### Implementation:
+```javascript
+// FALSCH (führt zu Error):
+controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+// RICHTIG (funktioniert mit r128 CDN):
+controls = new OrbitControls(camera, renderer.domElement);
+```
+
+#### Compatibility Layer hinzugefügt:
+```javascript
+// Auto-fix für beide Varianten
+if (typeof OrbitControls !== 'undefined' && !THREE.OrbitControls) {
+    THREE.OrbitControls = OrbitControls;
+}
+```
+
+**Result**: Version 7 funktioniert jetzt mit korrekten Namespace-Referenzen
+
 ## 🔴 Problembeschreibung
 Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
 

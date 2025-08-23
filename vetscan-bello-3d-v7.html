@@ -278,6 +278,24 @@
         let originalMaterials = new Map();
         let isLoading = true;
 
+        // Three.js r128 CDN Compatibility Check & Fix
+        window.addEventListener('load', function() {
+            // Ensure loaders are available globally or under THREE namespace
+            if (typeof OrbitControls !== 'undefined' && !THREE.OrbitControls) {
+                console.log('📦 CDN Compatibility: Using global OrbitControls');
+                // Optional: Also add to THREE namespace for consistency
+                THREE.OrbitControls = OrbitControls;
+            }
+            if (typeof GLTFLoader !== 'undefined' && !THREE.GLTFLoader) {
+                console.log('📦 CDN Compatibility: Using global GLTFLoader');
+                THREE.GLTFLoader = GLTFLoader;
+            }
+            if (typeof DRACOLoader !== 'undefined' && !THREE.DRACOLoader) {
+                console.log('📦 CDN Compatibility: Using global DRACOLoader');
+                THREE.DRACOLoader = DRACOLoader;
+            }
+        });
+
         // Initialisierung
         init();
 
@@ -343,7 +361,8 @@
         }
 
         function setupControls() {
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            // Three.js r128 CDN: OrbitControls is global, not under THREE namespace
+            controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.minDistance = 2;
@@ -650,8 +669,9 @@
                 
                 updateLoadingProgress(20 + (currentQualityIndex * 10), `Lade ${quality} quality...`);
                 
-                const loader = new THREE.GLTFLoader();
-                const dracoLoader = new THREE.DRACOLoader();
+                // Three.js r128 CDN: Loaders are global, not under THREE namespace
+                const loader = new GLTFLoader();
+                const dracoLoader = new DRACOLoader();
                 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
                 loader.setDRACOLoader(dracoLoader);
 
