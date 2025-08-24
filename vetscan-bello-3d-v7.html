@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VetScan Pro - Bello 3D Scanner v7.0.2</title>
+    <title>VetScan Pro - Bello 3D Scanner v7.1.0</title>
     <!-- Three.js Core - unpkg CDN (funktioniert garantiert!) -->
     <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
     <!-- Three.js Examples - unpkg CDN mit korrekten Pfaden -->
@@ -76,7 +76,8 @@
             gap: 6px;
         }
 
-        .mode-buttons .mode-button:nth-child(5) {
+        .mode-buttons .mode-button:nth-child(5),
+        .mode-buttons .mode-button:nth-child(6) {
             grid-column: 1 / -1;
         }
 
@@ -198,13 +199,14 @@
         <header class="header">
             <h1>🐕 VetScan Pro - Bello 3D Scanner</h1>
             <p>Interaktive 3D-Untersuchung mit medizinischen Visualisierungen</p>
-            <p style="font-size: 12px; opacity: 0.7;">Version 7.0.2 - Build 2025.08.23.002</p>
+            <p style="font-size: 12px; opacity: 0.7;">Version 7.1.0 - Build 2025.08.24.001</p>
         </header>
 
         <div class="main-viewer">
             <div id="loading-overlay" class="loading-overlay">
                 <div>
                     <div>🐕 Lade Bello Modell...</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin: 5px 0;">Claude Desktop Import bereit</div>
                     <div class="progress-bar">
                         <div id="progress-fill" class="progress-fill"></div>
                     </div>
@@ -230,6 +232,9 @@
                     <button class="mode-button" onclick="switchVisualization('mri')" title="Magnetresonanztomographie">
                         🧠 MRT
                     </button>
+                    <button class="mode-button" onclick="switchVisualization('ct')" title="Computertomographie - Schichtbildverfahren">
+                        💫 CT-Scan
+                    </button>
                 </div>
             </div>
 
@@ -247,13 +252,13 @@
 
             <div id="viewer-canvas"></div>
             
-            <div class="status-badge">v7.0.2</div>
+            <div class="status-badge">v7.1.0</div>
         </div>
 
         <div class="debug-info" id="debug-info">
             Loading libraries...<br>
-            Version: 7.0.2<br>
-            Build: 2025.08.23.002
+            Version: 7.1.0<br>
+            Build: 2025.08.24.001
         </div>
     </div>
 
@@ -265,8 +270,8 @@
         let medicalShaders = {};
         let originalMaterials = new Map();
         let loadingProgress = 0;
-        const VERSION = '7.0.2';
-        const BUILD = '2025.08.23.002';
+        const VERSION = '7.1.0';
+        const BUILD = '2025.08.24.001';
 
         // Debug helper
         function debug(message) {
@@ -442,18 +447,20 @@
         }
 
         function setupShaders() {
-            // Enhanced X-Ray Shader (Medical Grade)
+            // Enhanced X-Ray Shader (Medical Grade) - v7.1 Advanced
             medicalShaders.xray = {
                 vertexShader: `
                     varying vec3 vNormal;
                     varying vec3 vPosition;
                     varying vec3 vWorldPosition;
+                    varying vec2 vUv;
                     
                     void main() {
                         vNormal = normalize(normalMatrix * normal);
                         vPosition = position;
                         vec4 worldPosition = modelMatrix * vec4(position, 1.0);
                         vWorldPosition = worldPosition.xyz;
+                        vUv = uv;
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
                     }
                 `,
@@ -461,68 +468,192 @@
                     varying vec3 vNormal;
                     varying vec3 vPosition;
                     varying vec3 vWorldPosition;
+                    varying vec2 vUv;
+                    uniform float time;
+                    
+                    // Advanced bone density simulation
+                    float getBoneDensity(vec3 pos) {
+                        // Spine simulation (higher density in center)
+                        float spineDistance = length(pos.xz);
+                        float spine = smoothstep(0.3, 0.1, spineDistance) * 0.9;
+                        
+                        // Rib cage simulation
+                        float ribPattern = sin(pos.y * 12.0) * cos(pos.z * 8.0);
+                        float ribs = smoothstep(0.0, 0.7, ribPattern) * 0.6;
+                        
+                        // Skull density (higher at top)
+                        float skull = smoothstep(0.6, 1.0, pos.y) * 0.8;
+                        
+                        // Limb bones (radial density)
+                        float limbBones = smoothstep(0.15, 0.05, distance(pos.xz, vec2(0.0))) * 0.7;
+                        
+                        return clamp(spine + ribs + skull + limbBones, 0.0, 1.0);
+                    }
+                    
+                    // Medical noise for realistic X-Ray texture
+                    float medicalNoise(vec2 st) {
+                        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                    }
                     
                     void main() {
                         vec3 viewDirection = normalize(cameraPosition - vWorldPosition);
-                        float fresnel = pow(1.0 - abs(dot(viewDirection, vNormal)), 2.0);
+                        float fresnel = pow(1.0 - abs(dot(viewDirection, vNormal)), 1.8);
                         
-                        vec3 xrayColor = vec3(0.7, 0.9, 1.0);
-                        vec3 boneColor = vec3(0.95, 0.95, 0.9);
+                        // Calculate bone density at this position
+                        float boneDensity = getBoneDensity(vPosition);
                         
-                        vec3 color = mix(boneColor, xrayColor, fresnel);
-                        float alpha = 0.3 + fresnel * 0.7;
+                        // Medical X-Ray color grading
+                        vec3 softTissue = vec3(0.15, 0.2, 0.3);    // Dark blue-gray
+                        vec3 mediumDensity = vec3(0.4, 0.5, 0.6);  // Medium gray
+                        vec3 highDensity = vec3(0.85, 0.9, 0.95);  // Bright white (bones)
+                        
+                        // Multi-level density mapping
+                        vec3 baseColor;
+                        if (boneDensity < 0.3) {
+                            baseColor = mix(softTissue, mediumDensity, boneDensity * 3.33);
+                        } else {
+                            baseColor = mix(mediumDensity, highDensity, (boneDensity - 0.3) * 1.43);
+                        }
+                        
+                        // Apply Fresnel for edge highlighting
+                        vec3 color = mix(baseColor, highDensity, fresnel * 0.3);
+                        
+                        // Medical film grain effect
+                        float grain = medicalNoise(vUv * 200.0 + time * 0.1) * 0.03;
+                        color += grain;
+                        
+                        // Improved alpha for depth and density
+                        float alpha = 0.2 + fresnel * 0.4 + boneDensity * 0.6;
+                        
+                        // Subtle blue tint for medical authenticity
+                        color.b += 0.05;
                         
                         gl_FragColor = vec4(color, alpha);
                     }
                 `,
                 transparent: true,
-                side: THREE.DoubleSide
+                side: THREE.DoubleSide,
+                uniforms: {
+                    time: { value: 0.0 }
+                }
             };
 
-            // Ultrasound Shader
+            // Advanced Ultrasound Shader - v7.1 Medical Grade
             medicalShaders.ultrasound = {
                 vertexShader: `
                     varying vec2 vUv;
                     varying vec3 vPosition;
+                    varying vec3 vNormal;
+                    varying vec3 vWorldPosition;
                     uniform float time;
                     
                     void main() {
                         vUv = uv;
                         vPosition = position;
+                        vNormal = normalize(normalMatrix * normal);
+                        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+                        
+                        // Subtle ultrasound wave distortion
                         vec3 pos = position;
-                        pos.y += sin(time * 2.0 + position.x * 5.0) * 0.02;
+                        pos.y += sin(time * 3.0 + position.x * 8.0 + position.z * 6.0) * 0.008;
                         gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                     }
                 `,
                 fragmentShader: `
                     varying vec2 vUv;
                     varying vec3 vPosition;
+                    varying vec3 vNormal;
+                    varying vec3 vWorldPosition;
                     uniform float time;
+                    uniform float frequency;
+                    uniform float gain;
                     
-                    float random(vec2 st) {
-                        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                    // Advanced noise functions for medical ultrasound
+                    float hash(vec2 p) {
+                        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+                    }
+                    
+                    float noise(vec2 p) {
+                        vec2 i = floor(p);
+                        vec2 f = fract(p);
+                        vec2 u = f * f * (3.0 - 2.0 * f);
+                        return mix(mix(hash(i), hash(i + vec2(1,0)), u.x),
+                                   mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), u.x), u.y);
+                    }
+                    
+                    // Simulate tissue acoustic impedance
+                    float getAcousticImpedance(vec3 pos) {
+                        // Different tissue types have different impedances
+                        float soft = noise(pos.xy * 10.0) * 0.3; // Soft tissue
+                        float fluid = smoothstep(-0.2, 0.2, pos.y) * 0.8; // Fluid (bladder, heart chambers)
+                        float organ = sin(pos.x * 15.0) * sin(pos.z * 12.0) * 0.4; // Organs
+                        return clamp(soft + fluid + organ, 0.0, 1.0);
+                    }
+                    
+                    // Doppler effect simulation
+                    float getDopplerShift(vec3 pos, vec3 normal) {
+                        // Simulate blood flow direction
+                        vec3 flowDirection = normalize(vec3(sin(time * 0.5), 0.0, cos(time * 0.5)));
+                        float dopplerEffect = dot(normal, flowDirection);
+                        return dopplerEffect * 0.5 + 0.5;
                     }
                     
                     void main() {
-                        vec2 scanLine = vec2(vUv.x, mod(vUv.y + time * 0.1, 1.0));
-                        float noise = random(scanLine + time);
+                        // Ultrasound probe position (scanning from top)
+                        vec3 probeDirection = vec3(0.0, -1.0, 0.0);
+                        float depth = abs(vPosition.y);
                         
-                        vec3 baseColor = vec3(0.1, 0.1, 0.2);
-                        vec3 echoColor = vec3(0.3, 0.6, 0.9);
+                        // Time-gain compensation (TGC) - deeper = brighter
+                        float tgc = 1.0 + depth * gain;
                         
-                        float echo = sin(vUv.y * 50.0 + time * 2.0) * 0.5 + 0.5;
-                        echo *= noise;
+                        // Acoustic impedance for tissue differentiation
+                        float impedance = getAcousticImpedance(vPosition);
                         
-                        vec3 color = mix(baseColor, echoColor, echo);
+                        // Multiple scan lines for realistic ultrasound appearance
+                        float scanLines = sin(vUv.x * 80.0 + time * 2.0) * 0.1;
                         
-                        float scanEffect = smoothstep(0.0, 0.1, abs(mod(vUv.y + time * 0.1, 1.0) - 0.5));
-                        color += vec3(0.2) * (1.0 - scanEffect);
+                        // Beam focusing effect
+                        float beamFocus = 1.0 - smoothstep(0.0, 0.5, abs(vUv.x - 0.5));
                         
-                        gl_FragColor = vec4(color, 0.9);
+                        // Advanced speckle noise pattern
+                        vec2 speckleCoord = vUv * 150.0 + time * 0.2;
+                        float speckle = noise(speckleCoord) * noise(speckleCoord * 2.0) * 0.4;
+                        
+                        // Echo strength based on angle and impedance
+                        float echoAngle = abs(dot(vNormal, probeDirection));
+                        float echoStrength = impedance * echoAngle * beamFocus;
+                        
+                        // Doppler color overlay (red/blue for blood flow)
+                        float doppler = getDopplerShift(vPosition, vNormal);
+                        vec3 dopplerColor = mix(vec3(0.0, 0.0, 0.3), vec3(0.3, 0.0, 0.0), doppler);
+                        
+                        // Attenuation with depth
+                        float attenuation = exp(-depth * 0.8);
+                        
+                        // Base ultrasound coloring (grayscale with blue tint)
+                        float intensity = (echoStrength + speckle + scanLines) * tgc * attenuation;
+                        intensity = clamp(intensity, 0.0, 1.0);
+                        
+                        // Medical ultrasound color scheme
+                        vec3 baseColor = vec3(intensity * 0.7, intensity * 0.8, intensity);
+                        
+                        // Add subtle Doppler overlay
+                        vec3 finalColor = mix(baseColor, baseColor + dopplerColor, 0.3);
+                        
+                        // Scan beam indicator
+                        float scanBeam = 1.0 - smoothstep(0.0, 0.02, abs(mod(vUv.y + time * 0.15, 1.0) - 0.5));
+                        finalColor += vec3(0.1, 0.3, 0.5) * scanBeam;
+                        
+                        // Medical monitor phosphor glow
+                        finalColor = pow(finalColor, vec3(0.8));
+                        
+                        gl_FragColor = vec4(finalColor, 1.0);
                     }
                 `,
                 uniforms: {
-                    time: { value: 0 }
+                    time: { value: 0.0 },
+                    frequency: { value: 5.0 },
+                    gain: { value: 1.5 }
                 }
             };
 
@@ -606,8 +737,118 @@
                     slice: { value: 0 }
                 }
             };
+
+            // Advanced CT Scanner Shader - v7.1 Medical Grade
+            medicalShaders.ct = {
+                vertexShader: `
+                    varying vec3 vPosition;
+                    varying vec3 vNormal;
+                    varying vec2 vUv;
+                    varying vec3 vWorldPosition;
+                    uniform float time;
+                    uniform float slicePosition;
+                    
+                    void main() {
+                        vPosition = position;
+                        vNormal = normalize(normalMatrix * normal);
+                        vUv = uv;
+                        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vPosition;
+                    varying vec3 vNormal;
+                    varying vec2 vUv;
+                    varying vec3 vWorldPosition;
+                    uniform float time;
+                    uniform float slicePosition;
+                    uniform float contrast;
+                    
+                    // Hounsfield Unit simulation for CT imaging
+                    float getHounsfieldUnit(vec3 pos) {
+                        // Air: -1000 HU, Fat: -100 to -50 HU, Water: 0 HU, Muscle: 10-40 HU, Bone: 700-3000 HU
+                        float air = smoothstep(-0.8, -0.6, pos.y) * (-1000.0);
+                        float fat = smoothstep(-0.3, 0.0, abs(pos.x)) * (-80.0);
+                        float muscle = (sin(pos.x * 12.0) * sin(pos.z * 10.0)) * 25.0;
+                        float bone = smoothstep(0.05, 0.15, abs(sin(pos.y * 8.0) * cos(pos.x * 6.0))) * 1500.0;
+                        
+                        return clamp(air + fat + muscle + bone + 50.0, -1000.0, 3000.0);
+                    }
+                    
+                    // Convert Hounsfield units to grayscale intensity
+                    float hounsfieldToGrayscale(float hu) {
+                        // Standard CT window: Level 50, Width 400 (for soft tissue)
+                        float windowLevel = 50.0;
+                        float windowWidth = 400.0;
+                        
+                        float intensity = (hu - windowLevel + windowWidth/2.0) / windowWidth;
+                        return clamp(intensity, 0.0, 1.0);
+                    }
+                    
+                    // Cross-sectional slice simulation
+                    float getSliceVisibility(vec3 pos, float slicePos) {
+                        float distance = abs(pos.y - slicePos);
+                        float thickness = 0.05; // Slice thickness
+                        return 1.0 - smoothstep(0.0, thickness, distance);
+                    }
+                    
+                    void main() {
+                        // Animated slice position
+                        float animatedSlice = slicePosition + sin(time * 0.5) * 0.3;
+                        
+                        // Get tissue density (Hounsfield units)
+                        float hu = getHounsfieldUnit(vPosition);
+                        float intensity = hounsfieldToGrayscale(hu);
+                        
+                        // Cross-sectional slice effect
+                        float sliceVis = getSliceVisibility(vPosition, animatedSlice);
+                        
+                        // Enhance contrast at slice boundaries
+                        intensity = mix(intensity * 0.3, intensity, sliceVis);
+                        
+                        // CT reconstruction artifacts (subtle streaking)
+                        float artifact = sin(vUv.x * 60.0 + time) * sin(vUv.y * 40.0 + time * 0.7) * 0.02;
+                        intensity += artifact;
+                        
+                        // Medical CT color mapping
+                        vec3 ctColor;
+                        if (hu < -500.0) {
+                            // Air - black
+                            ctColor = vec3(0.0, 0.0, 0.0);
+                        } else if (hu < -50.0) {
+                            // Fat - dark gray
+                            ctColor = vec3(0.2, 0.2, 0.2);
+                        } else if (hu < 100.0) {
+                            // Soft tissue - medium gray
+                            ctColor = vec3(intensity * 0.6);
+                        } else {
+                            // Bone - bright white
+                            ctColor = vec3(0.9, 0.95, 1.0);
+                        }
+                        
+                        // Apply contrast enhancement
+                        ctColor = pow(ctColor, vec3(1.0 / (1.0 + contrast * 0.5)));
+                        
+                        // Slice highlight effect
+                        if (sliceVis > 0.8) {
+                            ctColor += vec3(0.1, 0.2, 0.3) * sliceVis;
+                        }
+                        
+                        // Medical monitor appearance
+                        ctColor = mix(ctColor, ctColor * vec3(0.9, 1.0, 1.1), 0.1);
+                        
+                        gl_FragColor = vec4(ctColor, 1.0);
+                    }
+                `,
+                uniforms: {
+                    time: { value: 0.0 },
+                    slicePosition: { value: 0.0 },
+                    contrast: { value: 1.0 }
+                }
+            };
             
-            debug('Medical shaders configured');
+            debug('Advanced medical shaders configured (v7.1)');
         }
 
         function loadBelloModel() {
@@ -621,8 +862,20 @@
             dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
             loader.setDRACOLoader(dracoLoader);
             
-            // Model URLs in priority order
+            // Model URLs in priority order - Updated for Claude Desktop integration
             const modelUrls = [
+                // Claude Desktop Export (highest priority)
+                'models/animals/dog/high/bello_claude_desktop.glb',
+                'models/animals/dog/medium/bello_claude_desktop.glb',
+                'models/animals/dog/low/bello_claude_desktop.glb',
+                'models/animals/dog/bello_claude_desktop.glb',
+                
+                // Progressive quality fallbacks
+                'models/animals/dog/high/bello_main.glb',
+                'models/animals/dog/medium/bello_main.glb',
+                'models/animals/dog/low/bello_main.glb',
+                
+                // Legacy paths (compatibility)
                 'assets/models/animals/bello/bello_medium.glb',
                 'assets/models/animals/bello/bello_low.glb',
                 'assets/models/animals/bello/bello.glb',
@@ -634,7 +887,8 @@
             
             function tryLoadModel() {
                 if (modelLoadAttempt >= modelUrls.length) {
-                    debug('⚠️ No GLB models found, using procedural dog');
+                    debug('⚠️ No Claude Desktop GLB found, using advanced procedural dog');
+                    debug('💡 To import real model: Place bello_claude_desktop.glb in models/animals/dog/');
                     createProceduralDog();
                     return;
                 }
@@ -646,8 +900,24 @@
                 loader.load(
                     url,
                     function(gltf) {
-                        debug(`✅ Model loaded: ${url}`);
+                        debug(`✅ Claude Desktop Model loaded: ${url}`);
                         belloModel = gltf.scene;
+                        
+                        // Detailed model information
+                        let meshCount = 0;
+                        let triangleCount = 0;
+                        belloModel.traverse((child) => {
+                            if (child.isMesh) {
+                                meshCount++;
+                                if (child.geometry) {
+                                    const geo = child.geometry;
+                                    triangleCount += geo.index ? geo.index.count / 3 : geo.attributes.position.count / 3;
+                                }
+                            }
+                        });
+                        
+                        debug(`📊 Model Stats: ${meshCount} meshes, ~${Math.round(triangleCount)} triangles`);
+                        debug(`🎨 Source: Claude Desktop Export - Professional Quality`);
                         
                         // Store original materials
                         belloModel.traverse((child) => {
@@ -688,111 +958,325 @@
         }
 
         function createProceduralDog() {
-            debug('Creating procedural Bello model...');
+            debug('🐕 Creating advanced Bello model with anatomical structures...');
             const dogGroup = new THREE.Group();
+            dogGroup.name = 'Bello';
             
-            // Enhanced Body
-            const bodyGeometry = new THREE.SphereGeometry(1, 32, 32);
-            bodyGeometry.scale(1.2, 0.8, 0.9);
-            const bodyMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x8B6F47,
-                emissive: 0x4A3C28,
+            // === ANATOMICAL SYSTEMS ===
+            
+            // 1. SKELETAL SYSTEM (INVISIBLE BASE STRUCTURE)
+            const skeletalSystem = new THREE.Group();
+            skeletalSystem.name = 'SkeletalSystem';
+            
+            // Spine (main structural support)
+            const spineGeometry = new THREE.CylinderGeometry(0.05, 0.05, 2.0, 8);
+            spineGeometry.rotateZ(Math.PI / 2);
+            const spineMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xFFFFFF, // White for bone
+                transparent: true,
+                opacity: 0.0 // Invisible in normal mode
+            });
+            const spine = new THREE.Mesh(spineGeometry, spineMaterial);
+            spine.position.set(0, 0, 0);
+            spine.name = 'Spine';
+            skeletalSystem.add(spine);
+            
+            // Rib cage structure
+            for (let i = 0; i < 12; i++) {
+                const ribGeometry = new THREE.TorusGeometry(0.4 + i * 0.02, 0.02, 4, 16, Math.PI);
+                const rib = new THREE.Mesh(ribGeometry, spineMaterial.clone());
+                rib.position.set(-0.5 + i * 0.15, 0.1, 0);
+                rib.rotation.y = Math.PI / 2;
+                rib.name = `Rib_${i + 1}`;
+                skeletalSystem.add(rib);
+            }
+            
+            // Skull structure
+            const skullGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+            const skull = new THREE.Mesh(skullGeometry, spineMaterial.clone());
+            skull.position.set(1.2, 0.3, 0);
+            skull.name = 'Skull';
+            skeletalSystem.add(skull);
+            
+            dogGroup.add(skeletalSystem);
+            
+            // 2. ORGAN SYSTEM (HEART, LUNGS, LIVER)
+            const organSystem = new THREE.Group();
+            organSystem.name = 'OrganSystem';
+            
+            // Heart
+            const heartGeometry = new THREE.SphereGeometry(0.15, 16, 16);
+            heartGeometry.scale(1.2, 1.0, 0.8);
+            const heartMaterial = new THREE.MeshPhongMaterial({
+                color: 0xFF0000,
+                transparent: true,
+                opacity: 0.0, // Invisible in normal mode
+                emissive: 0x330000,
                 emissiveIntensity: 0.1
+            });
+            const heart = new THREE.Mesh(heartGeometry, heartMaterial);
+            heart.position.set(0.3, 0.1, -0.1);
+            heart.name = 'Heart';
+            organSystem.add(heart);
+            
+            // Lungs (left and right)
+            const lungGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+            lungGeometry.scale(0.8, 1.2, 1.5);
+            const lungMaterial = new THREE.MeshPhongMaterial({
+                color: 0xFF69B4,
+                transparent: true,
+                opacity: 0.0,
+                emissive: 0x331122,
+                emissiveIntensity: 0.1
+            });
+            
+            const leftLung = new THREE.Mesh(lungGeometry, lungMaterial);
+            leftLung.position.set(0.1, 0.2, -0.3);
+            leftLung.name = 'LeftLung';
+            organSystem.add(leftLung);
+            
+            const rightLung = new THREE.Mesh(lungGeometry, lungMaterial.clone());
+            rightLung.position.set(0.1, 0.2, 0.3);
+            rightLung.name = 'RightLung';
+            organSystem.add(rightLung);
+            
+            // Liver
+            const liverGeometry = new THREE.SphereGeometry(0.25, 16, 16);
+            liverGeometry.scale(1.5, 0.6, 1.2);
+            const liverMaterial = new THREE.MeshPhongMaterial({
+                color: 0x8B4513,
+                transparent: true,
+                opacity: 0.0,
+                emissive: 0x2A1A00,
+                emissiveIntensity: 0.1
+            });
+            const liver = new THREE.Mesh(liverGeometry, liverMaterial);
+            liver.position.set(-0.2, -0.1, 0);
+            liver.name = 'Liver';
+            organSystem.add(liver);
+            
+            // Stomach
+            const stomachGeometry = new THREE.SphereGeometry(0.18, 16, 16);
+            stomachGeometry.scale(1.3, 0.8, 1.0);
+            const stomachMaterial = new THREE.MeshPhongMaterial({
+                color: 0x9ACD32,
+                transparent: true,
+                opacity: 0.0,
+                emissive: 0x2A3300,
+                emissiveIntensity: 0.1
+            });
+            const stomach = new THREE.Mesh(stomachGeometry, stomachMaterial);
+            stomach.position.set(-0.3, -0.2, 0);
+            stomach.name = 'Stomach';
+            organSystem.add(stomach);
+            
+            dogGroup.add(organSystem);
+            
+            // 3. EXTERNAL BODY STRUCTURE
+            
+            // Enhanced Body (main torso)
+            const bodyGeometry = new THREE.SphereGeometry(1, 32, 32);
+            bodyGeometry.scale(1.4, 0.9, 0.95);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x8B6F47,
+                emissive: 0x2D1B0F,
+                emissiveIntensity: 0.05
             });
             const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
             body.position.y = 0;
             body.castShadow = true;
             body.receiveShadow = true;
+            body.name = 'Body';
             dogGroup.add(body);
             
-            // Head
-            const headGeometry = new THREE.SphereGeometry(0.6, 32, 32);
-            headGeometry.scale(0.9, 0.9, 1.1);
-            const headMaterial = new THREE.MeshPhongMaterial({ 
+            // Head with better proportions
+            const headGeometry = new THREE.SphereGeometry(0.65, 32, 32);
+            headGeometry.scale(0.95, 0.9, 1.15);
+            const headMaterial = new THREE.MeshLambertMaterial({ 
                 color: 0x8B6F47,
-                emissive: 0x4A3C28,
-                emissiveIntensity: 0.1
+                emissive: 0x2D1B0F,
+                emissiveIntensity: 0.05
             });
             const head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.set(1.2, 0.3, 0);
+            head.position.set(1.35, 0.35, 0);
             head.castShadow = true;
+            head.receiveShadow = true;
+            head.name = 'Head';
             dogGroup.add(head);
             
-            // Snout
-            const snoutGeometry = new THREE.ConeGeometry(0.3, 0.6, 16);
+            // Enhanced snout with nostril details
+            const snoutGeometry = new THREE.CapsuleGeometry(0.15, 0.5, 4, 8);
             snoutGeometry.rotateZ(-Math.PI / 2);
-            const snoutMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x6B5637
+            const snoutMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x5C4A3A,
+                emissive: 0x1A1410,
+                emissiveIntensity: 0.02
             });
             const snout = new THREE.Mesh(snoutGeometry, snoutMaterial);
-            snout.position.set(1.7, 0.2, 0);
+            snout.position.set(1.8, 0.25, 0);
+            snout.name = 'Snout';
             dogGroup.add(snout);
             
-            // Ears
-            const earGeometry = new THREE.ConeGeometry(0.25, 0.5, 8);
-            const earMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x5C4A3A
+            // Nose
+            const noseGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+            const noseMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x000000,
+                emissive: 0x111111,
+                emissiveIntensity: 0.2
+            });
+            const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+            nose.position.set(2.05, 0.3, 0);
+            nose.name = 'Nose';
+            dogGroup.add(nose);
+            
+            // Floppy ears (Labrador style)
+            const earGeometry = new THREE.SphereGeometry(0.35, 16, 16);
+            earGeometry.scale(0.6, 1.0, 0.3);
+            const earMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x5C4A3A,
+                emissive: 0x1A1410,
+                emissiveIntensity: 0.02
             });
             
             const leftEar = new THREE.Mesh(earGeometry, earMaterial);
-            leftEar.position.set(1.1, 0.8, -0.3);
-            leftEar.rotation.z = -0.3;
+            leftEar.position.set(1.0, 0.6, -0.4);
+            leftEar.rotation.set(0.3, 0, -0.4);
+            leftEar.name = 'LeftEar';
             dogGroup.add(leftEar);
             
             const rightEar = new THREE.Mesh(earGeometry, earMaterial.clone());
-            rightEar.position.set(1.1, 0.8, 0.3);
-            rightEar.rotation.z = -0.3;
+            rightEar.position.set(1.0, 0.6, 0.4);
+            rightEar.rotation.set(0.3, 0, 0.4);
+            rightEar.name = 'RightEar';
             dogGroup.add(rightEar);
             
-            // Eyes
-            const eyeGeometry = new THREE.SphereGeometry(0.1, 16, 16);
-            const eyeMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x000000,
-                emissive: 0x111111,
-                emissiveIntensity: 0.5
+            // Expressive eyes with highlights
+            const eyeGeometry = new THREE.SphereGeometry(0.12, 16, 16);
+            const eyeMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x2B1F1A,
+                emissive: 0x0F0A08,
+                emissiveIntensity: 0.3
             });
             
             const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-            leftEye.position.set(1.4, 0.4, -0.2);
+            leftEye.position.set(1.45, 0.45, -0.22);
+            leftEye.name = 'LeftEye';
             dogGroup.add(leftEye);
             
             const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial.clone());
-            rightEye.position.set(1.4, 0.4, 0.2);
+            rightEye.position.set(1.45, 0.45, 0.22);
+            rightEye.name = 'RightEye';
             dogGroup.add(rightEye);
             
-            // Legs
-            const legGeometry = new THREE.CylinderGeometry(0.15, 0.12, 0.8, 12);
-            const legMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x7A5F3F
+            // Eye highlights for liveliness
+            const highlightGeometry = new THREE.SphereGeometry(0.03, 8, 8);
+            const highlightMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xFFFFFF,
+                emissive: 0xFFFFFF,
+                emissiveIntensity: 0.8
             });
             
-            const positions = [
-                [0.5, -0.6, -0.3],
-                [0.5, -0.6, 0.3],
-                [-0.5, -0.6, -0.3],
-                [-0.5, -0.6, 0.3]
+            const leftHighlight = new THREE.Mesh(highlightGeometry, highlightMaterial);
+            leftHighlight.position.set(1.52, 0.50, -0.20);
+            leftHighlight.name = 'LeftEyeHighlight';
+            dogGroup.add(leftHighlight);
+            
+            const rightHighlight = new THREE.Mesh(highlightGeometry, highlightMaterial.clone());
+            rightHighlight.position.set(1.52, 0.50, 0.20);
+            rightHighlight.name = 'RightEyeHighlight';
+            dogGroup.add(rightHighlight);
+            
+            // More realistic legs with paws
+            const legGeometry = new THREE.CapsuleGeometry(0.12, 0.7, 4, 8);
+            const legMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x7A5F3F,
+                emissive: 0x251C14,
+                emissiveIntensity: 0.03
+            });
+            
+            const legPositions = [
+                { pos: [0.6, -0.6, -0.35], name: 'FrontLeftLeg' },
+                { pos: [0.6, -0.6, 0.35], name: 'FrontRightLeg' },
+                { pos: [-0.6, -0.6, -0.35], name: 'BackLeftLeg' },
+                { pos: [-0.6, -0.6, 0.35], name: 'BackRightLeg' }
             ];
             
-            positions.forEach(pos => {
+            legPositions.forEach(legData => {
                 const leg = new THREE.Mesh(legGeometry, legMaterial.clone());
-                leg.position.set(...pos);
+                leg.position.set(...legData.pos);
                 leg.castShadow = true;
+                leg.name = legData.name;
                 dogGroup.add(leg);
+                
+                // Add paws
+                const pawGeometry = new THREE.SphereGeometry(0.15, 12, 12);
+                pawGeometry.scale(1.0, 0.6, 1.2);
+                const pawMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x4A3429,
+                    emissive: 0x1A110A,
+                    emissiveIntensity: 0.02
+                });
+                const paw = new THREE.Mesh(pawGeometry, pawMaterial);
+                paw.position.set(legData.pos[0], legData.pos[1] - 0.45, legData.pos[2]);
+                paw.name = legData.name.replace('Leg', 'Paw');
+                dogGroup.add(paw);
             });
             
-            // Tail
-            const tailGeometry = new THREE.ConeGeometry(0.2, 0.8, 12);
-            tailGeometry.rotateZ(Math.PI / 3);
-            const tailMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x6B5637
+            // Animated tail
+            const tailGeometry = new THREE.CapsuleGeometry(0.08, 0.9, 4, 8);
+            tailGeometry.rotateZ(Math.PI / 4);
+            const tailMaterial = new THREE.MeshLambertMaterial({ 
+                color: 0x6B5637,
+                emissive: 0x201A11,
+                emissiveIntensity: 0.02
             });
             const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-            tail.position.set(-1.3, 0.2, 0);
+            tail.position.set(-1.5, 0.3, 0);
+            tail.name = 'Tail';
             dogGroup.add(tail);
             
-            // Store materials for shader switching
+            // === MEDICAL VISUALIZATION MARKERS ===
+            
+            // Create invisible markers for anatomical regions
+            const createMarker = (name, position, size = 0.1) => {
+                const markerGeometry = new THREE.SphereGeometry(size, 8, 8);
+                const markerMaterial = new THREE.MeshBasicMaterial({
+                    color: 0xFF0000,
+                    transparent: true,
+                    opacity: 0.0,
+                    visible: false
+                });
+                const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                marker.position.set(...position);
+                marker.name = `Marker_${name}`;
+                marker.userData = { 
+                    isAnatomyMarker: true, 
+                    organName: name,
+                    medicalInfo: getMedicalInfo(name)
+                };
+                return marker;
+            };
+            
+            // Add anatomical markers
+            const markers = [
+                { name: 'Heart', pos: [0.3, 0.1, -0.1] },
+                { name: 'LeftLung', pos: [0.1, 0.2, -0.3] },
+                { name: 'RightLung', pos: [0.1, 0.2, 0.3] },
+                { name: 'Liver', pos: [-0.2, -0.1, 0] },
+                { name: 'Stomach', pos: [-0.3, -0.2, 0] },
+                { name: 'Spine', pos: [0, 0, 0] },
+                { name: 'Head', pos: [1.35, 0.35, 0] },
+                { name: 'Chest', pos: [0.2, 0.0, 0] }
+            ];
+            
+            markers.forEach(markerData => {
+                const marker = createMarker(markerData.name, markerData.pos);
+                dogGroup.add(marker);
+            });
+            
+            // Store original materials for all meshes
             dogGroup.traverse((child) => {
-                if (child.isMesh) {
+                if (child.isMesh && child.material) {
                     originalMaterials.set(child, child.material.clone());
                 }
             });
@@ -800,9 +1284,48 @@
             belloModel = dogGroup;
             scene.add(belloModel);
             
+            // Add subtle idle animation
+            function animateBello() {
+                if (belloModel) {
+                    const time = Date.now() * 0.001;
+                    
+                    // Breathing effect
+                    const breathScale = 1 + Math.sin(time * 3) * 0.02;
+                    const bodyMesh = belloModel.getObjectByName('Body');
+                    if (bodyMesh) {
+                        bodyMesh.scale.set(1.4, 0.9 * breathScale, 0.95);
+                    }
+                    
+                    // Tail wagging
+                    const tailMesh = belloModel.getObjectByName('Tail');
+                    if (tailMesh) {
+                        tailMesh.rotation.y = Math.sin(time * 4) * 0.3;
+                    }
+                    
+                    // Eye blink (occasional)
+                    const leftEye = belloModel.getObjectByName('LeftEye');
+                    const rightEye = belloModel.getObjectByName('RightEye');
+                    if (leftEye && rightEye && Math.random() < 0.002) {
+                        const blinkScale = Math.sin(time * 20) * 0.5 + 0.5;
+                        leftEye.scale.y = blinkScale;
+                        rightEye.scale.y = blinkScale;
+                        setTimeout(() => {
+                            leftEye.scale.y = 1;
+                            rightEye.scale.y = 1;
+                        }, 200);
+                    }
+                }
+                requestAnimationFrame(animateBello);
+            }
+            
+            // Start animation
+            animateBello();
+            
             updateProgress(100);
             hideLoadingOverlay();
-            debug('✅ Procedural dog created');
+            debug('✅ Advanced Bello model created with anatomical structures!');
+            debug(`📊 Total meshes: ${dogGroup.children.length}`);
+            debug(`🔬 Anatomical markers: ${markers.length}`);
         }
 
         function updateProgress(percent) {
@@ -869,50 +1392,324 @@
             }
         }
 
+        // Enhanced Medical Information System v7.1
         function showOrganInfo(point) {
             const organInfo = document.getElementById('organ-info');
             const organTitle = document.getElementById('organ-title');
             const organDetails = document.getElementById('organ-details');
             
-            // Determine body region based on click position
+            // Determine body region based on click position with higher precision
             let region = 'Körper';
             let details = '';
             
+            // Get current visualization mode for specialized information
+            const mode = currentVisualization;
+            
             if (point.y > 0.5) {
-                region = 'Kopf & Hals';
-                details = `
-                    <p><strong>Gehirn:</strong> Neurologische Funktionen normal</p>
-                    <p><strong>Augen:</strong> Pupillenreaktion positiv</p>
-                    <p><strong>Ohren:</strong> Keine Entzündungen erkennbar</p>
-                `;
-            } else if (point.y > -0.2) {
-                if (point.x > 0.3) {
-                    region = 'Brustkorb';
-                    details = `
-                        <p><strong>Herz:</strong> 80 BPM, rhythmisch</p>
-                        <p><strong>Lunge:</strong> Klare Atemgeräusche</p>
-                        <p><strong>Rippen:</strong> Intakt, keine Frakturen</p>
-                    `;
-                } else {
-                    region = 'Bauchraum';
-                    details = `
-                        <p><strong>Magen:</strong> Normale Füllung</p>
-                        <p><strong>Leber:</strong> Größe normal</p>
-                        <p><strong>Nieren:</strong> Beide funktionsfähig</p>
-                    `;
-                }
+                region = '🧠 Kopf & Neurologie';
+                details = getHeadDetails(mode);
+            } else if (point.y > 0.1 && point.x > -0.2 && point.x < 0.4) {
+                region = '💓 Herz-Kreislauf-System';
+                details = getCardiacDetails(mode);
+            } else if (point.y > 0.1) {
+                region = '🫁 Respirationssystem';
+                details = getRespiratoryDetails(mode);
+            } else if (point.y > -0.3 && Math.abs(point.x) < 0.3) {
+                region = '🏥 Abdomen & Verdauung';
+                details = getAbdominalDetails(mode);
+            } else if (point.y > -0.3) {
+                region = '🩻 Wirbelsäule & Rücken';
+                details = getSpinalDetails(mode);
             } else {
-                region = 'Extremitäten';
-                details = `
-                    <p><strong>Knochen:</strong> Keine Frakturen</p>
-                    <p><strong>Gelenke:</strong> Beweglichkeit gut</p>
-                    <p><strong>Muskulatur:</strong> Tonus normal</p>
-                `;
+                region = '🦴 Extremitäten & Skelett';
+                details = getLimbDetails(mode);
             }
             
             organTitle.textContent = region;
             organDetails.innerHTML = details;
             organInfo.style.display = 'block';
+        }
+
+        function getHeadDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>🦴 Schädelknochen:</strong> Normale Dichte, keine Frakturen</p>
+                        <p><strong>🦷 Zähne:</strong> Vollständiges Gebiss, keine Karies</p>
+                        <p><strong>🧠 Schädelbasis:</strong> Keine Verkalkungen</p>
+                        <p><em>Hounsfield-Werte: Knochen 800-1200 HU</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>🧠 Gehirn:</strong> Normale Echostruktur</p>
+                        <p><strong>👁️ Augäpfel:</strong> Klare Strukturen</p>
+                        <p><strong>🗣️ Weichteile:</strong> Homogene Echogenität</p>
+                        <p><em>Doppler: Zerebrale Durchblutung normal</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Kopftemperatur:</strong> 38.2°C (normal)</p>
+                        <p><strong>👂 Ohren:</strong> 37.8°C, keine Hyperthermie</p>
+                        <p><strong>👃 Nase:</strong> Kühl, gute Durchblutung</p>
+                        <p><em>Temperaturverteilung physiologisch</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>🧠 Graue Substanz:</strong> T1/T2 normal</p>
+                        <p><strong>🧠 Weiße Substanz:</strong> Keine Läsionen</p>
+                        <p><strong>💧 Liquor:</strong> Normaler Fluss</p>
+                        <p><em>FLAIR-Sequenz: Keine Pathologien</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>🧠 Hirngewebe:</strong> 35-45 HU (normal)</p>
+                        <p><strong>💀 Knochen:</strong> 1000+ HU, intakt</p>
+                        <p><strong>🩸 Gefäße:</strong> Keine Blutungen</p>
+                        <p><em>Kontrastmittel: Normale Anreicherung</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>🧠 Neurologie:</strong> Reflexe intakt</p>
+                        <p><strong>👁️ Augen:</strong> Pupillenreaktion positiv</p>
+                        <p><strong>👂 Ohren:</strong> Keine Entzündungen</p>
+                        <p><strong>🦷 Gebiss:</strong> Vollständig, gesund</p>
+                    `;
+            }
+        }
+
+        function getCardiacDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>💓 Herzschatten:</strong> Normal groß, VHS 9.5v</p>
+                        <p><strong>🫁 Lungengefäße:</strong> Normale Zeichnung</p>
+                        <p><strong>🦴 Thorax:</strong> Symmetrische Rippenbögen</p>
+                        <p><em>Herzspitze nicht vergrößert</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>💓 Herzfunktion:</strong> EF 65%, normal</p>
+                        <p><strong>🚪 Klappen:</strong> Mitral/Aortal intakt</p>
+                        <p><strong>🩸 Doppler:</strong> Fluss 1.2 m/s</p>
+                        <p><em>Wandbewegung synchron</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Herz:</strong> 39.1°C (aktiv)</p>
+                        <p><strong>🫁 Thorax:</strong> 38.5°C gleichmäßig</p>
+                        <p><strong>🩸 Durchblutung:</strong> Optimal</p>
+                        <p><em>Keine Minderperfusion</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>💓 Myokard:</strong> T1/T2 homogen</p>
+                        <p><strong>🫀 Kammern:</strong> Normale Größe</p>
+                        <p><strong>🩸 Perfusion:</strong> Gleichmäßig</p>
+                        <p><em>Keine Fibrose oder Narben</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>💓 Herzmuskel:</strong> 45-55 HU</p>
+                        <p><strong>🫀 Koronararterien:</strong> Kein Kalk</p>
+                        <p><strong>🫁 Mediastinum:</strong> Normal</p>
+                        <p><em>Calcium-Score: 0</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>💓 Herzfrequenz:</strong> 85 BPM, rhythmisch</p>
+                        <p><strong>🩺 Herzgeräusche:</strong> Rein, kräftig</p>
+                        <p><strong>💉 Puls:</strong> Kräftig, regelmäßig</p>
+                        <p><strong>🩸 Kreislauf:</strong> Stabil</p>
+                    `;
+            }
+        }
+
+        function getRespiratoryDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>🫁 Lungenfeld:</strong> Beidseitig belüftet</p>
+                        <p><strong>🦴 Rippen:</strong> Intakt, keine Frakturen</p>
+                        <p><strong>🫁 Zwerchfell:</strong> Normal gewölbt</p>
+                        <p><em>Keine Pneumonie oder Ödeme</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>🫁 Pleura:</strong> Gleitende Bewegung</p>
+                        <p><strong>💧 Erguss:</strong> Nicht nachweisbar</p>
+                        <p><strong>🔍 B-Linien:</strong> Physiologisch</p>
+                        <p><em>Lungenparenchym nicht einsehbar</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Lungentemp:</strong> 38.6°C</p>
+                        <p><strong>🌬️ Atemluft:</strong> 35.2°C</p>
+                        <p><strong>🦴 Thoraxwand:</strong> 38.0°C</p>
+                        <p><em>Normale Wärmeverteilung</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>🫁 Lungengewebe:</strong> Signal niedrig</p>
+                        <p><strong>🫀 Herzlunge:</strong> Klare Abgrenzung</p>
+                        <p><strong>🩸 Gefäße:</strong> Pulmonalarterien normal</p>
+                        <p><em>T2-Gewichtung unauffällig</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>🫁 Lungenparenchym:</strong> -800 HU</p>
+                        <p><strong>🩸 Pulmonalgefäße:</strong> Kontrastiert</p>
+                        <p><strong>🦴 Thoraxwand:</strong> 800+ HU</p>
+                        <p><em>Keine Embolien oder Infarkte</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>🫁 Atmung:</strong> 22/min, regelmäßig</p>
+                        <p><strong>🩺 Auskultation:</strong> Vesikuläratmen</p>
+                        <p><strong>📊 SpO2:</strong> 98%, normal</p>
+                        <p><strong>🌬️ Atemwege:</strong> Frei</p>
+                    `;
+            }
+        }
+
+        function getAbdominalDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>🍖 Magen:</strong> Normale Größe und Lage</p>
+                        <p><strong>💧 Darmgas:</strong> Physiologisch verteilt</p>
+                        <p><strong>🦴 Wirbelsäule:</strong> LWS intakt</p>
+                        <p><em>Keine Obstruktion sichtbar</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>🫘 Leber:</strong> Homogen, normale Größe</p>
+                        <p><strong>🫘 Nieren:</strong> Beidseitig 6.2cm</p>
+                        <p><strong>🫀 Aorta:</strong> 1.8cm Durchmesser</p>
+                        <p><em>Gallenblase: Wanddicke 2mm</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Bauchtemp:</strong> 38.8°C</p>
+                        <p><strong>🫘 Leber:</strong> 39.2°C (metabolisch aktiv)</p>
+                        <p><strong>🫘 Nieren:</strong> 38.9°C</p>
+                        <p><em>Normale Organtemperaturen</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>🫘 Leber:</strong> T1/T2 Signal normal</p>
+                        <p><strong>🫘 Pankreas:</strong> Homogene Struktur</p>
+                        <p><strong>🫘 Nieren:</strong> Kortikomedulläre Diff.</p>
+                        <p><em>MRCP: Gallenwege unauffällig</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>🫘 Leber:</strong> 55-65 HU, homogen</p>
+                        <p><strong>🫘 Nieren:</strong> 30-40 HU</p>
+                        <p><strong>🫘 Milz:</strong> 45-55 HU</p>
+                        <p><em>Kontrastphasen normal</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>🫘 Abdomen:</strong> Weich, nicht schmerzhaft</p>
+                        <p><strong>🫘 Leber:</strong> Nicht vergrößert</p>
+                        <p><strong>🫘 Nieren:</strong> Beide palpabel</p>
+                        <p><strong>🍽️ Verdauung:</strong> Normal</p>
+                    `;
+            }
+        }
+
+        function getSpinalDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>🦴 Wirbel:</strong> Normal ausgerichtet</p>
+                        <p><strong>💿 Bandscheiben:</strong> Höhe erhalten</p>
+                        <p><strong>🦴 Facettengelenke:</strong> Intakt</p>
+                        <p><em>Keine Spondylose</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>💪 Rückenmuskulatur:</strong> Homogen</p>
+                        <p><strong>🧠 Spinalkanal:</strong> Echoarm</p>
+                        <p><strong>🦴 Dornfortsätze:</strong> Darstellbar</p>
+                        <p><em>Begrenzte Beurteilbarkeit</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Rücken:</strong> 38.1°C</p>
+                        <p><strong>💪 Muskulatur:</strong> 38.4°C</p>
+                        <p><strong>🦴 Wirbelsäule:</strong> 37.9°C</p>
+                        <p><em>Keine Entzündungszeichen</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>🧠 Rückenmark:</strong> T2 hyperintens</p>
+                        <p><strong>💿 Bandscheiben:</strong> T2 Signal erhalten</p>
+                        <p><strong>🦴 Wirbelkörper:</strong> Normale Signale</p>
+                        <p><em>Keine Kompression oder Läsionen</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>🦴 Wirbelkörper:</strong> 150-300 HU</p>
+                        <p><strong>💿 Bandscheiben:</strong> 80-120 HU</p>
+                        <p><strong>🧠 Spinalkanal:</strong> Frei</p>
+                        <p><em>Knöcherne Strukturen intakt</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>🦴 Wirbelsäule:</strong> Beweglich</p>
+                        <p><strong>💪 Muskulatur:</strong> Kräftig, symmetrisch</p>
+                        <p><strong>🧠 Neurologie:</strong> Reflexe normal</p>
+                        <p><strong>🚶 Mobilität:</strong> Uneingeschränkt</p>
+                    `;
+            }
+        }
+
+        function getLimbDetails(mode) {
+            switch(mode) {
+                case 'xray':
+                    return `
+                        <p><strong>🦴 Röhrenknochen:</strong> Intakt, normale Dichte</p>
+                        <p><strong>🔗 Gelenke:</strong> Gelenkspalt erhalten</p>
+                        <p><strong>🦶 Pfoten:</strong> Alle Zehen vorhanden</p>
+                        <p><em>Keine Arthrose oder Frakturen</em></p>
+                    `;
+                case 'ultrasound':
+                    return `
+                        <p><strong>💪 Muskulatur:</strong> Homogene Struktur</p>
+                        <p><strong>🩸 Gefäße:</strong> Guter Doppler-Fluss</p>
+                        <p><strong>🦴 Kortikalis:</strong> Echogen</p>
+                        <p><em>Keine Hämatome oder Ödeme</em></p>
+                    `;
+                case 'thermal':
+                    return `
+                        <p><strong>🌡️ Gliedmaßen:</strong> 37.2°C</p>
+                        <p><strong>🦶 Pfoten:</strong> 36.8°C (peripher)</p>
+                        <p><strong>🔗 Gelenke:</strong> 37.5°C</p>
+                        <p><em>Gute periphere Durchblutung</em></p>
+                    `;
+                case 'mri':
+                    return `
+                        <p><strong>💪 Muskulatur:</strong> T1 iso-/hypointens</p>
+                        <p><strong>🦴 Knochenmark:</strong> Normale Signale</p>
+                        <p><strong>🔗 Gelenke:</strong> Knorpel T2 hyperintens</p>
+                        <p><em>Keine Ödeme oder Läsionen</em></p>
+                    `;
+                case 'ct':
+                    return `
+                        <p><strong>🦴 Kortikalis:</strong> 1000+ HU</p>
+                        <p><strong>🦴 Spongiosa:</strong> 150-400 HU</p>
+                        <p><strong>💪 Weichteile:</strong> 40-80 HU</p>
+                        <p><em>Knochendichte altersgerecht</em></p>
+                    `;
+                default:
+                    return `
+                        <p><strong>🦴 Knochen:</strong> Stabil, belastbar</p>
+                        <p><strong>🔗 Gelenke:</strong> Volle Beweglichkeit</p>
+                        <p><strong>💪 Muskulatur:</strong> Kraftvoll, symmetrisch</p>
+                        <p><strong>🦶 Gang:</strong> Physiologisch</p>
+                    `;
+            }
         }
 
         function closeOrganInfo() {
