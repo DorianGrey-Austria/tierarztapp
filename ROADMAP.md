@@ -28,21 +28,31 @@
 - ✅ **Interactive Organ Detection** - Click-based examination system
 - ✅ **vetscan-bello-3d.html** - Vollwertiger 3D-Viewer mit medizinischen Modi
 
-### Phase 4: Blender MCP Integration (25.08.2025) ⭐ DURCHBRUCH
+### Phase 4: Blender MCP Integration (25.08.2025) ⭐ DURCHBRUCH & KRITISCHE ERKENNTNIS
 - ✅ **MCP Konfiguration gelöst** - `.cursor/mcp.json` mit `uvx` command
 - ✅ **Bidirektionale Kommunikation** - Port 9876 WebSocket etabliert
 - ✅ **3D Object Creation** - Volle Kontrolle über Blender via MCP
 - ✅ **Material & Shader Control** - Farben und Materialien änderbar
 - ✅ **Creative Design Pipeline** - Accessories und Modifikationen möglich
 - ⚠️ **Export Workaround** - Manueller Export via Script nötig
+- 🔴 **KRITISCH: Claude Code vs Claude Desktop**
+  - Claude Desktop: Hat direkten `mcp__blender` Tool Zugriff
+  - Claude Code (Cursor): KEIN direkter MCP Tool Zugriff, nur Server-Start möglich
+  - Lösung: Scripts in Blender GUI manuell ausführen
+- ✅ **Glücksfall reproduziert** - Hund → Donut Transformation erfolgreich!
 
 ## 🎯 PRIORITÄTEN FÜR MORGEN (26.08.2025)
 
-### 1️⃣ **HÖCHSTE PRIORITÄT: Blender Export Automation**
-- [ ] MCP Export-Problem lösen (File I/O Permissions)
-- [ ] Alternative: Blender Addon mit Auto-Export entwickeln
-- [ ] WebSocket-basierter File Transfer implementieren
-- [ ] Export-Queue System für Batch-Operationen
+### 0️⃣ **NEUE ERKENNTNIS: Claude Desktop Migration testen**
+- [ ] Claude Desktop App installieren und MCP direkt testen
+- [ ] Vergleich: Direkte `mcp__blender` Tools vs Script-Workaround
+- [ ] Dokumentation der Unterschiede für Team
+
+### 1️⃣ **Blender Export Automation (angepasste Strategie)**
+- [ ] Da Claude Code keine direkten MCP Tools hat: Alternative Wege
+- [ ] Blender Addon mit File-Watcher für Auto-Export
+- [ ] Python Script-Runner als Bridge zwischen Claude Code und Blender
+- [ ] Docker-basierte Lösung mit API-Endpoint
 
 ### 2️⃣ **3D Asset Pipeline Vervollständigen**
 - [ ] Alle 20 Tiere als 3D-Modelle vorbereiten
