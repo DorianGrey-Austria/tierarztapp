@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro Medical 3D - Advanced Visualization v9.0</title>
+    
+    <!-- Three.js from unpkg CDN -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            width: 350px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .control-panel h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #00ff88, #00ccff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Visualization Modes */
+        .viz-modes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .viz-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .viz-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .viz-btn.active {
+            background: linear-gradient(135deg, #00ff88 0%, #00ccff 100%);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .viz-btn .icon {
+            font-size: 1.5em;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        /* Medical Data Display */
+        .medical-data {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-row:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .data-value {
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        .data-value.warning {
+            color: #ffaa00;
+        }
+        
+        .data-value.critical {
+            color: #ff4444;
+        }
+        
+        /* Organ System Selector */
+        .organ-selector {
+            margin-bottom: 20px;
+        }
+        
+        .organ-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .organ-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .organ-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #00ff88;
+        }
+        
+        .organ-btn.active {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+        
+        /* Advanced Controls */
+        .slider-control {
+            margin: 15px 0;
+        }
+        
+        .slider-control label {
+            display: block;
+            margin-bottom: 5px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00ccff);
+            cursor: pointer;
+        }
+        
+        /* Info Panel */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            width: 300px;
+            z-index: 1000;
+        }
+        
+        .diagnosis-card {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05));
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .diagnosis-card h3 {
+            color: #ff4444;
+            margin-bottom: 10px;
+        }
+        
+        .diagnosis-card p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #0f0f1e;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 4px solid rgba(0, 255, 136, 0.1);
+            border-top: 4px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #00ff88;
+        }
+        
+        /* Performance Monitor */
+        .performance-monitor {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+        <div class="loading-text">Initialisiere Medical 3D System...</div>
+    </div>
+    
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+    
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <h2>
+            <span>🏥</span>
+            VetScan Pro Medical 3D
+        </h2>
+        
+        <!-- Visualization Modes -->
+        <div class="viz-modes">
+            <button class="viz-btn active" onclick="setVisualizationMode('normal')">
+                <span class="icon">👁️</span>
+                Normal
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('xray')">
+                <span class="icon">💀</span>
+                X-Ray
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('thermal')">
+                <span class="icon">🌡️</span>
+                Thermal
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('ultrasound')">
+                <span class="icon">📡</span>
+                Ultrasound
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('mri')">
+                <span class="icon">🧲</span>
+                MRI
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('ct')">
+                <span class="icon">💫</span>
+                CT Scan
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('vascular')">
+                <span class="icon">❤️</span>
+                Vascular
+            </button>
+            <button class="viz-btn" onclick="setVisualizationMode('neural')">
+                <span class="icon">🧠</span>
+                Neural
+            </button>
+        </div>
+        
+        <!-- Medical Data -->
+        <div class="medical-data">
+            <h3 style="margin-bottom: 15px; color: #00ff88;">Vitalwerte</h3>
+            <div class="data-row">
+                <span class="data-label">Herzfrequenz</span>
+                <span class="data-value" id="heartRate">120 bpm</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Temperatur</span>
+                <span class="data-value warning" id="temperature">39.2°C</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Atemfrequenz</span>
+                <span class="data-value" id="respRate">25/min</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Sauerstoffsättigung</span>
+                <span class="data-value" id="oxygen">98%</span>
+            </div>
+            <div class="data-row">
+                <span class="data-label">Blutdruck</span>
+                <span class="data-value" id="bloodPressure">120/80</span>
+            </div>
+        </div>
+        
+        <!-- Organ System Selector -->
+        <div class="organ-selector">
+            <h3 style="margin-bottom: 10px; color: #00ff88;">Organsysteme</h3>
+            <div class="organ-grid">
+                <button class="organ-btn" onclick="highlightOrgan('heart')">❤️ Herz</button>
+                <button class="organ-btn" onclick="highlightOrgan('lungs')">🫁 Lunge</button>
+                <button class="organ-btn" onclick="highlightOrgan('liver')">🟤 Leber</button>
+                <button class="organ-btn" onclick="highlightOrgan('kidney')">🫘 Nieren</button>
+                <button class="organ-btn" onclick="highlightOrgan('stomach')">🔵 Magen</button>
+                <button class="organ-btn" onclick="highlightOrgan('brain')">🧠 Gehirn</button>
+                <button class="organ-btn" onclick="highlightOrgan('bones')">🦴 Skelett</button>
+                <button class="organ-btn" onclick="highlightOrgan('muscles')">💪 Muskeln</button>
+                <button class="organ-btn" onclick="highlightOrgan('nerves')">⚡ Nerven</button>
+            </div>
+        </div>
+        
+        <!-- Advanced Controls -->
+        <div class="slider-control">
+            <label>Transparenz: <span id="opacityValue">50%</span></label>
+            <input type="range" class="slider" id="opacitySlider" min="0" max="100" value="50" oninput="updateOpacity(this.value)">
+        </div>
+        
+        <div class="slider-control">
+            <label>Schnittebene: <span id="sliceValue">0</span></label>
+            <input type="range" class="slider" id="sliceSlider" min="-100" max="100" value="0" oninput="updateSlice(this.value)">
+        </div>
+        
+        <div class="slider-control">
+            <label>Kontrast: <span id="contrastValue">100%</span></label>
+            <input type="range" class="slider" id="contrastSlider" min="50" max="200" value="100" oninput="updateContrast(this.value)">
+        </div>
+    </div>
+    
+    <!-- Info Panel -->
+    <div class="info-panel">
+        <h3 style="margin-bottom: 15px; color: #00ff88;">Diagnose-Assistent</h3>
+        
+        <div class="diagnosis-card">
+            <h3>⚠️ Erhöhte Temperatur</h3>
+            <p>39.2°C liegt über dem Normalbereich. Mögliche Ursachen: Infektion, Entzündung oder Stress.</p>
+        </div>
+        
+        <div class="diagnosis-card" style="background: linear-gradient(135deg, rgba(255, 170, 0, 0.1), rgba(255, 170, 0, 0.05)); border-color: rgba(255, 170, 0, 0.3);">
+            <h3 style="color: #ffaa00;">🔍 Empfohlene Tests</h3>
+            <p>• Blutbild<br>• Urinanalyse<br>• Röntgen Thorax<br>• Ultraschall Abdomen</p>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button style="width: 100%; padding: 12px; background: linear-gradient(135deg, #00ff88, #00ccff); border: none; border-radius: 10px; color: #000; font-weight: bold; cursor: pointer;">
+                📊 Vollständige Analyse starten
+            </button>
+        </div>
+    </div>
+    
+    <!-- Performance Monitor -->
+    <div class="performance-monitor">
+        <div>FPS: <span id="fps">60</span></div>
+        <div>Vertices: <span id="vertices">0</span></div>
+        <div>Triangles: <span id="triangles">0</span></div>
+    </div>
+    
+    <script>
+        // Initialize Three.js Scene
+        let scene, camera, renderer, controls;
+        let model, currentMode = 'normal';
+        let animationId;
+        let clock = new THREE.Clock();
+        
+        // Medical Visualization Shaders
+        const medicalShaders = {
+            xray: {
+                vertexShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vViewPosition;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vViewPosition = -mvPosition.xyz;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vViewPosition;
+                    uniform float opacity;
+                    uniform float contrast;
+                    
+                    void main() {
+                        vec3 normal = normalize(vNormal);
+                        vec3 viewDir = normalize(vViewPosition);
+                        float intensity = pow(1.0 - abs(dot(normal, viewDir)), 2.0);
+                        intensity = pow(intensity, contrast / 100.0);
+                        
+                        vec3 color = vec3(0.3, 1.0, 0.5) * intensity;
+                        float alpha = intensity * opacity;
+                        
+                        gl_FragColor = vec4(color, alpha);
+                    }
+                `
+            },
+            thermal: {
+                vertexShader: `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    void main() {
+                        vUv = uv;
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    uniform float time;
+                    uniform float opacity;
+                    
+                    vec3 heatmap(float t) {
+                        vec3 cold = vec3(0.0, 0.0, 1.0);
+                        vec3 warm = vec3(1.0, 1.0, 0.0);
+                        vec3 hot = vec3(1.0, 0.0, 0.0);
+                        
+                        if(t < 0.5) {
+                            return mix(cold, warm, t * 2.0);
+                        } else {
+                            return mix(warm, hot, (t - 0.5) * 2.0);
+                        }
+                    }
+                    
+                    void main() {
+                        float heat = sin(vPosition.y * 3.0 + time) * 0.5 + 0.5;
+                        heat += sin(vPosition.x * 2.0 - time * 0.5) * 0.3;
+                        heat = clamp(heat, 0.0, 1.0);
+                        
+                        vec3 color = heatmap(heat);
+                        gl_FragColor = vec4(color, opacity);
+                    }
+                `
+            },
+            ultrasound: {
+                vertexShader: `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    void main() {
+                        vUv = uv;
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    uniform float time;
+                    uniform float opacity;
+                    
+                    float random(vec2 st) {
+                        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                    }
+                    
+                    void main() {
+                        vec2 scanLine = vec2(vUv.x, mod(vUv.y + time * 0.1, 1.0));
+                        float noise = random(scanLine + time * 0.01);
+                        
+                        float scan = step(0.98, mod(vUv.y + time * 0.2, 1.0));
+                        
+                        vec3 color = vec3(0.0, 0.8, 1.0);
+                        float intensity = noise * 0.5 + 0.5;
+                        intensity += scan * 0.5;
+                        
+                        gl_FragColor = vec4(color * intensity, opacity);
+                    }
+                `
+            },
+            mri: {
+                vertexShader: `
+                    varying vec3 vPosition;
+                    void main() {
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vPosition;
+                    uniform float slice;
+                    uniform float opacity;
+                    uniform float contrast;
+                    
+                    void main() {
+                        float slicePos = vPosition.z + slice / 100.0;
+                        float intensity = 1.0 - abs(slicePos * 2.0);
+                        intensity = pow(intensity, contrast / 100.0);
+                        
+                        vec3 color = vec3(intensity);
+                        float alpha = intensity * opacity;
+                        
+                        if(abs(slicePos) < 0.01) {
+                            color = vec3(1.0, 0.0, 0.0);
+                            alpha = 1.0;
+                        }
+                        
+                        gl_FragColor = vec4(color, alpha);
+                    }
+                `
+            },
+            ct: {
+                vertexShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+                    void main() {
+                        vNormal = normalize(normalMatrix * normal);
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vNormal;
+                    varying vec3 vPosition;
+                    uniform float opacity;
+                    uniform float contrast;
+                    
+                    void main() {
+                        float density = length(vPosition) * 0.5;
+                        density = pow(density, contrast / 100.0);
+                        
+                        vec3 color = vec3(1.0, 0.95, 0.9) * density;
+                        
+                        // Bone highlighting
+                        if(density > 0.7) {
+                            color = vec3(1.0, 1.0, 1.0);
+                        }
+                        
+                        gl_FragColor = vec4(color, opacity);
+                    }
+                `
+            },
+            vascular: {
+                vertexShader: `
+                    varying vec3 vPosition;
+                    varying float vPulse;
+                    uniform float time;
+                    void main() {
+                        vPosition = position;
+                        vPulse = sin(time * 3.0) * 0.5 + 0.5;
+                        
+                        vec3 newPosition = position;
+                        newPosition *= 1.0 + vPulse * 0.02;
+                        
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vPosition;
+                    varying float vPulse;
+                    uniform float opacity;
+                    
+                    void main() {
+                        vec3 arterialColor = vec3(1.0, 0.2, 0.2);
+                        vec3 venousColor = vec3(0.2, 0.2, 1.0);
+                        
+                        vec3 color = mix(venousColor, arterialColor, vPulse);
+                        
+                        gl_FragColor = vec4(color, opacity);
+                    }
+                `
+            },
+            neural: {
+                vertexShader: `
+                    varying vec3 vPosition;
+                    void main() {
+                        vPosition = position;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vPosition;
+                    uniform float time;
+                    uniform float opacity;
+                    
+                    void main() {
+                        float signal = sin(vPosition.x * 10.0 + time * 2.0) * 
+                                      sin(vPosition.y * 10.0 - time * 1.5) * 
+                                      sin(vPosition.z * 10.0 + time);
+                        signal = abs(signal);
+                        
+                        vec3 color = vec3(0.5, 0.0, 1.0) * signal + vec3(0.0, 1.0, 1.0) * (1.0 - signal);
+                        
+                        gl_FragColor = vec4(color, opacity);
+                    }
+                `
+            }
+        };
+        
+        // Shader uniforms
+        const uniforms = {
+            time: { value: 0 },
+            opacity: { value: 0.5 },
+            slice: { value: 0 },
+            contrast: { value: 1.0 }
+        };
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f0f1e);
+            scene.fog = new THREE.Fog(0x0f0f1e, 10, 50);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(
+                75,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(5, 5, 5);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 20;
+            
+            // Lighting
+            setupLighting();
+            
+            // Create placeholder model
+            createPlaceholderModel();
+            
+            // Load actual model
+            loadModel();
+            
+            // Start animation
+            animate();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 1000);
+        }
+        
+        function setupLighting() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            // Directional light
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            dirLight.shadow.camera.near = 0.1;
+            dirLight.shadow.camera.far = 50;
+            dirLight.shadow.camera.left = -10;
+            dirLight.shadow.camera.right = 10;
+            dirLight.shadow.camera.top = 10;
+            dirLight.shadow.camera.bottom = -10;
+            scene.add(dirLight);
+            
+            // Point lights for medical feel
+            const pointLight1 = new THREE.PointLight(0x00ff88, 0.5, 20);
+            pointLight1.position.set(-5, 5, 0);
+            scene.add(pointLight1);
+            
+            const pointLight2 = new THREE.PointLight(0x00ccff, 0.5, 20);
+            pointLight2.position.set(5, 5, 0);
+            scene.add(pointLight2);
+            
+            // Spot light for dramatic effect
+            const spotLight = new THREE.SpotLight(0xffffff, 0.5);
+            spotLight.position.set(0, 10, 0);
+            spotLight.angle = Math.PI / 6;
+            spotLight.penumbra = 0.2;
+            spotLight.castShadow = true;
+            scene.add(spotLight);
+        }
+        
+        function createPlaceholderModel() {
+            // Create a procedural dog-like shape using multiple geometries
+            const group = new THREE.Group();
+            
+            // Body
+            const bodyGeometry = new THREE.CapsuleGeometry(1, 3, 8, 16);
+            const bodyMaterial = new THREE.MeshPhongMaterial({
+                color: 0x8b4513,
+                transparent: true,
+                opacity: 0.8
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.rotation.z = Math.PI / 2;
+            group.add(body);
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            const head = new THREE.Mesh(headGeometry, bodyMaterial);
+            head.position.set(2, 0.5, 0);
+            head.scale.set(1.2, 1, 1);
+            group.add(head);
+            
+            // Legs
+            for(let i = 0; i < 4; i++) {
+                const legGeometry = new THREE.CylinderGeometry(0.2, 0.15, 1.5);
+                const leg = new THREE.Mesh(legGeometry, bodyMaterial);
+                const x = i < 2 ? 1 : -1;
+                const z = i % 2 === 0 ? 0.5 : -0.5;
+                leg.position.set(x, -1, z);
+                group.add(leg);
+            }
+            
+            // Tail
+            const tailGeometry = new THREE.ConeGeometry(0.2, 1.5, 8);
+            const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
+            tail.position.set(-2, 0.5, 0);
+            tail.rotation.z = -Math.PI / 4;
+            group.add(tail);
+            
+            // Ears
+            const earGeometry = new THREE.TetrahedronGeometry(0.3);
+            const ear1 = new THREE.Mesh(earGeometry, bodyMaterial);
+            ear1.position.set(2.2, 1.2, 0.3);
+            group.add(ear1);
+            
+            const ear2 = new THREE.Mesh(earGeometry, bodyMaterial);
+            ear2.position.set(2.2, 1.2, -0.3);
+            group.add(ear2);
+            
+            model = group;
+            scene.add(model);
+        }
+        
+        function loadModel() {
+            // Try to load actual model
+            const loader = new THREE.GLTFLoader();
+            const modelPaths = [
+                'assets/models/animals/dog/bello_high.glb',
+                'assets/models/animals/dog/bello_medium.glb',
+                'assets/models/animals/dog/bello_low.glb'
+            ];
+            
+            let loadAttempt = 0;
+            
+            function tryLoadModel() {
+                if(loadAttempt >= modelPaths.length) {
+                    console.log('Using procedural model');
+                    return;
+                }
+                
+                loader.load(
+                    modelPaths[loadAttempt],
+                    (gltf) => {
+                        // Remove placeholder
+                        if(model) {
+                            scene.remove(model);
+                        }
+                        
+                        model = gltf.scene;
+                        model.traverse((child) => {
+                            if(child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                                child.material.transparent = true;
+                            }
+                        });
+                        
+                        scene.add(model);
+                        
+                        // Center and scale model
+                        const box = new THREE.Box3().setFromObject(model);
+                        const center = box.getCenter(new THREE.Vector3());
+                        model.position.sub(center);
+                        
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 5 / maxDim;
+                        model.scale.multiplyScalar(scale);
+                    },
+                    (progress) => {
+                        console.log('Loading:', (progress.loaded / progress.total * 100) + '%');
+                    },
+                    (error) => {
+                        console.log('Failed to load:', modelPaths[loadAttempt]);
+                        loadAttempt++;
+                        tryLoadModel();
+                    }
+                );
+            }
+            
+            tryLoadModel();
+        }
+        
+        function setVisualizationMode(mode) {
+            currentMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.viz-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.viz-btn').classList.add('active');
+            
+            // Apply shader to model
+            if(model) {
+                model.traverse((child) => {
+                    if(child.isMesh) {
+                        if(mode === 'normal') {
+                            // Restore original material
+                            child.material = child.userData.originalMaterial || child.material;
+                        } else {
+                            // Store original material
+                            if(!child.userData.originalMaterial) {
+                                child.userData.originalMaterial = child.material;
+                            }
+                            
+                            // Apply medical shader
+                            const shader = medicalShaders[mode];
+                            if(shader) {
+                                child.material = new THREE.ShaderMaterial({
+                                    vertexShader: shader.vertexShader,
+                                    fragmentShader: shader.fragmentShader,
+                                    uniforms: uniforms,
+                                    transparent: true,
+                                    side: THREE.DoubleSide,
+                                    depthWrite: false
+                                });
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function highlightOrgan(organ) {
+            // Toggle organ button state
+            const btn = event.target;
+            btn.classList.toggle('active');
+            
+            // In a real implementation, this would highlight specific parts of the model
+            console.log('Highlighting organ:', organ);
+            
+            // Add visual feedback
+            if(model) {
+                model.traverse((child) => {
+                    if(child.isMesh) {
+                        // Simulate organ highlighting with emissive color
+                        if(btn.classList.contains('active')) {
+                            child.material.emissive = new THREE.Color(0x00ff88);
+                            child.material.emissiveIntensity = 0.2;
+                        } else {
+                            child.material.emissive = new THREE.Color(0x000000);
+                            child.material.emissiveIntensity = 0;
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateOpacity(value) {
+            uniforms.opacity.value = value / 100;
+            document.getElementById('opacityValue').textContent = value + '%';
+        }
+        
+        function updateSlice(value) {
+            uniforms.slice.value = value;
+            document.getElementById('sliceValue').textContent = value;
+        }
+        
+        function updateContrast(value) {
+            uniforms.contrast.value = value / 100;
+            document.getElementById('contrastValue').textContent = value + '%';
+        }
+        
+        // Performance monitoring
+        let frameCount = 0;
+        let lastTime = performance.now();
+        
+        function updatePerformanceMonitor() {
+            frameCount++;
+            const currentTime = performance.now();
+            
+            if(currentTime - lastTime >= 1000) {
+                const fps = Math.round(frameCount * 1000 / (currentTime - lastTime));
+                document.getElementById('fps').textContent = fps;
+                
+                // Update geometry stats
+                if(model) {
+                    let vertices = 0;
+                    let triangles = 0;
+                    
+                    model.traverse((child) => {
+                        if(child.isMesh && child.geometry) {
+                            const geo = child.geometry;
+                            vertices += geo.attributes.position ? geo.attributes.position.count : 0;
+                            triangles += geo.index ? geo.index.count / 3 : vertices / 3;
+                        }
+                    });
+                    
+                    document.getElementById('vertices').textContent = vertices.toLocaleString();
+                    document.getElementById('triangles').textContent = Math.round(triangles).toLocaleString();
+                }
+                
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+        }
+        
+        // Simulate vital signs
+        function updateVitalSigns() {
+            // Simulate heart rate
+            const heartRate = 100 + Math.sin(Date.now() * 0.001) * 20 + Math.random() * 10;
+            document.getElementById('heartRate').textContent = Math.round(heartRate) + ' bpm';
+            
+            // Simulate temperature
+            const temp = 38.5 + Math.sin(Date.now() * 0.0005) * 0.7;
+            const tempElement = document.getElementById('temperature');
+            tempElement.textContent = temp.toFixed(1) + '°C';
+            
+            if(temp > 39) {
+                tempElement.className = 'data-value critical';
+            } else if(temp > 38.5) {
+                tempElement.className = 'data-value warning';
+            } else {
+                tempElement.className = 'data-value';
+            }
+            
+            // Simulate respiration
+            const respRate = 20 + Math.sin(Date.now() * 0.002) * 5;
+            document.getElementById('respRate').textContent = Math.round(respRate) + '/min';
+            
+            // Simulate oxygen
+            const oxygen = 95 + Math.random() * 4;
+            document.getElementById('oxygen').textContent = Math.round(oxygen) + '%';
+            
+            // Simulate blood pressure
+            const systolic = 110 + Math.random() * 20;
+            const diastolic = 70 + Math.random() * 15;
+            document.getElementById('bloodPressure').textContent = 
+                Math.round(systolic) + '/' + Math.round(diastolic);
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            uniforms.time.value += delta;
+            
+            // Rotate model
+            if(model) {
+                model.rotation.y += 0.002;
+            }
+            
+            // Update controls
+            controls.update();
+            
+            // Update performance monitor
+            updatePerformanceMonitor();
+            
+            // Update vital signs
+            if(Math.random() < 0.05) { // Update occasionally
+                updateVitalSigns();
+            }
+            
+            // Render scene
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
