@@ -1,0 +1,17 @@
+🐕 BITTE EXPORTIERE DEINEN HUND HIER!
+=====================================
+
+OPTION 1: Super einfach (in Blender)
+------------------------------------
+1. Scripting Tab öffnen
+2. Text → Open → SIMPLE_EXPORT.py
+3. Run Script (Play Button)
+
+OPTION 2: Manuell
+-----------------
+1. File → Export → glTF 2.0
+2. Format: GLB
+3. Speichern als: dog.glb
+4. IN DIESEM ORDNER!
+
+Der Export-Watcher wartet auf deine Datei...

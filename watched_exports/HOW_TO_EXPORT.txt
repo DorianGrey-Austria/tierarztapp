@@ -1,0 +1,28 @@
+
+🐕 BLENDER EXPORT ANLEITUNG
+============================
+
+1. In Blender (mit deinem Modell):
+   File → Export → glTF 2.0 (.glb/.gltf)
+
+2. Export Settings:
+   - Format: glTF Binary (.glb) ✓
+   - Include: Selected Objects ✓
+   - Include: Materials ✓
+   - Transform: +Y Up ✓
+
+3. SPEICHERN IN DIESEM ORDNER:
+   /Users/doriangrey/Desktop/coding/tierarztspiel/watched_exports
+   
+4. Dateiname (egal welcher):
+   - bello_export.glb
+   - dog_model.glb
+   - current_work.glb
+   (Script erkennt automatisch alle .glb Dateien)
+
+5. Script übernimmt automatisch:
+   - Import nach models/animals/dog/
+   - Backup alter Versionen
+   - Bereit für Browser-Test
+
+WATCHER LÄUFT! Exportiere einfach hierher.

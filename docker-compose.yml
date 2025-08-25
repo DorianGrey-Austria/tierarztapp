@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  blender-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.blender-mcp
+    container_name: vetscan_blender_mcp
+    ports:
+      - "8765:8765"  # MCP WebSocket Port
+      - "8080:8080"  # Optional HTTP für Debug
+    volumes:
+      - ./assets/models:/app/exports  # Model Export Directory
+      - ./blender-projects:/app/projects  # Blender Project Files
+      - ./scripts:/app/scripts  # Custom Scripts
+    environment:
+      - DISPLAY=:99  # Virtual Display für headless Blender
+      - MCP_PORT=8765
+      - BLENDER_HEADLESS=true
+      - PROJECT_ROOT=/app
+      - DEBUG=true
+    working_dir: /app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optionaler X11 Server für GUI-Debug (falls nötig)
+  xvfb:
+    image: jlesage/xvfb:latest
+    container_name: vetscan_xvfb
+    ports:
+      - "5900:5900"  # VNC Port
+    environment:
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - RUN_XTERM=false
+    profiles: ["debug"]  # Nur mit --profile debug starten
+
+volumes:
+  blender_cache:
+    driver: local
+
+networks:
+  default:
+    name: vetscan_network

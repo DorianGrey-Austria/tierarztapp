@@ -1,0 +1,119 @@
+{
+  "mcpServers": {
+    "blender-mcp": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "env": {
+        "BLENDER_PATH": "/Applications/Blender.app/Contents/MacOS/Blender",
+        "PROJECT_ROOT": "/Users/doriangrey/Desktop/coding/tierarztspiel",
+        "DEBUG": "true"
+      },
+      "autoApprove": [
+        "execute_blender_code",
+        "get_scene_info",
+        "get_object_info",
+        "get_viewport_screenshot",
+        "export_gltf",
+        "create_material",
+        "set_texture",
+        "generate_model",
+        "download_polyhaven_asset",
+        "generate_hyper3d_model_via_text",
+        "create_object",
+        "modify_object",
+        "delete_object",
+        "list_objects"
+      ]
+    },
+    
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/doriangrey/Desktop/coding/tierarztspiel"
+      ],
+      "description": "Access to VetScan Pro project files",
+      "autoApprove": [
+        "read_file",
+        "write_file",
+        "list_directory",
+        "create_directory",
+        "get_file_info",
+        "move_file",
+        "delete_file"
+      ]
+    },
+    
+    "godot-mcp": {
+      "command": "node",
+      "args": ["/Users/doriangrey/EndlessRunner/godot-mcp/build/index.js"],
+      "env": {
+        "GODOT_PATH": "/Applications/Godot.app/Contents/MacOS/Godot",
+        "DEBUG": "true"
+      },
+      "autoApprove": [
+        "launch_editor",
+        "run_project",
+        "get_debug_output",
+        "stop_project",
+        "get_godot_version",
+        "list_projects",
+        "get_project_info",
+        "create_scene",
+        "add_node",
+        "load_sprite",
+        "export_mesh_library",
+        "save_scene",
+        "get_uid",
+        "update_project_uids"
+      ]
+    },
+    
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"],
+      "description": "Git operations for version control",
+      "autoApprove": [
+        "git_status",
+        "git_diff",
+        "git_log",
+        "git_add",
+        "git_commit",
+        "git_push",
+        "git_pull"
+      ]
+    },
+    
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "description": "Persistent memory for project context"
+    }
+  },
+  
+  "clientOptions": {
+    "timeout": 30000,
+    "retries": 3,
+    "autoReconnect": true
+  },
+  
+  "_metadata": {
+    "project": "VetScan Pro 3000 - Tierarztspiel",
+    "version": "7.0.2",
+    "created": "2025-08-25",
+    "deployment": "https://vibecoding.company",
+    "blender_integration": {
+      "port": 9876,
+      "protocol": "WebSocket",
+      "status": "active"
+    }
+  },
+  
+  "_notes": {
+    "critical": "blender-mcp MUST use uvx, not npx!",
+    "addon_path": "assets/blender-mcp-addon.py",
+    "test_script": "scripts/test-mcp-connection.js",
+    "troubleshooting": "BLENDER-MCP-INTEGRATION.md"
+  }
+}

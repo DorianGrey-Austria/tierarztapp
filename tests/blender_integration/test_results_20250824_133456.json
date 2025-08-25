@@ -1,0 +1,167 @@
+{
+  "test_session": {
+    "start_time": "2025-08-24T13:34:56.612796",
+    "total_duration_seconds": 5.29,
+    "total_tests": 10,
+    "claude_version": "Opus 4.1",
+    "system": "darwin"
+  },
+  "prerequisites": {
+    "blender_installed": true,
+    "blender_running": true,
+    "uvx_available": true,
+    "npx_available": true,
+    "bpy_available": false
+  },
+  "test_results": {
+    "Direct MCP": [
+      {
+        "test_id": 1,
+        "test_name": "Native get_scene_info()",
+        "method": "Direct MCP",
+        "success": false,
+        "latency_ms": 0.01,
+        "timestamp": "2025-08-24T13:34:56.846314",
+        "error": "NameError: name 'get_scene_info' is not defined",
+        "details": {}
+      }
+    ],
+    "Environment MCP": [
+      {
+        "test_id": 2,
+        "test_name": "Environment MCP Variables",
+        "method": "Environment MCP",
+        "success": false,
+        "latency_ms": 0.03,
+        "timestamp": "2025-08-24T13:34:56.846378",
+        "error": "",
+        "details": {
+          "found_variables": {}
+        }
+      }
+    ],
+    "JSON-RPC MCP": [
+      {
+        "test_id": 3,
+        "test_name": "WebSocket Connection Port 8080",
+        "method": "JSON-RPC MCP",
+        "success": true,
+        "latency_ms": 2.01,
+        "timestamp": "2025-08-24T13:34:56.848394",
+        "error": "",
+        "details": {
+          "port": 8080,
+          "connection": "established"
+        }
+      }
+    ],
+    "Subprocess CLI": [
+      {
+        "test_id": 4,
+        "test_name": "Blender CLI --python",
+        "method": "Subprocess CLI",
+        "success": true,
+        "latency_ms": 3406.25,
+        "timestamp": "2025-08-24T13:35:00.254727",
+        "error": "",
+        "details": {
+          "return_code": 0,
+          "objects_detected": 3,
+          "stdout_length": 239
+        }
+      }
+    ],
+    "Background Job": [
+      {
+        "test_id": 5,
+        "test_name": "Persistent Blender Background",
+        "method": "Background Job",
+        "success": true,
+        "latency_ms": 23.64,
+        "timestamp": "2025-08-24T13:35:00.278562",
+        "error": "",
+        "details": {
+          "running_processes": 1,
+          "pids": [
+            "784"
+          ]
+        }
+      }
+    ],
+    "Named Pipes": [
+      {
+        "test_id": 6,
+        "test_name": "Named Pipe Creation",
+        "method": "Named Pipes",
+        "success": true,
+        "latency_ms": 0.74,
+        "timestamp": "2025-08-24T13:35:00.279361",
+        "error": "",
+        "details": {
+          "pipe_path": "tests/blender_integration/blender_command_pipe"
+        }
+      }
+    ],
+    "File Watch": [
+      {
+        "test_id": 7,
+        "test_name": "Watch Folder Setup",
+        "method": "File Watch",
+        "success": true,
+        "latency_ms": 0.66,
+        "timestamp": "2025-08-24T13:35:00.280116",
+        "error": "",
+        "details": {
+          "command_folder": "tests/blender_integration/commands",
+          "response_folder": "tests/blender_integration/responses"
+        }
+      }
+    ],
+    "Blend File": [
+      {
+        "test_id": 8,
+        "test_name": "Blend File Creation",
+        "method": "Blend File",
+        "success": true,
+        "latency_ms": 813.86,
+        "timestamp": "2025-08-24T13:35:01.094163",
+        "error": "",
+        "details": {
+          "file_path": "tests/blender_integration/test.blend",
+          "file_size_bytes": 429425
+        }
+      }
+    ],
+    "AppleScript": [
+      {
+        "test_id": 9,
+        "test_name": "AppleScript Process Check",
+        "method": "AppleScript",
+        "success": true,
+        "latency_ms": 811.2,
+        "timestamp": "2025-08-24T13:35:01.905540",
+        "error": "",
+        "details": {
+          "blender_detected": true,
+          "output": "true"
+        }
+      }
+    ],
+    "System Events": [
+      {
+        "test_id": 10,
+        "test_name": "System Events Capability",
+        "method": "System Events",
+        "success": true,
+        "latency_ms": 0.04,
+        "timestamp": "2025-08-24T13:35:01.905636",
+        "error": "",
+        "details": {
+          "platform": "darwin",
+          "python_version": "3.13.3 (main, Apr  8 2025, 13:54:08) [Clang 17.0.0 (clang-1700.0.13.3)]",
+          "current_user": "doriangrey"
+        }
+      }
+    ]
+  }
+}

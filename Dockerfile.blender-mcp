@@ -1,0 +1,109 @@
+# Blender MCP Server Dockerfile für VetScan Pro 3000
+FROM ubuntu:22.04
+
+# Avoid tzdata interactive prompt
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Vienna
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    # Blender dependencies
+    blender \
+    # Python and Node.js
+    python3 \
+    python3-pip \
+    nodejs \
+    npm \
+    # MCP and networking
+    curl \
+    wget \
+    git \
+    # X11 für headless Blender
+    xvfb \
+    xauth \
+    x11-xserver-utils \
+    # Blender GPU support (optional)
+    libgl1-mesa-glx \
+    libglu1-mesa \
+    libxi6 \
+    libxrender1 \
+    libxrandr2 \
+    libxfixes3 \
+    libxcursor1 \
+    libxinerama1 \
+    # Additional utilities
+    htop \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies for MCP
+RUN pip3 install \
+    websockets \
+    fastapi \
+    uvicorn \
+    pydantic \
+    python-multipart \
+    aiofiles
+
+# Install Node.js dependencies for testing and utilities
+RUN npm install -g \
+    ws \
+    express
+
+# Set up working directory
+WORKDIR /app
+
+# Create necessary directories
+RUN mkdir -p \
+    /app/exports \
+    /app/projects \
+    /app/scripts \
+    /app/logs \
+    /app/temp
+
+# Copy MCP server files
+COPY scripts/blender-mcp-server.py /app/
+COPY scripts/medical-shaders.py /app/
+COPY scripts/health-server.py /app/
+# COPY assets/blender-mcp-addon.py /app/ # Will be created if needed
+
+# Copy default Blender project (if available)
+# COPY blender-projects/bello-base.blend /app/projects/ 
+# Note: Bello project will be created at runtime if not present
+
+# Set up Blender Python path
+ENV PYTHONPATH="/usr/share/blender/scripts/modules:$PYTHONPATH"
+ENV BLENDER_USER_SCRIPTS="/app/scripts"
+
+# Create virtual display startup script
+RUN echo '#!/bin/bash\n\
+# Start virtual display\n\
+Xvfb :99 -screen 0 1920x1080x24 &\n\
+export DISPLAY=:99\n\
+\n\
+# Wait for X server\n\
+sleep 2\n\
+\n\
+# Start Health Server\n\
+echo "Starting Health Server..."\n\
+python3 /app/health-server.py &\n\
+\n\
+# Start Blender MCP Server\n\
+echo "Starting Blender MCP Server..."\n\
+python3 /app/blender-mcp-server.py &\n\
+\n\
+# Keep container running\n\
+tail -f /app/logs/blender-mcp.log\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+# Set executable permissions
+RUN chmod +x /app/health-server.py
+
+# Expose ports
+EXPOSE 8765 8080
+
+# Set permissions
+RUN chmod -R 755 /app
+
+# Default command
+CMD ["/app/start.sh"]

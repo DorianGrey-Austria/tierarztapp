@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VetScan Pro - Bello 3D Scanner v7.1.0</title>
+    <title>VetScan Pro - Dog 3D Scanner v7.4.0 - Blender MCP Import</title>
     <!-- Three.js Core - unpkg CDN (funktioniert garantiert!) -->
     <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
     <!-- Three.js Examples - unpkg CDN mit korrekten Pfaden -->
@@ -252,13 +252,13 @@
 
             <div id="viewer-canvas"></div>
             
-            <div class="status-badge">v7.1.0</div>
+            <div class="status-badge">v7.3.0</div>
         </div>
 
         <div class="debug-info" id="debug-info">
             Loading libraries...<br>
-            Version: 7.1.0<br>
-            Build: 2025.08.24.001
+            Version: 7.3.0<br>
+            Build: 2025.08.24.003
         </div>
     </div>
 
@@ -270,8 +270,8 @@
         let medicalShaders = {};
         let originalMaterials = new Map();
         let loadingProgress = 0;
-        const VERSION = '7.1.0';
-        const BUILD = '2025.08.24.001';
+        const VERSION = '7.3.0';
+        const BUILD = '2025.08.24.003';
 
         // Debug helper
         function debug(message) {
@@ -342,11 +342,132 @@
         }
 
         // Initialize when ready
+        // WebSocket Live Reload Support
+        function setupLiveReload() {
+            debug('Setting up WebSocket live reload...');
+            
+            // Try multiple WebSocket endpoints
+            const wsEndpoints = [
+                'ws://localhost:8765',  // MCP Bridge
+                'ws://localhost:9876',  // Blender MCP Addon
+                'ws://localhost:3000/ws' // Vite dev server
+            ];
+            
+            let ws = null;
+            let reconnectAttempts = 0;
+            const maxReconnectAttempts = 3;
+            
+            function connectWebSocket(index = 0) {
+                if (index >= wsEndpoints.length) {
+                    debug('Live reload not available (no WebSocket server)');
+                    return;
+                }
+                
+                const endpoint = wsEndpoints[index];
+                
+                try {
+                    ws = new WebSocket(endpoint);
+                    
+                    ws.onopen = () => {
+                        debug(`✅ Live reload connected to ${endpoint}`);
+                        reconnectAttempts = 0;
+                    };
+                    
+                    ws.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            
+                            if (data.type === 'model_updated' || data.type === 'export_complete') {
+                                debug('🔄 Model updated! Reloading...');
+                                
+                                // Clear cache and reload model
+                                if (belloModel) {
+                                    scene.remove(belloModel);
+                                    belloModel = null;
+                                }
+                                
+                                // Add timestamp to prevent caching
+                                const timestamp = Date.now();
+                                const reloadUrl = data.path || 'assets/models/animals/bello/bello_live.glb';
+                                
+                                const loader = new THREE.GLTFLoader();
+                                loader.load(
+                                    `${reloadUrl}?t=${timestamp}`,
+                                    (gltf) => {
+                                        debug('✅ Live model reloaded!');
+                                        belloModel = gltf.scene;
+                                        
+                                        // Apply same setup as initial load
+                                        belloModel.traverse((child) => {
+                                            if (child.isMesh) {
+                                                originalMaterials.set(child, child.material.clone());
+                                                child.castShadow = true;
+                                                child.receiveShadow = true;
+                                            }
+                                        });
+                                        
+                                        // Center and scale
+                                        const box = new THREE.Box3().setFromObject(belloModel);
+                                        const center = box.getCenter(new THREE.Vector3());
+                                        belloModel.position.sub(center);
+                                        
+                                        const size = box.getSize(new THREE.Vector3());
+                                        const maxDim = Math.max(size.x, size.y, size.z);
+                                        const scale = 3 / maxDim;
+                                        belloModel.scale.setScalar(scale);
+                                        
+                                        scene.add(belloModel);
+                                        
+                                        // Re-apply current visualization mode
+                                        if (currentVisualization !== 'normal') {
+                                            applyVisualizationMode(currentVisualization);
+                                        }
+                                    },
+                                    undefined,
+                                    (error) => {
+                                        debug(`❌ Failed to reload model: ${error}`);
+                                    }
+                                );
+                            }
+                        } catch (e) {
+                            // Not JSON, ignore
+                        }
+                    };
+                    
+                    ws.onerror = () => {
+                        // Try next endpoint
+                        connectWebSocket(index + 1);
+                    };
+                    
+                    ws.onclose = () => {
+                        debug('WebSocket disconnected');
+                        
+                        // Try to reconnect after delay
+                        if (reconnectAttempts < maxReconnectAttempts) {
+                            reconnectAttempts++;
+                            setTimeout(() => {
+                                debug(`Reconnecting... (attempt ${reconnectAttempts})`);
+                                connectWebSocket(0);
+                            }, 5000);
+                        }
+                    };
+                    
+                } catch (e) {
+                    // Try next endpoint
+                    connectWebSocket(index + 1);
+                }
+            }
+            
+            // Start connection attempts
+            connectWebSocket();
+        }
+
         window.addEventListener('load', function() {
             debug(`Starting VetScan Pro v${VERSION}...`);
             waitForLibraries(() => {
                 debug('🎮 Initializing 3D scene...');
                 init();
+                setupLiveReload();  // Add live reload after init
             });
         });
 
@@ -862,9 +983,30 @@
             dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
             loader.setDRACOLoader(dracoLoader);
             
-            // Model URLs in priority order - Updated for Claude Desktop integration
+            // Model URLs in priority order - CREATIVE DOG FROM BLENDER
             const modelUrls = [
-                // Claude Desktop Export (highest priority)
+                // CREATIVE DOG WITH PARTY ACCESSORIES (highest priority)
+                'assets/models/animals/dog/dog_creative.glb',
+                
+                // NEW DOG MODELS FROM BLENDER EXPORT
+                'assets/models/animals/dog/dog_high.glb',
+                'assets/models/animals/dog/dog_medium.glb',
+                'assets/models/animals/dog/dog_medical.glb',
+                
+                // REALISTIC models exported from Blender GUI
+                'assets/models/animals/bello/bello_realistic_high.glb',
+                'assets/models/animals/bello/bello_realistic_medium.glb',
+                'assets/models/animals/bello/bello_realistic_low.glb',
+                'assets/models/animals/bello/bello_complete.glb',
+                'assets/models/animals/bello/bello_live.glb',  // Live export from addon
+                
+                // Fallback to earlier exports
+                'assets/models/animals/bello/bello_high.glb',
+                'assets/models/animals/bello/bello_medium.glb',
+                'assets/models/animals/bello/bello_medical.glb',
+                'assets/models/animals/bello/bello_xray.glb',
+                
+                // Claude Desktop Export fallbacks
                 'models/animals/dog/high/bello_claude_desktop.glb',
                 'models/animals/dog/medium/bello_claude_desktop.glb',
                 'models/animals/dog/low/bello_claude_desktop.glb',
@@ -876,7 +1018,6 @@
                 'models/animals/dog/low/bello_main.glb',
                 
                 // Legacy paths (compatibility)
-                'assets/models/animals/bello/bello_medium.glb',
                 'assets/models/animals/bello/bello_low.glb',
                 'assets/models/animals/bello/bello.glb',
                 'assets/models/bello.glb',

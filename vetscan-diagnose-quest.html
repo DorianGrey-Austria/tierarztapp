@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Diagnose Quest - Lerne wie ein echter Tierarzt!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-blue: #4A90E2;
+            --soft-green: #7FD4A3;
+            --warm-yellow: #FFD166;
+            --light-coral: #FF8B94;
+            --soft-purple: #B4A7D6;
+            --bg-gradient-1: #E8F4FD;
+            --bg-gradient-2: #FFF9F0;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --success-green: #4CAF50;
+            --warning-orange: #FF9800;
+            --danger-red: #F44336;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 30px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--soft-green));
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .logo-text {
+            font-family: 'Nunito', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-blue), var(--soft-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .points-display {
+            background: linear-gradient(135deg, var(--warm-yellow), #FFE4A1);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #8B6914;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .points-icon {
+            font-size: 20px;
+        }
+        
+        /* Main Game Area */
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        /* Patient Card */
+        .patient-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .patient-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+        
+        .patient-info h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .patient-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .detail-badge {
+            background: var(--bg-gradient-1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .urgency-indicator {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .urgency-low {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-green);
+        }
+        
+        .urgency-medium {
+            background: rgba(255, 152, 0, 0.1);
+            color: var(--warning-orange);
+        }
+        
+        .urgency-high {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger-red);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Animal Visualization */
+        .animal-visual {
+            width: 100%;
+            height: 300px;
+            background: var(--bg-gradient-1);
+            border-radius: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .animal-svg {
+            width: 250px;
+            height: 250px;
+        }
+        
+        .symptom-indicator {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--light-coral);
+            border: 3px solid white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .symptom-indicator:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .symptom-indicator.examined {
+            background: var(--success-green);
+        }
+        
+        /* Story Panel */
+        .story-panel {
+            background: linear-gradient(135deg, #FFF9F0, white);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--warm-yellow);
+        }
+        
+        .story-text {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .owner-says {
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+        
+        /* Action Buttons */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .action-button {
+            background: white;
+            border: 2px solid #E8EEF2;
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+            border-color: var(--primary-blue);
+        }
+        
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .action-content {
+            flex: 1;
+        }
+        
+        .action-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+        
+        .action-cost {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .cost-badge {
+            background: var(--warm-yellow);
+            color: #8B6914;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        /* Right Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* Collected Clues */
+        .clues-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .clue-item {
+            background: var(--bg-gradient-1);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .clue-icon {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .clue-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .clue-important {
+            background: linear-gradient(135deg, #FFE4E1, #FFF0F5);
+            border-left: 3px solid var(--light-coral);
+        }
+        
+        /* Diagnosis Panel */
+        .diagnosis-panel {
+            background: linear-gradient(135deg, var(--soft-purple), #D4C5F9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            color: white;
+        }
+        
+        .diagnosis-button {
+            width: 100%;
+            background: white;
+            color: var(--soft-purple);
+            border: none;
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .diagnosis-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .diagnosis-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Question Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .question-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .question-option {
+            background: var(--bg-gradient-1);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .question-option:hover {
+            border-color: var(--primary-blue);
+            transform: translateX(5px);
+        }
+        
+        .question-option-icon {
+            width: 30px;
+            height: 30px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .question-option-text {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .question-cost {
+            background: var(--warm-yellow);
+            color: #8B6914;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: #F5F5F5;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background: #E0E0E0;
+        }
+        
+        /* Diagnosis Selection */
+        .diagnosis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .diagnosis-option {
+            background: white;
+            border: 2px solid #E8EEF2;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .diagnosis-option:hover {
+            border-color: var(--soft-purple);
+            transform: scale(1.05);
+        }
+        
+        .diagnosis-option.selected {
+            background: var(--soft-purple);
+            color: white;
+            border-color: var(--soft-purple);
+        }
+        
+        /* Knowledge Card */
+        .knowledge-card {
+            background: linear-gradient(135deg, var(--warm-yellow), #FFE4A1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: var(--card-shadow);
+            display: none;
+        }
+        
+        .knowledge-card.active {
+            display: block;
+            animation: bounceIn 0.5s ease;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .knowledge-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .knowledge-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .knowledge-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #8B6914;
+        }
+        
+        .knowledge-fact {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .fact-icon {
+            width: 25px;
+            height: 25px;
+            background: var(--warm-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .fact-text {
+            flex: 1;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+        
+        /* XP Bar */
+        .xp-bar {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 20px;
+        }
+        
+        .xp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .xp-level {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .xp-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .xp-progress {
+            height: 12px;
+            background: #E8EEF2;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-blue), var(--soft-green));
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .xp-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        /* Achievement Popup */
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: linear-gradient(135deg, var(--success-green), #66BB6A);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: right 0.5s ease;
+            z-index: 2000;
+        }
+        
+        .achievement-popup.active {
+            right: 20px;
+        }
+        
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .achievement-content {
+            flex: 1;
+        }
+        
+        .achievement-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .achievement-desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 968px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .diagnosis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🩺</div>
+                <div class="logo-text">Diagnose Quest</div>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Level</span>
+                    <span class="stat-value" id="playerLevel">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Geheilte Tiere</span>
+                    <span class="stat-value" id="healedCount">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Erfolgsrate</span>
+                    <span class="stat-value" id="successRate">0%</span>
+                </div>
+                <div class="points-display">
+                    <span class="points-icon">💎</span>
+                    <span id="currentPoints">100</span>
+                    <span>Punkte</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- XP Bar -->
+        <div class="xp-bar">
+            <div class="xp-header">
+                <span class="xp-level">Level <span id="xpLevel">1</span></span>
+                <span class="xp-text"><span id="currentXP">0</span> / <span id="maxXP">100</span> XP</span>
+            </div>
+            <div class="xp-progress">
+                <div class="xp-fill" id="xpFill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <!-- Main Game Area -->
+        <div class="game-container">
+            <!-- Left: Patient Area -->
+            <div class="patient-card">
+                <div class="patient-header">
+                    <div class="patient-info">
+                        <h2 id="patientName">Bello</h2>
+                        <div class="patient-details">
+                            <span class="detail-badge">🐕 Hund</span>
+                            <span class="detail-badge">3 Jahre</span>
+                            <span class="detail-badge">Labrador</span>
+                        </div>
+                    </div>
+                    <div class="urgency-indicator urgency-medium">
+                        ⚠️ Mittlere Dringlichkeit
+                    </div>
+                </div>
+                
+                <!-- Animal Visual -->
+                <div class="animal-visual">
+                    <svg class="animal-svg" viewBox="0 0 200 200">
+                        <!-- Simple dog shape -->
+                        <ellipse cx="100" cy="120" rx="40" ry="30" fill="#8B7355" />
+                        <circle cx="70" cy="80" r="25" fill="#8B7355" />
+                        <ellipse cx="60" cy="75" rx="8" ry="15" fill="#6B5D4F" />
+                        <ellipse cx="80" cy="75" rx="8" ry="15" fill="#6B5D4F" />
+                        <circle cx="65" cy="80" r="2" fill="black" />
+                        <circle cx="75" cy="80" r="2" fill="black" />
+                        <ellipse cx="70" cy="85" rx="4" ry="3" fill="black" />
+                        <path d="M 60 140 Q 50 160 55 165" stroke="#8B7355" stroke-width="8" fill="none" stroke-linecap="round" />
+                        <path d="M 80 140 Q 70 160 75 165" stroke="#8B7355" stroke-width="8" fill="none" stroke-linecap="round" />
+                        <path d="M 110 140 Q 120 160 115 165" stroke="#8B7355" stroke-width="8" fill="none" stroke-linecap="round" />
+                        <path d="M 130 140 Q 140 160 135 165" stroke="#8B7355" stroke-width="8" fill="none" stroke-linecap="round" />
+                        <path d="M 135 120 Q 150 115 155 125" stroke="#8B7355" stroke-width="6" fill="none" stroke-linecap="round" />
+                    </svg>
+                    <div class="symptom-indicator" style="top: 30%; left: 35%" title="Kopfbereich">🔍</div>
+                    <div class="symptom-indicator" style="top: 50%; left: 50%" title="Bauchbereich">🔍</div>
+                    <div class="symptom-indicator" style="top: 70%; left: 30%" title="Beine">🔍</div>
+                </div>
+                
+                <!-- Story Panel -->
+                <div class="story-panel">
+                    <div class="owner-says">🧑 Besitzer sagt:</div>
+                    <div class="story-text" id="storyText">
+                        "Bello verhält sich seit gestern komisch. Er frisst nicht mehr richtig und liegt nur noch in seiner Ecke. Normalerweise ist er total verspielt, aber jetzt will er nicht mal mehr Gassi gehen."
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-grid">
+                    <div class="action-button" onclick="openQuestionModal('symptoms')">
+                        <div class="action-icon">❓</div>
+                        <div class="action-content">
+                            <div class="action-title">Nach Symptomen fragen</div>
+                            <div class="action-cost">
+                                Kosten: <span class="cost-badge">5-10 💎</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-button" onclick="openQuestionModal('examine')">
+                        <div class="action-icon">🔍</div>
+                        <div class="action-content">
+                            <div class="action-title">Körper untersuchen</div>
+                            <div class="action-cost">
+                                Kosten: <span class="cost-badge">10-15 💎</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-button" onclick="openQuestionModal('tests')">
+                        <div class="action-icon">🔬</div>
+                        <div class="action-content">
+                            <div class="action-title">Tests durchführen</div>
+                            <div class="action-cost">
+                                Kosten: <span class="cost-badge">20-30 💎</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="action-button" onclick="openQuestionModal('history')">
+                        <div class="action-icon">📋</div>
+                        <div class="action-content">
+                            <div class="action-title">Krankengeschichte</div>
+                            <div class="action-cost">
+                                Kosten: <span class="cost-badge">5 💎</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Sidebar -->
+            <div class="sidebar">
+                <!-- Collected Clues -->
+                <div class="clues-panel">
+                    <div class="panel-header">
+                        <span>🔍</span>
+                        <span class="panel-title">Gesammelte Hinweise</span>
+                    </div>
+                    <div id="cluesList">
+                        <div class="clue-item">
+                            <div class="clue-icon">🍽️</div>
+                            <div class="clue-text">Frisst nicht mehr richtig</div>
+                        </div>
+                        <div class="clue-item">
+                            <div class="clue-icon">😔</div>
+                            <div class="clue-text">Liegt nur noch in der Ecke</div>
+                        </div>
+                        <div class="clue-item">
+                            <div class="clue-icon">🚶</div>
+                            <div class="clue-text">Will nicht Gassi gehen</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Diagnosis Panel -->
+                <div class="diagnosis-panel">
+                    <div class="panel-header">
+                        <span>💊</span>
+                        <span class="panel-title" style="color: white;">Diagnose stellen</span>
+                    </div>
+                    <p style="font-size: 14px; opacity: 0.9; margin-bottom: 10px;">
+                        Sammle genug Hinweise, um eine sichere Diagnose zu stellen!
+                    </p>
+                    <button class="diagnosis-button" onclick="openDiagnosisModal()" id="diagnosisBtn">
+                        Diagnose wählen
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Knowledge Card (shown after diagnosis) -->
+        <div class="knowledge-card" id="knowledgeCard">
+            <div class="knowledge-header">
+                <div class="knowledge-icon">💡</div>
+                <div class="knowledge-title">Wusstest du schon?</div>
+            </div>
+            <div class="knowledge-fact">
+                <div class="fact-icon">✨</div>
+                <div class="fact-text">
+                    Eine Magendrehung ist ein lebensbedrohlicher Notfall bei Hunden! Große Hunde mit tiefem Brustkorb sind besonders gefährdet.
+                </div>
+            </div>
+            <div class="knowledge-fact">
+                <div class="fact-icon">🏥</div>
+                <div class="fact-text">
+                    Bei Verdacht auf Magendrehung muss sofort ein Tierarzt aufgesucht werden. Jede Minute zählt!
+                </div>
+            </div>
+            <div class="knowledge-fact">
+                <div class="fact-icon">🍽️</div>
+                <div class="fact-text">
+                    Vorbeugung: Mehrere kleine Mahlzeiten statt einer großen, nach dem Fressen keine wilden Spiele.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Question Modal -->
+    <div class="modal-overlay" id="questionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nach Symptomen fragen</h3>
+                <p class="modal-subtitle">Wähle eine Frage - jede kostet Punkte!</p>
+            </div>
+            <div class="question-options" id="questionOptions">
+                <!-- Options werden dynamisch generiert -->
+            </div>
+            <button class="modal-close" onclick="closeModal()">Schließen</button>
+        </div>
+    </div>
+    
+    <!-- Diagnosis Modal -->
+    <div class="modal-overlay" id="diagnosisModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Stelle deine Diagnose</h3>
+                <p class="modal-subtitle">Wähle die wahrscheinlichste Krankheit basierend auf deinen Hinweisen</p>
+            </div>
+            <div class="diagnosis-grid" id="diagnosisOptions">
+                <div class="diagnosis-option" data-diagnosis="magendrehung">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔄</div>
+                    <div style="font-weight: 600;">Magendrehung</div>
+                </div>
+                <div class="diagnosis-option" data-diagnosis="vergiftung">
+                    <div style="font-size: 24px; margin-bottom: 8px;">☠️</div>
+                    <div style="font-weight: 600;">Vergiftung</div>
+                </div>
+                <div class="diagnosis-option" data-diagnosis="infekt">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🦠</div>
+                    <div style="font-weight: 600;">Magen-Darm-Infekt</div>
+                </div>
+                <div class="diagnosis-option" data-diagnosis="parasiten">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🐛</div>
+                    <div style="font-weight: 600;">Parasiten</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="submitDiagnosis()" style="background: var(--soft-purple); color: white;">
+                Diagnose bestätigen
+            </button>
+            <button class="modal-close" onclick="closeModal()" style="margin-top: 10px;">
+                Abbrechen
+            </button>
+        </div>
+    </div>
+    
+    <!-- Achievement Popup -->
+    <div class="achievement-popup" id="achievementPopup">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-content">
+            <div class="achievement-title" id="achievementTitle">Schnelldiagnose!</div>
+            <div class="achievement-desc" id="achievementDesc">Fall in weniger als 50 Punkten gelöst</div>
+        </div>
+    </div>
+    
+    <script>
+        // Game State
+        const gameState = {
+            currentCase: null,
+            currentPoints: 100,
+            collectedClues: [],
+            playerLevel: 1,
+            currentXP: 0,
+            maxXP: 100,
+            healedAnimals: 0,
+            totalCases: 0,
+            successfulCases: 0,
+            selectedDiagnosis: null
+        };
+        
+        // Question Database
+        const questionDatabase = {
+            symptoms: [
+                {
+                    question: "Hat das Tier Fieber?",
+                    cost: 5,
+                    answer: "Ja, leicht erhöhte Temperatur (39.5°C)",
+                    clue: { icon: "🌡️", text: "Leichtes Fieber (39.5°C)" }
+                },
+                {
+                    question: "Wie ist der Appetit?",
+                    cost: 5,
+                    answer: "Komplett verweigert seit 2 Tagen",
+                    clue: { icon: "🚫", text: "Futterverweigerung seit 2 Tagen" }
+                },
+                {
+                    question: "Gibt es Erbrechen oder Durchfall?",
+                    cost: 8,
+                    answer: "Mehrfaches Erbrechen, kein Durchfall",
+                    clue: { icon: "🤢", text: "Mehrfaches Erbrechen", important: true }
+                },
+                {
+                    question: "Wie ist das Trinkverhalten?",
+                    cost: 5,
+                    answer: "Trinkt sehr viel, aber erbricht danach",
+                    clue: { icon: "💧", text: "Trinkt viel, erbricht danach" }
+                },
+                {
+                    question: "Zeigt das Tier Schmerzen?",
+                    cost: 10,
+                    answer: "Ja, besonders bei Berührung des Bauches",
+                    clue: { icon: "😣", text: "Bauchschmerzen bei Berührung", important: true }
+                }
+            ],
+            examine: [
+                {
+                    question: "Bauch abtasten",
+                    cost: 15,
+                    answer: "Bauch ist hart und aufgebläht",
+                    clue: { icon: "🎈", text: "Harter, aufgeblähter Bauch", important: true }
+                },
+                {
+                    question: "Herzfrequenz messen",
+                    cost: 10,
+                    answer: "Erhöhte Herzfrequenz (140 BPM)",
+                    clue: { icon: "❤️", text: "Tachykardie (140 BPM)" }
+                },
+                {
+                    question: "Schleimhäute untersuchen",
+                    cost: 10,
+                    answer: "Blass und trocken",
+                    clue: { icon: "👄", text: "Blasse, trockene Schleimhäute" }
+                },
+                {
+                    question: "Lymphknoten abtasten",
+                    cost: 12,
+                    answer: "Leicht geschwollen",
+                    clue: { icon: "🔴", text: "Lymphknoten leicht geschwollen" }
+                },
+                {
+                    question: "Ohren untersuchen",
+                    cost: 8,
+                    answer: "Unauffällig",
+                    clue: { icon: "👂", text: "Ohren unauffällig" }
+                }
+            ],
+            tests: [
+                {
+                    question: "Blutbild machen",
+                    cost: 25,
+                    answer: "Leichte Entzündungswerte erhöht",
+                    clue: { icon: "🩸", text: "Entzündungswerte erhöht" }
+                },
+                {
+                    question: "Röntgen Bauchraum",
+                    cost: 30,
+                    answer: "Magen stark vergrößert und verdreht!",
+                    clue: { icon: "📷", text: "Magen verdreht! (Röntgen)", important: true }
+                },
+                {
+                    question: "Ultraschall Bauch",
+                    cost: 25,
+                    answer: "Flüssigkeitsansammlung sichtbar",
+                    clue: { icon: "🔊", text: "Flüssigkeit im Bauchraum" }
+                },
+                {
+                    question: "Urinprobe",
+                    cost: 20,
+                    answer: "Konzentrierter Urin, sonst normal",
+                    clue: { icon: "🧪", text: "Urin konzentriert (Dehydration)" }
+                }
+            ],
+            history: [
+                {
+                    question: "Vorerkrankungen?",
+                    cost: 5,
+                    answer: "Keine bekannten Vorerkrankungen",
+                    clue: { icon: "📋", text: "Keine Vorerkrankungen" }
+                },
+                {
+                    question: "Letzte Mahlzeit?",
+                    cost: 5,
+                    answer: "Große Portion vor dem Spaziergang",
+                    clue: { icon: "🍖", text: "Große Mahlzeit vor Aktivität", important: true }
+                },
+                {
+                    question: "Impfstatus?",
+                    cost: 5,
+                    answer: "Vollständig geimpft",
+                    clue: { icon: "💉", text: "Impfungen aktuell" }
+                }
+            ]
+        };
+        
+        // Cases Database
+        const cases = [
+            {
+                id: 1,
+                patientName: "Bello",
+                species: "Hund",
+                age: "3 Jahre",
+                breed: "Labrador",
+                urgency: "medium",
+                initialStory: "Bello verhält sich seit gestern komisch. Er frisst nicht mehr richtig und liegt nur noch in seiner Ecke. Normalerweise ist er total verspielt, aber jetzt will er nicht mal mehr Gassi gehen.",
+                correctDiagnosis: "magendrehung",
+                explanation: "Bello hatte eine Magendrehung! Die Symptome wie aufgeblähter Bauch, Erbrechen ohne Erfolg und die große Mahlzeit vor Aktivität sind typische Anzeichen. Dies ist ein Notfall!",
+                knowledgeFacts: [
+                    "Eine Magendrehung ist ein lebensbedrohlicher Notfall bei Hunden! Große Hunde mit tiefem Brustkorb sind besonders gefährdet.",
+                    "Bei Verdacht auf Magendrehung muss sofort ein Tierarzt aufgesucht werden. Jede Minute zählt!",
+                    "Vorbeugung: Mehrere kleine Mahlzeiten statt einer großen, nach dem Fressen keine wilden Spiele."
+                ]
+            }
+        ];
+        
+        // Initialize Game
+        function initGame() {
+            loadCase(0);
+            updateUI();
+        }
+        
+        function loadCase(caseIndex) {
+            gameState.currentCase = cases[caseIndex];
+            gameState.currentPoints = 100;
+            gameState.collectedClues = [
+                { icon: "🍽️", text: "Frisst nicht mehr richtig" },
+                { icon: "😔", text: "Liegt nur noch in der Ecke" },
+                { icon: "🚶", text: "Will nicht Gassi gehen" }
+            ];
+            gameState.selectedDiagnosis = null;
+            
+            // Update patient info
+            document.getElementById('patientName').textContent = gameState.currentCase.patientName;
+            document.getElementById('storyText').textContent = gameState.currentCase.initialStory;
+            
+            updateCluesList();
+            updateUI();
+        }
+        
+        function updateUI() {
+            document.getElementById('currentPoints').textContent = gameState.currentPoints;
+            document.getElementById('playerLevel').textContent = gameState.playerLevel;
+            document.getElementById('healedCount').textContent = gameState.healedAnimals;
+            document.getElementById('xpLevel').textContent = gameState.playerLevel;
+            document.getElementById('currentXP').textContent = gameState.currentXP;
+            document.getElementById('maxXP').textContent = gameState.maxXP;
+            
+            const xpPercent = (gameState.currentXP / gameState.maxXP) * 100;
+            document.getElementById('xpFill').style.width = xpPercent + '%';
+            
+            const successRate = gameState.totalCases > 0 
+                ? Math.round((gameState.successfulCases / gameState.totalCases) * 100)
+                : 0;
+            document.getElementById('successRate').textContent = successRate + '%';
+            
+            // Enable/disable diagnosis button
+            document.getElementById('diagnosisBtn').disabled = gameState.collectedClues.length < 3;
+        }
+        
+        function updateCluesList() {
+            const cluesList = document.getElementById('cluesList');
+            cluesList.innerHTML = '';
+            
+            gameState.collectedClues.forEach(clue => {
+                const clueItem = document.createElement('div');
+                clueItem.className = clue.important ? 'clue-item clue-important' : 'clue-item';
+                clueItem.innerHTML = `
+                    <div class="clue-icon">${clue.icon}</div>
+                    <div class="clue-text">${clue.text}</div>
+                `;
+                cluesList.appendChild(clueItem);
+            });
+        }
+        
+        function openQuestionModal(category) {
+            const modal = document.getElementById('questionModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const optionsContainer = document.getElementById('questionOptions');
+            
+            // Set title
+            const titles = {
+                symptoms: "Nach Symptomen fragen",
+                examine: "Körperliche Untersuchung",
+                tests: "Medizinische Tests",
+                history: "Krankengeschichte"
+            };
+            modalTitle.textContent = titles[category];
+            
+            // Generate options
+            optionsContainer.innerHTML = '';
+            const questions = questionDatabase[category];
+            
+            questions.forEach((q, index) => {
+                const option = document.createElement('div');
+                option.className = 'question-option';
+                option.innerHTML = `
+                    <div class="question-option-icon">${category === 'symptoms' ? '❓' : category === 'examine' ? '🔍' : category === 'tests' ? '🔬' : '📋'}</div>
+                    <div class="question-option-text">${q.question}</div>
+                    <div class="question-cost">${q.cost} 💎</div>
+                `;
+                option.onclick = () => askQuestion(category, index);
+                optionsContainer.appendChild(option);
+            });
+            
+            modal.classList.add('active');
+        }
+        
+        function askQuestion(category, questionIndex) {
+            const question = questionDatabase[category][questionIndex];
+            
+            if (gameState.currentPoints < question.cost) {
+                alert('Nicht genug Punkte!');
+                return;
+            }
+            
+            // Deduct points
+            gameState.currentPoints -= question.cost;
+            
+            // Add clue
+            gameState.collectedClues.push(question.clue);
+            
+            // Show answer
+            alert(`Antwort: ${question.answer}`);
+            
+            // Update UI
+            updateCluesList();
+            updateUI();
+            closeModal();
+        }
+        
+        function openDiagnosisModal() {
+            const modal = document.getElementById('diagnosisModal');
+            modal.classList.add('active');
+            
+            // Reset selection
+            document.querySelectorAll('.diagnosis-option').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.onclick = function() {
+                    document.querySelectorAll('.diagnosis-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    gameState.selectedDiagnosis = this.dataset.diagnosis;
+                };
+            });
+        }
+        
+        function submitDiagnosis() {
+            if (!gameState.selectedDiagnosis) {
+                alert('Bitte wähle eine Diagnose!');
+                return;
+            }
+            
+            gameState.totalCases++;
+            
+            const correct = gameState.selectedDiagnosis === gameState.currentCase.correctDiagnosis;
+            
+            if (correct) {
+                gameState.successfulCases++;
+                gameState.healedAnimals++;
+                
+                // Calculate XP based on efficiency
+                const xpEarned = Math.max(50, gameState.currentPoints);
+                gameState.currentXP += xpEarned;
+                
+                // Level up check
+                if (gameState.currentXP >= gameState.maxXP) {
+                    gameState.currentXP -= gameState.maxXP;
+                    gameState.playerLevel++;
+                    gameState.maxXP = gameState.playerLevel * 100;
+                    showAchievement('Level Up!', `Du hast Level ${gameState.playerLevel} erreicht!`);
+                }
+                
+                // Show success message
+                alert(`✅ Richtige Diagnose! ${gameState.currentCase.explanation}\n\n+${xpEarned} XP erhalten!`);
+                
+                // Check for achievements
+                if (gameState.currentPoints >= 50) {
+                    showAchievement('Schnelldiagnose!', 'Fall in weniger als 50 Punkten gelöst');
+                }
+                
+                // Show knowledge card
+                showKnowledgeCard();
+            } else {
+                alert(`❌ Falsche Diagnose! ${gameState.currentCase.explanation}\n\nVersuch es nochmal!`);
+            }
+            
+            updateUI();
+            closeModal();
+        }
+        
+        function showKnowledgeCard() {
+            const card = document.getElementById('knowledgeCard');
+            card.classList.add('active');
+            
+            // You could update the facts here based on the current case
+        }
+        
+        function showAchievement(title, description) {
+            const popup = document.getElementById('achievementPopup');
+            document.getElementById('achievementTitle').textContent = title;
+            document.getElementById('achievementDesc').textContent = description;
+            
+            popup.classList.add('active');
+            
+            setTimeout(() => {
+                popup.classList.remove('active');
+            }, 3500);
+        }
+        
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(modal => {
+                modal.classList.remove('active');
+            });
+        }
+        
+        // Initialize game on load
+        window.onload = initGame;
+    </script>
+</body>
+</html>

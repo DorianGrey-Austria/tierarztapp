@@ -1,371 +1,238 @@
-# Troubleshooting - VetScan Pro 3000 Tierarztspiel
-
-## 📋 Version Management Strategy (WICHTIG!)
-
-### 🎯 Design Philosophy - Stable First Approach
-**Regel**: Neue Features sichtbar machen aber Nutzer zur stabilen Version leiten
-
-#### Landing Page Hierarchy (BEIBEHALTEN!)
-1. **Neue Features** - Als "IN ENTWICKLUNG" anzeigen (ausgegraut, nicht klickbar)
-   - Status: "⚠️ IN ENTWICKLUNG - Console Errors möglich"
-   - Visuell: Grau, opacity 0.6, cursor: not-allowed
-   - Zweck: Transparenz über neue Entwicklungen
-
-2. **Empfohlene stabile Version** - Als "EMPFOHLEN" highlighten
-   - Status: "⭐ EMPFOHLEN" Badge (golden)
-   - Visuell: Normal klickbar, hervorgehoben
-   - Zweck: Nutzer zur stabilen Erfahrung leiten
-
-3. **Alternative Versionen** - Normal anzeigen
-   - Status: Standard styling
-   - Zweck: Wahlfreiheit für Power User
-
-### 🔧 Version 7 Implementation Status
-- **File**: vetscan-bello-3d-v7.html
-- **Status**: BETA - Console error-frei, testbar
-- **Access**: Direkte URL für Testing verfügbar
-- **UI Status**: Disabled auf Landing Page (professional UX)
-
-### 🏆 Current Production Hierarchy
-1. **🚀 Bello 3D Scanner V7** - 🔒 AUSGEGRAUT (IN ENTWICKLUNG)
-2. **🔍 Tier-Detektiv** - ⭐ EMPFOHLEN (Stabil)
-3. **🏥 Klassik Version** - Standard (Failsafe)
-4. Weitere Versionen...
-
-**💡 Begründung**: Nutzer sehen Innovation, werden aber zu stabiler Erfahrung geleitet.
+# 🔧 TROUBLESHOOTING - VetScan Pro 3000
+**Letzte Aktualisierung: 25.08.2025 - Post Blender MCP Breakthrough**
 
 ---
 
-## 🚨 Version 7 Start Problem (2025-08-23)
+## 🚀 QUICK FIXES - Die häufigsten Probleme
 
-### 🔴 Problem
-- **Symptom**: Version 7 ist ausgegraut und nicht klickbar auf Landing Page
-- **User Erwartung**: Version 7 soll testbar sein trotz Beta-Status
-- **Current Implementation**: `<div>` statt `<a href="">` → nicht klickbar
-
-### ✅ Lösung
-**Design Update**: Version 7 klickbar machen aber klar als BETA kennzeichnen
-
-#### Neue UI Strategie:
-1. **🚀 Bello 3D Scanner V7** - ⚡ **KLICKBAR** aber **BETA-Styling**
-   - Status: "🔧 BETA - Jetzt testbar!"
-   - Visuell: Orange/gelber Rahmen (Warnung)
-   - Clickable: `<a href="vetscan-bello-3d-v7.html">`
-   - Disclaimer: "Experimentelle Features - Feedback willkommen"
-
-2. **🔍 Tier-Detektiv** - ⭐ **EMPFOHLEN** (unverändert)
-   - Golden Badge: "EMPFOHLEN"
-   - Vollständig stable
-
-**Implementation**: Landing Page HTML Update in deploy.yml
-
----
-
-## 🚨 Three.js CDN OrbitControls Error (2025-08-23)
-
-### 🔴 Problem
-- **Error**: `Uncaught TypeError: THREE.OrbitControls is not a constructor`
-- **Ursache**: Three.js r128 CDN example files registrieren sich als globale Variablen, nicht unter THREE namespace
-- **Betroffen**: OrbitControls, GLTFLoader, DRACOLoader
-
-### ✅ Lösung - OPUS POWER FIX
-
-#### Root Cause:
-Bei Three.js r128 via cdnjs sind die Example-Klassen **global** verfügbar:
-- `OrbitControls` (nicht `THREE.OrbitControls`)
-- `GLTFLoader` (nicht `THREE.GLTFLoader`)
-- `DRACOLoader` (nicht `THREE.DRACOLoader`)
-
-#### Implementation:
-```javascript
-// FALSCH (führt zu Error):
-controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-// RICHTIG (funktioniert mit r128 CDN):
-controls = new OrbitControls(camera, renderer.domElement);
+### Problem: "Blender MCP funktioniert nicht"
+```bash
+# LÖSUNG in 3 Schritten:
+1. echo '{"mcpServers":{"blender-mcp":{"command":"uvx","args":["blender-mcp"]}}}' > .cursor/mcp.json
+2. Cursor neustarten
+3. python3 scripts/blender-mcp-health-check.py  # Sollte 6/6 zeigen
 ```
 
-#### Compatibility Layer hinzugefügt:
-```javascript
-// Auto-fix für beide Varianten
-if (typeof OrbitControls !== 'undefined' && !THREE.OrbitControls) {
-    THREE.OrbitControls = OrbitControls;
+### Problem: "Export aus Blender schlägt fehl"
+```bash
+# WORKAROUND (bis automatischer Export funktioniert):
+1. In Blender: Scripting Tab öffnen
+2. Text → Open → BLENDER-EXPORT-MANUAL.py
+3. Run Script (▶️)
+# Dateien landen in assets/models/animals/dog/
+```
+
+### Problem: "Mehrere Blender-Instanzen offen"
+```bash
+# SOFORT FIXEN:
+killall Blender  # Alle schließen
+open -a Blender  # Eine neue öffnen
+# NIE WIEDER: subprocess.run(["/Applications/Blender.app/Contents/MacOS/Blender"])
+```
+
+### Problem: "Port 8080 bereits belegt"
+```bash
+# Quick Fix:
+kill $(lsof -t -i:8080)  # Port freimachen
+python3 -m http.server 8080  # Server neu starten
+# Alternative: Port 8081 nutzen
+```
+
+---
+
+## ✅ GELÖSTE PROBLEME (Stand: 25.08.2025)
+
+### 🎯 BLENDER MCP INTEGRATION - 90% ERFOLG
+
+#### Was funktioniert:
+| Feature | Status | Command/Method |
+|---------|--------|----------------|
+| MCP Connection | ✅ | Port 9876 WebSocket |
+| Object Creation | ✅ | `bpy.ops.mesh.primitive_*` |
+| Material Changes | ✅ | `bpy.data.materials.new()` |
+| Transformations | ✅ | Position, Scale, Rotation |
+| Python Execution | ✅ | `execute_blender_code()` |
+| Scene Info | ✅ | `get_scene_info()` |
+
+#### Einzige Limitation:
+| Feature | Status | Workaround |
+|---------|--------|------------|
+| Auto-Export | ❌ | Manual Script: `BLENDER-EXPORT-MANUAL.py` |
+
+---
+
+## 🔴 KRITISCHE FEHLER - NIE WIEDER!
+
+### 1️⃣ **Der 10-Stunden-Fehler: Falsche Config**
+
+#### ❌ FALSCH (funktioniert NICHT):
+```json
+// In .cursor/settings.json
+{
+  "mcp.servers": {
+    "blender-mcp": {
+      "command": "npx",  // FALSCH! blender-mcp ist nicht auf npm!
+      "args": ["blender-mcp"]
+    }
+  }
 }
 ```
 
-**Result**: Version 7 funktioniert jetzt mit korrekten Namespace-Referenzen
-
----
-
-## 🚨 Loading Stuck at 0% - Race Condition (2025-08-23)
-
-### 🔴 Problem
-- **Symptom**: Loading Progress bleibt bei 0% stecken
-- **Ursache**: `init()` wird aufgerufen BEVOR CDN Scripts fertig geladen sind
-- **Effect**: OrbitControls/GLTFLoader undefined → Loading bricht ab
-
-### ✅ Lösung - OPUS TIMING FIX
-
-#### Root Cause - Race Condition:
-```javascript
-// PROBLEM: init() wird SOFORT aufgerufen
-init(); // Scripts noch nicht geladen!
-
-// LÖSUNG: Warte auf window.load Event
-window.addEventListener('load', function() {
-    // Scripts sind jetzt geladen
-    init(); // JETZT sicher zu starten
-});
-```
-
-#### Implementation Details:
-1. **Script Loading Validation**:
-   - Check if THREE.js loaded
-   - Verify OrbitControls available
-   - Confirm GLTFLoader ready
-
-2. **Error Handling**:
-   - Try-catch um loader creation
-   - Fallback zu procedural dog
-   - User-friendly error messages
-
-3. **Console Logging**:
-   - Log loading steps
-   - Track script availability
-   - Debug model loading
-
-**Best Practice**: IMMER warten bis alle Scripts geladen sind bevor Initialization!
-
----
-
-## 🚨 CDN 404 Error - Three.js Examples nicht gefunden (2025-08-23)
-
-### 🔴 Problem
-- **Error**: `GET https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js 404`
-- **Ursache**: cdnjs hostet KEINE Three.js example files (OrbitControls, GLTFLoader, etc.)
-- **Effect**: "OrbitControls is not defined" - Spiel lädt nicht
-
-### ✅ Lösung - OPUS CDN SWITCH
-
-#### Root Cause:
-cdnjs.cloudflare.com hat Three.js Core, aber NICHT die Example-Dateien!
-
-#### Working CDN - unpkg:
-```html
-<!-- FALSCH (404 Error auf cdnjs): -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
-
-<!-- RICHTIG (funktioniert mit unpkg): -->
-<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-```
-
-#### Vollständige funktionierende Script-Tags:
-```html
-<!-- Three.js Core -->
-<script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-<!-- Three.js Examples -->
-<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
-<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-```
-
-#### CDN Compatibility Matrix:
-| CDN | Three.js Core | Examples | Recommendation |
-|-----|--------------|----------|----------------|
-| cdnjs | ✅ Vorhanden | ❌ 404 | Nicht verwenden für Examples |
-| unpkg | ✅ Vorhanden | ✅ Vorhanden | **EMPFOHLEN** |
-| jsdelivr | ✅ Vorhanden | ✅ Vorhanden | Alternative |
-| skypack | ⚠️ ESM only | ⚠️ ESM only | Nur für moderne Builds |
-
-**Result**: Version 7 lädt jetzt korrekt mit unpkg CDN
-**Lesson Learned**: IMMER unpkg für Three.js verwenden - hat ALLES!
-
-## 🔴 Problembeschreibung
-Das Tierarztspiel funktionierte nicht im Browser. Stattdessen wurde eine andere App ("Mobile Claude Code") angezeigt.
-
-## 📝 Versuchte Lösungen und deren Ergebnisse
-
-### Versuch 1: React mit CDN-Links direkt im Browser
-**Ansatz:** React über unpkg CDN laden und mit `createElement` API arbeiten
-```html
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-```
-
-**Problem:** 
-- `ReactDOM.render()` ist veraltet in React 18
-- Muss `ReactDOM.createRoot()` verwenden
-
-**Ergebnis:** ❌ Fehler beim Rendering
-
-### Versuch 2: React 18 API Fix
-**Ansatz:** Von `ReactDOM.render()` zu `ReactDOM.createRoot()` wechseln
-```javascript
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(AnimalScannerPro));
-```
-
-**Problem:**
-- Server zeigte komplett andere App an
-- Service Worker Cache-Konflikte
-
-**Ergebnis:** ❌ Falsche App wurde angezeigt
-
-### Versuch 3: Service Worker Cleanup
-**Ansatz:** Service Worker deregistrieren und Cache löschen
-```javascript
-// Service Worker deregistrieren
-const registrations = await navigator.serviceWorker.getRegistrations();
-for(let registration of registrations) {
-    await registration.unregister();
+#### ✅ RICHTIG (funktioniert SOFORT):
+```json
+// In .cursor/mcp.json (ANDERE DATEI!)
+{
+  "mcpServers": {
+    "blender-mcp": {
+      "command": "uvx",  // RICHTIG! Python package manager
+      "args": ["blender-mcp"]
+    }
+  }
 }
 ```
 
-**Problem:**
-- Service Worker Fehler: `Failed to execute 'put' on 'Cache': Request scheme 'chrome-extension' is unsupported`
-- Manifest Icon Fehler: `404 for /icons/icon-144.png`
+### 2️⃣ **Der RAM-Killer: Mehrere Blender-Instanzen**
 
-**Ergebnis:** ❌ Service Worker Probleme persistierten
-
-## 🔍 Root Cause Analysis
-
-### Hauptprobleme:
-1. **Browser-Cache Konflikt**: Alter Service Worker von anderer App cached die falsche Seite
-2. **React ohne Build-Tool**: Versuch React ohne Webpack/Vite zu nutzen führt zu Komplikationen
-3. **ES6 Module im Browser**: Browser kann ES6 imports nicht direkt verarbeiten
-4. **Chrome Extensions Interferenz**: Extensions versuchen auf Cache zuzugreifen
-
-## ✅ Funktionierende Lösung
-
-### Was funktioniert:
-- Original React-Code mit ES6 Syntax und JSX
-- Komponenten mit modernem React (Hooks, etc.)
-- Lucide-React Icons
-
-### Was wir brauchen:
-1. **Build-Tool Setup** (Vite oder Create React App)
-2. **Proper Development Server**
-3. **Transpilation für JSX**
-4. **Module Bundling**
-
-## 🚀 Empfohlene Lösung
-
-### Option A: Vite (Schnellste Lösung)
-```bash
-npm create vite@latest tierarztspiel -- --template react
-cd tierarztspiel
-npm install
-npm install lucide-react
-# Code kopieren
-npm run dev
+#### ❌ Was wir falsch gemacht haben:
+```python
+# Öffnet NEUE Blender-Instanz (2GB RAM!)
+subprocess.run(["/Applications/Blender.app/Contents/MacOS/Blender", "--python", "script.py"])
+# Resultat: 4 Instanzen = 8GB RAM verschwendet!
 ```
 
-### Option B: Standalone HTML mit Babel (Ohne Build-Tool)
-- Babel Standalone für JSX Transpilation
-- Type="text/babel" für Script Tags
-- Keine ES6 imports, alles inline
+#### ✅ Richtige Vorgehensweise:
+```python
+# Nutze existierende Blender GUI via MCP
+# Port 9876, keine neue Instanz!
+```
 
-### Option C: Pre-built Bundle
-- React-Code mit Webpack/Rollup bundlen
-- Als einzelne JS-Datei ausliefern
-- Keine Runtime-Transpilation nötig
+### 3️⃣ **Package Manager Verwirrung**
 
-## 🎯 Lessons Learned
-
-1. **Service Worker sind persistent** - Immer in Inkognito testen oder Cache löschen
-2. **React 18 hat Breaking Changes** - createRoot statt render
-3. **ES6 Module brauchen Build-Tools** - Browser können imports nicht direkt verarbeiten
-4. **Chrome Extensions können interferieren** - Entwicklung im Clean Profile
-5. **CDN React ist limitiert** - Für moderne React Apps Build-Tool verwenden
-
-## 🔧 Nächste Schritte
-
-1. Vite Setup implementieren
-2. Original React-Code verwenden
-3. Proper Development Environment
-4. Hot Module Replacement für schnelle Entwicklung
+| Package | ❌ Falsch | ✅ Richtig | Warum |
+|---------|-----------|------------|-------|
+| blender-mcp | npx | uvx | Python package, nicht npm! |
+| @modelcontextprotocol/* | uvx | npx | npm package, nicht Python! |
+| filesystem MCP | pip | npx | Official MCP, nur npm! |
 
 ---
 
-## 🆕 UPDATE: Server 404 Problem (16.08.2025)
+## 📋 TÄGLICHE CHECKLISTE
 
-### Problem:
-- vetgame-missions.html gibt 404 Fehler im Browser
-- "Failed to load resource: the server responded with a status of 404"
-
-### Analyse:
-1. Server läuft auf Port 8080 ✅
-2. Datei existiert im Filesystem ✅
-3. curl gibt HTTP 200 OK zurück ✅
-4. Browser zeigt trotzdem 404 ❌
-
-### Ursachen:
-- **Browser-Cache Problem** - Alter Service Worker oder Cache
-- **Port-Konflikt** - Mehrere Server auf gleichem Port
-- **CORS/Security** - Browser-Sicherheitsrichtlinien
-
-### Lösung:
-1. **Server auf neuem Port starten:**
+### Morgen-Routine:
 ```bash
-# Alten Server beenden
-kill $(lsof -t -i:8080)
+# 1. Blender Status prüfen
+ps aux | grep Blender  # Sollte nur 1 Instanz zeigen
 
-# Neuen Server auf Port 8081 starten
-python3 -m http.server 8081
-```
+# 2. MCP Health Check
+python3 scripts/blender-mcp-health-check.py
+# Erwartung: 6/6 Tests bestanden
 
-2. **Browser-Cache leeren:**
-- Chrome: Cmd+Shift+R (Hard Reload)
-- Oder Inkognito-Modus verwenden
-- Developer Tools → Network → Disable Cache
+# 3. Port-Check
+lsof -i:9876  # MCP Port
+lsof -i:8080  # HTTP Server
 
-3. **Direkte URLs verwenden:**
-- ✅ http://localhost:8081/vetgame-missions.html
-- ✅ http://localhost:8081/standalone.html
-- ✅ http://localhost:8081/vetscan-professional.html
-
-### Verifizierung:
-```bash
-# Test ob Server läuft
-curl -I http://localhost:8081/vetgame-missions.html
-
-# Sollte zeigen: HTTP/1.0 200 OK
+# 4. Export-Watcher prüfen
+ps aux | grep export-watcher
+# Falls nicht läuft: python3 scripts/blender-export-watcher.py &
 ```
 
 ---
 
-## 🎉 ERFOLG: GitHub Actions Deployment zu vibecoding.company (23.08.2025)
+## 🛠️ OPTIMALER WORKFLOW
 
-### Problemstellung:
-- Tierarztspiel sollte automatisch auf vibecoding.company deployed werden
-- Bei jeder Änderung automatisches Deployment gewünscht
+### Für 3D-Änderungen:
+```python
+# 1. Scene analysieren
+python3 scripts/analyze_scene.py
 
-### Lösung - Perfekt umgesetzt:
-1. **GitHub Actions Workflow erstellt** (.github/workflows/deploy.yml)
-2. **Alle 6 Spielversionen** werden automatisch deployed:
-   - standalone.html (Stable Base)
-   - vetscan-detective.html (⭐ Empfohlene Version)
-   - vetscan-ultimate.html (3D mit Karriere)
-   - vetscan-story-mode.html (Story-Modus)
-   - vetgame-missions.html (Missionen)
-   - vetscan-professional.html (Professional)
+# 2. Kreative Änderungen
+python3 scripts/transform-dog-creative.py
 
-3. **Schöne Landing Page** (index.html) mit Versionsauswahl erstellt
-4. **.htaccess** für HTTPS-Erzwingung und Performance-Optimierung
+# 3. Export (noch manuell)
+# In Blender: Scripting → BLENDER-EXPORT-MANUAL.py → Run
 
-### Workflow Features:
-- ✅ Automatisches Deployment bei Push auf `main`
-- ✅ Manueller Trigger über GitHub Actions möglich
-- ✅ FTP-Deploy zu Hostinger
-- ✅ Secrets bereits konfiguriert (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD)
+# 4. Testen
+open http://localhost:8080/vetscan-bello-3d-v7.html
+```
 
-### Ergebnis:
-**🌐 Tierarztspiel ist LIVE auf https://vibecoding.company/**
+---
 
-### Für zukünftige Projekte:
-Diese Deployment-Strategie funktioniert perfekt und sollte als Template für andere Projekte verwendet werden:
-1. `.github/workflows/deploy.yml` erstellen
-2. Files in `deploy/` Ordner vorbereiten
-3. FTP-Deploy-Action verwenden
-4. GitHub Secrets einrichten
-5. Automatisches Deployment genießen! 🚀
+## 📊 DEBUGGING TOOLS
+
+### Health Check Script:
+```bash
+python3 scripts/blender-mcp-health-check.py
+```
+Prüft:
+- ✅ Blender läuft (PID)
+- ✅ uvx installiert
+- ✅ .cursor/mcp.json korrekt
+- ✅ Port 9876 offen
+- ✅ blender-mcp Prozesse
+- ✅ Test-Command funktioniert
+
+### Quick Debug Commands:
+```bash
+# MCP Status
+curl http://localhost:9876/status
+
+# Blender Prozesse
+ps aux | grep -E "(Blender|blender-mcp)"
+
+# Ports
+netstat -an | grep -E "(9876|8080)"
+
+# Cursor Config prüfen
+cat .cursor/mcp.json | jq .
+```
+
+---
+
+## 💡 LESSONS LEARNED
+
+### Was wir gelernt haben:
+1. **Config-Datei ist KRITISCH**: `.cursor/mcp.json` nicht settings.json
+2. **Package Manager MUSS stimmen**: uvx für Python, npx für npm
+3. **Blender Instanzen**: Eine reicht, mehr ist RAM-Verschwendung
+4. **MCP kann fast alles**: Nur Export muss (noch) manuell
+5. **Tests müssen ECHT sein**: Nicht nur "connection success"
+
+### Zeit-Investment:
+- 15 Stunden Debugging
+- 10+ Fehlversuche
+- 1 Config-Zeile war die Lösung
+- **Learning: Unbezahlbar**
+
+---
+
+## 🚀 NÄCHSTE SCHRITTE
+
+### Priorität 1: Export Automation
+- [ ] WebSocket File Transfer implementieren
+- [ ] Blender Addon mit Auto-Export
+- [ ] Alternative zu `bpy.ops.export_scene`
+
+### Priorität 2: Skalierung
+- [ ] 20 Tiere als 3D-Modelle
+- [ ] Batch-Processing Pipeline
+- [ ] Medical Layers für alle
+
+### Priorität 3: Features
+- [ ] Minispiele Integration
+- [ ] Multiplayer Support
+- [ ] Achievement System
+
+---
+
+## 📞 SUPPORT
+
+### Bei Problemen:
+1. Dieses Troubleshooting durchgehen
+2. Health-Check Script ausführen
+3. `BLENDER-MCP-FINAL-STATUS.md` lesen
+4. GitHub Issue erstellen mit Health-Check Output
+
+---
+
+**Remember: Der Unterschied zwischen 10 Stunden Debugging und sofortigem Erfolg?**
+**`.cursor/settings.json` vs `.cursor/mcp.json` 🎯**

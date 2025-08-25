@@ -119,11 +119,25 @@ jobs:
                 <p class="subtitle">Wähle deine Spielversion:</p>
                 
                 <div class="version-grid">
+                    <div class="version-card" style="opacity: 0.6; cursor: not-allowed; background: #e5e7eb;">
+                        <div style="position: absolute; top: -10px; right: 10px; background: #6b7280; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🚧 IN ENTWICKLUNG</div>
+                        <h3>🏥 VetScan Pro 9.0</h3>
+                        <p>Professionelle medizinische Simulation mit erweiterten Diagnose-Tools.</p>
+                        <small style="color: #6b7280;">Verfügbar ab 26.08.2025</small>
+                    </div>
+                    
+                    <a href="vetscan-magic-v8.html" class="version-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); border: 3px solid #a855f7; position: relative;">
+                        <div style="position: absolute; top: -10px; right: 10px; background: #a855f7; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">✨ NEU</div>
+                        <h3>🎉 VetScan Pro 8.0 MAGIC</h3>
+                        <p>Die ultimative Version mit allem was funktioniert! 3D, Scanner-Spiel und Fun-Features.</p>
+                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Blender MCP Integration erfolgreich!</small>
+                    </a>
+                    
                     <a href="vetscan-bello-3d-v7.html" class="version-card" style="background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%); border: 3px solid #ff6b00; position: relative;">
                         <div style="position: absolute; top: -10px; right: 10px; background: #ff6b00; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔧 BETA</div>
                         <h3>🚀 Bello 3D Scanner V7</h3>
-                        <p>🔬 Jetzt testbar! Medizinische Visualisierung mit X-Ray, Ultrasound, Thermal & MRI Modi.</p>
-                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">⚡ Experimentelle Features - Feedback willkommen</small>
+                        <p>🔬 Medizinische Visualisierung mit X-Ray, Ultrasound, Thermal & MRI Modi.</p>
+                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Experimentelle Features</small>
                     </a>
                     
                     <a href="vetscan-detective.html" class="version-card recommended">
