@@ -1,5 +1,5 @@
 # 🔧 TROUBLESHOOTING - VetScan Pro 3000
-**Letzte Aktualisierung: 25.08.2025 - Post Blender MCP Breakthrough**
+**Letzte Aktualisierung: 26.08.2025 - Blender MCP VOLLSTÄNDIG GELÖST!**
 
 ---
 
@@ -40,9 +40,46 @@ python3 -m http.server 8080  # Server neu starten
 
 ---
 
-## ✅ GELÖSTE PROBLEME (Stand: 25.08.2025)
+## 🎉 BLENDER MCP DURCHBRUCH (26.08.2025) - 100% GELÖST!
 
-### 🎯 BLENDER MCP INTEGRATION - 90% ERFOLG
+### 🏆 FINALE SESSION ERFOLGE:
+- **Socket-Kommunikation funktioniert**: Port 9876 mit richtigem Format
+- **10 Tiere erfolgreich designed**: Via Sub-Agents mit medizinischen Visualisierungen
+- **Export funktioniert**: Hund (840KB), Katze (295KB), Kaninchen (82KB), Papagei (683KB)
+- **Dokumentation komplett**: BLENDER-MCP-HOWTO.md mit allen Working Examples
+
+### 🔥 DIE LÖSUNG: Socket-Kommunikation auf Port 9876
+
+#### Was war das Problem?
+- Health-Check funktionierte, aber keine Commands
+- "Unknown command type" Fehler bei allen Versuchen
+- Falsche Annahmen über das Protokoll-Format
+
+#### DIE FUNKTIONIERENDE LÖSUNG:
+```python
+# RICHTIG - So funktioniert es!
+command = {
+    "type": "execute_code",  # NICHT "command_type", NICHT "method" allein!
+    "params": {
+        "code": "import bpy; # Your Python code here"
+    }
+}
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect(('localhost', 9876))
+sock.send(json.dumps(command).encode())
+```
+
+#### Verfügbare Command Types (aus blender-mcp-addon.py):
+- `get_scene_info` - Scene-Informationen abrufen ✅
+- `get_object_info` - Object-Details abrufen ✅
+- `execute_code` - Python-Code in Blender ausführen ✅
+- `get_viewport_screenshot` - Screenshot erstellen ✅
+- `create_rodin_job` - Hyper3D Generierung (API Key nötig)
+- `import_generated_asset` - Generierte Assets importieren
+
+## ✅ GELÖSTE PROBLEME (Stand: 26.08.2025)
+
+### 🎯 BLENDER MCP INTEGRATION - 100% ERFOLG
 
 #### Was funktioniert:
 | Feature | Status | Command/Method |
@@ -202,6 +239,63 @@ cat .cursor/mcp.json | jq .
 - 10+ Fehlversuche
 - 1 Config-Zeile war die Lösung
 - **Learning: Unbezahlbar**
+
+---
+
+## 🎨 THREE.JS MODULE LOADING FIX (27.08.2025)
+
+### Problem: "3D Models werden nicht angezeigt"
+**Symptom**: Canvas ist leer, keine Fehler in Console, aber Models laden nicht
+
+#### ❌ FALSCH (Alte Three.js Methode):
+```html
+<!-- Funktioniert NICHT mit Three.js 0.155+ -->
+<script src="three.min.js"></script>
+<script src="examples/js/controls/OrbitControls.js"></script>
+<script src="examples/js/loaders/GLTFLoader.js"></script>
+<script>
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    const loader = new THREE.GLTFLoader();
+</script>
+```
+
+#### ✅ RICHTIG (ES6 Module mit importmap):
+```html
+<!-- Three.js mit ES6 Modules -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    
+    // Make global for other scripts
+    window.THREE = THREE;
+    window.OrbitControls = OrbitControls;
+    window.GLTFLoader = GLTFLoader;
+</script>
+<script type="module">
+    // Nutze window.* für die Klassen
+    const controls = new window.OrbitControls(camera, renderer.domElement);
+    const loader = new window.GLTFLoader();
+    
+    // DRACO Path für komprimierte Models
+    const dracoLoader = new window.DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/libs/draco/');
+</script>
+```
+
+### Weitere wichtige Fixes:
+1. **Script type="module"**: Alle Scripts mit Three.js Code müssen `type="module"` haben
+2. **DRACO Path**: Muss auf `/jsm/libs/draco/` zeigen, nicht `/js/libs/draco/`
+3. **Timing**: Code muss warten bis Module geladen sind (setTimeout oder DOMContentLoaded)
+4. **CORS**: Lokaler Server nötig für GLB Files (`python3 -m http.server 8080`)
 
 ---
 
