@@ -26,15 +26,30 @@ jobs:
         mkdir -p deploy
         
         # Kopiere alle HTML-Dateien des Tierarztspiels
-        cp standalone.html deploy/
-        cp vetscan-detective.html deploy/
-        cp vetscan-ultimate.html deploy/
-        cp vetscan-story-mode.html deploy/
-        cp vetgame-missions.html deploy/
-        cp vetscan-professional.html deploy/
-        cp vetscan-bello-3d-v7.html deploy/
-        cp vetscan-bello-3d.html deploy/
-        cp vetscan-pro-medical-3d.html deploy/
+        cp standalone.html deploy/ 2>/dev/null || true
+        cp vetscan-detective.html deploy/ 2>/dev/null || true
+        cp vetscan-ultimate.html deploy/ 2>/dev/null || true
+        cp vetscan-story-mode.html deploy/ 2>/dev/null || true
+        cp vetgame-missions.html deploy/ 2>/dev/null || true
+        cp vetscan-professional.html deploy/ 2>/dev/null || true
+        cp vetscan-bello-3d-v7.html deploy/ 2>/dev/null || true
+        cp vetscan-bello-3d.html deploy/ 2>/dev/null || true
+        cp vetscan-pro-medical-3d.html deploy/ 2>/dev/null || true
+        
+        # Version 9 & 10 files
+        cp vetscan-modern-animal-showcase.html deploy/ 2>/dev/null || true
+        cp vetscan-version-selector.html deploy/ 2>/dev/null || true
+        cp vetscan-all-animals-showcase.html deploy/ 2>/dev/null || true
+        cp vetscan-guinea-pig-3d.html deploy/ 2>/dev/null || true
+        cp test-rabbit-3d.html deploy/ 2>/dev/null || true
+        cp turtle-model-test.html deploy/ 2>/dev/null || true
+        
+        # Copy JS directory for Version 9
+        cp -r js deploy/ 2>/dev/null || true
+        
+        # Copy assets for 3D models
+        cp -r assets deploy/ 2>/dev/null || true
+        cp -r public deploy/ 2>/dev/null || true
         
         # Erstelle index.html als Startseite mit Auswahl
         cat > deploy/index.html << 'EOF'

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-08-27T02:34:02.352343",
+  "checks": {
+    "blender_process": {
+      "status": "running",
+      "pid": "784",
+      "message": "Blender l\u00e4uft (PID: 784)"
+    },
+    "uvx_installation": {
+      "status": "installed",
+      "path": "/opt/homebrew/bin/uvx",
+      "version": "uvx 0.7.6 (Homebrew 2025-05-19)",
+      "message": "uvx ist installiert: /opt/homebrew/bin/uvx"
+    },
+    "cursor_config": {
+      "status": "correct",
+      "command": "uvx",
+      "message": "\u2705 Cursor Config korrekt (uvx wird verwendet)"
+    },
+    "mcp_port": {
+      "status": "open",
+      "port": 9876,
+      "message": "Port 9876 ist offen"
+    },
+    "blender_mcp_processes": {
+      "status": "running",
+      "count": 13,
+      "message": "13 blender-mcp Prozesse gefunden"
+    },
+    "test_command": {
+      "status": "success",
+      "response_length": 60,
+      "message": "Test-Command erfolgreich gesendet und Antwort erhalten"
+    }
+  }
+}

@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Guinea Pig 3D Medical v1.0</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            z-index: 100;
+        }
+
+        .version-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #00ff00;
+            color: black;
+            padding: 10px;
+            text-align: center;
+            z-index: 999999;
+            font-weight: bold;
+        }
+
+        .controls {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            min-width: 200px;
+        }
+
+        .mode-btn {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .mode-btn:hover {
+            background: #357abd;
+        }
+
+        .mode-btn.active {
+            background: #2ecc71;
+        }
+
+        .medical-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        #canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background: rgba(255,107,107,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="version-banner">
+        VERSION 1.0 - Guinea Pig Medical Model - Deployed: August 27, 2025
+    </div>
+
+    <div class="header">
+        <h1>🐹 VetScan Pro - Guinea Pig Medical 3D</h1>
+        <p>Educational veterinary scanner simulation</p>
+    </div>
+
+    <div class="controls">
+        <h3>🏥 Medical Visualization</h3>
+        <button class="mode-btn active" onclick="setMaterial('normal')">Normal View</button>
+        <button class="mode-btn" onclick="setMaterial('xray')">X-Ray Mode</button>
+        <button class="mode-btn" onclick="setMaterial('ultrasound')">Ultrasound</button>
+        <button class="mode-btn" onclick="setMaterial('thermal')">Thermal Imaging</button>
+        <button class="mode-btn" onclick="setMaterial('mri')">MRI Scan</button>
+        
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #666;">
+            <h4>🎮 Controls</h4>
+            <p style="font-size: 12px; margin: 5px 0;">🖱️ Mouse: Rotate</p>
+            <p style="font-size: 12px; margin: 5px 0;">🔍 Scroll: Zoom</p>
+        </div>
+    </div>
+
+    <div class="medical-info">
+        <h3>🐹 Guinea Pig Medical Facts</h3>
+        <div id="medical-facts">
+            <p><strong>🦷 Dental Health:</strong> Continuously growing incisors require regular wear</p>
+            <p><strong>🍊 Vitamin C:</strong> Cannot synthesize vitamin C - must be provided in diet</p>
+            <p><strong>🔄 Cecotrophy:</strong> Re-ingests soft feces for nutrient absorption</p>
+            <p><strong>⚖️ Weight:</strong> 700-1200g (adult)</p>
+            <p><strong>💓 Heart Rate:</strong> 230-380 BPM</p>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        🐹 Loading Guinea Pig Medical Model...<br>
+        <div style="margin-top: 10px; font-size: 14px;">Preparing medical visualization modes...</div>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Three.js CDN -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        const VERSION = "1.0.0";
+        const BUILD = "2025.08.27.001";
+        
+        console.log(`🐹 VetScan Pro Guinea Pig Medical v${VERSION} (${BUILD})`);
+
+        // Scene setup
+        let scene, camera, renderer, controls;
+        let guineaPigModel = null;
+        let currentMaterial = 'normal';
+        const materials = {};
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x2c3e50);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(3, 2, 3);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('canvas'),
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Lighting
+            setupLighting();
+
+            // Load guinea pig model
+            loadGuineaPigModel();
+
+            // Animation loop
+            animate();
+        }
+
+        function setupLighting() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            // Main directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Fill light
+            const fillLight = new THREE.DirectionalLight(0x4a90e2, 0.3);
+            fillLight.position.set(-3, 2, -3);
+            scene.add(fillLight);
+        }
+
+        function loadGuineaPigModel() {
+            const loader = new THREE.GLTFLoader();
+            
+            // Try to load the guinea pig model
+            const modelPaths = [
+                'assets/models/animals/guinea_pig/guinea_pig_medical.glb',
+                'watched_exports/guinea_pig_medical.glb'
+            ];
+
+            let currentPath = 0;
+
+            function tryLoadModel() {
+                if (currentPath >= modelPaths.length) {
+                    // If no model found, create a procedural guinea pig
+                    createProceduralGuineaPig();
+                    return;
+                }
+
+                const path = modelPaths[currentPath];
+                console.log(`🔄 Trying to load: ${path}`);
+
+                loader.load(
+                    path,
+                    function(gltf) {
+                        console.log('✅ Guinea pig model loaded successfully');
+                        guineaPigModel = gltf.scene;
+                        
+                        // Scale and position
+                        guineaPigModel.scale.setScalar(1);
+                        guineaPigModel.position.set(0, -0.5, 0);
+                        
+                        // Enable shadows
+                        guineaPigModel.traverse((child) => {
+                            if (child.isMesh) {
+                                child.castShadow = true;
+                                child.receiveShadow = true;
+                            }
+                        });
+                        
+                        scene.add(guineaPigModel);
+                        
+                        // Create materials
+                        createMedicalMaterials();
+                        
+                        // Hide loading
+                        document.getElementById('loading').style.display = 'none';
+                    },
+                    function(progress) {
+                        const percent = (progress.loaded / progress.total * 100).toFixed(0);
+                        document.getElementById('loading').innerHTML = 
+                            `🐹 Loading Guinea Pig Model... ${percent}%`;
+                    },
+                    function(error) {
+                        console.warn(`⚠️ Could not load ${path}:`, error);
+                        currentPath++;
+                        tryLoadModel();
+                    }
+                );
+            }
+
+            tryLoadModel();
+        }
+
+        function createProceduralGuineaPig() {
+            console.log('🔧 Creating procedural guinea pig model...');
+            
+            const group = new THREE.Group();
+            group.name = 'ProceduralGuineaPig';
+            
+            // Body (compact and rounded)
+            const bodyGeometry = new THREE.SphereGeometry(0.8, 32, 16);
+            const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 }); // Brown
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.scale.set(1.3, 0.65, 0.9); // Guinea pig proportions
+            body.castShadow = true;
+            body.receiveShadow = true;
+            group.add(body);
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.35, 24, 12);
+            const headMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.set(0.9, 0.1, 0);
+            head.scale.set(0.8, 0.9, 1.0);
+            head.castShadow = true;
+            group.add(head);
+            
+            // Ears (small for guinea pig)
+            for (let side of [-1, 1]) {
+                const earGeometry = new THREE.SphereGeometry(0.1, 8, 6);
+                const earMaterial = new THREE.MeshLambertMaterial({ color: 0xFFB6C1 }); // Pink
+                const ear = new THREE.Mesh(earGeometry, earMaterial);
+                ear.position.set(1.0, 0.25, side * 0.2);
+                ear.scale.set(0.6, 0.4, 1.2);
+                ear.castShadow = true;
+                group.add(ear);
+            }
+            
+            // Legs (short)
+            const legPositions = [
+                [0.4, -0.5, -0.4],   // Front left
+                [0.4, -0.5, 0.4],    // Front right
+                [-0.2, -0.5, -0.4],  // Back left
+                [-0.2, -0.5, 0.4]    // Back right
+            ];
+            
+            legPositions.forEach((pos, i) => {
+                const legGeometry = new THREE.CylinderGeometry(0.06, 0.08, 0.25, 8);
+                const legMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                const leg = new THREE.Mesh(legGeometry, legMaterial);
+                leg.position.set(pos[0], pos[1], pos[2]);
+                leg.castShadow = true;
+                group.add(leg);
+            });
+            
+            // Eyes
+            for (let side of [-1, 1]) {
+                const eyeGeometry = new THREE.SphereGeometry(0.03, 8, 6);
+                const eyeMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+                const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+                eye.position.set(1.15, 0.15, side * 0.12);
+                group.add(eye);
+            }
+            
+            // Position the group
+            group.position.set(0, -0.2, 0);
+            
+            scene.add(group);
+            guineaPigModel = group;
+            
+            // Create materials
+            createMedicalMaterials();
+            
+            document.getElementById('loading').style.display = 'none';
+            console.log('✅ Procedural guinea pig created');
+        }
+
+        function createMedicalMaterials() {
+            console.log('🎨 Creating medical materials...');
+            
+            // Normal material (brown guinea pig)
+            materials.normal = new THREE.MeshLambertMaterial({ 
+                color: 0x8B4513,
+                transparent: false
+            });
+            
+            // X-Ray material
+            materials.xray = new THREE.MeshLambertMaterial({ 
+                color: 0xCCE5FF,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            
+            // Ultrasound material
+            materials.ultrasound = new THREE.MeshLambertMaterial({ 
+                color: 0xE0E0E0,
+                transparent: false,
+                emissive: 0x202020
+            });
+            
+            // Thermal material
+            materials.thermal = new THREE.MeshLambertMaterial({ 
+                color: 0xFF4500,
+                emissive: 0x331100
+            });
+            
+            // MRI material
+            materials.mri = new THREE.MeshLambertMaterial({ 
+                color: 0xB0B0B0,
+                transparent: false
+            });
+            
+            console.log('✅ Medical materials created');
+        }
+
+        function setMaterial(materialName) {
+            if (!guineaPigModel || !materials[materialName]) return;
+            
+            currentMaterial = materialName;
+            
+            // Update button states
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Apply material to all meshes
+            guineaPigModel.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = materials[materialName];
+                }
+            });
+            
+            // Update medical info
+            updateMedicalInfo(materialName);
+            
+            console.log(`🎨 Material changed to: ${materialName}`);
+        }
+
+        function updateMedicalInfo(mode) {
+            const facts = {
+                normal: `
+                    <p><strong>🐹 Normal View:</strong> Standard guinea pig anatomy</p>
+                    <p><strong>🦷 Teeth:</strong> Continuously growing incisors</p>
+                    <p><strong>🍊 Diet:</strong> Requires vitamin C supplementation</p>
+                    <p><strong>📏 Size:</strong> 20-25cm body length</p>
+                `,
+                xray: `
+                    <p><strong>🩻 X-Ray Mode:</strong> Skeletal structure visible</p>
+                    <p><strong>🦴 Bones:</strong> Small, delicate bone structure</p>
+                    <p><strong>🦷 Dental:</strong> Check for overgrown teeth</p>
+                    <p><strong>⚠️ Issues:</strong> Dental overgrowth, fractures</p>
+                `,
+                ultrasound: `
+                    <p><strong>🔊 Ultrasound:</strong> Soft tissue examination</p>
+                    <p><strong>🫀 Heart:</strong> High heart rate (230-380 BPM)</p>
+                    <p><strong>🤰 Pregnancy:</strong> 59-72 day gestation</p>
+                    <p><strong>🔍 Uses:</strong> Pregnancy, organ health</p>
+                `,
+                thermal: `
+                    <p><strong>🌡️ Thermal Mode:</strong> Body temperature mapping</p>
+                    <p><strong>🔥 Normal:</strong> 37.2-39.5°C (99-103°F)</p>
+                    <p><strong>❄️ Cold stress:</strong> Hypothermia risk</p>
+                    <p><strong>⚠️ Fever:</strong> Sign of illness</p>
+                `,
+                mri: `
+                    <p><strong>🧠 MRI Scan:</strong> Detailed tissue imaging</p>
+                    <p><strong>🧠 Brain:</strong> Small but complex</p>
+                    <p><strong>🫁 Organs:</strong> Cecum for cecotrophy</p>
+                    <p><strong>🩸 Vitamin C:</strong> Liver cannot synthesize</p>
+                `
+            };
+            
+            document.getElementById('medical-facts').innerHTML = facts[mode] || facts.normal;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            // Rotate guinea pig slightly
+            if (guineaPigModel) {
+                guineaPigModel.rotation.y += 0.005;
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Event listeners
+        window.addEventListener('resize', onWindowResize);
+
+        // Initialize
+        init();
+
+        // Log version info
+        console.log(`🐹 Guinea Pig Medical Model System v${VERSION}`);
+        console.log('🏥 Medical visualization modes available');
+        console.log('🦷 Focus: Dental health & vitamin C dependency');
+    </script>
+</body>
+</html>

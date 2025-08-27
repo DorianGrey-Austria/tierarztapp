@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turtle Medical Model Test - VetScan Pro 3000</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            max-width: 350px;
+        }
+
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .status {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status.loading {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #FFC107;
+        }
+
+        .status.success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .status.error {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-left: 4px solid #f44336;
+        }
+
+        .controls {
+            margin-top: 15px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #333;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:hover, button:hover {
+            background: #555;
+        }
+
+        button {
+            background: #4CAF50;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .material-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #333;
+            border-top: 5px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="loading-screen">
+            <div class="spinner"></div>
+            <h2>Loading Turtle Medical Model...</h2>
+            <p id="loading-status">Initializing 3D viewer...</p>
+        </div>
+
+        <div id="viewer"></div>
+
+        <div id="ui-overlay">
+            <h1>🐢 Turtle Medical Scanner</h1>
+            <div id="status" class="status loading">Loading model...</div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="visualization-mode">Medical Visualization Mode:</label>
+                    <select id="visualization-mode">
+                        <option value="0">Normal (Realistic)</option>
+                        <option value="1">X-Ray (Shell Transparency)</option>
+                        <option value="2">Ultrasound (Tissue Patterns)</option>
+                        <option value="3">Thermal (Temperature Map)</option>
+                        <option value="4">MRI (Tissue Differentiation)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <button id="rotate-btn">Auto-Rotate: OFF</button>
+                    <button id="reset-camera">Reset Camera</button>
+                </div>
+            </div>
+
+            <div class="material-info">
+                <div id="material-description">
+                    <strong>Normal Mode:</strong><br>
+                    Realistic turtle coloring with anatomically correct shell structure, retractable neck, and webbed feet.
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div><strong>Model Info:</strong></div>
+            <div id="polygon-count">Polygons: Loading...</div>
+            <div id="vertex-count">Vertices: Loading...</div>
+            <div id="material-count">Materials: 5</div>
+            <div id="file-size">File Size: Loading...</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/three@0.162.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.162.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://unpkg.com/three@0.162.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls, turtle, mixer;
+        let autoRotate = false;
+        const materials = [];
+        
+        // Material descriptions
+        const materialDescriptions = {
+            0: {
+                name: "Normal Mode",
+                description: "Realistic turtle coloring with anatomically correct shell structure, retractable neck, and webbed feet."
+            },
+            1: {
+                name: "X-Ray Mode",
+                description: "Transparent shell view showing internal bone structure. Shell transparency reveals anatomical layers important for fracture diagnosis."
+            },
+            2: {
+                name: "Ultrasound Mode",
+                description: "Tissue visualization with noise patterns and scan lines. Useful for soft tissue examination and organ placement."
+            },
+            3: {
+                name: "Thermal Mode",
+                description: "Temperature gradient mapping showing heat distribution. Blue (cold) to red (hot) visualization for circulatory assessment."
+            },
+            4: {
+                name: "MRI Mode",
+                description: "Grayscale tissue differentiation for detailed anatomical study. Optimized for educational medical imaging."
+            }
+        };
+
+        // Initialize 3D scene
+        function init() {
+            updateLoadingStatus("Initializing 3D renderer...");
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 3, 5);
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('viewer').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 2;
+            controls.maxDistance = 20;
+
+            // Lighting
+            setupLighting();
+
+            // Load turtle model
+            loadTurtleModel();
+
+            // Event listeners
+            setupEventListeners();
+
+            // Start animation loop
+            animate();
+        }
+
+        function setupLighting() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            // Main directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Fill light
+            const fillLight = new THREE.DirectionalLight(0x4080ff, 0.3);
+            fillLight.position.set(-10, 5, -5);
+            scene.add(fillLight);
+
+            // Medical examination light (spot)
+            const spotLight = new THREE.SpotLight(0xffffff, 0.8, 30, Math.PI / 6, 0.2, 2);
+            spotLight.position.set(0, 10, 0);
+            spotLight.target.position.set(0, 0, 0);
+            scene.add(spotLight);
+            scene.add(spotLight.target);
+        }
+
+        function updateLoadingStatus(message) {
+            const statusEl = document.getElementById('loading-status');
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+        }
+
+        function loadTurtleModel() {
+            updateLoadingStatus("Loading turtle model...");
+            
+            const loader = new THREE.GLTFLoader();
+            const modelPath = './assets/models/animals/turtle/turtle_medical.glb';
+            
+            loader.load(
+                modelPath,
+                function(gltf) {
+                    updateLoadingStatus("Processing model materials...");
+                    
+                    turtle = gltf.scene;
+                    
+                    // Scale and position the turtle
+                    turtle.scale.setScalar(1);
+                    turtle.position.set(0, -1, 0);
+                    
+                    // Enable shadows
+                    turtle.traverse(function(child) {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                            
+                            // Store materials for switching
+                            if (child.material) {
+                                materials.push(child.material);
+                            }
+                        }
+                    });
+                    
+                    scene.add(turtle);
+                    
+                    // Update stats
+                    updateModelStats(turtle);
+                    
+                    // Hide loading screen
+                    document.getElementById('loading-screen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loading-screen').style.display = 'none';
+                    }, 500);
+                    
+                    // Update status
+                    const statusEl = document.getElementById('status');
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ Turtle model loaded successfully!';
+                    
+                    console.log('🐢 Turtle model loaded successfully!');
+                    console.log('📊 Model stats:', {
+                        polygons: countPolygons(turtle),
+                        materials: materials.length,
+                        boundingBox: new THREE.Box3().setFromObject(turtle)
+                    });
+                },
+                function(progress) {
+                    const percent = (progress.loaded / progress.total * 100).toFixed(1);
+                    updateLoadingStatus(`Loading model... ${percent}%`);
+                },
+                function(error) {
+                    console.error('❌ Error loading turtle model:', error);
+                    
+                    document.getElementById('loading-screen').style.display = 'none';
+                    
+                    const statusEl = document.getElementById('status');
+                    statusEl.className = 'status error';
+                    statusEl.innerHTML = `❌ Model not found!<br>
+                        <small>Run the Blender script first:<br>
+                        BLENDER-TURTLE-SCRIPT.py</small>`;
+                    
+                    // Create placeholder geometry
+                    createPlaceholderTurtle();
+                }
+            );
+        }
+
+        function createPlaceholderTurtle() {
+            // Create a simple placeholder turtle for demonstration
+            const group = new THREE.Group();
+            
+            // Shell
+            const shellGeometry = new THREE.SphereGeometry(1, 16, 8);
+            shellGeometry.scale(1.4, 0.6, 1.8);
+            const shellMaterial = new THREE.MeshLambertMaterial({ color: 0x4a7c59 });
+            const shell = new THREE.Mesh(shellGeometry, shellMaterial);
+            shell.position.y = 0.5;
+            group.add(shell);
+            
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.4, 12, 8);
+            const headMaterial = new THREE.MeshLambertMaterial({ color: 0x5d8a3a });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.set(0, 0.5, -2);
+            group.add(head);
+            
+            // Legs
+            for (let i = 0; i < 4; i++) {
+                const legGeometry = new THREE.CylinderGeometry(0.2, 0.15, 0.6);
+                const legMaterial = new THREE.MeshLambertMaterial({ color: 0x5d8a3a });
+                const leg = new THREE.Mesh(legGeometry, legMaterial);
+                
+                const angle = (i / 4) * Math.PI * 2;
+                leg.position.set(
+                    Math.cos(angle) * 1.2,
+                    -0.2,
+                    Math.sin(angle) * 0.8
+                );
+                group.add(leg);
+            }
+            
+            turtle = group;
+            scene.add(turtle);
+            
+            console.log('📝 Placeholder turtle created');
+        }
+
+        function updateModelStats(model) {
+            const polygonCount = countPolygons(model);
+            const vertexCount = countVertices(model);
+            
+            document.getElementById('polygon-count').textContent = `Polygons: ${polygonCount.toLocaleString()}`;
+            document.getElementById('vertex-count').textContent = `Vertices: ${vertexCount.toLocaleString()}`;
+            
+            // Estimate file size (rough approximation)
+            const estimatedSize = (polygonCount * 50 + vertexCount * 20) / 1024; // KB
+            document.getElementById('file-size').textContent = `Estimated: ${estimatedSize.toFixed(1)} KB`;
+        }
+
+        function countPolygons(object) {
+            let count = 0;
+            object.traverse(child => {
+                if (child.isMesh && child.geometry) {
+                    if (child.geometry.index) {
+                        count += child.geometry.index.count / 3;
+                    } else {
+                        count += child.geometry.attributes.position.count / 3;
+                    }
+                }
+            });
+            return Math.floor(count);
+        }
+
+        function countVertices(object) {
+            let count = 0;
+            object.traverse(child => {
+                if (child.isMesh && child.geometry && child.geometry.attributes.position) {
+                    count += child.geometry.attributes.position.count;
+                }
+            });
+            return count;
+        }
+
+        function setupEventListeners() {
+            // Material switching
+            document.getElementById('visualization-mode').addEventListener('change', function(e) {
+                const mode = parseInt(e.target.value);
+                switchVisualizationMode(mode);
+                updateMaterialDescription(mode);
+            });
+
+            // Auto-rotate toggle
+            document.getElementById('rotate-btn').addEventListener('click', function() {
+                autoRotate = !autoRotate;
+                this.textContent = `Auto-Rotate: ${autoRotate ? 'ON' : 'OFF'}`;
+            });
+
+            // Reset camera
+            document.getElementById('reset-camera').addEventListener('click', function() {
+                camera.position.set(5, 3, 5);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            });
+
+            // Window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function switchVisualizationMode(mode) {
+            if (!turtle) return;
+
+            turtle.traverse(child => {
+                if (child.isMesh && child.material) {
+                    // Switch to the specified material slot
+                    if (child.material.length && child.material[mode]) {
+                        child.material = child.material[mode];
+                    }
+                }
+            });
+
+            console.log(`🔄 Switched to visualization mode: ${mode}`);
+        }
+
+        function updateMaterialDescription(mode) {
+            const info = materialDescriptions[mode] || materialDescriptions[0];
+            document.getElementById('material-description').innerHTML = 
+                `<strong>${info.name}:</strong><br>${info.description}`;
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Auto-rotate turtle
+            if (autoRotate && turtle) {
+                turtle.rotation.y += 0.01;
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Starting Turtle Medical Model Test...');
+            init();
+        });
+    </script>
+</body>
+</html>
