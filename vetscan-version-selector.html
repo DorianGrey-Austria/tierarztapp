@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro 3000 - Version Selector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .versions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .version-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .version-card.featured {
+            background: linear-gradient(135deg, #00ff88, #00aaff);
+            color: white;
+            grid-column: span 2;
+        }
+        
+        .version-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .version-name {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .featured .version-name {
+            color: white;
+        }
+        
+        .version-description {
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .feature-tag {
+            background: #f0f0f0;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+        
+        .featured .feature-tag {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge.new {
+            background: #00ff88;
+            color: #004422;
+        }
+        
+        .badge.beta {
+            background: #fbbf24;
+            color: #92400e;
+        }
+        
+        @media (max-width: 768px) {
+            .version-card.featured {
+                grid-column: span 1;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 VetScan Pro 3000</h1>
+        <p class="subtitle">Wähle deine gewünschte Version</p>
+        
+        <div class="versions-grid">
+            <!-- Version 9.0 - NEU! -->
+            <a href="vetscan-modern-animal-showcase.html" class="version-card featured">
+                <div class="version-number">Version 9.0 <span class="badge new">NEU!</span></div>
+                <div class="version-name">🎮 Modern Animal Showcase</div>
+                <div class="version-description">
+                    Die neueste Version mit realistischen 3D-Tieren! Interaktive Showcase mit 10 Tierarten, 
+                    8 medizinischen Visualisierungsmodi und Hyper3D-Style Procedural Generation.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">✨ Realistische Tiere</span>
+                    <span class="feature-tag">🔬 8 Medical Modes</span>
+                    <span class="feature-tag">🎯 10 Tierarten</span>
+                    <span class="feature-tag">📱 Responsive</span>
+                    <span class="feature-tag">🚀 Three.js</span>
+                </div>
+            </a>
+            
+            <!-- Version 8.0 -->
+            <a href="vetscan-magic-v8.html" class="version-card">
+                <div class="version-number">Version 8.0</div>
+                <div class="version-name">🪄 Magic Edition</div>
+                <div class="version-description">
+                    Die finale Magic Edition mit allen Features und Optimierungen.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">100 Patienten</span>
+                    <span class="feature-tag">20 Tiere</span>
+                    <span class="feature-tag">Achievements</span>
+                </div>
+            </a>
+            
+            <!-- Version 7.0 -->
+            <a href="vetscan-bello-3d-v7.html" class="version-card">
+                <div class="version-number">Version 7.0</div>
+                <div class="version-name">🐕 Bello 3D</div>
+                <div class="version-description">
+                    3D-Scanner mit Blender MCP Integration für realistische Hundemodelle.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">3D Models</span>
+                    <span class="feature-tag">Blender MCP</span>
+                    <span class="feature-tag">X-Ray</span>
+                </div>
+            </a>
+            
+            <!-- Story Mode -->
+            <a href="vetscan-story-mode.html" class="version-card">
+                <div class="version-number">Story Mode</div>
+                <div class="version-name">📖 Narrative Edition</div>
+                <div class="version-description">
+                    Erlebe spannende Geschichten und löse medizinische Rätsel.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">Story</span>
+                    <span class="feature-tag">Quests</span>
+                    <span class="feature-tag">NPCs</span>
+                </div>
+            </a>
+            
+            <!-- Detective Mode -->
+            <a href="vetscan-detective.html" class="version-card">
+                <div class="version-number">Detective</div>
+                <div class="version-name">🔍 Mystery Cases</div>
+                <div class="version-description">
+                    Löse knifflige veterinärmedizinische Fälle als Tierdetektiv.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">Rätsel</span>
+                    <span class="feature-tag">Clues</span>
+                    <span class="feature-tag">Mystery</span>
+                </div>
+            </a>
+            
+            <!-- Professional -->
+            <a href="vetscan-professional.html" class="version-card">
+                <div class="version-number">Professional</div>
+                <div class="version-name">👨‍⚕️ Expert Mode</div>
+                <div class="version-description">
+                    Für fortgeschrittene Spieler mit realistischen medizinischen Details.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">Realistic</span>
+                    <span class="feature-tag">Advanced</span>
+                    <span class="feature-tag">Medical</span>
+                </div>
+            </a>
+            
+            <!-- React Version -->
+            <a href="index.html" class="version-card">
+                <div class="version-number">React App <span class="badge beta">Beta</span></div>
+                <div class="version-name">⚛️ Modern Framework</div>
+                <div class="version-description">
+                    Die React-basierte Version mit modernem UI und State Management.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">React 18</span>
+                    <span class="feature-tag">Vite</span>
+                    <span class="feature-tag">Tailwind</span>
+                </div>
+            </a>
+            
+            <!-- Classic -->
+            <a href="standalone.html" class="version-card">
+                <div class="version-number">Classic</div>
+                <div class="version-name">🎮 Original</div>
+                <div class="version-description">
+                    Die klassische Standalone-Version ohne Framework.
+                </div>
+                <div class="features">
+                    <span class="feature-tag">Vanilla JS</span>
+                    <span class="feature-tag">Simple</span>
+                    <span class="feature-tag">Fast</span>
+                </div>
+            </a>
+        </div>
+        
+        <div style="text-align: center; color: white; padding: 20px;">
+            <p style="margin-bottom: 10px;">🚀 Deployed on <strong>vibecoding.company</strong></p>
+            <p style="opacity: 0.8;">Created with ❤️ using Claude Code</p>
+        </div>
+    </div>
+</body>
+</html>
