@@ -101,38 +101,66 @@ export class Hyper3DAnimalGenerator {
     generateDog() {
         const group = new THREE.Group();
         
-        // Body - elongated ellipsoid
-        const bodyGeometry = new THREE.SphereGeometry(1, 16, 12);
-        bodyGeometry.scale(1.8, 0.8, 0.7);
+        // Create realistic dog shape using multiple connected geometries
+        // Body - dog-like torso shape
+        const bodyShape = new THREE.Shape();
+        bodyShape.moveTo(-1.2, -0.4);
+        bodyShape.bezierCurveTo(-1.2, -0.8, -0.5, -0.8, 0.8, -0.6);
+        bodyShape.bezierCurveTo(1.2, -0.4, 1.2, 0.4, 0.8, 0.6);
+        bodyShape.bezierCurveTo(0.2, 0.8, -0.8, 0.8, -1.2, 0.4);
+        bodyShape.bezierCurveTo(-1.2, 0.2, -1.2, -0.2, -1.2, -0.4);
+        
+        const extrudeSettings = {
+            depth: 0.6,
+            bevelEnabled: true,
+            bevelSegments: 8,
+            steps: 2,
+            bevelSize: 0.1,
+            bevelThickness: 0.1
+        };
+        
+        const bodyGeometry = new THREE.ExtrudeGeometry(bodyShape, extrudeSettings);
         const body = new THREE.Mesh(bodyGeometry, this.materials.goldenFur);
-        body.position.set(0, 0, 0);
+        body.position.set(0, 0, -0.3);
         body.castShadow = true;
         group.add(body);
         
-        // Head - sphere with snout
-        const headGeometry = new THREE.SphereGeometry(0.5, 16, 12);
-        headGeometry.scale(1.2, 1, 1);
+        // Head - more dog-like with snout
+        const headGeometry = new THREE.SphereGeometry(0.4, 16, 12);
+        headGeometry.scale(1.4, 1.1, 1);
         const head = new THREE.Mesh(headGeometry, this.materials.goldenFur);
-        head.position.set(1.5, 0.3, 0);
+        head.position.set(1.3, 0.2, 0);
         head.castShadow = true;
         group.add(head);
         
-        // Snout
-        const snoutGeometry = new THREE.ConeGeometry(0.2, 0.6, 8);
+        // Snout - more realistic shape
+        const snoutGeometry = new THREE.CylinderGeometry(0.15, 0.25, 0.5, 8);
         snoutGeometry.rotateZ(Math.PI / 2);
         const snout = new THREE.Mesh(snoutGeometry, this.materials.goldenFur);
-        snout.position.set(2.1, 0.2, 0);
+        snout.position.set(1.8, 0.1, 0);
         group.add(snout);
         
-        // Ears
-        const earGeometry = new THREE.ConeGeometry(0.15, 0.4, 6);
+        // Dog ears - floppy and realistic
+        const earShape = new THREE.Shape();
+        earShape.moveTo(0, 0);
+        earShape.bezierCurveTo(0, 0.3, 0.2, 0.4, 0.3, 0.2);
+        earShape.bezierCurveTo(0.35, 0, 0.3, -0.2, 0);
+        earShape.bezierCurveTo(-0.1, -0.1, 0, 0, 0);
+        
+        const earGeometry = new THREE.ExtrudeGeometry(earShape, {
+            depth: 0.05,
+            bevelEnabled: true,
+            bevelSize: 0.02
+        });
+        
         const leftEar = new THREE.Mesh(earGeometry, this.materials.goldenFur);
-        leftEar.position.set(1.3, 0.7, -0.3);
-        leftEar.rotation.z = -0.3;
+        leftEar.position.set(1.1, 0.5, -0.2);
+        leftEar.rotation.set(0.2, -0.3, -0.5);
         group.add(leftEar);
         
         const rightEar = leftEar.clone();
-        rightEar.position.z = 0.3;
+        rightEar.position.z = 0.2;
+        rightEar.rotation.z = 0.5;
         group.add(rightEar);
         
         // Legs

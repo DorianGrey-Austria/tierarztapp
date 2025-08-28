@@ -366,6 +366,52 @@
         .glow-effect {
             box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
         }
+        
+        /* Game Elements */
+        .feature-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .feature-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.2);
+        }
+        
+        .feature-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .feature-btn.active {
+            background: linear-gradient(135deg, #00ff88, #00aaff);
+            border-color: transparent;
+            animation: pulse-btn 2s infinite;
+        }
+        
+        @keyframes pulse-btn {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 136, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.6); }
+        }
+        
+        .activity-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -461,6 +507,45 @@
                     <h4 style="color: #00aaff; margin-bottom: 10px;">Anatomical Features</h4>
                     <div class="features-container" id="features-container">
                         <!-- Features will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Game Elements -->
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0, 255, 136, 0.1); border-radius: 10px;" id="game-panel">
+                    <h4 style="color: #00ff88; margin-bottom: 10px;">🎮 Interactive Features</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                        <button class="feature-btn" onclick="startHealthCheck()" id="health-btn">
+                            ❤️ Health Check
+                        </button>
+                        <button class="feature-btn" onclick="feedAnimal()" id="feed-btn">
+                            🍖 Feed Animal  
+                        </button>
+                        <button class="feature-btn" onclick="playWithAnimal()" id="play-btn">
+                            🎾 Play Game
+                        </button>
+                        <button class="feature-btn" onclick="teachTrick()" id="teach-btn">
+                            🎯 Teach Trick
+                        </button>
+                    </div>
+                    
+                    <div id="game-status" style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; display: none;">
+                        <div id="happiness-bar" style="margin-bottom: 10px;">
+                            <span style="font-size: 0.9em;">😊 Happiness: </span>
+                            <div style="display: inline-block; width: 100px; height: 10px; background: #333; border-radius: 5px; overflow: hidden;">
+                                <div id="happiness-fill" style="width: 80%; height: 100%; background: linear-gradient(90deg, #ff4444, #ffff44, #44ff44); transition: width 0.5s;"></div>
+                            </div>
+                            <span id="happiness-text" style="margin-left: 10px;">80%</span>
+                        </div>
+                        <div id="health-bar" style="margin-bottom: 10px;">
+                            <span style="font-size: 0.9em;">❤️ Health: </span>
+                            <div style="display: inline-block; width: 100px; height: 10px; background: #333; border-radius: 5px; overflow: hidden;">
+                                <div id="health-fill" style="width: 95%; height: 100%; background: linear-gradient(90deg, #ff4444, #44ff44); transition: width 0.5s;"></div>
+                            </div>
+                            <span id="health-text" style="margin-left: 10px;">95%</span>
+                        </div>
+                        <div id="activity-log" style="font-size: 0.8em; opacity: 0.8; max-height: 80px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                            <!-- Activity messages will appear here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -960,11 +1045,251 @@
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
         
+        // Game State
+        let gameState = {
+            currentAnimal: null,
+            happiness: 80,
+            health: 95,
+            activities: []
+        };
+        
+        // Game Functions
+        function startHealthCheck() {
+            if (!currentAnimal) {
+                addActivity('⚠️ Please select an animal first!', 'warning');
+                return;
+            }
+            
+            addActivity('🏥 Performing health check...', 'info');
+            
+            setTimeout(() => {
+                const healthIssues = [];
+                if (gameState.happiness < 50) healthIssues.push('Low mood detected');
+                if (Math.random() > 0.8) healthIssues.push('Minor dehydration');
+                if (Math.random() > 0.9) healthIssues.push('Needs dental care');
+                
+                if (healthIssues.length === 0) {
+                    addActivity('✅ Perfect health! Your ' + currentAnimal.name + ' is in great shape!', 'success');
+                    gameState.health = Math.min(100, gameState.health + 5);
+                } else {
+                    addActivity('📋 Issues found: ' + healthIssues.join(', '), 'warning');
+                    addActivity('💊 Recommended: Regular checkups and care', 'info');
+                }
+                
+                updateGameStats();
+            }, 2000);
+        }
+        
+        function feedAnimal() {
+            if (!currentAnimal) {
+                addActivity('⚠️ Please select an animal first!', 'warning');
+                return;
+            }
+            
+            const foods = {
+                'dog': ['🦴 Bone', '🥩 Meat', '🍖 Dog treats'],
+                'cat': ['🐟 Fish', '🥛 Milk', '🐭 Cat treats'],  
+                'rabbit': ['🥕 Carrot', '🥬 Lettuce', '🌾 Hay'],
+                'horse': ['🌾 Hay', '🍎 Apple', '🥕 Carrot'],
+                'parrot': ['🌻 Seeds', '🍌 Banana', '🥜 Nuts']
+            };
+            
+            const animalFoods = foods[currentAnimal.id] || ['🍎 Generic food'];
+            const food = animalFoods[Math.floor(Math.random() * animalFoods.length)];
+            
+            addActivity('🍽️ Feeding ' + food + ' to ' + currentAnimal.name, 'info');
+            
+            setTimeout(() => {
+                addActivity('😋 Yummy! ' + currentAnimal.name + ' loved it!', 'success');
+                gameState.happiness = Math.min(100, gameState.happiness + 10);
+                gameState.health = Math.min(100, gameState.health + 2);
+                updateGameStats();
+                
+                // Make animal happy animation
+                if (currentModel) {
+                    animateHappiness();
+                }
+            }, 1500);
+        }
+        
+        function playWithAnimal() {
+            if (!currentAnimal) {
+                addActivity('⚠️ Please select an animal first!', 'warning');
+                return;
+            }
+            
+            const games = {
+                'dog': ['🎾 Fetch', '🏃 Running', '🎲 Hide and seek'],
+                'cat': ['🧶 Yarn ball', '🐭 Mouse toy', '📦 Box game'],
+                'rabbit': ['🏃 Hopping race', '🕳️ Tunnel game'],
+                'horse': ['🏇 Riding', '🏃 Galloping'],
+                'parrot': ['🗣️ Talking', '🎵 Singing', '🪶 Flying']
+            };
+            
+            const animalGames = games[currentAnimal.id] || ['🎮 Generic play'];
+            const game = animalGames[Math.floor(Math.random() * animalGames.length)];
+            
+            addActivity('🎮 Playing ' + game + ' with ' + currentAnimal.name, 'info');
+            
+            setTimeout(() => {
+                if (Math.random() > 0.3) {
+                    addActivity('🏆 Great game! ' + currentAnimal.name + ' had so much fun!', 'success');
+                    gameState.happiness = Math.min(100, gameState.happiness + 15);
+                } else {
+                    addActivity('😴 ' + currentAnimal.name + ' is getting tired from playing', 'info');
+                    gameState.happiness = Math.min(100, gameState.happiness + 5);
+                }
+                updateGameStats();
+                
+                // Play animation
+                if (currentModel) {
+                    animatePlay();
+                }
+            }, 2000);
+        }
+        
+        function teachTrick() {
+            if (!currentAnimal) {
+                addActivity('⚠️ Please select an animal first!', 'warning');
+                return;
+            }
+            
+            const tricks = {
+                'dog': ['🐕 Sit', '🤝 Shake hands', '🔄 Roll over', '🎯 Play dead'],
+                'cat': ['🐱 High five', '👑 Sit pretty', '🤸 Jump through hoop'],
+                'horse': ['🦵 Rear up', '💃 Dance', '🤝 Bow'],
+                'parrot': ['🗣️ Say hello', '🎵 Sing song', '👋 Wave wing']
+            };
+            
+            const animalTricks = tricks[currentAnimal.id] || ['🎪 Generic trick'];
+            const trick = animalTricks[Math.floor(Math.random() * animalTricks.length)];
+            
+            addActivity('🎓 Teaching ' + trick + ' to ' + currentAnimal.name, 'info');
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.4;
+                if (success) {
+                    addActivity('🌟 Success! ' + currentAnimal.name + ' learned ' + trick + '!', 'success');
+                    gameState.happiness = Math.min(100, gameState.happiness + 20);
+                } else {
+                    addActivity('🤔 ' + currentAnimal.name + ' needs more practice with ' + trick, 'info');
+                    gameState.happiness = Math.min(100, gameState.happiness + 5);
+                }
+                updateGameStats();
+            }, 3000);
+        }
+        
+        function addActivity(message, type = 'info') {
+            const log = document.getElementById('activity-log');
+            const time = new Date().toLocaleTimeString().slice(0, 5);
+            
+            const colors = {
+                'success': '#44ff44',
+                'warning': '#ffaa44', 
+                'info': '#44aaff',
+                'error': '#ff4444'
+            };
+            
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.style.color = colors[type];
+            item.innerHTML = `<span style="opacity: 0.6;">${time}</span> ${message}`;
+            
+            log.appendChild(item);
+            log.scrollTop = log.scrollHeight;
+            
+            // Show game status panel
+            document.getElementById('game-status').style.display = 'block';
+            
+            // Limit to last 10 activities
+            while (log.children.length > 10) {
+                log.removeChild(log.firstChild);
+            }
+        }
+        
+        function updateGameStats() {
+            // Update happiness
+            const happinessFill = document.getElementById('happiness-fill');
+            const happinessText = document.getElementById('happiness-text');
+            happinessFill.style.width = gameState.happiness + '%';
+            happinessText.textContent = Math.round(gameState.happiness) + '%';
+            
+            // Update health
+            const healthFill = document.getElementById('health-fill');
+            const healthText = document.getElementById('health-text');
+            healthFill.style.width = gameState.health + '%';
+            healthText.textContent = Math.round(gameState.health) + '%';
+            
+            // Decay over time
+            setTimeout(() => {
+                gameState.happiness = Math.max(0, gameState.happiness - 0.5);
+                gameState.health = Math.max(0, gameState.health - 0.1);
+                updateGameStats();
+            }, 30000); // Every 30 seconds
+        }
+        
+        function animateHappiness() {
+            if (currentModel) {
+                // Bounce animation
+                const originalY = currentModel.position.y;
+                currentModel.position.y += 0.3;
+                setTimeout(() => {
+                    currentModel.position.y = originalY;
+                }, 500);
+                
+                // Add sparkle effect
+                createSparkles();
+            }
+        }
+        
+        function animatePlay() {
+            if (currentModel) {
+                // Spin animation
+                let spins = 0;
+                const spinInterval = setInterval(() => {
+                    currentModel.rotation.y += 0.2;
+                    spins++;
+                    if (spins >= 10) {
+                        clearInterval(spinInterval);
+                    }
+                }, 100);
+            }
+        }
+        
+        function createSparkles() {
+            // Add particle effect for happiness
+            const sparkleGeometry = new THREE.SphereGeometry(0.02, 4, 4);
+            const sparkleMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            for (let i = 0; i < 10; i++) {
+                const sparkle = new THREE.Mesh(sparkleGeometry, sparkleMaterial);
+                sparkle.position.set(
+                    (Math.random() - 0.5) * 4,
+                    Math.random() * 3 + 1,
+                    (Math.random() - 0.5) * 4
+                );
+                scene.add(sparkle);
+                
+                // Animate sparkles
+                setTimeout(() => {
+                    scene.remove(sparkle);
+                }, 2000);
+            }
+        }
+        
         // Initialize - Wait for modules to load
         setTimeout(() => {
             initThreeJS();
             populateAnimalList();
             setupModeButtons();
+            
+            // Initialize game
+            addActivity('🎮 Welcome to VetScan Pro Interactive Mode!', 'success');
+            addActivity('👆 Select an animal to start playing!', 'info');
         }, 100);
     </script>
 </body>
