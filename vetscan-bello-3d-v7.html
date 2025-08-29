@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VetScan Pro - Dog 3D Scanner v7.4.0 - Blender MCP Import</title>
+    <title>VetScan Pro - Dog 3D Scanner v8.0.0 - Production Pipeline</title>
     <!-- Three.js Core - unpkg CDN (funktioniert garantiert!) -->
     <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
     <!-- Three.js Examples - unpkg CDN mit korrekten Pfaden -->
@@ -199,7 +199,7 @@
         <header class="header">
             <h1>🐕 VetScan Pro - Bello 3D Scanner</h1>
             <p>Interaktive 3D-Untersuchung mit medizinischen Visualisierungen</p>
-            <p style="font-size: 12px; opacity: 0.7;">Version 7.1.0 - Build 2025.08.24.001</p>
+            <p style="font-size: 12px; opacity: 0.7;">Version 8.0.0 - Production Pipeline - Build 2025.08.29</p>
         </header>
 
         <div class="main-viewer">
@@ -252,7 +252,7 @@
 
             <div id="viewer-canvas"></div>
             
-            <div class="status-badge">v7.3.0</div>
+            <div class="status-badge">v8.0.0</div>
         </div>
 
         <div class="debug-info" id="debug-info">
@@ -270,8 +270,8 @@
         let medicalShaders = {};
         let originalMaterials = new Map();
         let loadingProgress = 0;
-        const VERSION = '7.3.0';
-        const BUILD = '2025.08.24.003';
+        const VERSION = '8.0.0';
+        const BUILD = '2025.08.29.001';
 
         // Debug helper
         function debug(message) {
@@ -974,21 +974,31 @@
 
         function loadBelloModel() {
             updateProgress(10);
+            debug('🚀 Starting production model loading pipeline...');
             
-            // Try to load GLTF model first
+            // Configure advanced GLTF loader
             const loader = new THREE.GLTFLoader();
             
-            // Configure DRACO decoder (optional, for compressed models)
+            // Configure DRACO decoder with error handling
             const dracoLoader = new THREE.DRACOLoader();
             dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+            dracoLoader.preload();
             loader.setDRACOLoader(dracoLoader);
             
-            // Model URLs in priority order - CREATIVE DOG FROM BLENDER
+            // Production-ready loading manager
+            const manager = new THREE.LoadingManager();
+            manager.onLoad = () => debug('✅ All resources loaded successfully');
+            manager.onError = (url) => debug(`❌ Failed to load resource: ${url}`);
+            loader.manager = manager;
+            
+            // Production Model URLs - Blender MCP Pipeline
             const modelUrls = [
-                // CREATIVE DOG WITH PARTY ACCESSORIES (highest priority)
+                // FRESH CREATIVE MODEL FROM BLENDER MCP (highest priority)
+                'assets/models/animals/dog/dog_from_blender.glb',
                 'assets/models/animals/dog/dog_creative.glb',
                 
-                // NEW DOG MODELS FROM BLENDER EXPORT
+                // HIGH-QUALITY MODELS FROM BLENDER EXPORT
+                'assets/models/animals/dog/high/dog_claude_desktop.glb',
                 'assets/models/animals/dog/dog_high.glb',
                 'assets/models/animals/dog/dog_medium.glb',
                 'assets/models/animals/dog/dog_medical.glb',
@@ -1028,20 +1038,25 @@
             
             function tryLoadModel() {
                 if (modelLoadAttempt >= modelUrls.length) {
-                    debug('⚠️ No Claude Desktop GLB found, using advanced procedural dog');
-                    debug('💡 To import real model: Place bello_claude_desktop.glb in models/animals/dog/');
+                    debug('⚠️ All model URLs exhausted, creating procedural fallback');
+                    debug('💡 Pro tip: Check CORS headers and file permissions');
                     createProceduralDog();
                     return;
                 }
                 
                 const url = modelUrls[modelLoadAttempt];
-                debug(`Attempting to load: ${url}`);
-                updateProgress(20 + modelLoadAttempt * 10);
+                debug(`🔄 Loading model ${modelLoadAttempt + 1}/${modelUrls.length}: ${url}`);
+                updateProgress(20 + modelLoadAttempt * 8);
+                
+                // Add cache-busting for fresh exports
+                const cacheBustedUrl = url.includes('dog_from_blender.glb') ? 
+                    `${url}?t=${Date.now()}` : url;
                 
                 loader.load(
-                    url,
+                    cacheBustedUrl,
                     function(gltf) {
-                        debug(`✅ Claude Desktop Model loaded: ${url}`);
+                        debug(`✅ PRODUCTION MODEL LOADED: ${url}`);
+                        debug(`📦 Model source: ${url.includes('dog_from_blender.glb') ? 'Fresh Blender MCP Export' : 'Cached Model'}`);
                         belloModel = gltf.scene;
                         
                         // Detailed model information
@@ -1088,9 +1103,23 @@
                         updateProgress(20 + modelLoadAttempt * 10 + percent * 0.7);
                     },
                     function(error) {
-                        debug(`Failed to load ${url}`);
+                        debug(`❌ Failed to load ${url}: ${error.message || error}`);
+                        
+                        // Enhanced error diagnostics
+                        if (error.message && error.message.includes('CORS')) {
+                            debug(`🔒 CORS issue detected. File might be blocked.`);
+                        } else if (error.message && error.message.includes('404')) {
+                            debug(`📂 File not found. Check if model exists.`);
+                        } else if (error.message && error.message.includes('NetworkError')) {
+                            debug(`🌐 Network error. Check connection.`);
+                        }
+                        
                         modelLoadAttempt++;
-                        tryLoadModel();
+                        
+                        // Small delay before next attempt to prevent overwhelming
+                        setTimeout(() => {
+                            tryLoadModel();
+                        }, 100);
                     }
                 );
             }
@@ -1099,9 +1128,10 @@
         }
 
         function createProceduralDog() {
-            debug('🐕 Creating advanced Bello model with anatomical structures...');
+            debug('🐕 FALLBACK: Creating advanced Bello model with anatomical structures...');
+            debug('💡 This procedural model includes full medical visualization support');
             const dogGroup = new THREE.Group();
-            dogGroup.name = 'Bello';
+            dogGroup.name = 'BelloProceduralFallback';
             
             // === ANATOMICAL SYSTEMS ===
             
