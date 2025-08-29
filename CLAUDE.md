@@ -94,3 +94,19 @@ No formal test framework configured. Testing is done via:
 - Browser console for runtime errors
 - `npm run test:integration` for Playwright tests (when available)
 - Manual testing with Python HTTP server
+
+## MCP Integration
+
+The project uses Model Context Protocol (MCP) for external tools:
+- **Blender MCP**: 3D model generation and export (configured in `.cursor/mcp.json`)
+- **Filesystem MCP**: Project file access
+- **Git MCP**: Version control operations
+
+Critical: Use `uvx blender-mcp` not `npx` - this is a Python package, not npm.
+
+## BMAD Method Framework
+
+This project includes the BMAD Method framework for AI-driven development:
+- Specialized agents for different development roles
+- Task sharding for complex projects
+- Use `npx bmad-method --help` to see available commands

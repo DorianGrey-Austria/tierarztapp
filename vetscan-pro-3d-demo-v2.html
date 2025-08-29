@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro 3000 - Professional Multi-Species Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #00ff88;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .version-banner {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: black;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 999;
+            box-shadow: 0 5px 20px rgba(0, 255, 136, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .viewer-container {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            right: 320px;
+            bottom: 0;
+            background: #000;
+        }
+
+        .control-panel {
+            position: fixed;
+            top: 80px;
+            right: 0;
+            width: 320px;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 2px solid #334155;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+            background: rgba(30, 41, 59, 0.6);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+        }
+
+        .panel-section h3 {
+            color: #00ff88;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .species-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .species-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            color: #93c5fd;
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .species-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .species-btn.active {
+            background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+            color: black;
+            border-color: #00ff88;
+            font-weight: 600;
+        }
+
+        .medical-modes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+
+        .mode-btn {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid #a855f7;
+            color: #c4b5fd;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mode-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            color: white;
+            border-color: #a855f7;
+            font-weight: 600;
+        }
+
+        .quality-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .quality-btn {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            color: #86efac;
+            padding: 8px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .quality-btn:hover {
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .quality-btn.active {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border-color: #22c55e;
+            font-weight: 600;
+        }
+
+        .stats-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+
+        .stats-value {
+            color: #00ff88;
+            font-weight: 600;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 255, 136, 0.3);
+            border-radius: 50%;
+            border-top-color: #00ff88;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #00ff88;
+            text-align: center;
+        }
+
+        .diagnostic-info {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #00ff88;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .control-panel {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                width: auto;
+                height: 200px;
+                border-left: none;
+                border-top: 2px solid #334155;
+            }
+
+            .viewer-container {
+                right: 0;
+                bottom: 200px;
+            }
+
+            .species-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .medical-modes {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 VetScan Pro 3000 - Professional Multi-Species Demo</h1>
+        <div class="subtitle">Advanced Medical Visualization • 20 Animal Species • Professional Quality</div>
+    </div>
+
+    <div class="version-banner">
+        ✨ Version 2.0 - BMAD Method Enhanced
+    </div>
+
+    <div class="viewer-container">
+        <canvas id="viewer3d"></canvas>
+        <div id="loadingOverlay" class="loading-overlay">
+            <div>
+                <div class="loading-spinner"></div>
+                <div class="loading-text">
+                    <div id="loadingStatus">Initializing VetScan Pro 3000...</div>
+                    <div style="font-size: 10px; margin-top: 5px; opacity: 0.7;">Professional Veterinary Simulation System</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="control-panel">
+        <!-- Species Selection -->
+        <div class="panel-section">
+            <h3>🐾 Species Selection</h3>
+            <div class="species-grid" id="speciesGrid">
+                <!-- Generated dynamically -->
+            </div>
+            <div style="font-size: 10px; opacity: 0.7; margin-top: 8px;">
+                Current: <span id="currentSpecies">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Medical Visualization -->
+        <div class="panel-section">
+            <h3>🔬 Medical Visualization</h3>
+            <div class="medical-modes" id="medicalModes">
+                <button class="mode-btn active" data-mode="normal">
+                    👁️ Normal View
+                </button>
+                <button class="mode-btn" data-mode="xray_advanced">
+                    🦴 Advanced X-Ray
+                </button>
+                <button class="mode-btn" data-mode="ct_scan">
+                    🔘 CT Scan
+                </button>
+                <button class="mode-btn" data-mode="mri_enhanced">
+                    🧠 Enhanced MRI
+                </button>
+                <button class="mode-btn" data-mode="ultrasound_doppler">
+                    🩺 Doppler Ultrasound
+                </button>
+                <button class="mode-btn" data-mode="thermal_advanced">
+                    🌡️ Thermal Imaging
+                </button>
+            </div>
+        </div>
+
+        <!-- Quality Settings -->
+        <div class="panel-section">
+            <h3>⚡ Quality Settings</h3>
+            <div class="quality-controls">
+                <button class="quality-btn" data-quality="mobile">Mobile</button>
+                <button class="quality-btn" data-quality="tablet">Tablet</button>
+                <button class="quality-btn active" data-quality="desktop">Desktop</button>
+                <button class="quality-btn" data-quality="pro">Pro</button>
+            </div>
+            <div style="margin-top: 8px; font-size: 10px; opacity: 0.7;">
+                Auto-adaptive quality based on performance
+            </div>
+        </div>
+
+        <!-- Performance Stats -->
+        <div class="panel-section">
+            <h3>📊 Performance</h3>
+            <div class="stats-display" id="statsDisplay">
+                <div class="stats-row">
+                    <span>FPS:</span>
+                    <span class="stats-value" id="fpsValue">--</span>
+                </div>
+                <div class="stats-row">
+                    <span>Draw Calls:</span>
+                    <span class="stats-value" id="drawCallsValue">--</span>
+                </div>
+                <div class="stats-row">
+                    <span>Triangles:</span>
+                    <span class="stats-value" id="trianglesValue">--</span>
+                </div>
+                <div class="stats-row">
+                    <span>Memory:</span>
+                    <span class="stats-value" id="memoryValue">--</span>
+                </div>
+                <div class="stats-row">
+                    <span>Quality:</span>
+                    <span class="stats-value" id="qualityValue">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnostic Info -->
+        <div class="panel-section">
+            <h3>🏥 Diagnostic Info</h3>
+            <div id="diagnosticInfo" class="diagnostic-info">
+                Select an organ zone to perform examination
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.179.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.179.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Professional VetScan Pro 3000 Demo Application
+        class VetScanProDemo {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
+                
+                this.currentAnimal = null;
+                this.currentSpecies = 'dog';
+                this.currentQuality = 'desktop';
+                this.currentMedicalMode = 'normal';
+                
+                this.loader = new GLTFLoader();
+                this.dracoLoader = new DRACOLoader();
+                
+                // Performance monitoring
+                this.stats = {
+                    fps: 0,
+                    frameCount: 0,
+                    lastTime: performance.now()
+                };
+                
+                // Available species (matching our generator)
+                this.species = {
+                    // Quadruped Small
+                    cat: '🐱 Katze',
+                    rabbit: '🐰 Kaninchen', 
+                    guinea_pig: '🐹 Meerschweinchen',
+                    ferret: '🦦 Frettchen',
+                    
+                    // Quadruped Medium
+                    dog: '🐕 Hund',
+                    sheep: '🐑 Schaf',
+                    goat: '🐐 Ziege',
+                    pig: '🐷 Schwein',
+                    
+                    // Quadruped Large  
+                    horse: '🐎 Pferd',
+                    cow: '🐄 Kuh',
+                    llama: '🦙 Lama',
+                    
+                    // Birds
+                    canary: '🐤 Kanarienvogel',
+                    budgie: '🦜 Wellensittich',
+                    parrot: '🦜 Papagei',
+                    chicken: '🐓 Huhn',
+                    
+                    // Reptiles
+                    snake: '🐍 Schlange',
+                    lizard: '🦎 Echse', 
+                    turtle: '🐢 Schildkröte',
+                    
+                    // Aquatic
+                    goldfish: '🐠 Goldfisch'
+                };
+                
+                this.medicalShaders = new Map();
+                this.anatomyMarkers = [];
+                
+                console.log('🚀 VetScan Pro 3000 Demo initializing...');
+            }
+
+            async init() {
+                try {
+                    this.setupRenderer();
+                    this.setupScene();
+                    this.setupControls();
+                    this.setupLoaders();
+                    this.setupUI();
+                    this.setupEventHandlers();
+                    
+                    // Load default animal
+                    await this.loadAnimal(this.currentSpecies);
+                    
+                    this.animate();
+                    this.hideLoading();
+                    
+                    console.log('✅ VetScan Pro 3000 Demo ready!');
+                    
+                } catch (error) {
+                    console.error('❌ Initialization failed:', error);
+                    this.showError('Initialization failed: ' + error.message);
+                }
+            }
+
+            setupRenderer() {
+                const canvas = document.getElementById('viewer3d');
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas, 
+                    antialias: true,
+                    powerPreference: 'high-performance'
+                });
+                
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.setSize(window.innerWidth - 320, window.innerHeight - 80);
+                this.renderer.setClearColor(0x0a0f1c, 1);
+                
+                // Advanced rendering features
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.renderer.toneMapping = THREE.ReinhardToneMapping;
+                this.renderer.toneMappingExposure = 1.0;
+                
+                console.log('🖥️ Renderer initialized');
+            }
+
+            setupScene() {
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.Fog(0x0a0f1c, 10, 50);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(
+                    50, 
+                    (window.innerWidth - 320) / (window.innerHeight - 80), 
+                    0.1, 
+                    1000
+                );
+                this.camera.position.set(5, 3, 5);
+                
+                // Lighting setup for medical visualization
+                this.setupLighting();
+                
+                console.log('🎬 Scene initialized');
+            }
+
+            setupLighting() {
+                // Ambient light for overall illumination
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+                this.scene.add(ambientLight);
+                
+                // Main directional light (sun)
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 50;
+                this.scene.add(directionalLight);
+                
+                // Fill lights for medical examination
+                const fillLight1 = new THREE.SpotLight(0x4488ff, 0.5, 20, Math.PI / 6, 0.5);
+                fillLight1.position.set(-5, 5, 5);
+                this.scene.add(fillLight1);
+                
+                const fillLight2 = new THREE.SpotLight(0xff4488, 0.3, 20, Math.PI / 8, 0.5);
+                fillLight2.position.set(5, -5, 5);
+                this.scene.add(fillLight2);
+                
+                // Medical examination light (controlled)
+                this.medicalLight = new THREE.SpotLight(0xffffff, 1.0, 10, Math.PI / 4, 0.3);
+                this.medicalLight.position.set(0, 5, 0);
+                this.medicalLight.visible = false;
+                this.scene.add(this.medicalLight);
+                
+                console.log('💡 Lighting setup complete');
+            }
+
+            setupControls() {
+                this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+                this.controls.enableDamping = true;
+                this.controls.dampingFactor = 0.05;
+                this.controls.minDistance = 2;
+                this.controls.maxDistance = 15;
+                this.controls.maxPolarAngle = Math.PI * 0.8;
+                
+                console.log('🎮 Controls initialized');
+            }
+
+            setupLoaders() {
+                // Setup DRACO compression
+                this.dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+                this.loader.setDRACOLoader(this.dracoLoader);
+                
+                console.log('📦 Loaders configured');
+            }
+
+            setupUI() {
+                // Generate species buttons
+                const speciesGrid = document.getElementById('speciesGrid');
+                Object.entries(this.species).forEach(([id, name]) => {
+                    const button = document.createElement('button');
+                    button.className = 'species-btn';
+                    button.dataset.species = id;
+                    button.textContent = name;
+                    button.onclick = () => this.selectSpecies(id);
+                    
+                    if (id === this.currentSpecies) {
+                        button.classList.add('active');
+                    }
+                    
+                    speciesGrid.appendChild(button);
+                });
+                
+                // Update current species display
+                document.getElementById('currentSpecies').textContent = this.species[this.currentSpecies];
+                
+                console.log('🖱️ UI initialized');
+            }
+
+            setupEventHandlers() {
+                // Medical mode buttons
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.selectMedicalMode(btn.dataset.mode);
+                    });
+                });
+                
+                // Quality buttons
+                document.querySelectorAll('.quality-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.selectQuality(btn.dataset.quality);
+                    });
+                });
+                
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.handleResize();
+                });
+                
+                console.log('📡 Event handlers setup');
+            }
+
+            async selectSpecies(speciesId) {
+                if (speciesId === this.currentSpecies) return;
+                
+                this.showLoading(`Loading ${this.species[speciesId]}...`);
+                
+                try {
+                    // Update UI
+                    document.querySelectorAll('.species-btn').forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.species === speciesId);
+                    });
+                    
+                    this.currentSpecies = speciesId;
+                    document.getElementById('currentSpecies').textContent = this.species[speciesId];
+                    
+                    // Load new animal
+                    await this.loadAnimal(speciesId);
+                    this.hideLoading();
+                    
+                    console.log(`✅ Loaded species: ${speciesId}`);
+                    
+                } catch (error) {
+                    console.error(`❌ Failed to load ${speciesId}:`, error);
+                    this.showError(`Failed to load ${this.species[speciesId]}: ${error.message}`);
+                    this.hideLoading();
+                }
+            }
+
+            async loadAnimal(speciesId) {
+                // Remove current animal
+                if (this.currentAnimal) {
+                    this.scene.remove(this.currentAnimal);
+                    this.disposeAnimal(this.currentAnimal);
+                }
+                
+                // Try loading with current quality, fallback to lower qualities
+                const qualityOrder = ['pro', 'desktop', 'tablet', 'mobile'];
+                const startIndex = qualityOrder.indexOf(this.currentQuality);
+                
+                for (let i = startIndex; i >= 0; i--) {
+                    const quality = qualityOrder[i];
+                    const modelPath = `./assets/models/animals/${speciesId}/${speciesId}_${quality}.glb`;
+                    
+                    try {
+                        console.log(`📦 Attempting to load: ${modelPath}`);
+                        const gltf = await this.loadGLTF(modelPath);
+                        
+                        this.currentAnimal = gltf.scene;
+                        this.currentAnimal.name = `${speciesId}_${quality}`;
+                        
+                        // Setup animal
+                        this.setupAnimal(this.currentAnimal, speciesId);
+                        this.scene.add(this.currentAnimal);
+                        
+                        console.log(`✅ Loaded ${speciesId} with ${quality} quality`);
+                        return;
+                        
+                    } catch (error) {
+                        console.warn(`⚠️ Failed to load ${quality} quality for ${speciesId}:`, error);
+                        
+                        // If all GLB models fail, create fallback
+                        if (i === 0) {
+                            this.currentAnimal = this.createFallbackAnimal(speciesId);
+                            this.setupAnimal(this.currentAnimal, speciesId);
+                            this.scene.add(this.currentAnimal);
+                            console.log(`🔧 Using fallback model for ${speciesId}`);
+                        }
+                    }
+                }
+            }
+
+            loadGLTF(path) {
+                return new Promise((resolve, reject) => {
+                    this.loader.load(
+                        path,
+                        resolve,
+                        (progress) => {
+                            const percent = (progress.loaded / progress.total * 100).toFixed(1);
+                            this.updateLoadingStatus(`Loading... ${percent}%`);
+                        },
+                        reject
+                    );
+                });
+            }
+
+            createFallbackAnimal(speciesId) {
+                // Create procedural fallback model
+                let geometry, material;
+                
+                const speciesCategory = this.getSpeciesCategory(speciesId);
+                
+                switch (speciesCategory) {
+                    case 'bird':
+                        geometry = new THREE.SphereGeometry(0.5, 12, 8);
+                        material = new THREE.MeshLambertMaterial({ color: 0x4169E1 });
+                        break;
+                    case 'fish':
+                        geometry = new THREE.CylinderGeometry(0.2, 0.1, 1, 8);
+                        material = new THREE.MeshLambertMaterial({ color: 0xFFD700 });
+                        break;
+                    case 'reptile':
+                        geometry = new THREE.BoxGeometry(2, 0.3, 0.5);
+                        material = new THREE.MeshLambertMaterial({ color: 0x228B22 });
+                        break;
+                    default: // quadruped
+                        geometry = new THREE.BoxGeometry(1.5, 0.8, 0.6);
+                        material = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+                        break;
+                }
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                
+                const group = new THREE.Group();
+                group.add(mesh);
+                group.name = `${speciesId}_fallback`;
+                
+                return group;
+            }
+
+            getSpeciesCategory(speciesId) {
+                if (['canary', 'budgie', 'parrot', 'chicken'].includes(speciesId)) return 'bird';
+                if (['goldfish'].includes(speciesId)) return 'fish';
+                if (['snake', 'lizard', 'turtle'].includes(speciesId)) return 'reptile';
+                return 'quadruped';
+            }
+
+            setupAnimal(animal, speciesId) {
+                // Scale and position appropriately
+                const scales = {
+                    cat: 0.6, rabbit: 0.4, guinea_pig: 0.3, ferret: 0.5,
+                    dog: 1.0, sheep: 1.2, goat: 1.0, pig: 1.1,
+                    horse: 2.5, cow: 2.2, llama: 1.8,
+                    canary: 0.15, budgie: 0.18, parrot: 0.4, chicken: 0.5,
+                    snake: 1.5, lizard: 0.3, turtle: 0.6,
+                    goldfish: 0.2
+                };
+                
+                const scale = scales[speciesId] || 1.0;
+                animal.scale.setScalar(scale);
+                
+                // Center the animal
+                const box = new THREE.Box3().setFromObject(animal);
+                const center = box.getCenter(new THREE.Vector3());
+                animal.position.sub(center);
+                
+                // Setup materials and shadows
+                animal.traverse(child => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        
+                        if (child.material) {
+                            child.material.needsUpdate = true;
+                        }
+                    }
+                });
+                
+                // Create anatomy markers for interaction
+                this.createAnatomyMarkers(animal, speciesId, scale);
+                
+                // Apply current medical visualization mode
+                this.applyMedicalMode(this.currentMedicalMode);
+            }
+
+            createAnatomyMarkers(animal, speciesId, scale) {
+                // Clear existing markers
+                this.anatomyMarkers.forEach(marker => {
+                    this.scene.remove(marker);
+                });
+                this.anatomyMarkers = [];
+                
+                // Define organ positions (relative to animal center)
+                const organPositions = {
+                    heart: new THREE.Vector3(0.3, 0.6, 0),
+                    lungs: new THREE.Vector3(0.35, 0.65, 0),
+                    stomach: new THREE.Vector3(0, 0.4, 0),
+                    liver: new THREE.Vector3(-0.2, 0.45, 0.15),
+                    brain: new THREE.Vector3(0.6, 0.8, 0)
+                };
+                
+                // Create interactive markers
+                Object.entries(organPositions).forEach(([organ, position]) => {
+                    const markerGeometry = new THREE.SphereGeometry(0.05 * scale, 8, 6);
+                    const markerMaterial = new THREE.MeshBasicMaterial({
+                        color: 0x00ff88,
+                        transparent: true,
+                        opacity: 0,
+                        side: THREE.DoubleSide
+                    });
+                    
+                    const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+                    marker.position.copy(position.clone().multiplyScalar(scale));
+                    marker.userData = {
+                        type: 'anatomy_marker',
+                        organ: organ,
+                        species: speciesId
+                    };
+                    
+                    animal.add(marker);
+                    this.anatomyMarkers.push(marker);
+                });
+            }
+
+            selectMedicalMode(mode) {
+                if (mode === this.currentMedicalMode) return;
+                
+                // Update UI
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === mode);
+                });
+                
+                this.currentMedicalMode = mode;
+                this.applyMedicalMode(mode);
+                
+                console.log(`🔬 Medical mode: ${mode}`);
+            }
+
+            applyMedicalMode(mode) {
+                if (!this.currentAnimal) return;
+                
+                this.currentAnimal.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        switch (mode) {
+                            case 'normal':
+                                this.applyNormalMode(child);
+                                break;
+                            case 'xray_advanced':
+                                this.applyXrayMode(child);
+                                break;
+                            case 'thermal_advanced':
+                                this.applyThermalMode(child);
+                                break;
+                            case 'ct_scan':
+                                this.applyCTMode(child);
+                                break;
+                            case 'mri_enhanced':
+                                this.applyMRIMode(child);
+                                break;
+                            case 'ultrasound_doppler':
+                                this.applyUltrasoundMode(child);
+                                break;
+                        }
+                    }
+                });
+                
+                // Control medical light
+                this.medicalLight.visible = mode !== 'normal';
+            }
+
+            applyNormalMode(mesh) {
+                // Restore original material or use default
+                if (mesh.userData.originalMaterial) {
+                    mesh.material = mesh.userData.originalMaterial;
+                } else {
+                    mesh.material = new THREE.MeshLambertMaterial({ 
+                        color: 0x8B4513,
+                        transparent: false
+                    });
+                }
+            }
+
+            applyXrayMode(mesh) {
+                // Store original material
+                if (!mesh.userData.originalMaterial) {
+                    mesh.userData.originalMaterial = mesh.material.clone();
+                }
+                
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: 0x4488ff,
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide,
+                    blending: THREE.AdditiveBlending
+                });
+            }
+
+            applyThermalMode(mesh) {
+                if (!mesh.userData.originalMaterial) {
+                    mesh.userData.originalMaterial = mesh.material.clone();
+                }
+                
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: 0xff4444,
+                    transparent: false
+                });
+            }
+
+            applyCTMode(mesh) {
+                if (!mesh.userData.originalMaterial) {
+                    mesh.userData.originalMaterial = mesh.material.clone();
+                }
+                
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: 0x888888,
+                    transparent: true,
+                    opacity: 0.8
+                });
+            }
+
+            applyMRIMode(mesh) {
+                if (!mesh.userData.originalMaterial) {
+                    mesh.userData.originalMaterial = mesh.material.clone();
+                }
+                
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: 0x666666,
+                    transparent: false
+                });
+            }
+
+            applyUltrasoundMode(mesh) {
+                if (!mesh.userData.originalMaterial) {
+                    mesh.userData.originalMaterial = mesh.material.clone();
+                }
+                
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: 0x444444,
+                    transparent: true,
+                    opacity: 0.9
+                });
+            }
+
+            selectQuality(quality) {
+                if (quality === this.currentQuality) return;
+                
+                // Update UI
+                document.querySelectorAll('.quality-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.quality === quality);
+                });
+                
+                const oldQuality = this.currentQuality;
+                this.currentQuality = quality;
+                
+                // Reload current animal with new quality
+                this.selectSpecies(this.currentSpecies);
+                
+                console.log(`⚙️ Quality changed: ${oldQuality} → ${quality}`);
+            }
+
+            updateStats() {
+                const now = performance.now();
+                const deltaTime = now - this.stats.lastTime;
+                
+                this.stats.frameCount++;
+                
+                // Update FPS every second
+                if (deltaTime >= 1000) {
+                    this.stats.fps = Math.round((this.stats.frameCount * 1000) / deltaTime);
+                    this.stats.frameCount = 0;
+                    this.stats.lastTime = now;
+                    
+                    // Update display
+                    document.getElementById('fpsValue').textContent = this.stats.fps;
+                    document.getElementById('qualityValue').textContent = this.currentQuality;
+                    
+                    if (this.renderer.info) {
+                        document.getElementById('drawCallsValue').textContent = this.renderer.info.render.calls;
+                        document.getElementById('trianglesValue').textContent = this.renderer.info.render.triangles.toLocaleString();
+                        document.getElementById('memoryValue').textContent = 
+                            Math.round(this.renderer.info.memory.geometries + this.renderer.info.memory.textures) + ' objects';
+                    }
+                }
+            }
+
+            handleResize() {
+                const width = window.innerWidth - 320;
+                const height = window.innerHeight - 80;
+                
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+
+            showLoading(message = 'Loading...') {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                this.updateLoadingStatus(message);
+            }
+
+            hideLoading() {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            updateLoadingStatus(message) {
+                document.getElementById('loadingStatus').textContent = message;
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-message';
+                errorDiv.textContent = message;
+                
+                const panel = document.querySelector('.control-panel');
+                panel.insertBefore(errorDiv, panel.firstChild);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 5000);
+            }
+
+            disposeAnimal(animal) {
+                animal.traverse(child => {
+                    if (child.geometry) {
+                        child.geometry.dispose();
+                    }
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(material => material.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Update controls
+                if (this.controls) {
+                    this.controls.update();
+                }
+                
+                // Update performance stats
+                this.updateStats();
+                
+                // Render scene
+                if (this.renderer && this.scene && this.camera) {
+                    this.renderer.render(this.scene, this.camera);
+                }
+            }
+
+            dispose() {
+                if (this.currentAnimal) {
+                    this.disposeAnimal(this.currentAnimal);
+                }
+                
+                if (this.dracoLoader) {
+                    this.dracoLoader.dispose();
+                }
+                
+                if (this.renderer) {
+                    this.renderer.dispose();
+                }
+                
+                console.log('🧹 VetScan Pro Demo disposed');
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            const demo = new VetScanProDemo();
+            await demo.init();
+            
+            // Global reference for debugging
+            window.vetScanDemo = demo;
+        });
+
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.vetScanDemo) {
+                window.vetScanDemo.dispose();
+            }
+        });
+    </script>
+</body>
+</html>

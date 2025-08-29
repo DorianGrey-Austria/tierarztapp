@@ -1,13 +1,238 @@
 #!/usr/bin/env python3
 """
-Blender MCP Server für VetScan Pro 3000
-Docker-based Blender Model Context Protocol Server
+VetScan Pro 3000 - Enhanced Blender MCP Server
+Multi-Species 3D Asset Generation Pipeline
+Professional veterinary simulator backend
+"""
 
-Bietet folgende Funktionen:
-- get_scene_info: Szene Information abrufen
-- get_object_info: Object Details abrufen  
-- execute_blender_code: Python Code in Blender ausführen
-- export_gltf: GLB/GLTF Export
+import asyncio
+import websockets
+import json
+import subprocess
+import os
+import sys
+from datetime import datetime
+import logging
+from pathlib import Path
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('/app/logs/blender-mcp.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
+class BlenderMCPServer:
+    def __init__(self, host='0.0.0.0', port=8765):
+        self.host = host
+        self.port = port
+        self.clients = set()
+        self.generation_queue = asyncio.Queue()
+        self.active_jobs = {}
+        
+        # Setup paths
+        self.blender_path = os.environ.get('BLENDER_PATH', '/usr/bin/blender')
+        self.project_root = os.environ.get('PROJECT_ROOT', '/app')
+        self.export_path = f"{self.project_root}/exports"
+        self.scripts_path = f"{self.project_root}/scripts"
+        
+        # Create necessary directories
+        os.makedirs(self.export_path, exist_ok=True)
+        os.makedirs(f"{self.project_root}/logs", exist_ok=True)
+        
+        logger.info(f"🚀 VetScan Pro MCP Server initializing...")
+        logger.info(f"📁 Export path: {self.export_path}")
+        logger.info(f"🔧 Blender path: {self.blender_path}")
+
+    async def register_client(self, websocket):
+        """Register new WebSocket client"""
+        self.clients.add(websocket)
+        client_info = f"{websocket.remote_address[0]}:{websocket.remote_address[1]}"
+        logger.info(f"📡 Client connected: {client_info}")
+        
+        # Send welcome message with server capabilities
+        welcome = {
+            "type": "welcome",
+            "server": "VetScan Pro Blender MCP",
+            "version": "2.0",
+            "capabilities": [
+                "generate_single_animal",
+                "generate_all_animals", 
+                "get_generation_status",
+                "list_available_species",
+                "get_model_info",
+                "health_check"
+            ],
+            "timestamp": datetime.now().isoformat()
+        }
+        await websocket.send(json.dumps(welcome))
+
+    async def handle_message(self, websocket, message):
+        """Handle incoming WebSocket messages"""
+        try:
+            data = json.loads(message)
+            method = data.get('method', '')
+            params = data.get('params', {})
+            request_id = data.get('id', 'unknown')
+            
+            logger.info(f"📨 Received: {method} (ID: {request_id})")
+            
+            # Route to appropriate handler
+            if method == 'generate_single_animal':
+                response = await self.generate_single_animal(params)
+            elif method == 'generate_all_animals':
+                response = await self.generate_all_animals(params)
+            elif method == 'health_check':
+                response = await self.health_check()
+            else:
+                response = {
+                    "error": f"Unknown method: {method}",
+                    "available_methods": [
+                        "generate_single_animal", "generate_all_animals", "health_check"
+                    ]
+                }
+            
+            # Send response
+            response_msg = {
+                "id": request_id,
+                "result": response,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            await websocket.send(json.dumps(response_msg))
+            
+        except Exception as e:
+            logger.error(f"❌ Error handling message: {str(e)}")
+
+    async def generate_single_animal(self, params):
+        """Generate a single animal species"""
+        species_id = params.get('species_id', 'dog')
+        
+        logger.info(f"🐕 Starting generation: {species_id}")
+        
+        job_id = f"{species_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        try:
+            # Run Blender script
+            script_path = f"{self.scripts_path}/generate_all_animals.py"
+            cmd = [
+                self.blender_path,
+                '--background',
+                '--python', script_path,
+                '--', species_id
+            ]
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.project_root
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                logger.info(f"✅ Generation completed: {species_id}")
+                return {
+                    "job_id": job_id,
+                    "status": "completed",
+                    "species_id": species_id
+                }
+            else:
+                error_msg = stderr.decode() if stderr else "Unknown error"
+                logger.error(f"❌ Generation failed: {error_msg}")
+                return {
+                    "job_id": job_id,
+                    "status": "failed",
+                    "error": error_msg
+                }
+                
+        except Exception as e:
+            return {"status": "failed", "error": str(e)}
+
+    async def generate_all_animals(self, params):
+        """Generate all 20 animal species"""
+        logger.info(f"🌟 Starting mass generation")
+        
+        try:
+            script_path = f"{self.scripts_path}/generate_all_animals.py"
+            cmd = [
+                self.blender_path,
+                '--background', 
+                '--python', script_path,
+                '--', 'all'
+            ]
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.project_root
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                logger.info(f"✅ Mass generation completed")
+                return {"status": "completed", "message": "All animals generated"}
+            else:
+                error_msg = stderr.decode() if stderr else "Unknown error"
+                return {"status": "failed", "error": error_msg}
+                
+        except Exception as e:
+            return {"status": "failed", "error": str(e)}
+
+    async def health_check(self):
+        """Health check endpoint"""
+        return {
+            "status": "healthy",
+            "server": "VetScan Pro Blender MCP",
+            "version": "2.0",
+            "timestamp": datetime.now().isoformat()
+        }
+
+    async def handle_client(self, websocket, path):
+        """Handle individual WebSocket client"""
+        self.clients.add(websocket)
+        try:
+            async for message in websocket:
+                await self.handle_message(websocket, message)
+        except Exception as e:
+            logger.error(f"❌ Client error: {str(e)}")
+        finally:
+            self.clients.discard(websocket)
+
+    async def start_server(self):
+        """Start the WebSocket server"""
+        logger.info(f"🚀 Starting VetScan Pro Blender MCP Server on {self.host}:{self.port}")
+        
+        server = await websockets.serve(
+            self.handle_client,
+            self.host,
+            self.port
+        )
+        
+        return server
+
+async def main():
+    """Main server entry point"""
+    server = BlenderMCPServer()
+    websocket_server = await server.start_server()
+    
+    try:
+        await websocket_server.wait_closed()
+    except KeyboardInterrupt:
+        logger.info("🛑 Server shutdown")
+    finally:
+        websocket_server.close()
+
+if __name__ == "__main__":
+    os.makedirs('/app/logs', exist_ok=True)
+    asyncio.run(main())
 - get_viewport_screenshot: Viewport Screenshot
 - generate_bello_model: Bello 3D-Modell generieren
 """
