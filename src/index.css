@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Game-specific animations */
+@layer utilities {
+  .animate-pulse-fast {
+    animation: pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  .animate-heartbeat {
+    animation: heartbeat 1s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
@@ -12,12 +35,75 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(34, 211, 238, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+.level-up-animation {
+  animation: scaleUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.achievement-enter {
+  animation: slideInRight 0.5s ease-out;
 }
 
 /* Custom Scrollbar Styles */
@@ -37,4 +123,52 @@
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(6, 182, 212, 0.7);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(17, 24, 39, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+/* Neon text glow */
+.neon-text {
+  text-shadow:
+    0 0 5px rgba(34, 211, 238, 0.5),
+    0 0 10px rgba(34, 211, 238, 0.3),
+    0 0 20px rgba(34, 211, 238, 0.2);
+}
+
+/* Radial gradient utility */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Body styles */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0a0f1a;
+  color: #e5e7eb;
+}
+
+/* Selection */
+::selection {
+  background-color: rgba(34, 211, 238, 0.3);
+  color: #fff;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
