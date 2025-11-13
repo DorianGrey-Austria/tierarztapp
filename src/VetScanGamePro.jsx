@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
   Heart, Zap, Trophy, Star, Award, ArrowRight, RefreshCw,
-  CheckCircle, XCircle, Clock, Target, BookOpen, Settings, TrendingUp
+  CheckCircle, XCircle, Clock, Target, BookOpen, Settings, TrendingUp, Lightbulb, Book
 } from 'lucide-react';
 
 import { getGameEngine } from './game/GameEngine';
 import TutorialSystem from './components/TutorialSystem';
+import VeterinaryHandbook from './components/VeterinaryHandbook';
 import {
   StethoscopeGame,
   XRayGame,
   BloodTestGame,
   PalpationGame
 } from './components/DiagnosticMinigames';
+import {
+  EnhancedStethoscopeGame,
+  TemperatureGame
+} from './components/EnhancedDiagnosticMinigames';
 
 import { ANIMAL_SPECIES, generatePatients, getVitalSignsForAnimal } from './veterinary-medical-data';
 
@@ -36,6 +41,7 @@ const VetScanGamePro = () => {
   // UI State
   const [showAchievementPopup, setShowAchievementPopup] = useState(null);
   const [showLevelUpPopup, setShowLevelUpPopup] = useState(null);
+  const [showHandbook, setShowHandbook] = useState(false);
 
   // Available patients
   const [availablePatients, setAvailablePatients] = useState([]);
@@ -312,6 +318,25 @@ const VetScanGamePro = () => {
                 Erfahre wie das Spiel funktioniert und lerne die diagnostischen Tools kennen.
               </p>
             </button>
+
+            {/* Veterinary Handbook */}
+            <button
+              onClick={() => setShowHandbook(true)}
+              className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 hover:from-blue-800/30 hover:to-indigo-800/30 backdrop-blur-md rounded-xl p-8 border border-blue-700/20 transition-all text-left group"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-4 bg-blue-600/20 rounded-lg group-hover:bg-blue-600/30 transition-colors">
+                  <Book className="w-10 h-10 text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-blue-400">Tierarzt-Handbuch</h3>
+                  <p className="text-sm text-gray-400">Medizinisches Nachschlagewerk</p>
+                </div>
+              </div>
+              <p className="text-gray-300">
+                Umfassendes Wissen über Tierarten, Vitalwerte, Krankheiten und mehr. Dein ständiger Begleiter!
+              </p>
+            </button>
           </div>
 
           {/* Achievements Preview */}
@@ -432,13 +457,13 @@ const VetScanGamePro = () => {
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-400">Durchgeführte Tests</div>
-                <div className="text-2xl font-bold text-cyan-400">{completedTools} / 4</div>
+                <div className="text-2xl font-bold text-cyan-400">{completedTools} / 5</div>
               </div>
             </div>
 
             {/* Progress */}
-            <div className="grid grid-cols-4 gap-2">
-              {['stethoscope', 'xray', 'blood_test', 'palpation'].map(tool => (
+            <div className="grid grid-cols-5 gap-2">
+              {['stethoscope', 'thermometer', 'xray', 'blood_test', 'palpation'].map(tool => (
                 <div
                   key={tool}
                   className={`h-2 rounded-full transition-all ${
@@ -450,12 +475,26 @@ const VetScanGamePro = () => {
           </div>
         </div>
 
+        {/* Floating Handbook Button */}
+        <button
+          onClick={() => setShowHandbook(true)}
+          className="fixed bottom-8 right-8 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full shadow-2xl transition-all hover:scale-110 z-40 animate-pulse"
+          title="Tierarzt-Handbuch öffnen"
+        >
+          <Book className="w-6 h-6" />
+        </button>
+
         {/* Examination Tools */}
         <div className="p-8 max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Stethoscope */}
+            {/* Enhanced Stethoscope with Real Data */}
             {!examinationData.stethoscope && (
-              <StethoscopeGame patient={currentPatient} onComplete={handleToolComplete} />
+              <EnhancedStethoscopeGame patient={currentPatient} onComplete={handleToolComplete} />
+            )}
+
+            {/* Thermometer - New! */}
+            {!examinationData.thermometer && completedTools >= 1 && (
+              <TemperatureGame patient={currentPatient} onComplete={handleToolComplete} />
             )}
 
             {/* X-Ray */}
@@ -464,12 +503,12 @@ const VetScanGamePro = () => {
             )}
 
             {/* Blood Test */}
-            {!examinationData.blood_test && completedTools >= 1 && (
+            {!examinationData.blood_test && completedTools >= 2 && (
               <BloodTestGame patient={currentPatient} onComplete={handleToolComplete} />
             )}
 
             {/* Palpation */}
-            {!examinationData.palpation && completedTools >= 1 && (
+            {!examinationData.palpation && completedTools >= 2 && (
               <PalpationGame patient={currentPatient} onComplete={handleToolComplete} />
             )}
           </div>
@@ -648,7 +687,16 @@ const VetScanGamePro = () => {
     );
   }
 
-  return null;
+  // Render Veterinary Handbook Modal (Always available)
+  return (
+    <>
+      <VeterinaryHandbook
+        isOpen={showHandbook}
+        onClose={() => setShowHandbook(false)}
+        currentAnimal={currentPatient?.animalType}
+      />
+    </>
+  );
 };
 
 export default VetScanGamePro;
