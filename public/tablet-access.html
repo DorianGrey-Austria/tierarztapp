@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VetScan Pro - Tablet Zugriff</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 min-h-screen p-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+      <h1 class="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        🏥 VetScan Pro - Tablet Zugriff
+      </h1>
+      <p class="text-center text-gray-600 mb-8">
+        Scanne den QR-Code mit deinem Tablet oder tippe die URL ein
+      </p>
+
+      <!-- React App -->
+      <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 mb-6 border-2 border-blue-200">
+        <h2 class="text-2xl font-bold mb-4 text-blue-900">
+          ⚛️ React App (EMPFOHLEN)
+        </h2>
+        <div class="flex flex-col md:flex-row items-center gap-6">
+          <div id="qr-react" class="bg-white p-4 rounded-lg shadow-md"></div>
+          <div class="flex-1">
+            <p class="text-3xl font-mono font-bold text-blue-700 mb-4">
+              http://21.0.0.162:3000/
+            </p>
+            <div class="space-y-2 text-sm">
+              <p class="flex items-center gap-2">
+                <span class="text-green-600">✓</span>
+                Modernste Version
+              </p>
+              <p class="flex items-center gap-2">
+                <span class="text-green-600">✓</span>
+                Live-Reload
+              </p>
+              <p class="flex items-center gap-2">
+                <span class="text-green-600">✓</span>
+                Mobile-optimiert
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Standalone Versions -->
+      <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+        <h2 class="text-2xl font-bold mb-4 text-purple-900">
+          🌐 Standalone HTML Versionen
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Professional -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2">Professional Edition</h3>
+            <div id="qr-professional" class="mb-2"></div>
+            <p class="text-xs font-mono text-gray-600 break-all">
+              http://21.0.0.162:8080/vetscan-professional.html
+            </p>
+          </div>
+
+          <!-- Ultimate -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2">Ultimate Edition</h3>
+            <div id="qr-ultimate" class="mb-2"></div>
+            <p class="text-xs font-mono text-gray-600 break-all">
+              http://21.0.0.162:8080/vetscan-ultimate.html
+            </p>
+          </div>
+
+          <!-- Detective -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2">Detective Story Mode</h3>
+            <div id="qr-detective" class="mb-2"></div>
+            <p class="text-xs font-mono text-gray-600 break-all">
+              http://21.0.0.162:8080/vetscan-detective.html
+            </p>
+          </div>
+
+          <!-- Magic V8 -->
+          <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="font-bold text-lg mb-2">Magic V8</h3>
+            <div id="qr-magic" class="mb-2"></div>
+            <p class="text-xs font-mono text-gray-600 break-all">
+              http://21.0.0.162:8080/vetscan-magic-v8.html
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="bg-white rounded-2xl shadow-2xl p-8">
+      <h2 class="text-2xl font-bold mb-4">📱 Anleitung</h2>
+      <ol class="space-y-3 text-gray-700">
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</span>
+          <span>Stelle sicher, dass dein Tablet im <strong>gleichen WLAN</strong> ist</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">2</span>
+          <span>Öffne die <strong>Kamera-App</strong> auf deinem Tablet</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">3</span>
+          <span>Scanne einen der <strong>QR-Codes</strong> oben</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">4</span>
+          <span>Oder tippe die URL manuell im Browser ein</span>
+        </li>
+        <li class="flex gap-3">
+          <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">5</span>
+          <span><strong>Viel Spaß!</strong> 🎉</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // Generate QR Codes
+    function generateQR(elementId, url, size = 200) {
+      new QRCode(document.getElementById(elementId), {
+        text: url,
+        width: size,
+        height: size,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    // React App QR
+    generateQR('qr-react', 'http://21.0.0.162:3000/', 200);
+
+    // Standalone QRs (smaller)
+    generateQR('qr-professional', 'http://21.0.0.162:8080/vetscan-professional.html', 150);
+    generateQR('qr-ultimate', 'http://21.0.0.162:8080/vetscan-ultimate.html', 150);
+    generateQR('qr-detective', 'http://21.0.0.162:8080/vetscan-detective.html', 150);
+    generateQR('qr-magic', 'http://21.0.0.162:8080/vetscan-magic-v8.html', 150);
+  </script>
+</body>
+</html>
