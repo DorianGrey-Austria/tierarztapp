@@ -3,11 +3,12 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-Educational veterinary medical scanner simulation game with multiple implementations:
-- **Standalone HTML versions**: Self-contained files requiring no build process (multiple versions: detective, ultimate, story-mode, etc.)
-- **React version**: Full-featured app using Vite, React 18, and Tailwind CSS
-- **3D Model Integration**: Three.js-based visualization with medical shaders and progressive loading
+Educational veterinary medical scanner simulation game with multiple implementations and comprehensive 3D pipeline:
+- **Standalone HTML versions**: 20+ self-contained game versions (detective, ultimate, story-mode, pro-leveling, etc.)
+- **React version**: Full-featured app using Vite, React 18, and Tailwind CSS with 3D integration
+- **3D Model Integration**: Three.js-based visualization with medical shaders, progressive loading, and Blender MCP pipeline
 - **Auto-deployment**: Pushes to main branch deploy to https://vibecoding.company via GitHub Actions
+- **Educational Focus**: Teaches veterinary medicine through interactive 3D models and medical scenarios
 
 ## Development Commands
 ```bash
@@ -20,7 +21,12 @@ npm run preview                # Preview production build
 # 3D workflow
 npm run optimize:model         # Optimize GLB models using gltf-transform
 npm run generate:shaders       # Generate medical shaders
-npm run test:integration -- --grep <pattern>  # Run Playwright tests with pattern
+npm run test:integration       # Run all Playwright integration tests
+npm run test:integration -- --grep <pattern>  # Run specific test pattern
+
+# Health checks
+python3 scripts/blender-mcp-health-check.py  # Test Blender MCP connection
+python3 scripts/production-pipeline-test.py  # Test full 3D pipeline
 ```
 
 ```bash
@@ -65,9 +71,12 @@ docker-compose down            # Stop services
 
 ### Key Scripts and Utilities
 - `scripts/blender-mcp-health-check.py`: Test Blender MCP connection with JSON health reports
-- `scripts/blender_auto_export.py`: Automated GLB export with quality levels
+- `scripts/blender_auto_export.py`: Automated GLB export with quality levels  
 - `scripts/generate-shaders.js`: Medical shader generation
 - `scripts/blender_mcp_animal_generator.py`: Procedural animal generation
+- `scripts/production-pipeline-test.py`: Full 3D pipeline testing
+- `scripts/direct_3d_generation.py`: Direct 3D model generation via Hyper3D
+- `scripts/pseudo_hyper3d.py`: Pseudo 3D generation for testing
 - `docker-start.sh`: Comprehensive Docker startup with health checks
 
 ## Deployment System
@@ -184,3 +193,51 @@ assets/models/animals/
 - Playwright for integration testing
 - Docker for Blender MCP containerization
 - GitHub Actions for CI/CD
+- Python 3 for server hosting and scripts
+- Blender MCP for 3D asset pipeline
+
+## Important File Structure Notes
+
+**Standalone Game Versions (20+ HTML files):**
+All games are self-contained single HTML files that can run directly in browser:
+- `vetscan-detective.html`: Detective-style gameplay with Dr. Eule mentor
+- `vetscan-pro-leveling.html`: RPG progression system with 50 levels
+- `vetscan-story-mode.html`: Campaign-based narrative gameplay
+- `vetscan-ultimate.html`: Advanced 3D visualization features
+- `vetscan-bello-3d-v7.html`: Latest 3D Bello integration
+- `vetscan-version-selector.html`: Version navigation interface
+- And 15+ additional specialized versions
+
+**Game Data System:**
+- `veterinary-medical-data.js`: Central medical database with 20 animal species, 100+ patient profiles, medical conditions, and anatomy mappings
+- `animal-patients-generator.js`: Procedural patient generation system
+
+## Cursor Rules Integration
+
+This project uses comprehensive Cursor rules (`.cursorrules`) that define:
+- **Blender MCP Integration**: Direct access to Blender for 3D asset creation
+- **Export Pipeline**: Multi-quality model export (high/medium/low) with DRACO compression
+- **Medical Materials**: Automated creation of X-Ray, Ultrasound, and Thermal visualization shaders
+- **Automated Deployment**: Git-based deployment to production after model updates
+
+**Key MCP Functions Available:**
+- `execute_blender_code()`: Run Python scripts in Blender
+- `get_scene_info()`: Retrieve scene information  
+- `get_object_info()`: Get details about specific objects
+- `generate_hyper3d_model_via_text()`: Text-to-3D model generation
+- `get_viewport_screenshot()`: Visual validation of 3D models
+- `set_texture()`: Apply textures to objects
+
+## Current Development Status
+
+**Latest Developments (September 2025):**
+- 40+ Python scripts for Blender automation and 3D pipeline
+- Comprehensive health check system with JSON reporting
+- Direct 3D generation capabilities via Hyper3D integration
+- Production pipeline testing framework
+- Docker-based Blender MCP services with health monitoring
+
+**Key Files Modified:**
+- Multiple Hyper3D integration scripts (`scripts/direct_3d_generation.py`, `scripts/pseudo_hyper3d.py`)
+- Enhanced Blender MCP health checking system
+- Production pipeline automation (`scripts/production-pipeline-test.py`)

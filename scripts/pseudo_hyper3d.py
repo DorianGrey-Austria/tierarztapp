@@ -174,7 +174,11 @@ def create_dog_material(prompt):
     
     bsdf.inputs['Base Color'].default_value = base_color
     bsdf.inputs['Roughness'].default_value = 0.85  # Fur roughness
-    bsdf.inputs['Specular IOR'].default_value = 0.2  # Subtle shine
+    # Compatible with different Blender versions
+    if 'Specular IOR' in bsdf.inputs:
+        bsdf.inputs['Specular IOR'].default_value = 0.2  # Subtle shine
+    elif 'Specular' in bsdf.inputs:
+        bsdf.inputs['Specular'].default_value = 0.2
     
     # Apply to all dog objects
     for obj in bpy.data.objects:
