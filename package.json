@@ -4,9 +4,11 @@
   "version": "3.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "bash ../_TOOLS/port-manager.sh run tierarztapp app -- npx vite --strictPort --port 8035",
+    "dev:raw": "vite --strictPort --port 8035",
+    "dev:stop": "bash ../_TOOLS/port-manager.sh stop tierarztapp app",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port 8035",
     "optimize:model": "gltf-transform optimize",
     "generate:shaders": "node scripts/generate-shaders.js",
     "test:integration": "playwright test --grep"

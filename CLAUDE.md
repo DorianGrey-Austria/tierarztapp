@@ -3,241 +3,85 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-Educational veterinary medical scanner simulation game with multiple implementations and comprehensive 3D pipeline:
-- **Standalone HTML versions**: 20+ self-contained game versions (detective, ultimate, story-mode, pro-leveling, etc.)
-- **React version**: Full-featured app using Vite, React 18, and Tailwind CSS with 3D integration
-- **3D Model Integration**: Three.js-based visualization with medical shaders, progressive loading, and Blender MCP pipeline
-- **Auto-deployment**: Pushes to main branch deploy to https://vibecoding.company via GitHub Actions
-- **Educational Focus**: Teaches veterinary medicine through interactive 3D models and medical scenarios
+
+Educational veterinary medical scanner simulation game ("VetScan Pro") with two parallel implementations:
+
+- **Standalone HTML versions** (production): 20+ self-contained game files in the repo root (`vetscan-detective.html`, `vetscan-magic-v8.html`, `standalone.html`, etc.). Each includes all CSS/JS inline with no external dependencies. These are what gets deployed to https://vibecoding.company via GitHub Actions FTP to Hostinger.
+- **React app** (development target): Vite + React 18 + Tailwind CSS + Three.js in `src/`. The `dist/` build output is NOT deployed -- only standalone HTML files go to production.
+
+The root `index.html` is also a standalone game file (not the React app entry point). `vetscan-version-selector.html` and the CI-generated `deploy/index.html` serve as navigation hubs between game versions.
 
 ## Development Commands
-```bash
-# React development
-npm install                    # Install dependencies
-npm run dev                    # Start dev server on port 3000 (auto-opens browser)
-npm run build                  # Build for production
-npm run preview                # Preview production build
-
-# 3D workflow
-npm run optimize:model         # Optimize GLB models using gltf-transform
-npm run generate:shaders       # Generate medical shaders
-npm run test:integration       # Run all Playwright integration tests
-npm run test:integration -- --grep <pattern>  # Run specific test pattern
-
-# Health checks
-python3 scripts/blender-mcp-health-check.py  # Test Blender MCP connection
-python3 scripts/production-pipeline-test.py  # Test full 3D pipeline
-```
 
 ```bash
+# React app
+npm install          # Install dependencies
+npm run dev          # Managed Vite dev server on port 8035 (via port-manager.sh, auto-opens browser)
+npm run dev:raw      # Direct Vite dev server on 8035 (bypasses port-manager)
+npm run dev:stop     # Stop the registered app service
+npm run build        # Production build to dist/
+npm run preview      # Preview production build on 8035
+
 # Standalone HTML testing
-python3 -m http.server 8080    # Start local server
-# Access: http://localhost:8080/[filename].html
+python3 -m http.server 8080   # Serve root dir, then access localhost:8080/<file>.html
 
-# Alternative port if 8080 is busy:
-python3 -m http.server 8081
+# 3D pipeline
+npm run optimize:model         # gltf-transform GLB optimization
+npm run generate:shaders       # Generate medical shader files (scripts/generate-shaders.js)
 
-# Kill existing server:
-kill $(lsof -t -i:8080)
-```
+# Blender MCP (Docker)
+./docker-start.sh              # Start Blender MCP container
+docker-compose ps              # Check status
+python3 scripts/blender-mcp-health-check.py   # Health check (outputs JSON)
 
-```bash
-# Docker-based 3D pipeline
-./docker-start.sh              # Start Blender MCP services (comprehensive startup script)
-docker-compose ps              # Check container status
-docker-compose logs -f blender-mcp  # View logs
-docker-compose down            # Stop services
+# Integration tests (Playwright -- requires a grep pattern argument)
+npm run test:integration -- "pattern"
 ```
 
 ## Architecture
-### React Components
-- `src/main.jsx`: Entry point with React 18
-- `src/VetScanUltraAdvanced.jsx`: Main game component with 20 animal species support
-- `src/components/BelloViewer.jsx`: 3D model viewer with Three.js integration
-- `src/components/InteractiveAnatomy.js`: Anatomy interaction system
-- `src/game/AnimalLoader.js`: Progressive model loading (high/medium/low quality) with DRACO compression
-- `src/game/MultiSpeciesLoader.js`: Multi-animal loading system
-- `src/shaders/MedicalVisualization.js`: Medical visualization modes (X-Ray, Ultrasound, Thermal, MRI)
-- `src/shaders/AdvancedMedicalShaders.js`: Advanced shader system
-- `src/engine/PerformanceManager.js`: Performance optimization
 
-### Game Data Architecture
-`veterinary-medical-data.js`: Comprehensive medical database with:
-- 20 animal species (pets, livestock, exotic animals)
-- 100+ individual patient profiles with personality traits
-- Medical conditions categorized by severity (emergency, routine, chronic)
-- 3D model configurations with anatomy point mapping
-- Breed-specific vital sign ranges
+### React App (`src/`)
 
-### Key Scripts and Utilities
-- `scripts/blender-mcp-health-check.py`: Test Blender MCP connection with JSON health reports
-- `scripts/blender_auto_export.py`: Automated GLB export with quality levels  
-- `scripts/generate-shaders.js`: Medical shader generation
-- `scripts/blender_mcp_animal_generator.py`: Procedural animal generation
-- `scripts/production-pipeline-test.py`: Full 3D pipeline testing
-- `scripts/direct_3d_generation.py`: Direct 3D model generation via Hyper3D
-- `scripts/pseudo_hyper3d.py`: Pseudo 3D generation for testing
-- `docker-start.sh`: Comprehensive Docker startup with health checks
+Entry point: `src/main.jsx` renders `VetScanUltraAdvanced` (the main game component, 36k, supports 20 animal species). A second large component `AnimalScannerPro.jsx` (26k) exists at `src/` root level.
 
-## Deployment System
+Key layers:
+- **3D Viewer**: `components/BelloViewer.jsx` (Three.js 3D viewer), `components/InteractiveAnatomy.js` (organ click zones)
+- **Model Loading**: `game/AnimalLoader.js` (progressive quality: high/medium/low with DRACO fallback), `game/MultiSpeciesLoader.js`, `game/BelloModel.js`
+- **Medical Shaders**: `shaders/MedicalVisualization.js` (X-Ray, Ultrasound, Thermal, MRI modes), `shaders/AdvancedMedicalShaders.js`
+- **Performance**: `engine/PerformanceManager.js` (also lives at `components/PerformanceManager.js`)
 
-```bash
-git add .
-git commit -m "feat: Your changes"
-git push origin main
-# Automatically deploys to https://vibecoding.company via GitHub Actions
-```
+### Game Data
 
-**Deployment Configuration:**
-- **GitHub Actions**: `.github/workflows/deploy.yml` handles FTP deployment to Hostinger
-- **Multi-version deployment**: Copies all HTML versions (standalone, detective, ultimate, story-mode, etc.)
-- **Asset pipeline**: Includes JS, assets, public directories
-- **Security headers**: .htaccess with compression, caching, and security headers
-- **Performance**: DRACO compression enabled for 3D models
+`veterinary-medical-data.js` (root, 51k): Central medical database -- 20 species, 100+ patient profiles, medical conditions by severity, anatomy point mappings, breed-specific vital signs. Shared by both React and standalone versions.
 
-## 3D Model System Architecture
+`js/hyper3d-animals.js`: Additional animal data used by some standalone HTML versions (deployed alongside them).
 
-**Progressive Loading System:**
-- High quality models: Full detail with DRACO compression
-- Medium quality: 50% polygon reduction
-- Low quality: 25% polygon reduction
-- Fallback: Procedural generation if models fail to load
+### 3D Model Pipeline
 
-**Model Storage Structure:**
-```
-assets/models/animals/
-├── bello/ (primary test animal)
-│   ├── bello_high.glb
-│   ├── bello_medium.glb
-│   ├── bello_low.glb
-│   ├── bello_medical.glb
-│   └── bello_xray.glb
-├── cat/, dog/, horse/, rabbit/ (various quality levels)
-└── fallbacks/ (procedural models)
-```
+Models in `assets/models/animals/<species>/` (currently: bello, cat, dog, parrot, rabbit) with quality tiers (`_high.glb`, `_medium.glb`, `_low.glb`) plus medical variants (`_medical.glb`, `_xray.glb`). Bello also has a `.blend` source file. The loader falls back to procedural geometry if GLB files fail to load.
 
-**Medical Visualization Modes:**
-- Normal: Standard rendering
-- X-Ray: Fresnel-based transparency with emission
-- Ultrasound: Wave-based visualization
-- Thermal: Heat mapping
-- MRI: Cross-sectional views
+The Blender MCP pipeline runs in Docker (`docker-compose.yml`): headless Blender with virtual display on ports 8765 (WebSocket) and 8080 (health endpoint). Blender MCP uses `uvx blender-mcp` (Python package via uvx), NOT npm/npx. Extensive automation scripts in `scripts/` handle model creation, export, and health checking.
 
-## Blender MCP Integration
+### Deployment
 
-**Docker Architecture:**
-- **Container**: `vetscan_blender_mcp` runs on port 8765 (WebSocket) and 8080 (health check)
-- **Volumes**: Model exports, Blender projects, custom scripts
-- **Environment**: Headless Blender with virtual display
-- **Health checks**: Automated container health monitoring
+GitHub Actions (`.github/workflows/deploy.yml`) on push to `main`:
+1. Copies standalone HTML files + `assets/` + `public/` + `js/` into `deploy/`
+2. Generates a version-selector `index.html` with links to all game variants
+3. FTP-deploys to Hostinger (`/public_html/`)
 
-**MCP Configuration** (`.cursor/mcp.json`):
-- **blender-mcp**: Uses `uvx blender-mcp` (Python package, not npm)
-- **filesystem**: Project file access
-- **git**: Version control operations
-- **memory**: Persistent context storage
+Requires secrets: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`.
 
-**Key MCP Tools:**
-- `execute_blender_code()`: Run Python scripts in Blender
-- `get_scene_info()`: Scene object information
-- `get_viewport_screenshot()`: Visual validation
-- `generate_hyper3d_model_via_text()`: Text-to-3D generation
+## Ports
 
-## Port Configuration
-- **3000**: React dev server (Vite)
-- **8080**: Python HTTP server / Docker health check
-- **8765**: Blender MCP WebSocket (primary)
-- **8081**: Alternative Python server
-- **5900**: VNC port for debug containers
+| Port | Service |
+|------|---------|
+| 8035 | Vite dev server (React app) |
+| 8080 | Python HTTP server / Blender MCP health |
+| 8765 | Blender MCP WebSocket |
 
-## Testing Strategy
+## Important Conventions
 
-**Testing Methods:**
-- **Browser console**: Runtime error detection
-- **Playwright**: Integration testing with `npm run test:integration`
-- **Python server**: Manual testing of standalone HTML versions
-- **Health checks**: Automated Blender MCP connection testing
-
-**Test Files:**
-- `tests/blender_integration/`: Blender MCP integration tests
-- `test-results/`: Integration test results
-- Health check logs: `blender_mcp_health_*.json`
-
-## MCP Integration Details
-
-**Critical Configuration Notes:**
-- **Blender MCP**: MUST use `uvx blender-mcp` (Python package via uvx, not npm)
-- **Auto-approval**: Extensive list of pre-approved MCP operations
-- **Project root**: `/Users/doriangrey/Desktop/coding/tierarztspiel`
-- **Blender path**: `/Applications/Blender.app/Contents/MacOS/Blender`
-
-## BMAD Method Framework
-
-**AI-Driven Development System:**
-- **Installation**: `npx bmad-method install` (v4.40.0 successfully installed)
-- **Expansion packs**: 2D game dev, Unity, creative writing, DevOps
-- **Agents**: Product Owner, Scrum Master, Developer, Tester, Architect
-- **Commands**: `npx bmad-method list:expansions`, `npx bmad-method status`
-
-## Dependencies and Technology Stack
-
-**Core Technologies:**
-- React 18.2.0 with Vite 5.1.0
-- Three.js 0.179.0 for 3D rendering
-- Tailwind CSS with PostCSS and Autoprefixer
-- DRACO 3D compression for model optimization
-- Lucide React for UI icons
-
-**Development Tools:**
-- gltf-transform for model optimization
-- Playwright for integration testing
-- Docker for Blender MCP containerization
-- GitHub Actions for CI/CD
-- Python 3 for server hosting and scripts
-- Blender MCP for 3D asset pipeline
-
-## Important File Structure Notes
-
-**Standalone Game Versions (20+ HTML files):**
-All games are self-contained single HTML files that can run directly in browser:
-- `vetscan-detective.html`: Detective-style gameplay with Dr. Eule mentor
-- `vetscan-pro-leveling.html`: RPG progression system with 50 levels
-- `vetscan-story-mode.html`: Campaign-based narrative gameplay
-- `vetscan-ultimate.html`: Advanced 3D visualization features
-- `vetscan-bello-3d-v7.html`: Latest 3D Bello integration
-- `vetscan-version-selector.html`: Version navigation interface
-- And 15+ additional specialized versions
-
-**Game Data System:**
-- `veterinary-medical-data.js`: Central medical database with 20 animal species, 100+ patient profiles, medical conditions, and anatomy mappings
-- `animal-patients-generator.js`: Procedural patient generation system
-
-## Cursor Rules Integration
-
-This project uses comprehensive Cursor rules (`.cursorrules`) that define:
-- **Blender MCP Integration**: Direct access to Blender for 3D asset creation
-- **Export Pipeline**: Multi-quality model export (high/medium/low) with DRACO compression
-- **Medical Materials**: Automated creation of X-Ray, Ultrasound, and Thermal visualization shaders
-- **Automated Deployment**: Git-based deployment to production after model updates
-
-**Key MCP Functions Available:**
-- `execute_blender_code()`: Run Python scripts in Blender
-- `get_scene_info()`: Retrieve scene information  
-- `get_object_info()`: Get details about specific objects
-- `generate_hyper3d_model_via_text()`: Text-to-3D model generation
-- `get_viewport_screenshot()`: Visual validation of 3D models
-- `set_texture()`: Apply textures to objects
-
-## Current Development Status
-
-**Latest Developments (September 2025):**
-- 40+ Python scripts for Blender automation and 3D pipeline
-- Comprehensive health check system with JSON reporting
-- Direct 3D generation capabilities via Hyper3D integration
-- Production pipeline testing framework
-- Docker-based Blender MCP services with health monitoring
-
-**Key Files Modified:**
-- Multiple Hyper3D integration scripts (`scripts/direct_3d_generation.py`, `scripts/pseudo_hyper3d.py`)
-- Enhanced Blender MCP health checking system
-- Production pipeline automation (`scripts/production-pipeline-test.py`)
+- Standalone HTML games are self-contained -- each file includes all CSS/JS inline. Do not add external dependencies to them.
+- `.cursorrules` contains Blender MCP integration instructions for Cursor IDE -- not relevant for Claude Code.
+- `.env.example` documents available config vars (Blender path, API keys, ports).
+- `scripts/` contains 50+ Python/JS/shell scripts primarily for Blender model creation and export. Most are single-purpose automation scripts, not part of the app runtime.

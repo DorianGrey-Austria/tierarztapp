@@ -18,7 +18,7 @@ python3 -m http.server 8080
 ```bash
 npm install
 npm run dev
-# Öffnet automatisch auf http://localhost:3000
+# Oeffnet automatisch auf http://localhost:8035
 ```
 
 ## 🎯 Spielversionen
