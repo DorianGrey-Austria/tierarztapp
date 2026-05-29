@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Radiologie-Befundungstrainer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2234;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --xray-bg: #050810;
+            --xray-bone: #d4d8e0;
+            --xray-soft: #4a5568;
+            --xray-air: #1a1a2e;
+            --xray-fluid: #6b7280;
+            --xray-pathology: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .xray-viewer {
+            background: var(--xray-bg);
+            border: 2px solid #1e293b;
+            border-radius: 12px;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .xray-viewer svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .annotation-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--warning);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            animation: pulse-ring 2s infinite;
+            z-index: 10;
+        }
+
+        .annotation-marker.correct { border-color: var(--success); }
+        .annotation-marker.incorrect { border-color: var(--danger); }
+
+        .annotation-marker .marker-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--warning);
+        }
+
+        .annotation-marker.correct .marker-number { color: var(--success); }
+        .annotation-marker.incorrect .marker-number { color: var(--danger); }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .checklist-item {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.5);
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .checklist-item:hover { background: rgba(59, 130, 246, 0.1); }
+        .checklist-item.checked { background: rgba(34, 197, 94, 0.1); border-left: 3px solid var(--success); }
+        .checklist-item.missed { background: rgba(239, 68, 68, 0.1); border-left: 3px solid var(--danger); }
+
+        .step-indicator {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 4px;
+            border-radius: 2px;
+            background: #334155;
+            transition: background 0.3s;
+        }
+
+        .step-dot.active { background: var(--accent); }
+        .step-dot.done { background: var(--success); }
+
+        .vhs-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .vhs-overlay.active { pointer-events: all; }
+
+        .vhs-line {
+            stroke: #f59e0b;
+            stroke-width: 2;
+            stroke-dasharray: 6 3;
+            cursor: grab;
+        }
+
+        .vhs-handle {
+            fill: #f59e0b;
+            stroke: #fff;
+            stroke-width: 1;
+            cursor: grab;
+            r: 6;
+        }
+
+        .vhs-handle:hover { r: 8; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        .finding-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .finding-tag.normal { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .finding-tag.pathological { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .finding-tag.artifact { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+
+        .score-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #1e293b;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .case-card {
+            background: var(--bg-card);
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .case-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+        .case-card.completed { border-color: var(--success); }
+
+        .dropdown-select {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .text-input {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .text-input:focus, .dropdown-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+
+        .systematic-step {
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.3);
+            border-left: 3px solid #334155;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .systematic-step.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--accent);
+        }
+
+        .systematic-step.completed {
+            border-left-color: var(--success);
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @media (max-width: 768px) {
+            .desktop-grid { flex-direction: column !important; }
+            .xray-viewer { min-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ============================================================
+// DATA: Cases, findings, systematic approach
+// ============================================================
+
+const SYSTEMATIC_STEPS = [
+    { id: 'quality', label: '1. Technische Qualitaet', description: 'Belichtung, Lagerung, Inspirationstiefe' },
+    { id: 'extra', label: '2. Extrathorakale Strukturen', description: 'Weichteile, Rippen, Wirbelsaeule' },
+    { id: 'pleura', label: '3. Pleuraraum', description: 'Erguss? Pneumothorax?' },
+    { id: 'lung', label: '4. Lungenparenchym', description: 'Alveolar, interstitiell, bronchial, vaskulaer' },
+    { id: 'mediastinum', label: '5. Mediastinum', description: 'Trachea, Oesophagus' },
+    { id: 'heart', label: '6. Herz', description: 'VHS, Form, Groesse' },
+    { id: 'diaphragm', label: '7. Zwerchfell', description: 'Position, Integritaet' }
+];
+
+const CASES = [
+    {
+        id: 'normal-thorax',
+        title: 'Normaler Thorax Hund',
+        category: 'Referenz',
+        difficulty: 'Einfach',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: 'Routine-Untersuchung, 5-jaehriger Labrador Retriever, keine Symptome.',
+        vhsTarget: 10.0,
+        vhsNormal: true,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Gute Belichtung, korrekte Lagerung, ausreichende Inspiration (Zwerchfell bei T12-T13).' },
+            { id: 'f2', region: 'extra', structure: 'Rippen und Wirbelsaeule', status: 'normal', description: 'Rippen symmetrisch, keine Frakturen, Wirbelkoerper regelrecht.' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'normal', description: 'Kein Erguss, kein Pneumothorax, Lappenspalten nicht sichtbar.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenparenchym', status: 'normal', description: 'Klare Lungenfelder, normales Gefaesszeichnungsmuster, keine Verschattungen.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Trachea', status: 'normal', description: 'Trachea im Verlauf normal, kein Anheben, keine Kompression.' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'normal', description: 'Herzsilhouette normal geformt, VHS 10.0 (Normbereich 9.7 +/- 0.5 WK). Kein Hinweis auf Kardiomegalie.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfellkuppel glatt, intakt, physiologische Position.' }
+        ],
+        svgId: 'svg-normal'
+    },
+    {
+        id: 'cardiomegaly',
+        title: 'Kardiomegalie links (DCM)',
+        category: 'Kardiologie',
+        difficulty: 'Mittel',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: '7-jaehriger Dobermann, Leistungsinsuffizienz seit 3 Wochen, gelegentlich Husten.',
+        vhsTarget: 12.5,
+        vhsNormal: false,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Ausreichende Belichtung und Lagerung.' },
+            { id: 'f2', region: 'extra', structure: 'Extrathorakale Strukturen', status: 'normal', description: 'Rippen und Weichteile unauffaellig.' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'normal', description: 'Kein Erguss oder Pneumothorax.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenvenen', status: 'pathological', description: 'Lungenvenen deutlich gestaut (verbreitert), Hinweis auf venoese Stauung.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Trachea', status: 'pathological', description: 'Trachea dorsal angehoben durch vergroesserten Herzschatten, v.a. linkes Atrium.' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'pathological', description: 'Deutlich vergroesserter Herzschatten, VHS 12.5 (erhoehen). Generalisierte Kardiomegalie, typisch fuer DCM. Linkes Atrium prominent (Trachea-Anhebung).' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfell intakt, leicht kaudal verdraengt durch Kardiomegalie.' }
+        ],
+        svgId: 'svg-cardiomegaly'
+    },
+    {
+        id: 'pulmonary-edema',
+        title: 'Lungenoedem (kardial)',
+        category: 'Kardiologie',
+        difficulty: 'Mittel',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: '10-jaehriger Cavalier King Charles Spaniel, akute Dyspnoe, Husten, bekannte Mitralklappeninsuffizienz.',
+        vhsTarget: 13.0,
+        vhsNormal: false,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Belichtung adaequat, Lagerung akzeptabel (dyspnoeischer Patient).' },
+            { id: 'f2', region: 'extra', structure: 'Extrathorakale Strukturen', status: 'normal', description: 'Unauffaellig.' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'normal', description: 'Kein freier Erguss, kein Pneumothorax.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenparenchym', status: 'pathological', description: 'Perihilaere alveolare Verschattung beidseits (Schmetterlingsfigur). Typisches Muster fuer kardiales Lungenoedem beim Hund.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Trachea', status: 'pathological', description: 'Trachea deutlich dorsal angehoben, Hauptbronchus komprimiert durch massiv vergroessertes linkes Atrium.' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'pathological', description: 'Massive Kardiomegalie (VHS 13.0). Linkes Atrium stark vergroessert. Linksseitige Herzvergroesserung dominierend.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfell intakt, leicht kaudal verdraengt.' }
+        ],
+        svgId: 'svg-edema'
+    },
+    {
+        id: 'pleural-effusion',
+        title: 'Pleuraerguss',
+        category: 'Thorax',
+        difficulty: 'Mittel',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: '6-jaehrige Mischlingshuentdin, Tachypnoe seit 2 Tagen, gedaempfter Klopfschall ventral.',
+        vhsTarget: null,
+        vhsNormal: null,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Ausreichende Belichtung. Beurteilbarkeit durch Erguss eingeschraenkt.' },
+            { id: 'f2', region: 'extra', structure: 'Extrathorakale Strukturen', status: 'normal', description: 'Rippen und Weichteile unauffaellig.' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'pathological', description: 'Deutlicher Pleuraerguss mit Verschattung ventral. Lappenspalten sichtbar (Fissurlinien). Fluessigkeitslinie horizontal bei lateraler Aufnahme.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenparenchym', status: 'pathological', description: 'Ventrale Lungenfelder nicht beurteilbar (ueberlagert durch Erguss). Dorsale Anteile teils beluertet.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Trachea', status: 'normal', description: 'Trachea im sichtbaren Verlauf unauffaellig.' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'pathological', description: 'Herzsilhouette nicht sicher abgrenzbar (Silhouette-Zeichen positiv mit Erguss). VHS nicht zuverlaessig bestimmbar.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'pathological', description: 'Zwerchfellkontur nicht abgrenzbar (durch Erguss maskiert).' }
+        ],
+        svgId: 'svg-effusion'
+    },
+    {
+        id: 'pneumothorax',
+        title: 'Pneumothorax',
+        category: 'Thorax',
+        difficulty: 'Mittel',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: '3-jaehriger Terrier-Mix, Autounfall vor 2 Stunden, Dyspnoe, verminderte Lungengeraeusche rechts.',
+        vhsTarget: 9.5,
+        vhsNormal: true,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Belichtung adaequat, Notfallaufnahme.' },
+            { id: 'f2', region: 'extra', structure: 'Rippen', status: 'pathological', description: 'Verdacht auf Rippenfraktur rechts (R6-R7), Weichteilschwellung lateral.' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'pathological', description: 'Pneumothorax: Erhoehte Transparenz peripher, Lungenrand sichtbar (visceraler Pleurarand). Lunge partiell kollabiert, retrahiert nach hiliaer.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenparenchym', status: 'pathological', description: 'Lungenparenchym im beluerueten Anteil unauffaellig. Lunge teils kollabiert, erhoehte Dichte im kollabierten Bereich.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Mediastinum', status: 'normal', description: 'Kein Mediastinalshift, kein Spannungspneumothorax.' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'normal', description: 'Herzschatten unauffaellig, VHS 9.5 im Normbereich. Herz erscheint "abgehoben" vom Sternum.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfell intakt, keine Ruptur erkennbar.' }
+        ],
+        svgId: 'svg-pneumothorax'
+    },
+    {
+        id: 'foreign-body',
+        title: 'Fremdkoerper GI',
+        category: 'Abdomen',
+        difficulty: 'Schwer',
+        species: 'Hund',
+        projection: 'Laterolateral',
+        history: '2-jaehriger Golden Retriever, Erbrechen seit 24h, Inappetenz, Spielzeug vermisst.',
+        vhsTarget: null,
+        vhsNormal: null,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Abdomenaufnahme, gute Belichtung und Lagerung.' },
+            { id: 'f2', region: 'extra', structure: 'Skelett', status: 'normal', description: 'Wirbelsaeule und Becken unauffaellig.' },
+            { id: 'f3', region: 'pleura', structure: 'Nicht anwendbar', status: 'normal', description: 'Abdominale Aufnahme, Thorax nicht vollstaendig abgebildet.' },
+            { id: 'f4', region: 'lung', structure: 'Magen-Darm-Trakt', status: 'pathological', description: 'Runder, weichteiledichter Fremdkoerper im Magenbereich (ca. 3 cm Durchmesser). Multiple gasgefuellte Duenndarmschlingen kranial = mechanischer Ileus. Duenndarm dilatiert (> 2x Rippenbreite).' },
+            { id: 'f5', region: 'mediastinum', structure: 'Abdominale Organe', status: 'normal', description: 'Leber, Milz und Nieren im sichtbaren Bereich unauffaellig.' },
+            { id: 'f6', region: 'heart', structure: 'Nicht anwendbar', status: 'normal', description: 'Abdominale Aufnahme.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfell im sichtbaren Anteil intakt.' }
+        ],
+        svgId: 'svg-foreignbody'
+    },
+    {
+        id: 'fracture',
+        title: 'Fraktur Femur',
+        category: 'Orthopaedie',
+        difficulty: 'Einfach',
+        species: 'Hund',
+        projection: 'Mediolateral Femur',
+        history: '4-jaehriger Schaeferhund, Lahmheit Grad 4/4 links hinten nach Sturz, Schwellung Oberschenkel.',
+        vhsTarget: null,
+        vhsNormal: null,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Gute Belichtung, Femur vollstaendig abgebildet inkl. angrenzender Gelenke.' },
+            { id: 'f2', region: 'extra', structure: 'Weichteile', status: 'pathological', description: 'Deutliche Weichteilschwellung um den mittleren Femurschaft. Erhoehte Weichteildichte (Haematom).' },
+            { id: 'f3', region: 'pleura', structure: 'Knochen (Femurschaft)', status: 'pathological', description: 'Schraegfraktur im mittleren Diaphysenbereich des Femur. Komplette Fraktur mit Dislokation (Versatz ca. 1 Schaftbreite lateral). Kleines Schmetterlingsfragment.' },
+            { id: 'f4', region: 'lung', structure: 'Gelenkflaechen', status: 'normal', description: 'Hueftgelenk und Kniegelenk unauffaellig, keine Luxation, keine Gelenkbeteiligung der Fraktur.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Kontralaterale Seite', status: 'normal', description: 'Hinweis: Zweite Ebene und kontralaterale Aufnahme empfohlen.' },
+            { id: 'f6', region: 'heart', structure: 'Nicht anwendbar', status: 'normal', description: 'Extremitaetenaufnahme.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Nicht anwendbar', status: 'normal', description: 'Extremitaetenaufnahme.' }
+        ],
+        svgId: 'svg-fracture'
+    },
+    {
+        id: 'megaesophagus',
+        title: 'Megaoesophagus',
+        category: 'Gastroenterologie',
+        difficulty: 'Schwer',
+        species: 'Hund',
+        projection: 'Laterolateral (rechts anliegend)',
+        history: '9 Monate alter Deutscher Schaeferhund, Regurgitation seit Absetzalter, Gewichtsverlust.',
+        vhsTarget: 9.8,
+        vhsNormal: true,
+        findings: [
+            { id: 'f1', region: 'quality', structure: 'Technische Qualitaet', status: 'normal', description: 'Gute Belichtung und Lagerung.' },
+            { id: 'f2', region: 'extra', structure: 'Extrathorakale Strukturen', status: 'pathological', description: 'Koerperkondition reduziert (wenig subkutanes Fett).' },
+            { id: 'f3', region: 'pleura', structure: 'Pleuraraum', status: 'normal', description: 'Kein Erguss oder Pneumothorax.' },
+            { id: 'f4', region: 'lung', structure: 'Lungenparenchym', status: 'pathological', description: 'Ventrokaudal alveolare Verschattung (Verdacht auf Aspirationspneumonie). Bronchiales Muster im rechten mittleren Lungenlappen.' },
+            { id: 'f5', region: 'mediastinum', structure: 'Oesophagus', status: 'pathological', description: 'Massiv erweiterter, luftgefuellter Oesophagus dorsal der Trachea. Oesophagusweite uebersteigt die Trachealbreite deutlich. Typisches Streifenzeichen (Trachealstreifen).' },
+            { id: 'f6', region: 'heart', structure: 'Herzschatten', status: 'normal', description: 'Herzschatten normal, VHS 9.8. Herz wird ventral durch Oesophagus verdraengt.' },
+            { id: 'f7', region: 'diaphragm', structure: 'Zwerchfell', status: 'normal', description: 'Zwerchfell intakt, erweiterter Oesophagus bis zum Hiatus sichtbar.' }
+        ],
+        svgId: 'svg-megaesophagus'
+    }
+];
+
+// ============================================================
+// SVG GENERATORS - Schematic radiographic images
+// ============================================================
+
+function generateSVG(caseId, width = 600, height = 450) {
+    const generators = {
+        'normal-thorax': svgNormalThorax,
+        'cardiomegaly': svgCardiomegaly,
+        'pulmonary-edema': svgPulmonaryEdema,
+        'pleural-effusion': svgPleuralEffusion,
+        'pneumothorax': svgPneumothorax,
+        'foreign-body': svgForeignBody,
+        'fracture': svgFracture,
+        'megaesophagus': svgMegaesophagus
+    };
+    return (generators[caseId] || svgNormalThorax)(width, height);
+}
+
+function svgNormalThorax(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="lung-grad" cx="50%" cy="45%" r="50%">
+                <stop offset="0%" stop-color="#0d1117"/>
+                <stop offset="100%" stop-color="#0a0e14"/>
+            </radialGradient>
+        </defs>
+        <!-- Background -->
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <!-- Body outline -->
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        <!-- Spine -->
+        ${generateSpine(w, h, 13)}
+        <!-- Ribs -->
+        ${generateRibs(w, h, 13)}
+        <!-- Lung fields (clear) -->
+        <ellipse cx="${w*0.35}" cy="${h*0.42}" rx="${w*0.16}" ry="${h*0.28}" fill="url(#lung-grad)" opacity="0.7"/>
+        <ellipse cx="${w*0.65}" cy="${h*0.42}" rx="${w*0.16}" ry="${h*0.28}" fill="url(#lung-grad)" opacity="0.7"/>
+        <!-- Trachea -->
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#1a2030" stroke-width="8" stroke-linecap="round"/>
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#0a0e14" stroke-width="5" stroke-linecap="round"/>
+        <!-- Trachea bifurcation -->
+        <path d="M ${w*0.42} ${h*0.32} Q ${w*0.38} ${h*0.35} ${w*0.33} ${h*0.38}" fill="none" stroke="#0a0e14" stroke-width="3"/>
+        <path d="M ${w*0.42} ${h*0.32} Q ${w*0.48} ${h*0.36} ${w*0.55} ${h*0.38}" fill="none" stroke="#0a0e14" stroke-width="3"/>
+        <!-- Heart (normal size) -->
+        <ellipse cx="${w*0.46}" cy="${h*0.55}" rx="${w*0.1}" ry="${h*0.14}" fill="#3a4458" stroke="#4a5568" stroke-width="1" transform="rotate(-10, ${w*0.46}, ${h*0.55})"/>
+        <!-- Diaphragm -->
+        <path d="M ${w*0.15} ${h*0.78} Q ${w*0.35} ${h*0.65} ${w*0.5} ${h*0.72} Q ${w*0.65} ${h*0.65} ${w*0.85} ${h*0.78}" fill="none" stroke="#4a5568" stroke-width="2.5"/>
+        <!-- Sternum -->
+        <line x1="${w*0.38}" y1="${h*0.85}" x2="${w*0.38}" y2="${h*0.35}" stroke="#8a9ab0" stroke-width="3" opacity="0.6"/>
+        <!-- Label -->
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+function svgCardiomegaly(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="lung-grad2" cx="50%" cy="45%" r="50%">
+                <stop offset="0%" stop-color="#0d1117"/>
+                <stop offset="100%" stop-color="#0a0e14"/>
+            </radialGradient>
+        </defs>
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        ${generateSpine(w, h, 13)}
+        ${generateRibs(w, h, 13)}
+        <!-- Lung fields (slightly compressed) -->
+        <ellipse cx="${w*0.3}" cy="${h*0.4}" rx="${w*0.12}" ry="${h*0.25}" fill="url(#lung-grad2)" opacity="0.7"/>
+        <ellipse cx="${w*0.7}" cy="${h*0.4}" rx="${w*0.13}" ry="${h*0.25}" fill="url(#lung-grad2)" opacity="0.7"/>
+        <!-- Stauungsvenen (congested pulmonary veins) -->
+        <line x1="${w*0.35}" y1="${h*0.45}" x2="${w*0.25}" y2="${h*0.35}" stroke="#5a6a7a" stroke-width="3" opacity="0.8"/>
+        <line x1="${w*0.58}" y1="${h*0.45}" x2="${w*0.68}" y2="${h*0.35}" stroke="#5a6a7a" stroke-width="3" opacity="0.8"/>
+        <line x1="${w*0.36}" y1="${h*0.5}" x2="${w*0.24}" y2="${h*0.42}" stroke="#5a6a7a" stroke-width="2.5" opacity="0.7"/>
+        <line x1="${w*0.6}" y1="${h*0.5}" x2="${w*0.72}" y2="${h*0.42}" stroke="#5a6a7a" stroke-width="2.5" opacity="0.7"/>
+        <!-- Trachea (elevated) -->
+        <path d="M ${w*0.5} ${h*0.06} L ${w*0.5} ${h*0.15} Q ${w*0.48} ${h*0.2} ${w*0.44} ${h*0.25}" fill="none" stroke="#1a2030" stroke-width="8" stroke-linecap="round"/>
+        <path d="M ${w*0.5} ${h*0.06} L ${w*0.5} ${h*0.15} Q ${w*0.48} ${h*0.2} ${w*0.44} ${h*0.25}" fill="none" stroke="#0a0e14" stroke-width="5" stroke-linecap="round"/>
+        <!-- Heart (enlarged - DCM) -->
+        <ellipse cx="${w*0.48}" cy="${h*0.55}" rx="${w*0.17}" ry="${h*0.19}" fill="#3a4458" stroke="#4a5568" stroke-width="1.5" transform="rotate(-8, ${w*0.48}, ${h*0.55})"/>
+        <!-- Left atrium bulge -->
+        <ellipse cx="${w*0.52}" cy="${h*0.38}" rx="${w*0.07}" ry="${h*0.06}" fill="#3a4458" stroke="#4a5568" stroke-width="1"/>
+        <!-- Diaphragm (pushed caudally) -->
+        <path d="M ${w*0.15} ${h*0.82} Q ${w*0.35} ${h*0.7} ${w*0.5} ${h*0.76} Q ${w*0.65} ${h*0.7} ${w*0.85} ${h*0.82}" fill="none" stroke="#4a5568" stroke-width="2.5"/>
+        <line x1="${w*0.38}" y1="${h*0.88}" x2="${w*0.38}" y2="${h*0.38}" stroke="#8a9ab0" stroke-width="3" opacity="0.6"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+function svgPulmonaryEdema(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="edema-grad" cx="50%" cy="50%" r="45%">
+                <stop offset="0%" stop-color="#3a4050" stop-opacity="0.8"/>
+                <stop offset="60%" stop-color="#2a3040" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#0a0e14" stop-opacity="0.1"/>
+            </radialGradient>
+        </defs>
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        ${generateSpine(w, h, 13)}
+        ${generateRibs(w, h, 13)}
+        <!-- Perihilar alveolar opacity (butterfly pattern) -->
+        <ellipse cx="${w*0.38}" cy="${h*0.42}" rx="${w*0.12}" ry="${h*0.15}" fill="url(#edema-grad)" opacity="0.9"/>
+        <ellipse cx="${w*0.58}" cy="${h*0.42}" rx="${w*0.12}" ry="${h*0.15}" fill="url(#edema-grad)" opacity="0.9"/>
+        <!-- Additional cotton-wool opacities -->
+        <circle cx="${w*0.32}" cy="${h*0.38}" r="${w*0.04}" fill="#2a3545" opacity="0.6"/>
+        <circle cx="${w*0.62}" cy="${h*0.38}" r="${w*0.04}" fill="#2a3545" opacity="0.6"/>
+        <circle cx="${w*0.35}" cy="${h*0.48}" r="${w*0.035}" fill="#2a3545" opacity="0.5"/>
+        <circle cx="${w*0.6}" cy="${h*0.48}" r="${w*0.035}" fill="#2a3545" opacity="0.5"/>
+        <!-- Trachea (markedly elevated) -->
+        <path d="M ${w*0.5} ${h*0.05} L ${w*0.5} ${h*0.12} Q ${w*0.47} ${h*0.17} ${w*0.43} ${h*0.22}" fill="none" stroke="#1a2030" stroke-width="8" stroke-linecap="round"/>
+        <path d="M ${w*0.5} ${h*0.05} L ${w*0.5} ${h*0.12} Q ${w*0.47} ${h*0.17} ${w*0.43} ${h*0.22}" fill="none" stroke="#0a0e14" stroke-width="5" stroke-linecap="round"/>
+        <!-- Heart (massively enlarged) -->
+        <ellipse cx="${w*0.48}" cy="${h*0.58}" rx="${w*0.19}" ry="${h*0.21}" fill="#3a4458" stroke="#4a5568" stroke-width="1.5" transform="rotate(-5, ${w*0.48}, ${h*0.58})"/>
+        <!-- Massive LA -->
+        <ellipse cx="${w*0.54}" cy="${h*0.38}" rx="${w*0.09}" ry="${h*0.07}" fill="#3a4458" stroke="#4a5568" stroke-width="1"/>
+        <!-- Congested veins -->
+        <line x1="${w*0.36}" y1="${h*0.48}" x2="${w*0.24}" y2="${h*0.36}" stroke="#5a6a7a" stroke-width="3.5" opacity="0.8"/>
+        <line x1="${w*0.62}" y1="${h*0.48}" x2="${w*0.74}" y2="${h*0.36}" stroke="#5a6a7a" stroke-width="3.5" opacity="0.8"/>
+        <!-- Diaphragm -->
+        <path d="M ${w*0.15} ${h*0.85} Q ${w*0.35} ${h*0.73} ${w*0.5} ${h*0.79} Q ${w*0.65} ${h*0.73} ${w*0.85} ${h*0.85}" fill="none" stroke="#4a5568" stroke-width="2.5"/>
+        <line x1="${w*0.38}" y1="${h*0.9}" x2="${w*0.38}" y2="${h*0.38}" stroke="#8a9ab0" stroke-width="3" opacity="0.6"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+function svgPleuralEffusion(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="effusion-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0a0e14" stop-opacity="0"/>
+                <stop offset="45%" stop-color="#2a3545" stop-opacity="0.3"/>
+                <stop offset="70%" stop-color="#3a4a5a" stop-opacity="0.7"/>
+                <stop offset="100%" stop-color="#4a5a6a" stop-opacity="0.9"/>
+            </linearGradient>
+        </defs>
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        ${generateSpine(w, h, 13)}
+        ${generateRibs(w, h, 13)}
+        <!-- Upper lung still aerated -->
+        <ellipse cx="${w*0.35}" cy="${h*0.3}" rx="${w*0.14}" ry="${h*0.12}" fill="#0a0e14" opacity="0.6"/>
+        <ellipse cx="${w*0.65}" cy="${h*0.3}" rx="${w*0.14}" ry="${h*0.12}" fill="#0a0e14" opacity="0.6"/>
+        <!-- Pleural effusion (fluid ventral) -->
+        <ellipse cx="${w/2}" cy="${h*0.62}" rx="${w*0.38}" ry="${h*0.28}" fill="url(#effusion-grad)"/>
+        <!-- Fissure lines (interlobar) -->
+        <line x1="${w*0.3}" y1="${h*0.35}" x2="${w*0.35}" y2="${h*0.6}" stroke="#5a6878" stroke-width="1.5" opacity="0.7"/>
+        <line x1="${w*0.7}" y1="${h*0.35}" x2="${w*0.65}" y2="${h*0.6}" stroke="#5a6878" stroke-width="1.5" opacity="0.7"/>
+        <!-- Heart silhouette (obscured by fluid) -->
+        <ellipse cx="${w*0.46}" cy="${h*0.55}" rx="${w*0.11}" ry="${h*0.14}" fill="#3e4e5e" stroke="none" opacity="0.4"/>
+        <!-- Trachea -->
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#1a2030" stroke-width="8" stroke-linecap="round"/>
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#0a0e14" stroke-width="5" stroke-linecap="round"/>
+        <!-- Fluid line marker -->
+        <line x1="${w*0.2}" y1="${h*0.48}" x2="${w*0.8}" y2="${h*0.48}" stroke="#5a6a7a" stroke-width="1" stroke-dasharray="4 3" opacity="0.5"/>
+        <!-- Diaphragm (obscured) -->
+        <path d="M ${w*0.15} ${h*0.78} Q ${w*0.5} ${h*0.72} ${w*0.85} ${h*0.78}" fill="none" stroke="#4a5568" stroke-width="1" stroke-dasharray="3 3" opacity="0.3"/>
+        <line x1="${w*0.38}" y1="${h*0.85}" x2="${w*0.38}" y2="${h*0.35}" stroke="#8a9ab0" stroke-width="3" opacity="0.5"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+function svgPneumothorax(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        ${generateSpine(w, h, 13)}
+        ${generateRibs(w, h, 13)}
+        <!-- Peripheral increased transparency (free air) -->
+        <ellipse cx="${w*0.35}" cy="${h*0.4}" rx="${w*0.2}" ry="${h*0.3}" fill="#0c1018" opacity="0.8"/>
+        <ellipse cx="${w*0.65}" cy="${h*0.4}" rx="${w*0.2}" ry="${h*0.3}" fill="#0c1018" opacity="0.8"/>
+        <!-- Collapsed lung (retracted, denser) -->
+        <ellipse cx="${w*0.4}" cy="${h*0.42}" rx="${w*0.08}" ry="${h*0.16}" fill="#1a2535" stroke="#3a4a5a" stroke-width="1.5" opacity="0.9"/>
+        <ellipse cx="${w*0.6}" cy="${h*0.42}" rx="${w*0.09}" ry="${h*0.18}" fill="#1a2535" stroke="#3a4a5a" stroke-width="1.5" opacity="0.9"/>
+        <!-- Visceral pleural line (visible lung edge) -->
+        <path d="M ${w*0.33} ${h*0.22} Q ${w*0.3} ${h*0.4} ${w*0.34} ${h*0.6}" fill="none" stroke="#6a7a8a" stroke-width="1.5"/>
+        <path d="M ${w*0.68} ${h*0.22} Q ${w*0.72} ${h*0.4} ${w*0.67} ${h*0.6}" fill="none" stroke="#6a7a8a" stroke-width="1.5"/>
+        <!-- Heart (elevated from sternum) -->
+        <ellipse cx="${w*0.48}" cy="${h*0.52}" rx="${w*0.1}" ry="${h*0.13}" fill="#3a4458" stroke="#4a5568" stroke-width="1" transform="rotate(-10, ${w*0.48}, ${h*0.52})"/>
+        <!-- Trachea -->
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#1a2030" stroke-width="8" stroke-linecap="round"/>
+        <path d="M ${w*0.5} ${h*0.08} L ${w*0.5} ${h*0.22} Q ${w*0.48} ${h*0.28} ${w*0.42} ${h*0.32}" fill="none" stroke="#0a0e14" stroke-width="5" stroke-linecap="round"/>
+        <!-- Rib fracture indicator (R6-R7 right) -->
+        <line x1="${w*0.73}" y1="${h*0.42}" x2="${w*0.76}" y2="${h*0.45}" stroke="#8a9ab0" stroke-width="2.5"/>
+        <line x1="${w*0.76}" y1="${h*0.44}" x2="${w*0.78}" y2="${h*0.42}" stroke="#8a9ab0" stroke-width="2.5"/>
+        <!-- Gap in rib (fracture) -->
+        <circle cx="${w*0.76}" cy="${h*0.435}" r="3" fill="#050810"/>
+        <!-- Diaphragm -->
+        <path d="M ${w*0.15} ${h*0.78} Q ${w*0.35} ${h*0.65} ${w*0.5} ${h*0.72} Q ${w*0.65} ${h*0.65} ${w*0.85} ${h*0.78}" fill="none" stroke="#4a5568" stroke-width="2.5"/>
+        <line x1="${w*0.38}" y1="${h*0.85}" x2="${w*0.38}" y2="${h*0.35}" stroke="#8a9ab0" stroke-width="3" opacity="0.6"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+function svgForeignBody(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <!-- Body outline (abdomen) -->
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        <!-- Spine -->
+        ${generateSpine(w, h, 7, 0.08)}
+        <!-- Pelvis outline -->
+        <path d="M ${w*0.3} ${h*0.82} Q ${w*0.5} ${h*0.9} ${w*0.7} ${h*0.82}" fill="none" stroke="#8a9ab0" stroke-width="2.5"/>
+        <line x1="${w*0.3}" y1="${h*0.82}" x2="${w*0.25}" y2="${h*0.95}" stroke="#8a9ab0" stroke-width="2.5"/>
+        <line x1="${w*0.7}" y1="${h*0.82}" x2="${w*0.75}" y2="${h*0.95}" stroke="#8a9ab0" stroke-width="2.5"/>
+        <!-- Stomach -->
+        <ellipse cx="${w*0.4}" cy="${h*0.3}" rx="${w*0.12}" ry="${h*0.08}" fill="#1a2030" stroke="#3a4555" stroke-width="1.5" transform="rotate(-15, ${w*0.4}, ${h*0.3})"/>
+        <!-- Foreign body in stomach! -->
+        <circle cx="${w*0.42}" cy="${h*0.3}" r="${w*0.035}" fill="#5a6a7a" stroke="#8a9ab0" stroke-width="1.5"/>
+        <circle cx="${w*0.42}" cy="${h*0.3}" r="${w*0.015}" fill="none" stroke="#6a7a8a" stroke-width="0.5"/>
+        <!-- Gas-filled dilated small bowel loops (ileus) -->
+        <ellipse cx="${w*0.55}" cy="${h*0.42}" rx="${w*0.08}" ry="${h*0.035}" fill="#0c1018" stroke="#2a3545" stroke-width="1.5"/>
+        <ellipse cx="${w*0.4}" cy="${h*0.48}" rx="${w*0.09}" ry="${h*0.03}" fill="#0c1018" stroke="#2a3545" stroke-width="1.5"/>
+        <ellipse cx="${w*0.58}" cy="${h*0.55}" rx="${w*0.07}" ry="${h*0.035}" fill="#0c1018" stroke="#2a3545" stroke-width="1.5"/>
+        <ellipse cx="${w*0.45}" cy="${h*0.6}" rx="${w*0.085}" ry="${h*0.03}" fill="#0c1018" stroke="#2a3545" stroke-width="1.5"/>
+        <ellipse cx="${w*0.55}" cy="${h*0.66}" rx="${w*0.06}" ry="${h*0.03}" fill="#0c1018" stroke="#2a3545" stroke-width="1.5"/>
+        <!-- Normal bowel (caudal) -->
+        <path d="M ${w*0.35} ${h*0.72} Q ${w*0.5} ${h*0.7} ${w*0.6} ${h*0.75}" fill="none" stroke="#2a3545" stroke-width="4" opacity="0.5"/>
+        <!-- Liver shadow -->
+        <path d="M ${w*0.2} ${h*0.15} Q ${w*0.35} ${h*0.2} ${w*0.3} ${h*0.28}" fill="#1a2030" stroke="none" opacity="0.5"/>
+        <!-- Kidneys -->
+        <ellipse cx="${w*0.55}" cy="${h*0.2}" rx="${w*0.04}" ry="${h*0.06}" fill="#2a3545" stroke="#3a4555" stroke-width="1" transform="rotate(-10, ${w*0.55}, ${h*0.2})"/>
+        <ellipse cx="${w*0.62}" cy="${h*0.25}" rx="${w*0.04}" ry="${h*0.055}" fill="#2a3545" stroke="#3a4555" stroke-width="1" transform="rotate(-5, ${w*0.62}, ${h*0.25})"/>
+        <!-- Bladder -->
+        <ellipse cx="${w*0.5}" cy="${h*0.82}" rx="${w*0.06}" ry="${h*0.05}" fill="#1a2535" stroke="#3a4555" stroke-width="1"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">Kaudal</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">Kranial</text>
+    </svg>`;
+}
+
+function svgFracture(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <!-- Soft tissue outline -->
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.15}" ry="${h*0.45}" fill="#0e1420" stroke="#2a3040" stroke-width="1"/>
+        <!-- Soft tissue swelling around fracture -->
+        <ellipse cx="${w*0.52}" cy="${h*0.5}" rx="${w*0.2}" ry="${h*0.18}" fill="#0e1420" stroke="#2a3040" stroke-width="1.5" opacity="0.8"/>
+        <!-- Femur proximal (above fracture) -->
+        <!-- Femoral head -->
+        <circle cx="${w*0.48}" cy="${h*0.08}" r="${w*0.05}" fill="#c0c8d4" stroke="#d4d8e0" stroke-width="1.5"/>
+        <!-- Femoral neck -->
+        <rect x="${w*0.44}" y="${h*0.12}" width="${w*0.08}" height="${h*0.08}" fill="#b0b8c4" rx="4" transform="rotate(5, ${w*0.48}, ${h*0.16})"/>
+        <!-- Greater trochanter -->
+        <ellipse cx="${w*0.55}" cy="${h*0.1}" rx="${w*0.03}" ry="${h*0.04}" fill="#b0b8c4" stroke="#c0c8d4" stroke-width="1"/>
+        <!-- Proximal shaft -->
+        <rect x="${w*0.44}" y="${h*0.18}" width="${w*0.09}" height="${h*0.25}" fill="#b0b8c4" rx="6" stroke="#c0c8d4" stroke-width="1"/>
+        <!-- FRACTURE LINE (oblique) -->
+        <line x1="${w*0.42}" y1="${h*0.42}" x2="${w*0.56}" y2="${h*0.48}" stroke="#050810" stroke-width="3"/>
+        <!-- Butterfly fragment -->
+        <polygon points="${w*0.48},${h*0.43} ${w*0.53},${h*0.45} ${w*0.5},${h*0.48}" fill="#a0a8b4" stroke="#c0c8d4" stroke-width="1"/>
+        <!-- Distal shaft (displaced laterally) -->
+        <rect x="${w*0.48}" y="${h*0.48}" width="${w*0.09}" height="${h*0.25}" fill="#b0b8c4" rx="6" stroke="#c0c8d4" stroke-width="1" transform="rotate(3, ${w*0.52}, ${h*0.6})"/>
+        <!-- Distal femur condyles -->
+        <ellipse cx="${w*0.5}" cy="${h*0.78}" rx="${w*0.07}" ry="${h*0.04}" fill="#b0b8c4" stroke="#c0c8d4" stroke-width="1.5"/>
+        <!-- Intercondylar notch -->
+        <line x1="${w*0.5}" y1="${h*0.75}" x2="${w*0.5}" y2="${h*0.82}" stroke="#1a2030" stroke-width="1"/>
+        <!-- Patella -->
+        <ellipse cx="${w*0.42}" cy="${h*0.76}" rx="${w*0.025}" ry="${h*0.03}" fill="#c0c8d4" stroke="#d4d8e0" stroke-width="1"/>
+        <!-- Proximal tibia (partially visible) -->
+        <rect x="${w*0.44}" y="${h*0.82}" width="${w*0.1}" height="${h*0.12}" fill="#a0a8b4" rx="5" stroke="#b0b8c4" stroke-width="1"/>
+        <!-- Displacement arrows -->
+        <line x1="${w*0.38}" y1="${h*0.45}" x2="${w*0.33}" y2="${h*0.45}" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2" marker-end="none" opacity="0.6"/>
+        <line x1="${w*0.6}" y1="${h*0.5}" x2="${w*0.65}" y2="${h*0.5}" stroke="#ef4444" stroke-width="1" stroke-dasharray="3 2" opacity="0.6"/>
+        <!-- Muscle layers faintly visible -->
+        <path d="M ${w*0.32} ${h*0.2} Q ${w*0.28} ${h*0.4} ${w*0.3} ${h*0.7}" fill="none" stroke="#1a2535" stroke-width="1" opacity="0.5"/>
+        <path d="M ${w*0.62} ${h*0.2} Q ${w*0.67} ${h*0.4} ${w*0.65} ${h*0.7}" fill="none" stroke="#1a2535" stroke-width="1" opacity="0.5"/>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">Lateral</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">Medial</text>
+        <text x="${w/2}" y="${h-5}" fill="#334155" font-size="10" text-anchor="middle" font-family="monospace">Distal</text>
+        <text x="${w/2}" y="15" fill="#334155" font-size="10" text-anchor="middle" font-family="monospace">Proximal</text>
+    </svg>`;
+}
+
+function svgMegaesophagus(w, h) {
+    return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="${w}" height="${h}" fill="#050810"/>
+        <ellipse cx="${w/2}" cy="${h/2}" rx="${w*0.42}" ry="${h*0.44}" fill="none" stroke="#2a3040" stroke-width="1.5"/>
+        ${generateSpine(w, h, 13)}
+        ${generateRibs(w, h, 13)}
+        <!-- Lung fields -->
+        <ellipse cx="${w*0.3}" cy="${h*0.4}" rx="${w*0.12}" ry="${h*0.22}" fill="#0a0e14" opacity="0.6"/>
+        <ellipse cx="${w*0.68}" cy="${h*0.4}" rx="${w*0.12}" ry="${h*0.22}" fill="#0a0e14" opacity="0.6"/>
+        <!-- Aspiration pneumonia (ventrocaudal opacity) -->
+        <ellipse cx="${w*0.35}" cy="${h*0.58}" rx="${w*0.08}" ry="${h*0.06}" fill="#2a3545" opacity="0.7"/>
+        <ellipse cx="${w*0.3}" cy="${h*0.55}" rx="${w*0.06}" ry="${h*0.04}" fill="#2a3545" opacity="0.5"/>
+        <!-- Massively dilated esophagus (air-filled, dorsal to trachea) -->
+        <path d="M ${w*0.48} ${h*0.06} Q ${w*0.55} ${h*0.06} ${w*0.58} ${h*0.1} L ${w*0.6} ${h*0.7} Q ${w*0.58} ${h*0.75} ${w*0.52} ${h*0.76}" fill="#0c1018" stroke="#3a4a5a" stroke-width="1.5"/>
+        <path d="M ${w*0.48} ${h*0.06} Q ${w*0.42} ${h*0.06} ${w*0.42} ${h*0.1} L ${w*0.42} ${h*0.7} Q ${w*0.44} ${h*0.75} ${w*0.52} ${h*0.76}" fill="#0c1018" stroke="#3a4a5a" stroke-width="1.5"/>
+        <!-- Tracheal stripe sign -->
+        <line x1="${w*0.42}" y1="${h*0.1}" x2="${w*0.42}" y2="${h*0.32}" stroke="#5a6a7a" stroke-width="1.5"/>
+        <!-- Trachea (ventral, compressed) -->
+        <path d="M ${w*0.4} ${h*0.08} L ${w*0.4} ${h*0.22} Q ${w*0.38} ${h*0.28} ${w*0.36} ${h*0.32}" fill="none" stroke="#1a2030" stroke-width="6" stroke-linecap="round"/>
+        <path d="M ${w*0.4} ${h*0.08} L ${w*0.4} ${h*0.22} Q ${w*0.38} ${h*0.28} ${w*0.36} ${h*0.32}" fill="none" stroke="#0a0e14" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Heart (normal, displaced ventrally) -->
+        <ellipse cx="${w*0.42}" cy="${h*0.58}" rx="${w*0.1}" ry="${h*0.13}" fill="#3a4458" stroke="#4a5568" stroke-width="1" transform="rotate(-10, ${w*0.42}, ${h*0.58})"/>
+        <!-- Diaphragm -->
+        <path d="M ${w*0.15} ${h*0.78} Q ${w*0.35} ${h*0.65} ${w*0.5} ${h*0.72} Q ${w*0.65} ${h*0.65} ${w*0.85} ${h*0.78}" fill="none" stroke="#4a5568" stroke-width="2.5"/>
+        <line x1="${w*0.38}" y1="${h*0.85}" x2="${w*0.38}" y2="${h*0.35}" stroke="#8a9ab0" stroke-width="3" opacity="0.6"/>
+        <!-- Labels -->
+        <text x="${w*0.55}" y="${h*0.04}" fill="#4a5a6a" font-size="9" text-anchor="middle" font-family="monospace">Oesophagus</text>
+        <text x="${w*0.35}" y="${h*0.04}" fill="#4a5a6a" font-size="9" text-anchor="middle" font-family="monospace">Trachea</text>
+        <text x="${w-10}" y="20" fill="#334155" font-size="11" text-anchor="end" font-family="monospace">L</text>
+        <text x="10" y="20" fill="#334155" font-size="11" font-family="monospace">R</text>
+    </svg>`;
+}
+
+// Helper: generate spine vertebrae
+function generateSpine(w, h, count, startY = 0.06) {
+    let svg = '';
+    for (let i = 0; i < count; i++) {
+        const y = h * (startY + i * (0.065));
+        if (y > h * 0.9) break;
+        svg += `<rect x="${w*0.47}" y="${y}" width="${w*0.06}" height="${h*0.04}" rx="3" fill="#8a9ab0" stroke="#a0b0c0" stroke-width="0.5" opacity="0.7"/>`;
+        // Spinous process
+        svg += `<line x1="${w*0.5}" y1="${y}" x2="${w*0.5}" y2="${y - h*0.015}" stroke="#8a9ab0" stroke-width="1.5" opacity="0.5"/>`;
+    }
+    return svg;
+}
+
+// Helper: generate ribs
+function generateRibs(w, h, count) {
+    let svg = '';
+    for (let i = 0; i < count; i++) {
+        const y = h * (0.1 + i * 0.058);
+        if (y > h * 0.8) break;
+        const curve = 0.15 + (i / count) * 0.08;
+        // Left rib
+        svg += `<path d="M ${w*0.47} ${y} Q ${w*(0.47 - curve)} ${y + h*0.03} ${w*(0.47 - curve - 0.05)} ${y + h*0.08}" fill="none" stroke="#6a7a8a" stroke-width="1.5" opacity="0.5"/>`;
+        // Right rib
+        svg += `<path d="M ${w*0.53} ${y} Q ${w*(0.53 + curve)} ${y + h*0.03} ${w*(0.53 + curve + 0.05)} ${y + h*0.08}" fill="none" stroke="#6a7a8a" stroke-width="1.5" opacity="0.5"/>`;
+    }
+    return svg;
+}
+
+
+// ============================================================
+// APPLICATION STATE
+// ============================================================
+
+const state = {
+    currentView: 'overview', // 'overview', 'case', 'results'
+    currentCase: null,
+    currentStep: 0,
+    mode: 'study', // 'study', 'quiz'
+    annotations: [],
+    userFindings: {},
+    completedCases: new Set(),
+    scores: {},
+    showSolution: false,
+    vhsActive: false,
+    vhsLongAxis: 0,
+    vhsShortAxis: 0,
+    annotationModalOpen: false,
+    pendingAnnotation: null,
+    resultsModalOpen: false
+};
+
+// ============================================================
+// RENDER ENGINE
+// ============================================================
+
+function render() {
+    const app = document.getElementById('app');
+    switch(state.currentView) {
+        case 'overview': app.innerHTML = renderOverview(); break;
+        case 'case': app.innerHTML = renderCase(); break;
+        case 'results': app.innerHTML = renderResults(); break;
+    }
+    attachEvents();
+}
+
+function renderOverview() {
+    const completedCount = state.completedCases.size;
+    const totalCases = CASES.length;
+    const avgScore = Object.values(state.scores).length > 0 ?
+        Math.round(Object.values(state.scores).reduce((a,b) => a+b, 0) / Object.values(state.scores).length) : 0;
+
+    return `
+    <div class="min-h-screen" style="background: var(--bg-primary);">
+        <!-- Header -->
+        <header class="border-b border-gray-800 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="vetscan-version-selector.html" class="text-gray-500 hover:text-gray-300 transition-colors text-sm flex items-center gap-1">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        Zurueck
+                    </a>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">Radiologie-Befundungstrainer</h1>
+                        <p class="text-sm text-gray-500">Systematische Roentgenbild-Interpretation</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6 text-sm">
+                    <div class="text-gray-400">
+                        <span class="text-white font-semibold">${completedCount}</span>/${totalCases} Faelle
+                    </div>
+                    ${avgScore > 0 ? `<div class="text-gray-400">Durchschnitt: <span class="text-white font-semibold">${avgScore}%</span></div>` : ''}
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Mode Selection -->
+            <div class="flex gap-3 mb-8">
+                <button class="tab-btn ${state.mode === 'study' ? 'active' : ''}" data-action="set-mode" data-mode="study">
+                    Lernmodus
+                </button>
+                <button class="tab-btn ${state.mode === 'quiz' ? 'active' : ''}" data-action="set-mode" data-mode="quiz">
+                    Quiz-Modus
+                </button>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-5 mb-8">
+                <h3 class="text-blue-400 font-semibold mb-2">Systematischer Befundungsansatz</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                    ${SYSTEMATIC_STEPS.map(s => `
+                        <div class="flex items-start gap-2">
+                            <span class="text-blue-400 font-mono text-xs mt-0.5">${s.id === 'quality' ? '01' : s.id === 'extra' ? '02' : s.id === 'pleura' ? '03' : s.id === 'lung' ? '04' : s.id === 'mediastinum' ? '05' : s.id === 'heart' ? '06' : '07'}</span>
+                            <div>
+                                <div class="text-gray-300">${s.label.split('. ')[1]}</div>
+                                <div class="text-gray-500 text-xs">${s.description}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- VHS Reference -->
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-5 mb-8">
+                <h3 class="text-amber-400 font-semibold mb-2">VHS (Vertebral Heart Score) -- Referenzwerte</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <div class="text-gray-400 text-xs mb-1">Messmethode</div>
+                        <div class="text-gray-300">Laengs- + Querachse des Herzens in Wirbelkoerperlaengen ab T4</div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400 text-xs mb-1">Hund (Normalwert)</div>
+                        <div class="text-gray-300 font-mono">9.7 +/- 0.5 WK <span class="text-xs text-gray-500">(rasseabhaengig)</span></div>
+                    </div>
+                    <div>
+                        <div class="text-gray-400 text-xs mb-1">Katze (Normalwert)</div>
+                        <div class="text-gray-300 font-mono">7.5 +/- 0.3 WK</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cases Grid -->
+            <h2 class="text-lg font-semibold text-white mb-4">Faelle</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                ${CASES.map(c => {
+                    const completed = state.completedCases.has(c.id);
+                    const score = state.scores[c.id];
+                    return `
+                    <div class="case-card ${completed ? 'completed' : ''}" data-action="open-case" data-case-id="${c.id}">
+                        <div class="flex items-start justify-between mb-3">
+                            <span class="finding-tag ${c.difficulty === 'Einfach' ? 'normal' : c.difficulty === 'Mittel' ? 'artifact' : 'pathological'}">${c.difficulty}</span>
+                            ${completed ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+                        </div>
+                        <h3 class="text-white font-semibold text-sm mb-1">${c.title}</h3>
+                        <p class="text-gray-500 text-xs mb-2">${c.category} | ${c.species}</p>
+                        <p class="text-gray-400 text-xs line-clamp-2">${c.history.substring(0, 80)}...</p>
+                        ${score !== undefined ? `
+                            <div class="mt-3">
+                                <div class="score-bar">
+                                    <div class="score-bar-fill" style="width: ${score}%; background: ${score >= 70 ? 'var(--success)' : score >= 40 ? 'var(--warning)' : 'var(--danger)'}"></div>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">${score}%</div>
+                            </div>
+                        ` : ''}
+                    </div>`;
+                }).join('')}
+            </div>
+        </main>
+    </div>`;
+}
+
+function renderCase() {
+    const c = state.currentCase;
+    if (!c) return '';
+
+    const isQuiz = state.mode === 'quiz';
+    const svgContent = generateSVG(c.id);
+
+    return `
+    <div class="min-h-screen" style="background: var(--bg-primary);">
+        <!-- Case Header -->
+        <header class="border-b border-gray-800 px-6 py-3">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button class="text-gray-500 hover:text-gray-300 transition-colors text-sm flex items-center gap-1" data-action="back-to-overview">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        Zurueck
+                    </button>
+                    <div>
+                        <h1 class="text-lg font-bold text-white">${c.title}</h1>
+                        <p class="text-xs text-gray-500">${c.species} | ${c.projection} | ${c.category}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    ${c.vhsTarget !== null ? `
+                        <button class="btn-secondary text-xs" data-action="toggle-vhs" style="padding: 6px 12px;">
+                            ${state.vhsActive ? 'VHS ausblenden' : 'VHS-Rechner'}
+                        </button>
+                    ` : ''}
+                    ${isQuiz && !state.showSolution ? `
+                        <button class="btn-primary text-xs" data-action="submit-findings" style="padding: 6px 16px;">
+                            Befunde abgeben
+                        </button>
+                    ` : ''}
+                    ${state.showSolution ? `
+                        <button class="btn-primary text-xs" data-action="next-case" style="padding: 6px 16px;">
+                            Naechster Fall
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-6 py-6">
+            <!-- Anamnese -->
+            <div class="bg-gray-800/30 rounded-lg p-4 mb-6">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Anamnese</span>
+                <p class="text-gray-300 text-sm mt-1">${c.history}</p>
+            </div>
+
+            <div class="flex gap-6 desktop-grid" style="display: flex;">
+                <!-- Left: X-ray viewer -->
+                <div class="flex-1" style="min-width: 0;">
+                    <div class="xray-viewer" id="xray-viewer" data-action="annotate-click">
+                        ${svgContent}
+                        <!-- Annotations -->
+                        <div id="annotations-layer">
+                            ${state.annotations.map((a, i) => `
+                                <div class="annotation-marker ${a.evaluated ? (a.correct ? 'correct' : 'incorrect') : ''}"
+                                     style="left: ${a.x}%; top: ${a.y}%;"
+                                     data-action="edit-annotation" data-index="${i}">
+                                    <span class="marker-number">${i + 1}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <!-- VHS Overlay -->
+                        ${state.vhsActive ? renderVHSOverlay() : ''}
+                    </div>
+
+                    ${state.vhsActive ? `
+                        <div class="mt-4 bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                            <h4 class="text-amber-400 font-semibold text-sm mb-3">VHS-Rechner</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <label class="text-gray-400 text-xs">Laengsachse (WK)</label>
+                                    <input type="number" step="0.1" min="0" max="20" value="${state.vhsLongAxis}"
+                                           class="text-input mt-1" id="vhs-long" data-action="update-vhs"/>
+                                </div>
+                                <div>
+                                    <label class="text-gray-400 text-xs">Querachse (WK)</label>
+                                    <input type="number" step="0.1" min="0" max="20" value="${state.vhsShortAxis}"
+                                           class="text-input mt-1" id="vhs-short" data-action="update-vhs"/>
+                                </div>
+                            </div>
+                            <div class="mt-3 p-3 rounded-lg" style="background: rgba(30, 41, 59, 0.5);">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400 text-sm">VHS =</span>
+                                    <span class="text-2xl font-bold ${getVHSColor(state.vhsLongAxis + state.vhsShortAxis, c)}" id="vhs-result">
+                                        ${(state.vhsLongAxis + state.vhsShortAxis).toFixed(1)} WK
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Normalwert ${c.species}: ${c.species === 'Hund' ? '9.7 +/- 0.5' : '7.5 +/- 0.3'} WK
+                                    ${c.vhsTarget ? ` | Zielwert dieses Falls: ${c.vhsTarget} WK` : ''}
+                                </div>
+                                ${state.showSolution && c.vhsTarget ? `
+                                    <div class="mt-2 text-xs">
+                                        <span class="${c.vhsNormal ? 'text-green-400' : 'text-red-400'}">
+                                            ${c.vhsNormal ? 'Normaler VHS' : 'VHS erhoehnt -- Hinweis auf Kardiomegalie'}
+                                        </span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Right: Findings Panel -->
+                <div style="width: 380px; flex-shrink: 0;">
+                    <!-- Systematic Steps -->
+                    <div class="mb-4">
+                        <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Systematische Befundung</h3>
+                        ${SYSTEMATIC_STEPS.map((step, i) => {
+                            const finding = c.findings.find(f => f.region === step.id);
+                            const userFinding = state.userFindings[step.id];
+                            const isActive = state.currentStep === i;
+                            const isCompleted = !!userFinding;
+                            return `
+                            <div class="systematic-step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+                                 data-action="select-step" data-step="${i}">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm ${isActive ? 'text-blue-400' : 'text-gray-300'}">${step.label}</span>
+                                    ${isCompleted ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>' : ''}
+                                </div>
+                                <span class="text-xs text-gray-500">${step.description}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+
+                    <!-- Current Step Input -->
+                    <div class="bg-gray-800/40 rounded-xl p-4 mb-4">
+                        <h4 class="text-sm font-semibold text-white mb-3">
+                            ${SYSTEMATIC_STEPS[state.currentStep].label}
+                        </h4>
+
+                        ${isQuiz && !state.showSolution ? `
+                            <!-- Quiz mode input -->
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-xs text-gray-400">Beurteilung</label>
+                                    <select class="dropdown-select mt-1" id="finding-status" data-action="update-finding-status">
+                                        <option value="" ${!state.userFindings[SYSTEMATIC_STEPS[state.currentStep].id]?.status ? 'selected' : ''}>-- Bitte waehlen --</option>
+                                        <option value="normal" ${state.userFindings[SYSTEMATIC_STEPS[state.currentStep].id]?.status === 'normal' ? 'selected' : ''}>Normal / Unauffaellig</option>
+                                        <option value="pathological" ${state.userFindings[SYSTEMATIC_STEPS[state.currentStep].id]?.status === 'pathological' ? 'selected' : ''}>Pathologisch</option>
+                                        <option value="not-assessable" ${state.userFindings[SYSTEMATIC_STEPS[state.currentStep].id]?.status === 'not-assessable' ? 'selected' : ''}>Nicht beurteilbar</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400">Beschreibung / Befund</label>
+                                    <textarea class="text-input mt-1" rows="3" id="finding-description"
+                                              placeholder="Beschreiben Sie Ihren Befund..."
+                                              data-action="update-finding-desc">${state.userFindings[SYSTEMATIC_STEPS[state.currentStep].id]?.description || ''}</textarea>
+                                </div>
+                                <button class="btn-primary text-xs w-full" data-action="save-step-finding" style="padding: 8px;">
+                                    Befund speichern & weiter
+                                </button>
+                            </div>
+                        ` : `
+                            <!-- Study mode or solution view -->
+                            ${(() => {
+                                const stepId = SYSTEMATIC_STEPS[state.currentStep].id;
+                                const finding = c.findings.find(f => f.region === stepId);
+                                if (!finding) return '<p class="text-gray-500 text-sm">Kein Befund fuer diesen Bereich.</p>';
+
+                                const userF = state.userFindings[stepId];
+                                const showComparison = state.showSolution && userF;
+
+                                return `
+                                <div class="space-y-3">
+                                    <div>
+                                        <span class="text-xs text-gray-500">Struktur</span>
+                                        <p class="text-sm text-white">${finding.structure}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs text-gray-500">Befund</span>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="finding-tag ${finding.status === 'normal' ? 'normal' : 'pathological'}">
+                                                ${finding.status === 'normal' ? 'Normal' : 'Pathologisch'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs text-gray-500">Beschreibung</span>
+                                        <p class="text-sm text-gray-300 mt-1">${finding.description}</p>
+                                    </div>
+                                    ${showComparison ? `
+                                        <div class="border-t border-gray-700 pt-3">
+                                            <span class="text-xs text-gray-500">Ihre Antwort</span>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="finding-tag ${userF.status === finding.status ? 'normal' : 'pathological'}">
+                                                    ${userF.status === finding.status ? 'Korrekt' : 'Falsch'}
+                                                </span>
+                                                <span class="text-xs text-gray-400">(${userF.status || 'keine Angabe'})</span>
+                                            </div>
+                                            ${userF.description ? `<p class="text-xs text-gray-400 mt-1 italic">"${userF.description}"</p>` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>`;
+                            })()}
+                        `}
+                    </div>
+
+                    <!-- Annotations List -->
+                    ${state.annotations.length > 0 ? `
+                        <div class="bg-gray-800/40 rounded-xl p-4">
+                            <h4 class="text-sm font-semibold text-gray-400 mb-3">Markierungen (${state.annotations.length})</h4>
+                            <div class="space-y-2 max-h-48 overflow-y-auto">
+                                ${state.annotations.map((a, i) => `
+                                    <div class="flex items-start justify-between p-2 rounded-lg" style="background: rgba(30,41,59,0.4);">
+                                        <div class="flex items-start gap-2">
+                                            <span class="text-xs font-mono text-amber-400">${i + 1}</span>
+                                            <div>
+                                                <p class="text-xs text-gray-300">${a.note || 'Keine Notiz'}</p>
+                                                ${a.evaluated !== undefined ? `
+                                                    <span class="text-xs ${a.correct ? 'text-green-400' : 'text-red-400'}">
+                                                        ${a.correct ? 'Richtig' : 'Nicht relevant'}
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                        <button class="text-gray-600 hover:text-red-400 text-xs" data-action="remove-annotation" data-index="${i}">x</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </main>
+
+        <!-- Annotation Modal -->
+        ${state.annotationModalOpen ? renderAnnotationModal() : ''}
+        <!-- Results Modal -->
+        ${state.resultsModalOpen ? renderResultsModal() : ''}
+    </div>`;
+}
+
+function renderVHSOverlay() {
+    return `
+    <svg class="vhs-overlay ${state.vhsActive ? 'active' : ''}" viewBox="0 0 600 450" id="vhs-svg">
+        <!-- Long axis guide line -->
+        <line x1="240" y1="200" x2="310" y2="340" class="vhs-line" id="vhs-long-line"/>
+        <circle cx="240" cy="200" class="vhs-handle" id="vhs-long-start"/>
+        <circle cx="310" cy="340" class="vhs-handle" id="vhs-long-end"/>
+        <!-- Short axis guide line -->
+        <line x1="220" y1="260" x2="340" y2="280" class="vhs-line" id="vhs-short-line"/>
+        <circle cx="220" cy="260" class="vhs-handle" id="vhs-short-start"/>
+        <circle cx="340" cy="280" class="vhs-handle" id="vhs-short-end"/>
+        <!-- Labels -->
+        <text x="270" y="195" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="sans-serif">L</text>
+        <text x="285" y="255" fill="#f59e0b" font-size="10" text-anchor="middle" font-family="sans-serif">Q</text>
+    </svg>`;
+}
+
+function renderAnnotationModal() {
+    return `
+    <div class="modal-overlay" data-action="close-modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-bold text-white mb-4">Markierung hinzufuegen</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm text-gray-400">Was sehen Sie an dieser Stelle?</label>
+                    <textarea class="text-input mt-1" rows="3" id="annotation-note" placeholder="z.B. Erhoehte Verschattung, Frakturlinie, Fremdkoerper..."></textarea>
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400">Beurteilung</label>
+                    <select class="dropdown-select mt-1" id="annotation-type">
+                        <option value="finding">Befund</option>
+                        <option value="normal">Normal</option>
+                        <option value="artifact">Artefakt</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button class="btn-secondary" data-action="cancel-annotation">Abbrechen</button>
+                    <button class="btn-primary" data-action="confirm-annotation">Markierung setzen</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderResultsModal() {
+    const c = state.currentCase;
+    if (!c) return '';
+
+    const pathFindings = c.findings.filter(f => f.status === 'pathological');
+    const totalFindings = c.findings.length;
+    let correctCount = 0;
+    let detailRows = '';
+
+    c.findings.forEach(f => {
+        const userF = state.userFindings[f.region];
+        const statusMatch = userF && userF.status === f.status;
+        if (statusMatch) correctCount++;
+
+        detailRows += `
+        <div class="p-3 rounded-lg mb-2" style="background: rgba(30,41,59,0.4);">
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-sm text-white">${f.structure}</span>
+                <div class="flex items-center gap-2">
+                    <span class="finding-tag ${f.status === 'normal' ? 'normal' : 'pathological'}">${f.status === 'normal' ? 'Normal' : 'Pathologisch'}</span>
+                    ${userF ? `
+                        <span class="text-xs ${statusMatch ? 'text-green-400' : 'text-red-400'}">
+                            ${statusMatch ? 'Korrekt erkannt' : 'Falsch beurteilt'}
+                        </span>
+                    ` : '<span class="text-xs text-gray-500">Nicht beurteilt</span>'}
+                </div>
+            </div>
+            <p class="text-xs text-gray-400">${f.description}</p>
+        </div>`;
+    });
+
+    const score = Math.round((correctCount / totalFindings) * 100);
+
+    return `
+    <div class="modal-overlay">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="text-center mb-6">
+                <div class="text-5xl font-bold mb-2 ${score >= 70 ? 'text-green-400' : score >= 40 ? 'text-amber-400' : 'text-red-400'}">${score}%</div>
+                <p class="text-gray-400">
+                    ${correctCount} von ${totalFindings} Befunden korrekt beurteilt
+                </p>
+                <div class="score-bar mt-3 mx-auto" style="max-width: 300px;">
+                    <div class="score-bar-fill" style="width: ${score}%; background: ${score >= 70 ? 'var(--success)' : score >= 40 ? 'var(--warning)' : 'var(--danger)'}"></div>
+                </div>
+            </div>
+
+            <h4 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Musterloesung</h4>
+            <div class="max-h-60 overflow-y-auto mb-6">
+                ${detailRows}
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <button class="btn-secondary" data-action="close-results-to-overview">Uebersicht</button>
+                <button class="btn-primary" data-action="close-results-review">Befunde durchsehen</button>
+            </div>
+        </div>
+    </div>`;
+}
+
+function renderResults() {
+    // Full results page after completing all cases
+    const totalCases = CASES.length;
+    const completedCases = state.completedCases.size;
+    const allScores = Object.values(state.scores);
+    const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a,b) => a+b, 0) / allScores.length) : 0;
+
+    return `
+    <div class="min-h-screen flex items-center justify-center" style="background: var(--bg-primary);">
+        <div class="text-center max-w-lg">
+            <div class="text-6xl font-bold mb-4 ${avgScore >= 70 ? 'text-green-400' : avgScore >= 40 ? 'text-amber-400' : 'text-red-400'}">${avgScore}%</div>
+            <h2 class="text-2xl font-bold text-white mb-2">Durchschnittliche Bewertung</h2>
+            <p class="text-gray-400 mb-8">${completedCases} von ${totalCases} Faellen abgeschlossen</p>
+            <div class="space-y-3 mb-8 text-left">
+                ${CASES.map(c => {
+                    const score = state.scores[c.id];
+                    return `
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <div class="text-sm text-gray-300">${c.title}</div>
+                            <div class="score-bar mt-1">
+                                <div class="score-bar-fill" style="width: ${score || 0}%; background: ${(score || 0) >= 70 ? 'var(--success)' : (score || 0) >= 40 ? 'var(--warning)' : 'var(--danger)'}"></div>
+                            </div>
+                        </div>
+                        <span class="text-sm font-mono text-gray-400 w-12 text-right">${score !== undefined ? score + '%' : '--'}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+            <button class="btn-primary" data-action="back-to-overview">Zurueck zur Uebersicht</button>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+function getVHSColor(vhs, caseData) {
+    if (vhs === 0) return 'text-gray-500';
+    const isNormal = caseData.species === 'Hund' ? (vhs >= 9.2 && vhs <= 10.2) : (vhs >= 7.2 && vhs <= 7.8);
+    return isNormal ? 'text-green-400' : 'text-red-400';
+}
+
+// ============================================================
+// EVENT HANDLING
+// ============================================================
+
+function attachEvents() {
+    document.querySelectorAll('[data-action]').forEach(el => {
+        const action = el.dataset.action;
+
+        switch(action) {
+            case 'set-mode':
+                el.addEventListener('click', () => {
+                    state.mode = el.dataset.mode;
+                    render();
+                });
+                break;
+
+            case 'open-case':
+                el.addEventListener('click', () => {
+                    const c = CASES.find(x => x.id === el.dataset.caseId);
+                    if (c) {
+                        state.currentCase = c;
+                        state.currentView = 'case';
+                        state.currentStep = 0;
+                        state.annotations = [];
+                        state.userFindings = {};
+                        state.showSolution = false;
+                        state.vhsActive = false;
+                        state.vhsLongAxis = 0;
+                        state.vhsShortAxis = 0;
+                        state.annotationModalOpen = false;
+                        state.resultsModalOpen = false;
+                        render();
+                    }
+                });
+                break;
+
+            case 'back-to-overview':
+                el.addEventListener('click', () => {
+                    state.currentView = 'overview';
+                    state.currentCase = null;
+                    render();
+                });
+                break;
+
+            case 'select-step':
+                el.addEventListener('click', () => {
+                    state.currentStep = parseInt(el.dataset.step);
+                    render();
+                });
+                break;
+
+            case 'annotate-click':
+                el.addEventListener('click', (e) => {
+                    if (state.vhsActive) return;
+                    if (e.target.closest('.annotation-marker')) return;
+                    if (e.target.closest('.vhs-overlay')) return;
+
+                    const rect = el.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+                    state.pendingAnnotation = { x, y };
+                    state.annotationModalOpen = true;
+                    render();
+                });
+                break;
+
+            case 'close-modal':
+                el.addEventListener('click', () => {
+                    state.annotationModalOpen = false;
+                    state.pendingAnnotation = null;
+                    render();
+                });
+                break;
+
+            case 'cancel-annotation':
+                el.addEventListener('click', () => {
+                    state.annotationModalOpen = false;
+                    state.pendingAnnotation = null;
+                    render();
+                });
+                break;
+
+            case 'confirm-annotation':
+                el.addEventListener('click', () => {
+                    const noteEl = document.getElementById('annotation-note');
+                    const typeEl = document.getElementById('annotation-type');
+                    if (state.pendingAnnotation) {
+                        state.annotations.push({
+                            ...state.pendingAnnotation,
+                            note: noteEl ? noteEl.value : '',
+                            type: typeEl ? typeEl.value : 'finding'
+                        });
+                    }
+                    state.annotationModalOpen = false;
+                    state.pendingAnnotation = null;
+                    render();
+                });
+                break;
+
+            case 'remove-annotation':
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const idx = parseInt(el.dataset.index);
+                    state.annotations.splice(idx, 1);
+                    render();
+                });
+                break;
+
+            case 'edit-annotation':
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // Could open edit modal -- for now just highlight
+                });
+                break;
+
+            case 'toggle-vhs':
+                el.addEventListener('click', () => {
+                    state.vhsActive = !state.vhsActive;
+                    render();
+                });
+                break;
+
+            case 'save-step-finding':
+                el.addEventListener('click', () => {
+                    const statusEl = document.getElementById('finding-status');
+                    const descEl = document.getElementById('finding-description');
+                    const stepId = SYSTEMATIC_STEPS[state.currentStep].id;
+
+                    state.userFindings[stepId] = {
+                        status: statusEl ? statusEl.value : '',
+                        description: descEl ? descEl.value : ''
+                    };
+
+                    if (state.currentStep < SYSTEMATIC_STEPS.length - 1) {
+                        state.currentStep++;
+                    }
+                    render();
+                });
+                break;
+
+            case 'update-finding-status':
+                el.addEventListener('change', () => {
+                    const stepId = SYSTEMATIC_STEPS[state.currentStep].id;
+                    if (!state.userFindings[stepId]) state.userFindings[stepId] = {};
+                    state.userFindings[stepId].status = el.value;
+                });
+                break;
+
+            case 'update-finding-desc':
+                el.addEventListener('input', () => {
+                    const stepId = SYSTEMATIC_STEPS[state.currentStep].id;
+                    if (!state.userFindings[stepId]) state.userFindings[stepId] = {};
+                    state.userFindings[stepId].description = el.value;
+                });
+                break;
+
+            case 'submit-findings':
+                el.addEventListener('click', () => {
+                    evaluateFindings();
+                });
+                break;
+
+            case 'close-results-to-overview':
+                el.addEventListener('click', () => {
+                    state.resultsModalOpen = false;
+                    state.currentView = 'overview';
+                    state.currentCase = null;
+                    render();
+                });
+                break;
+
+            case 'close-results-review':
+                el.addEventListener('click', () => {
+                    state.resultsModalOpen = false;
+                    state.showSolution = true;
+                    state.currentStep = 0;
+                    render();
+                });
+                break;
+
+            case 'next-case':
+                el.addEventListener('click', () => {
+                    const currentIdx = CASES.findIndex(c => c.id === state.currentCase.id);
+                    const nextIdx = (currentIdx + 1) % CASES.length;
+                    const nextCase = CASES[nextIdx];
+                    state.currentCase = nextCase;
+                    state.currentStep = 0;
+                    state.annotations = [];
+                    state.userFindings = {};
+                    state.showSolution = false;
+                    state.vhsActive = false;
+                    state.vhsLongAxis = 0;
+                    state.vhsShortAxis = 0;
+                    state.annotationModalOpen = false;
+                    state.resultsModalOpen = false;
+                    render();
+                });
+                break;
+        }
+    });
+
+    // VHS input handlers
+    const vhsLong = document.getElementById('vhs-long');
+    const vhsShort = document.getElementById('vhs-short');
+    if (vhsLong) {
+        vhsLong.addEventListener('input', () => {
+            state.vhsLongAxis = parseFloat(vhsLong.value) || 0;
+            updateVHSDisplay();
+        });
+    }
+    if (vhsShort) {
+        vhsShort.addEventListener('input', () => {
+            state.vhsShortAxis = parseFloat(vhsShort.value) || 0;
+            updateVHSDisplay();
+        });
+    }
+
+    // VHS draggable handles
+    setupVHSDrag();
+}
+
+function updateVHSDisplay() {
+    const resultEl = document.getElementById('vhs-result');
+    if (resultEl && state.currentCase) {
+        const total = state.vhsLongAxis + state.vhsShortAxis;
+        resultEl.textContent = total.toFixed(1) + ' WK';
+        resultEl.className = 'text-2xl font-bold ' + getVHSColor(total, state.currentCase);
+    }
+}
+
+function setupVHSDrag() {
+    const svgEl = document.getElementById('vhs-svg');
+    if (!svgEl) return;
+
+    let dragging = null;
+    let startPos = { x: 0, y: 0 };
+
+    const handles = svgEl.querySelectorAll('.vhs-handle');
+    handles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dragging = handle;
+            const rect = svgEl.getBoundingClientRect();
+            const svgPoint = svgEl.createSVGPoint();
+            svgPoint.x = e.clientX;
+            svgPoint.y = e.clientY;
+            startPos = { x: e.clientX, y: e.clientY };
+        });
+    });
+
+    svgEl.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        e.preventDefault();
+
+        const rect = svgEl.getBoundingClientRect();
+        const scaleX = 600 / rect.width;
+        const scaleY = 450 / rect.height;
+        const newX = (e.clientX - rect.left) * scaleX;
+        const newY = (e.clientY - rect.top) * scaleY;
+
+        dragging.setAttribute('cx', newX);
+        dragging.setAttribute('cy', newY);
+
+        // Update corresponding line endpoint
+        const lineId = dragging.id.replace('-start', '-line').replace('-end', '-line');
+        const line = document.getElementById(lineId);
+        if (line) {
+            if (dragging.id.endsWith('-start')) {
+                line.setAttribute('x1', newX);
+                line.setAttribute('y1', newY);
+            } else {
+                line.setAttribute('x2', newX);
+                line.setAttribute('y2', newY);
+            }
+        }
+
+        // Calculate distances and update VHS
+        recalcVHSFromHandles();
+    });
+
+    svgEl.addEventListener('mouseup', () => { dragging = null; });
+    svgEl.addEventListener('mouseleave', () => { dragging = null; });
+}
+
+function recalcVHSFromHandles() {
+    const longStart = document.getElementById('vhs-long-start');
+    const longEnd = document.getElementById('vhs-long-end');
+    const shortStart = document.getElementById('vhs-short-start');
+    const shortEnd = document.getElementById('vhs-short-end');
+
+    if (!longStart || !longEnd || !shortStart || !shortEnd) return;
+
+    const longDist = Math.sqrt(
+        Math.pow(parseFloat(longEnd.getAttribute('cx')) - parseFloat(longStart.getAttribute('cx')), 2) +
+        Math.pow(parseFloat(longEnd.getAttribute('cy')) - parseFloat(longStart.getAttribute('cy')), 2)
+    );
+    const shortDist = Math.sqrt(
+        Math.pow(parseFloat(shortEnd.getAttribute('cx')) - parseFloat(shortStart.getAttribute('cx')), 2) +
+        Math.pow(parseFloat(shortEnd.getAttribute('cy')) - parseFloat(shortStart.getAttribute('cy')), 2)
+    );
+
+    // Approximate: one vertebral body ~ 28px in our SVG scale
+    const vertebralUnit = 28;
+    state.vhsLongAxis = Math.round((longDist / vertebralUnit) * 10) / 10;
+    state.vhsShortAxis = Math.round((shortDist / vertebralUnit) * 10) / 10;
+
+    const vhsLongInput = document.getElementById('vhs-long');
+    const vhsShortInput = document.getElementById('vhs-short');
+    if (vhsLongInput) vhsLongInput.value = state.vhsLongAxis;
+    if (vhsShortInput) vhsShortInput.value = state.vhsShortAxis;
+
+    updateVHSDisplay();
+}
+
+function evaluateFindings() {
+    const c = state.currentCase;
+    if (!c) return;
+
+    let correct = 0;
+    const total = c.findings.length;
+
+    c.findings.forEach(f => {
+        const userF = state.userFindings[f.region];
+        if (userF && userF.status === f.status) {
+            correct++;
+        }
+    });
+
+    // Evaluate annotations
+    state.annotations.forEach(a => {
+        a.evaluated = true;
+        // Simple proximity check: is the annotation near a pathological finding?
+        // In a real app this would use region detection on the SVG
+        const hasPathology = c.findings.some(f => f.status === 'pathological');
+        a.correct = a.type === 'finding' && hasPathology;
+    });
+
+    const score = Math.round((correct / total) * 100);
+    state.scores[c.id] = score;
+    state.completedCases.add(c.id);
+    state.resultsModalOpen = true;
+
+    render();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+render();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Laborwert-Interpreter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vet: {
+                            primary: '#1e3a5f',
+                            secondary: '#2d5a8e',
+                            accent: '#00b4d8',
+                            dark: '#0a1929',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            surface: '#f0f4f8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a1929 0%, #1e3a5f 50%, #0d2137 100%);
+            min-height: 100vh;
+            margin: 0;
+            color: #e2e8f0;
+        }
+
+        .glass-panel {
+            background: rgba(30, 58, 95, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+        }
+
+        .input-field {
+            background: rgba(10, 25, 41, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            color: #e2e8f0;
+            padding: 8px 12px;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00b4d8;
+            box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .species-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            background: rgba(30, 58, 95, 0.3);
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .species-btn:hover {
+            border-color: rgba(0, 180, 216, 0.4);
+            color: #cbd5e1;
+        }
+
+        .species-btn.active {
+            background: rgba(0, 180, 216, 0.15);
+            border-color: #00b4d8;
+            color: #00b4d8;
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.15);
+        }
+
+        .param-row {
+            display: grid;
+            grid-template-columns: 200px 70px 1fr 180px;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .param-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .status-normal { color: #10b981; }
+        .status-mild { color: #f59e0b; }
+        .status-severe { color: #ef4444; }
+
+        .bg-status-normal { background: rgba(16, 185, 129, 0.1); border-left: 3px solid #10b981; }
+        .bg-status-mild { background: rgba(245, 158, 11, 0.1); border-left: 3px solid #f59e0b; }
+        .bg-status-severe { background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-normal { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .badge-low { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .badge-high { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+        .badge-critical-low { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .badge-critical-high { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            background: rgba(0, 180, 216, 0.08);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 180, 216, 0.12);
+        }
+
+        .pattern-card {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .pattern-card:hover {
+            transform: translateX(4px);
+        }
+
+        .finding-text {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .example-btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 58, 95, 0.4);
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .example-btn:hover {
+            background: rgba(0, 180, 216, 0.1);
+            border-color: rgba(0, 180, 216, 0.3);
+            color: #e2e8f0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: none;
+            background: rgba(30, 58, 95, 0.2);
+            color: #64748b;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: rgba(30, 58, 95, 0.5);
+            color: #00b4d8;
+            border-color: rgba(0, 180, 216, 0.2);
+        }
+
+        @media print {
+            body { background: white; color: #1a1a1a; }
+            .glass-panel { background: white; border: 1px solid #ddd; backdrop-filter: none; }
+            .no-print { display: none !important; }
+            .input-field { border: 1px solid #ccc; background: white; color: #1a1a1a; }
+            .status-normal { color: #059669; }
+            .status-mild { color: #d97706; }
+            .status-severe { color: #dc2626; }
+        }
+
+        @media (max-width: 768px) {
+            .param-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-6">
+
+    <!-- Header -->
+    <header class="max-w-7xl mx-auto mb-6">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+                <a href="vetscan-version-selector.html" class="text-sm text-slate-400 hover:text-sky-400 transition-colors no-print">&larr; Zurueck zur Versionsuebersicht</a>
+                <h1 class="text-3xl md:text-4xl font-bold mt-2">
+                    <span class="text-sky-400">VetScan</span> <span class="text-white">Laborwert-Interpreter</span>
+                </h1>
+                <p class="text-slate-400 mt-1">Speziesspezifische Referenzbereiche &middot; Automatische Befundung &middot; Mustererkennung</p>
+            </div>
+            <div class="flex gap-3 no-print">
+                <button onclick="resetAll()" class="px-4 py-2 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 transition-colors text-sm">Zuruecksetzen</button>
+                <button onclick="printReport()" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white transition-colors text-sm font-medium">Befund drucken</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto">
+
+        <!-- Spezies-Auswahl -->
+        <section class="mb-6 no-print">
+            <div class="flex flex-wrap gap-3 items-center">
+                <span class="text-sm text-slate-500 font-medium mr-2">Spezies:</span>
+                <button class="species-btn active" data-species="hund" onclick="selectSpecies('hund')">
+                    Hund
+                </button>
+                <button class="species-btn" data-species="katze" onclick="selectSpecies('katze')">
+                    Katze
+                </button>
+                <button class="species-btn" data-species="pferd" onclick="selectSpecies('pferd')">
+                    Pferd
+                </button>
+            </div>
+        </section>
+
+        <!-- Beispielpatienten -->
+        <section class="mb-6 no-print">
+            <div class="glass-panel p-4">
+                <h3 class="text-sm font-semibold text-slate-400 mb-3">Beispielpatienten zum Ueben</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="examplePatients"></div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+            <!-- Linke Spalte: Eingabe -->
+            <div class="xl:col-span-2 space-y-4">
+
+                <!-- Tabs -->
+                <div class="flex gap-1 no-print">
+                    <button class="tab-btn active" data-tab="haematologie" onclick="switchTab('haematologie')">Haematologie</button>
+                    <button class="tab-btn" data-tab="serumchemie" onclick="switchTab('serumchemie')">Serumchemie</button>
+                    <button class="tab-btn" data-tab="elektrolyte" onclick="switchTab('elektrolyte')">Elektrolyte</button>
+                </div>
+
+                <!-- Haematologie -->
+                <div id="tab-haematologie" class="glass-panel p-4">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <h2 class="font-semibold text-white">Haematologie</h2>
+                    </div>
+                    <!-- Spaltenheader -->
+                    <div class="param-row text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                        <span>Parameter</span>
+                        <span>Einheit</span>
+                        <span>Wert</span>
+                        <span>Referenz / Status</span>
+                    </div>
+                    <div id="haematologie-params" class="space-y-1"></div>
+                </div>
+
+                <!-- Serumchemie -->
+                <div id="tab-serumchemie" class="glass-panel p-4 hidden">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 2v2m8-2v2m-4-2v2"/></svg>
+                        <h2 class="font-semibold text-white">Serumchemie</h2>
+                    </div>
+                    <div class="param-row text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                        <span>Parameter</span>
+                        <span>Einheit</span>
+                        <span>Wert</span>
+                        <span>Referenz / Status</span>
+                    </div>
+                    <div id="serumchemie-params" class="space-y-1"></div>
+                </div>
+
+                <!-- Elektrolyte -->
+                <div id="tab-elektrolyte" class="glass-panel p-4 hidden">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <h2 class="font-semibold text-white">Elektrolyte</h2>
+                    </div>
+                    <div class="param-row text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">
+                        <span>Parameter</span>
+                        <span>Einheit</span>
+                        <span>Wert</span>
+                        <span>Referenz / Status</span>
+                    </div>
+                    <div id="elektrolyte-params" class="space-y-1"></div>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte: Ergebnisse -->
+            <div class="space-y-4">
+
+                <!-- Automatische Befundung -->
+                <div class="glass-panel p-4">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <h2 class="font-semibold text-white">Automatische Befundung</h2>
+                    </div>
+                    <div id="findings-container">
+                        <p class="text-slate-500 text-sm italic">Geben Sie Laborwerte ein, um automatische Befunde zu erhalten.</p>
+                    </div>
+                </div>
+
+                <!-- Mustererkennung -->
+                <div class="glass-panel p-4">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        <h2 class="font-semibold text-white">Mustererkennung</h2>
+                        <span class="pulse-dot bg-amber-400 ml-auto"></span>
+                    </div>
+                    <div id="patterns-container">
+                        <p class="text-slate-500 text-sm italic">Syndrome werden automatisch erkannt, sobald passende Wertekombinationen vorliegen.</p>
+                    </div>
+                </div>
+
+                <!-- Zusammenfassung -->
+                <div class="glass-panel p-4">
+                    <div class="section-header mb-4">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <h2 class="font-semibold text-white">Zusammenfassung</h2>
+                    </div>
+                    <div id="summary-container">
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-emerald-400" id="count-normal">0</div>
+                                <div class="text-xs text-slate-500">Normal</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-amber-400" id="count-mild">0</div>
+                                <div class="text-xs text-slate-500">Abweichend</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-red-400" id="count-severe">0</div>
+                                <div class="text-xs text-slate-500">Kritisch</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto mt-8 pb-6 text-center no-print">
+        <p class="text-slate-600 text-xs">VetScan Laborwert-Interpreter &middot; Nur fuer Ausbildungszwecke &middot; Keine klinische Diagnostik</p>
+    </footer>
+
+    <script>
+    // =========================================================================
+    // DATENBANK: Referenzbereiche
+    // =========================================================================
+
+    const REFERENCE_RANGES = {
+        haematologie: [
+            { id: 'erythrozyten', name: 'Erythrozyten', unit: 'T/l', hund: [5.5, 8.5], katze: [5.0, 10.0], pferd: [6.5, 12.5] },
+            { id: 'haemoglobin', name: 'Haemoglobin', unit: 'g/dl', hund: [12, 18], katze: [8, 15], pferd: [11, 19] },
+            { id: 'haematokrit', name: 'Haematokrit', unit: '%', hund: [37, 55], katze: [24, 45], pferd: [32, 53] },
+            { id: 'mcv', name: 'MCV', unit: 'fl', hund: [60, 77], katze: [39, 55], pferd: [37, 58] },
+            { id: 'mch', name: 'MCH', unit: 'pg', hund: [19, 25], katze: [13, 17], pferd: [13, 19] },
+            { id: 'mchc', name: 'MCHC', unit: 'g/dl', hund: [31, 36], katze: [30, 36], pferd: [31, 37] },
+            { id: 'leukozyten', name: 'Leukozyten', unit: 'G/l', hund: [6.0, 17.0], katze: [5.5, 19.5], pferd: [5.4, 14.3] },
+            { id: 'neutrophile', name: 'Neutrophile seg.', unit: 'G/l', hund: [3.0, 11.5], katze: [2.5, 12.5], pferd: [2.3, 8.6] },
+            { id: 'lymphozyten', name: 'Lymphozyten', unit: 'G/l', hund: [1.0, 4.8], katze: [1.5, 7.0], pferd: [1.5, 7.7] },
+            { id: 'monozyten', name: 'Monozyten', unit: 'G/l', hund: [0.15, 1.35], katze: [0.0, 0.85], pferd: [0.0, 0.8] },
+            { id: 'eosinophile', name: 'Eosinophile', unit: 'G/l', hund: [0.1, 1.25], katze: [0.0, 1.5], pferd: [0.0, 1.0] },
+            { id: 'thrombozyten', name: 'Thrombozyten', unit: 'G/l', hund: [150, 500], katze: [175, 500], pferd: [100, 350] },
+        ],
+        serumchemie: [
+            { id: 'glukose', name: 'Glukose', unit: 'mg/dl', hund: [60, 120], katze: [70, 150], pferd: [75, 115] },
+            { id: 'harnstoff', name: 'Harnstoff/BUN', unit: 'mg/dl', hund: [10, 30], katze: [15, 35], pferd: [10, 27] },
+            { id: 'kreatinin', name: 'Kreatinin', unit: 'mg/dl', hund: [0.5, 1.5], katze: [0.8, 1.8], pferd: [1.0, 2.0] },
+            { id: 'alt', name: 'ALT/GPT', unit: 'U/l', hund: [10, 120], katze: [12, 130], pferd: null },
+            { id: 'ast', name: 'AST/GOT', unit: 'U/l', hund: [10, 50], katze: [10, 80], pferd: [150, 400] },
+            { id: 'ap', name: 'AP', unit: 'U/l', hund: [20, 150], katze: [10, 80], pferd: [100, 350] },
+            { id: 'ggt', name: 'GGT', unit: 'U/l', hund: [1, 10], katze: [1, 10], pferd: [5, 25] },
+            { id: 'bilirubin', name: 'Bilirubin ges.', unit: 'mg/dl', hund: [0.1, 0.6], katze: [0.1, 0.5], pferd: [0.5, 3.0] },
+            { id: 'totalprotein', name: 'Totalprotein', unit: 'g/dl', hund: [5.5, 7.5], katze: [5.7, 8.9], pferd: [5.7, 8.0] },
+            { id: 'albumin', name: 'Albumin', unit: 'g/dl', hund: [2.5, 4.0], katze: [2.1, 3.9], pferd: [2.6, 3.7] },
+            { id: 'cholesterol', name: 'Cholesterol', unit: 'mg/dl', hund: [135, 270], katze: [65, 225], pferd: [75, 150] },
+        ],
+        elektrolyte: [
+            { id: 'natrium', name: 'Natrium', unit: 'mmol/l', hund: [140, 155], katze: [147, 156], pferd: [132, 146] },
+            { id: 'kalium', name: 'Kalium', unit: 'mmol/l', hund: [3.5, 5.5], katze: [3.5, 5.8], pferd: [2.6, 5.0] },
+            { id: 'chlorid', name: 'Chlorid', unit: 'mmol/l', hund: [105, 120], katze: [107, 120], pferd: [95, 105] },
+            { id: 'calcium', name: 'Calcium', unit: 'mmol/l', hund: [2.2, 2.9], katze: [2.0, 2.7], pferd: [2.5, 3.4] },
+            { id: 'phosphat', name: 'Phosphat', unit: 'mmol/l', hund: [0.8, 1.6], katze: [1.0, 2.4], pferd: [0.7, 1.5] },
+        ]
+    };
+
+    // =========================================================================
+    // BEISPIELPATIENTEN
+    // =========================================================================
+
+    const EXAMPLE_PATIENTS = {
+        hund: [
+            {
+                name: 'Dehydratation (Hund)',
+                desc: 'Erbrechen seit 3 Tagen, reduzierte Wasseraufnahme',
+                values: {
+                    erythrozyten: 9.2, haemoglobin: 19.5, haematokrit: 62,
+                    mcv: 67, mch: 21, mchc: 34,
+                    leukozyten: 18.5, neutrophile: 14.2, lymphozyten: 2.1,
+                    monozyten: 0.8, eosinophile: 0.3, thrombozyten: 420,
+                    glukose: 95, harnstoff: 48, kreatinin: 2.8,
+                    alt: 45, ast: 38, ap: 85, ggt: 4,
+                    bilirubin: 0.3, totalprotein: 8.2, albumin: 4.5, cholesterol: 210,
+                    natrium: 158, kalium: 3.2, chlorid: 118, calcium: 2.5, phosphat: 1.9
+                }
+            },
+            {
+                name: 'Niereninsuffizienz (Hund)',
+                desc: 'Polyurie, Polydipsie, Gewichtsverlust',
+                values: {
+                    erythrozyten: 4.8, haemoglobin: 10.5, haematokrit: 31,
+                    mcv: 65, mch: 22, mchc: 34,
+                    leukozyten: 12.0, neutrophile: 8.5, lymphozyten: 2.0,
+                    monozyten: 0.5, eosinophile: 0.4, thrombozyten: 280,
+                    glukose: 105, harnstoff: 85, kreatinin: 4.2,
+                    alt: 30, ast: 25, ap: 55, ggt: 3,
+                    bilirubin: 0.2, totalprotein: 6.0, albumin: 2.3, cholesterol: 190,
+                    natrium: 142, kalium: 5.8, chlorid: 110, calcium: 1.9, phosphat: 2.8
+                }
+            },
+            {
+                name: 'Lebererkrankung (Hund)',
+                desc: 'Ikterus, Apathie, Inappetenz',
+                values: {
+                    erythrozyten: 5.8, haemoglobin: 13.0, haematokrit: 39,
+                    mcv: 67, mch: 22, mchc: 33,
+                    leukozyten: 14.0, neutrophile: 10.0, lymphozyten: 2.5,
+                    monozyten: 0.6, eosinophile: 0.3, thrombozyten: 120,
+                    glukose: 52, harnstoff: 6, kreatinin: 0.6,
+                    alt: 450, ast: 280, ap: 520, ggt: 35,
+                    bilirubin: 3.8, totalprotein: 4.8, albumin: 1.8, cholesterol: 98,
+                    natrium: 138, kalium: 3.8, chlorid: 106, calcium: 2.1, phosphat: 1.0
+                }
+            },
+            {
+                name: 'Bakterielle Infektion (Hund)',
+                desc: 'Fieber, Mattigkeit, eitriger Nasenausfluss',
+                values: {
+                    erythrozyten: 6.5, haemoglobin: 14.0, haematokrit: 42,
+                    mcv: 65, mch: 22, mchc: 33,
+                    leukozyten: 35.0, neutrophile: 28.0, lymphozyten: 3.5,
+                    monozyten: 1.8, eosinophile: 0.2, thrombozyten: 380,
+                    glukose: 110, harnstoff: 22, kreatinin: 1.0,
+                    alt: 65, ast: 40, ap: 95, ggt: 5,
+                    bilirubin: 0.3, totalprotein: 8.5, albumin: 2.8, cholesterol: 165,
+                    natrium: 143, kalium: 4.2, chlorid: 108, calcium: 2.4, phosphat: 1.2
+                }
+            }
+        ],
+        katze: [
+            {
+                name: 'Chronische Nierenerkrankung (Katze)',
+                desc: 'Aeltere Katze, Gewichtsverlust, Erbrechen',
+                values: {
+                    erythrozyten: 4.2, haemoglobin: 7.0, haematokrit: 20,
+                    mcv: 42, mch: 14, mchc: 33,
+                    leukozyten: 8.0, neutrophile: 5.5, lymphozyten: 1.8,
+                    monozyten: 0.3, eosinophile: 0.2, thrombozyten: 250,
+                    glukose: 130, harnstoff: 95, kreatinin: 5.5,
+                    alt: 45, ast: 35, ap: 30, ggt: 2,
+                    bilirubin: 0.2, totalprotein: 7.2, albumin: 2.5, cholesterol: 180,
+                    natrium: 148, kalium: 5.9, chlorid: 112, calcium: 1.8, phosphat: 3.2
+                }
+            },
+            {
+                name: 'Hepatische Lipidose (Katze)',
+                desc: 'Uebergewichtige Katze, seit 5 Tagen Anorexie',
+                values: {
+                    erythrozyten: 6.0, haemoglobin: 9.5, haematokrit: 28,
+                    mcv: 44, mch: 15, mchc: 34,
+                    leukozyten: 10.0, neutrophile: 7.0, lymphozyten: 2.0,
+                    monozyten: 0.4, eosinophile: 0.3, thrombozyten: 200,
+                    glukose: 85, harnstoff: 25, kreatinin: 1.2,
+                    alt: 380, ast: 220, ap: 180, ggt: 12,
+                    bilirubin: 4.5, totalprotein: 6.5, albumin: 2.0, cholesterol: 320,
+                    natrium: 145, kalium: 3.2, chlorid: 108, calcium: 2.2, phosphat: 1.5
+                }
+            },
+            {
+                name: 'Stressleukogramm (Katze)',
+                desc: 'Vorstellung in der Klinik, gestresste Katze',
+                values: {
+                    erythrozyten: 8.0, haemoglobin: 12.0, haematokrit: 38,
+                    mcv: 45, mch: 15, mchc: 33,
+                    leukozyten: 22.0, neutrophile: 17.5, lymphozyten: 1.2,
+                    monozyten: 0.6, eosinophile: 0.05, thrombozyten: 350,
+                    glukose: 220, harnstoff: 22, kreatinin: 1.3,
+                    alt: 55, ast: 30, ap: 35, ggt: 3,
+                    bilirubin: 0.2, totalprotein: 7.5, albumin: 3.2, cholesterol: 140,
+                    natrium: 150, kalium: 4.0, chlorid: 112, calcium: 2.3, phosphat: 1.4
+                }
+            },
+            {
+                name: 'Normalbefund (Katze)',
+                desc: 'Gesunde Katze, Routineuntersuchung',
+                values: {
+                    erythrozyten: 7.5, haemoglobin: 11.0, haematokrit: 35,
+                    mcv: 45, mch: 15, mchc: 33,
+                    leukozyten: 10.0, neutrophile: 6.0, lymphozyten: 3.0,
+                    monozyten: 0.3, eosinophile: 0.4, thrombozyten: 300,
+                    glukose: 100, harnstoff: 25, kreatinin: 1.2,
+                    alt: 45, ast: 25, ap: 30, ggt: 3,
+                    bilirubin: 0.2, totalprotein: 7.0, albumin: 3.0, cholesterol: 150,
+                    natrium: 150, kalium: 4.2, chlorid: 112, calcium: 2.4, phosphat: 1.5
+                }
+            }
+        ],
+        pferd: [
+            {
+                name: 'Kolik / Dehydratation (Pferd)',
+                desc: 'Koliksymptome, Schwitzen, Tachykardie',
+                values: {
+                    erythrozyten: 13.5, haemoglobin: 20.5, haematokrit: 58,
+                    mcv: 43, mch: 15, mchc: 35,
+                    leukozyten: 4.8, neutrophile: 2.0, lymphozyten: 2.2,
+                    monozyten: 0.3, eosinophile: 0.1, thrombozyten: 130,
+                    glukose: 145, harnstoff: 35, kreatinin: 3.2,
+                    ast: 580, ap: 280, ggt: 18,
+                    bilirubin: 4.5, totalprotein: 8.5, albumin: 3.9, cholesterol: 85,
+                    natrium: 128, kalium: 2.4, chlorid: 88, calcium: 2.3, phosphat: 0.6
+                }
+            },
+            {
+                name: 'Entzuendung / Infektion (Pferd)',
+                desc: 'Fieber, Nasenausfluss, Husten',
+                values: {
+                    erythrozyten: 7.5, haemoglobin: 12.0, haematokrit: 36,
+                    mcv: 45, mch: 16, mchc: 35,
+                    leukozyten: 18.5, neutrophile: 14.0, lymphozyten: 2.5,
+                    monozyten: 1.0, eosinophile: 0.2, thrombozyten: 250,
+                    glukose: 95, harnstoff: 18, kreatinin: 1.5,
+                    ast: 350, ap: 200, ggt: 12,
+                    bilirubin: 2.0, totalprotein: 8.2, albumin: 2.8, cholesterol: 110,
+                    natrium: 136, kalium: 3.5, chlorid: 98, calcium: 2.6, phosphat: 1.0
+                }
+            },
+            {
+                name: 'Lebererkrankung (Pferd)',
+                desc: 'Ikterus, Gewichtsverlust, Photodermatitis',
+                values: {
+                    erythrozyten: 7.0, haemoglobin: 11.5, haematokrit: 34,
+                    mcv: 46, mch: 16, mchc: 34,
+                    leukozyten: 9.0, neutrophile: 5.5, lymphozyten: 2.8,
+                    monozyten: 0.4, eosinophile: 0.1, thrombozyten: 90,
+                    glukose: 65, harnstoff: 5, kreatinin: 1.2,
+                    ast: 850, ap: 180, ggt: 85,
+                    bilirubin: 8.5, totalprotein: 5.2, albumin: 1.9, cholesterol: 55,
+                    natrium: 130, kalium: 3.0, chlorid: 92, calcium: 2.4, phosphat: 0.8
+                }
+            },
+            {
+                name: 'Normalbefund (Pferd)',
+                desc: 'Gesundes Pferd, Ankaufsuntersuchung',
+                values: {
+                    erythrozyten: 9.0, haemoglobin: 14.0, haematokrit: 40,
+                    mcv: 44, mch: 16, mchc: 35,
+                    leukozyten: 8.5, neutrophile: 4.5, lymphozyten: 3.2,
+                    monozyten: 0.3, eosinophile: 0.2, thrombozyten: 200,
+                    glukose: 90, harnstoff: 18, kreatinin: 1.5,
+                    ast: 280, ap: 180, ggt: 12,
+                    bilirubin: 1.5, totalprotein: 6.8, albumin: 3.2, cholesterol: 100,
+                    natrium: 138, kalium: 3.8, chlorid: 100, calcium: 2.9, phosphat: 1.0
+                }
+            }
+        ]
+    };
+
+    // =========================================================================
+    // STATE
+    // =========================================================================
+
+    let currentSpecies = 'hund';
+    let currentValues = {};
+
+    // =========================================================================
+    // INITIALISIERUNG
+    // =========================================================================
+
+    function init() {
+        renderAllParams();
+        renderExamplePatients();
+        analyzeAll();
+    }
+
+    function selectSpecies(species) {
+        currentSpecies = species;
+        document.querySelectorAll('.species-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.species === species);
+        });
+        // Werte beibehalten, aber Referenzbereiche aktualisieren
+        renderAllParams();
+        renderExamplePatients();
+        analyzeAll();
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        ['haematologie', 'serumchemie', 'elektrolyte'].forEach(t => {
+            const el = document.getElementById('tab-' + t);
+            if (el) el.classList.toggle('hidden', t !== tabName);
+        });
+    }
+
+    // =========================================================================
+    // RENDERING: Parameter-Eingabefelder
+    // =========================================================================
+
+    function renderAllParams() {
+        ['haematologie', 'serumchemie', 'elektrolyte'].forEach(category => {
+            renderParamGroup(category);
+        });
+    }
+
+    function renderParamGroup(category) {
+        const container = document.getElementById(category + '-params');
+        if (!container) return;
+        container.innerHTML = '';
+
+        REFERENCE_RANGES[category].forEach(param => {
+            const range = param[currentSpecies];
+            // Wenn kein Referenzbereich fuer diese Spezies (z.B. ALT beim Pferd)
+            if (range === null) {
+                const row = document.createElement('div');
+                row.className = 'param-row opacity-40';
+                row.innerHTML = `
+                    <span class="text-sm font-medium text-slate-400">${param.name}</span>
+                    <span class="text-xs text-slate-500">${param.unit}</span>
+                    <span class="text-xs text-slate-600 italic">Nicht relevant fuer ${currentSpecies.charAt(0).toUpperCase() + currentSpecies.slice(1)}</span>
+                    <span class="text-xs text-slate-600">-</span>
+                `;
+                container.appendChild(row);
+                return;
+            }
+
+            const currentVal = currentValues[param.id];
+            const status = currentVal !== undefined && currentVal !== '' ? evaluateValue(parseFloat(currentVal), range) : null;
+
+            const row = document.createElement('div');
+            let rowClass = 'param-row';
+            if (status === 'critical-high' || status === 'critical-low') rowClass += ' bg-status-severe';
+            else if (status === 'high' || status === 'low') rowClass += ' bg-status-mild';
+            else if (status === 'normal') rowClass += ' bg-status-normal';
+            row.className = rowClass;
+
+            row.innerHTML = `
+                <span class="text-sm font-medium text-slate-300">${param.name}</span>
+                <span class="text-xs text-slate-500">${param.unit}</span>
+                <div>
+                    <input type="number" step="any"
+                        class="input-field"
+                        id="input-${param.id}"
+                        placeholder="${range[0]} - ${range[1]}"
+                        value="${currentVal !== undefined ? currentVal : ''}"
+                        oninput="onValueChange('${param.id}', this.value)">
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-500">${range[0]} - ${range[1]}</span>
+                    ${status ? `<span class="badge badge-${status}">${getStatusLabel(status)}</span>` : ''}
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function onValueChange(paramId, value) {
+        if (value === '' || value === null) {
+            delete currentValues[paramId];
+        } else {
+            currentValues[paramId] = value;
+        }
+        // Neu rendern fuer Farbcodierung
+        renderAllParams();
+        analyzeAll();
+    }
+
+    // =========================================================================
+    // BEWERTUNG: Einzelwerte
+    // =========================================================================
+
+    function evaluateValue(value, range) {
+        if (isNaN(value)) return null;
+        const [low, high] = range;
+        const span = high - low;
+        const mildThreshold = span * 0.25; // 25% ueber/unter Grenze = stark abweichend
+
+        if (value >= low && value <= high) return 'normal';
+        if (value < low) {
+            return (low - value) > mildThreshold ? 'critical-low' : 'low';
+        }
+        if (value > high) {
+            return (value - high) > mildThreshold ? 'critical-high' : 'high';
+        }
+        return null;
+    }
+
+    function getStatusLabel(status) {
+        const labels = {
+            'normal': 'Normal',
+            'low': 'Erniedrigt',
+            'high': 'Erhoehte',
+            'critical-low': 'Stark erniedrigt',
+            'critical-high': 'Stark erhoehte'
+        };
+        return labels[status] || status;
+    }
+
+    // =========================================================================
+    // HILFSFUNKTIONEN: Wert-Status abfragen
+    // =========================================================================
+
+    function getVal(id) {
+        const v = currentValues[id];
+        return (v !== undefined && v !== '') ? parseFloat(v) : null;
+    }
+
+    function getStatus(id) {
+        const v = getVal(id);
+        if (v === null) return null;
+        // Finde den Parameter in allen Kategorien
+        for (const cat of Object.values(REFERENCE_RANGES)) {
+            const param = cat.find(p => p.id === id);
+            if (param) {
+                const range = param[currentSpecies];
+                if (range === null) return null;
+                return evaluateValue(v, range);
+            }
+        }
+        return null;
+    }
+
+    function isHigh(id) {
+        const s = getStatus(id);
+        return s === 'high' || s === 'critical-high';
+    }
+
+    function isLow(id) {
+        const s = getStatus(id);
+        return s === 'low' || s === 'critical-low';
+    }
+
+    function isNormal(id) {
+        return getStatus(id) === 'normal';
+    }
+
+    function hasValue(id) {
+        return getVal(id) !== null;
+    }
+
+    // =========================================================================
+    // ANALYSE: Automatische Befundung + Mustererkennung
+    // =========================================================================
+
+    function analyzeAll() {
+        const findings = [];
+        const patterns = [];
+
+        // --- Einzelwert-Befundung ---
+        generateSingleFindings(findings);
+
+        // --- Mustererkennung ---
+        detectPatterns(patterns);
+
+        // --- Rendering ---
+        renderFindings(findings);
+        renderPatterns(patterns);
+        updateSummary();
+    }
+
+    function generateSingleFindings(findings) {
+        // Haematologie
+        if (isHigh('leukozyten')) {
+            findings.push({ severity: 'warning', text: 'Leukozytose: Erhoehte Gesamtleukozytenzahl. Moegliche Ursachen: Entzuendung, Infektion, Stress, Neoplasie.' });
+        }
+        if (isLow('leukozyten')) {
+            findings.push({ severity: 'danger', text: 'Leukopenie: Erniedrigte Gesamtleukozytenzahl. Moegliche Ursachen: Virale Infektion, Sepsis, Knochenmarkdepression, Medikamente.' });
+        }
+
+        if (isHigh('neutrophile')) {
+            findings.push({ severity: 'warning', text: 'Neutrophilie: Erhoehte Neutrophilenzahl. Hinweis auf bakterielle Infektion, Entzuendung oder Stress.' });
+        }
+        if (isLow('neutrophile')) {
+            findings.push({ severity: 'danger', text: 'Neutropenie: Erniedrigte Neutrophilenzahl. Hinweis auf uebermaessigen Verbrauch (Sepsis) oder verminderte Produktion.' });
+        }
+
+        if (isLow('lymphozyten')) {
+            findings.push({ severity: 'info', text: 'Lymphopenie: Kann stressbedingt (Kortisol) oder durch virale Infektion verursacht sein.' });
+        }
+        if (isHigh('lymphozyten')) {
+            findings.push({ severity: 'info', text: 'Lymphozytose: Moegliche Ursachen: chronische Antigenstimulation, lymphoproliferative Erkrankung, Aufregung (v.a. Katze).' });
+        }
+
+        if (isLow('haematokrit')) {
+            findings.push({ severity: 'danger', text: 'Anaemie: Erniedrigter Haematokrit. Weitere Differenzierung durch MCV und Retikulozyten erforderlich.' });
+        }
+        if (isHigh('haematokrit')) {
+            findings.push({ severity: 'warning', text: 'Erhoehter Haematokrit: Dehydratation (relativ) oder Polyzythaemie (absolut).' });
+        }
+
+        if (isLow('thrombozyten')) {
+            findings.push({ severity: 'danger', text: 'Thrombozytopenie: Erniedrigte Thrombozytenzahl. Blutungsrisiko erhoehte. Ursachen: Verbrauch, Sequestration, verminderte Produktion, immunvermittelt.' });
+        }
+
+        // Serumchemie
+        if (isHigh('harnstoff') || isHigh('kreatinin')) {
+            findings.push({ severity: 'danger', text: 'Azotaemie: Erhoehte Retentionsparameter (Harnstoff und/oder Kreatinin). Differenzierung: praereal, renal, postrenal.' });
+        }
+
+        if (isHigh('alt')) {
+            findings.push({ severity: 'warning', text: 'ALT-Erhoehung: Hinweis auf Hepatozytenschaden. ALT ist leberspezifisch (Hund, Katze).' });
+        }
+        if (isHigh('ast')) {
+            findings.push({ severity: 'warning', text: 'AST-Erhoehung: Hinweis auf Zellschaden (Leber und/oder Muskulatur). Nicht leberspezifisch.' });
+        }
+        if (isHigh('ap')) {
+            findings.push({ severity: 'info', text: 'AP-Erhoehung: Moegliche Ursachen: Cholestase, Knochenumbau, Kortikosteroid-induziert (Hund), Wachstum (Jungtiere).' });
+        }
+        if (isHigh('ggt')) {
+            findings.push({ severity: 'warning', text: 'GGT-Erhoehung: Hinweis auf Cholestase oder Gallengangsschaedigung.' });
+        }
+        if (isHigh('bilirubin')) {
+            findings.push({ severity: 'warning', text: 'Hyperbilirubinaemie: Moegliche Ursachen: praehepatisch (Haemolyse), hepatisch (Leberschaden), posthepatisch (Cholestase).' });
+        }
+
+        if (isLow('albumin')) {
+            findings.push({ severity: 'warning', text: 'Hypoalbuminaemie: Moegliche Ursachen: verminderte Synthese (Leber), Verlust (renal, enterisch), Verteilung (Erguss).' });
+        }
+
+        if (isLow('glukose')) {
+            findings.push({ severity: 'danger', text: 'Hypoglykaemie: Erhoehter Verbrauch, verminderte Produktion (Leberinsuffizienz) oder Insulinom.' });
+        }
+        if (isHigh('glukose')) {
+            findings.push({ severity: 'warning', text: 'Hyperglykaeemie: Stressbedingt (v.a. Katze), Diabetes mellitus, Cushing-Syndrom.' });
+        }
+
+        // Elektrolyte
+        if (isHigh('kalium')) {
+            findings.push({ severity: 'danger', text: 'Hyperkaliaeemie: Kardiotoxisch! Moegliche Ursachen: Niereninsuffizienz, Morbus Addison, Obstruktion der Harnwege.' });
+        }
+        if (isLow('kalium')) {
+            findings.push({ severity: 'warning', text: 'Hypokaliaeemie: Moegliche Ursachen: Erbrechen, Durchfall, Diuretika, Anorexie.' });
+        }
+
+        if (isLow('natrium')) {
+            findings.push({ severity: 'warning', text: 'Hyponatriaemie: Moegliche Ursachen: Erbrechen, Durchfall, Morbus Addison, Erguss.' });
+        }
+        if (isHigh('natrium')) {
+            findings.push({ severity: 'warning', text: 'Hypernatriaemie: Dehydratation, reduzierte Wasseraufnahme, Diabetes insipidus.' });
+        }
+
+        if (isLow('calcium')) {
+            findings.push({ severity: 'danger', text: 'Hypokalzaemie: Moegliche Ursachen: Hypoparathyreoidismus, Eklampsie, Niereninsuffizienz, Pankreatitis.' });
+        }
+        if (isHigh('calcium')) {
+            findings.push({ severity: 'warning', text: 'Hyperkalzaemie: Moegliche Ursachen: Neoplasie (paraneoplastisch), primaerer Hyperparathyreoidismus, Vitamin-D-Intoxikation.' });
+        }
+    }
+
+    function detectPatterns(patterns) {
+        // Praerenale Azotaemie
+        if (isHigh('harnstoff') && isHigh('kreatinin') && isHigh('haematokrit')) {
+            patterns.push({
+                name: 'Praerenale Azotaemie',
+                severity: 'warning',
+                description: 'Harnstoff und Kreatinin erhoehte bei gleichzeitig erhoehtem Haematokrit: Typisches Muster einer Dehydratation. Die Azotaemie ist durch verminderte renale Perfusion bedingt.',
+                recommendation: 'Infusionstherapie einleiten. Retentionsparameter nach Rehydratation kontrollieren.'
+            });
+        }
+
+        // Renale Azotaemie
+        if (isHigh('harnstoff') && isHigh('kreatinin') && (isNormal('haematokrit') || isLow('haematokrit'))) {
+            patterns.push({
+                name: 'Renale Azotaemie',
+                severity: 'danger',
+                description: 'Harnstoff und Kreatinin erhoehte bei normalem oder erniedrigtem Haematokrit: Hinweis auf primaere Niereninsuffizienz. Die nicht-regenerative Anaemie ist typisch fuer chronische Nierenerkrankung (EPO-Mangel).',
+                recommendation: 'IRIS-Staging durchfuehren. Harnanalyse (USG, UPC), Blutdruck, SDMA bestimmen.'
+            });
+        }
+
+        // Leberinsuffizienz
+        if ((isHigh('alt') || isHigh('ast')) && isLow('albumin') && isLow('harnstoff') && isHigh('bilirubin')) {
+            patterns.push({
+                name: 'Leberinsuffizienz',
+                severity: 'danger',
+                description: 'Erhoehte Leberenzyme (ALT/AST) kombiniert mit erniedrigtem Albumin, erniedrigtem Harnstoff und erhoehtem Bilirubin: Klassisches Muster einer schweren Leberinsuffizienz mit verminderter Syntheseleistung und Entgiftungsstoerung.',
+                recommendation: 'Ultraschall Leber/Abdomen. Gallensaeuren, NH3 bestimmen. Leberbiopsie erwaegen.'
+            });
+        }
+        // Partielle Leberinsuffizienz (weniger streng)
+        else if ((isHigh('alt') || isHigh('ast')) && (isLow('albumin') || isHigh('bilirubin'))) {
+            patterns.push({
+                name: 'Hepatopathie',
+                severity: 'warning',
+                description: 'Erhoehte Leberenzyme mit Hypoalbuminaemie und/oder Hyperbilirubinaemie: Hinweis auf Lebererkrankung mit moeglicherweise eingeschraenkter Leberfunktion.',
+                recommendation: 'Weitere Diagnostik: Ultraschall, Gallensaeuren, Gerinnungsparameter.'
+            });
+        }
+
+        // Stress-Leukogramm
+        if (isHigh('leukozyten') && isHigh('neutrophile') && isLow('lymphozyten') && isLow('eosinophile')) {
+            patterns.push({
+                name: 'Stress-Leukogramm',
+                severity: 'info',
+                description: 'Leukozytose mit Neutrophilie, Lymphopenie und Eosinopenie: Klassisches Stress-Leukogramm, typisch fuer endogene oder exogene Kortikosteroidwirkung.',
+                recommendation: 'Cushing-Syndrom abklaeren. Stress/Schmerz als Ursache in Betracht ziehen. Ggf. Kortisol-Stimulationstest.'
+            });
+        }
+
+        // Entzuendungs-Leukogramm
+        if (isHigh('leukozyten') && isHigh('neutrophile') && !isLow('lymphozyten')) {
+            // Nur wenn nicht schon Stress-Leukogramm erkannt
+            const alreadyStress = patterns.some(p => p.name === 'Stress-Leukogramm');
+            if (!alreadyStress) {
+                patterns.push({
+                    name: 'Entzuendungs-Leukogramm',
+                    severity: 'warning',
+                    description: 'Leukozytose mit Neutrophilie: Hinweis auf akute Entzuendung oder bakterielle Infektion. Bei sehr hohen Werten an Linksverschiebung denken.',
+                    recommendation: 'Infektionsherd suchen. Differentialblutbild mit Linksverschiebung beurteilen. CRP/SAA bestimmen.'
+                });
+            }
+        }
+
+        // Regenerative Anaemie (MCV erhoehte bei niedrigem Hkt)
+        if (isLow('haematokrit') && isHigh('mcv')) {
+            patterns.push({
+                name: 'Regenerative Anaemie',
+                severity: 'warning',
+                description: 'Erniedrigter Haematokrit bei erhoehtem MCV (Makrozytose): Hinweis auf eine regenerative Anaemie mit Retikulozytose. Typisch fuer Blutverlust oder Haemolyse.',
+                recommendation: 'Retikulozytencount durchfuehren. Coombs-Test bei Verdacht auf immunvermittelte Haemolyse. Blutungsquelle suchen.'
+            });
+        }
+
+        // Nicht-regenerative Anaemie
+        if (isLow('haematokrit') && (isNormal('mcv') || isLow('mcv')) && hasValue('haematokrit') && hasValue('mcv')) {
+            patterns.push({
+                name: 'Nicht-regenerative Anaemie',
+                severity: 'danger',
+                description: 'Erniedrigter Haematokrit bei normalem oder erniedrigtem MCV: Hinweis auf eine nicht-regenerative Anaemie. Die fehlende Knochenmarksantwort deutet auf chronische Erkrankung, Knochenmarkpathologie oder Eisenmangel.',
+                recommendation: 'Retikulozytencount zur Bestaetigung. Chronische Nierenerkrankung (EPO-Mangel), chronische Entzuendung, Knochenmarkzytologie erwaegen.'
+            });
+        }
+
+        // Cholestase
+        if (isHigh('ggt') && isHigh('bilirubin') && isHigh('ap')) {
+            patterns.push({
+                name: 'Cholestase-Muster',
+                severity: 'warning',
+                description: 'Erhoehte GGT, AP und Bilirubin: Typisches Cholestase-Muster. Hinweis auf Gallenabflussstoerung oder diffuse Lebererkrankung mit Gallenstau.',
+                recommendation: 'Ultraschall: Gallengaenge, Gallenblase, Leber beurteilen. Intra- vs. extrahepatische Cholestase differenzieren.'
+            });
+        }
+
+        // Dehydratation (Haematokrit hoch + Totalprotein hoch + Natrium hoch)
+        if (isHigh('haematokrit') && isHigh('totalprotein') && (isHigh('natrium') || isHigh('albumin'))) {
+            const alreadyPraereal = patterns.some(p => p.name === 'Praerenale Azotaemie');
+            if (!alreadyPraereal) {
+                patterns.push({
+                    name: 'Dehydratation',
+                    severity: 'warning',
+                    description: 'Erhoehter Haematokrit und Totalprotein: Relative Erhoehung durch Haemokonzentration bei Fluessigkeitsverlust.',
+                    recommendation: 'Klinische Dehydratation einschaetzen (Hautturgor, Schleimhaeute). Infusionstherapie einleiten.'
+                });
+            }
+        }
+    }
+
+    // =========================================================================
+    // RENDERING: Ergebnisse
+    // =========================================================================
+
+    function renderFindings(findings) {
+        const container = document.getElementById('findings-container');
+        if (findings.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-sm italic">Geben Sie Laborwerte ein, um automatische Befunde zu erhalten.</p>';
+            return;
+        }
+
+        container.innerHTML = findings.map(f => {
+            const colorMap = {
+                danger: 'border-red-500 bg-red-500/5 text-red-300',
+                warning: 'border-amber-500 bg-amber-500/5 text-amber-300',
+                info: 'border-sky-500 bg-sky-500/5 text-sky-300'
+            };
+            const iconMap = {
+                danger: '<svg class="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>',
+                warning: '<svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                info: '<svg class="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+            const colors = colorMap[f.severity] || colorMap.info;
+            const icon = iconMap[f.severity] || iconMap.info;
+            return `<div class="finding-text border-l-2 ${colors} flex gap-2">${icon}<span>${f.text}</span></div>`;
+        }).join('');
+    }
+
+    function renderPatterns(patterns) {
+        const container = document.getElementById('patterns-container');
+        if (patterns.length === 0) {
+            container.innerHTML = '<p class="text-slate-500 text-sm italic">Syndrome werden automatisch erkannt, sobald passende Wertekombinationen vorliegen.</p>';
+            return;
+        }
+
+        container.innerHTML = patterns.map(p => {
+            const colorMap = {
+                danger: 'bg-red-500/10 border border-red-500/20',
+                warning: 'bg-amber-500/10 border border-amber-500/20',
+                info: 'bg-sky-500/10 border border-sky-500/20'
+            };
+            const titleColor = {
+                danger: 'text-red-400',
+                warning: 'text-amber-400',
+                info: 'text-sky-400'
+            };
+            return `
+                <div class="pattern-card ${colorMap[p.severity] || colorMap.info}">
+                    <h4 class="font-bold ${titleColor[p.severity] || titleColor.info} text-sm mb-2">${p.name}</h4>
+                    <p class="text-slate-300 text-sm mb-3">${p.description}</p>
+                    <div class="bg-white/5 rounded-lg p-3 text-xs text-slate-400">
+                        <span class="font-semibold text-slate-300">Empfehlung:</span> ${p.recommendation}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function updateSummary() {
+        let normal = 0, mild = 0, severe = 0;
+
+        Object.keys(currentValues).forEach(id => {
+            const s = getStatus(id);
+            if (s === 'normal') normal++;
+            else if (s === 'low' || s === 'high') mild++;
+            else if (s === 'critical-low' || s === 'critical-high') severe++;
+        });
+
+        document.getElementById('count-normal').textContent = normal;
+        document.getElementById('count-mild').textContent = mild;
+        document.getElementById('count-severe').textContent = severe;
+    }
+
+    // =========================================================================
+    // BEISPIELPATIENTEN
+    // =========================================================================
+
+    function renderExamplePatients() {
+        const container = document.getElementById('examplePatients');
+        const patients = EXAMPLE_PATIENTS[currentSpecies] || [];
+        container.innerHTML = patients.map((p, i) => `
+            <button class="example-btn" onclick="loadExample(${i})">
+                <div class="font-semibold text-slate-300 text-sm mb-1">${p.name}</div>
+                <div class="text-xs text-slate-500">${p.desc}</div>
+            </button>
+        `).join('');
+    }
+
+    function loadExample(index) {
+        const patients = EXAMPLE_PATIENTS[currentSpecies] || [];
+        if (!patients[index]) return;
+
+        currentValues = { ...patients[index].values };
+        renderAllParams();
+        analyzeAll();
+
+        // Scroll zum ersten Tab
+        switchTab('haematologie');
+        document.querySelector('.tab-btn[data-tab="haematologie"]')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // =========================================================================
+    // RESET + DRUCK
+    // =========================================================================
+
+    function resetAll() {
+        currentValues = {};
+        renderAllParams();
+        analyzeAll();
+    }
+
+    function printReport() {
+        // Druckdatum und Spezies in den Header einfuegen
+        const speciesName = currentSpecies.charAt(0).toUpperCase() + currentSpecies.slice(1);
+        const dateStr = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        // Temporaeren Print-Header erstellen
+        const printHeader = document.createElement('div');
+        printHeader.id = 'print-header-temp';
+        printHeader.innerHTML = `
+            <div style="text-align:center; margin-bottom: 20px; padding: 16px; border-bottom: 2px solid #ddd;">
+                <h2 style="margin:0; font-size: 20px;">VetScan Laborbefund</h2>
+                <p style="margin: 4px 0 0 0; color: #666; font-size: 14px;">Spezies: ${speciesName} | Datum: ${dateStr}</p>
+                <p style="margin: 4px 0 0 0; color: #999; font-size: 11px;">Nur fuer Ausbildungszwecke - Keine klinische Diagnostik</p>
+            </div>
+        `;
+        document.body.prepend(printHeader);
+
+        // Alle Tabs sichtbar machen fuer Druck
+        ['haematologie', 'serumchemie', 'elektrolyte'].forEach(t => {
+            const el = document.getElementById('tab-' + t);
+            if (el) el.classList.remove('hidden');
+        });
+
+        window.print();
+
+        // Aufraumen
+        document.getElementById('print-header-temp')?.remove();
+        // Tab-Zustand wiederherstellen
+        const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'haematologie';
+        ['haematologie', 'serumchemie', 'elektrolyte'].forEach(t => {
+            const el = document.getElementById('tab-' + t);
+            if (el) el.classList.toggle('hidden', t !== activeTab);
+        });
+    }
+
+    // =========================================================================
+    // INIT
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

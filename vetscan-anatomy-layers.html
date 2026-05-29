@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=4.0, user-scalable=yes">
+    <title>VetScan Pro - Anatomie-Schichtmodell</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --skin-color: #d4a574;
+            --skin-light: #e8c9a0;
+            --muscle-color: #c0392b;
+            --muscle-light: #e74c3c;
+            --organ-heart: #a93226;
+            --organ-lung: #f1948a;
+            --organ-liver: #6e2c00;
+            --organ-stomach: #d4ac0d;
+            --organ-spleen: #7d3c98;
+            --organ-intestine: #f0b27a;
+            --organ-kidney: #a04000;
+            --organ-bladder: #5dade2;
+            --organ-uterus: #e8daef;
+            --bone-color: #fdfefe;
+            --bone-outline: #d5d8dc;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-link {
+            color: var(--accent);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #60a5fa; }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 57px);
+        }
+
+        /* Left Control Panel */
+        .control-panel {
+            width: 300px;
+            min-width: 300px;
+            background: var(--bg-secondary);
+            border-right: 1px solid rgba(59, 130, 246, 0.15);
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .panel-section h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Layer Controls */
+        .layer-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .layer-control:hover { background: rgba(59, 130, 246, 0.1); }
+        .layer-control.active { background: rgba(59, 130, 246, 0.15); }
+
+        .layer-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .layer-label {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .layer-sublabel {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Slider */
+        .opacity-slider {
+            width: 100%;
+            margin-top: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: #334155;
+            outline: none;
+        }
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid #1e293b;
+        }
+
+        /* Species Selector */
+        .species-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: transparent;
+            color: #94a3b8;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            text-align: center;
+        }
+        .species-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .species-btn:hover:not(.active) {
+            border-color: var(--accent);
+            color: #e2e8f0;
+        }
+
+        /* Search */
+        .search-input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--accent); }
+        .search-wrapper {
+            position: relative;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 14px;
+        }
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+        .search-result-item {
+            padding: 8px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .search-result-item:hover { background: rgba(59, 130, 246, 0.15); }
+        .search-result-layer {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Quiz Mode */
+        .quiz-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+            color: #c4b5fd;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quiz-btn:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25));
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+        .quiz-btn.active {
+            background: linear-gradient(135deg, #7c3aed, #3b82f6);
+            color: white;
+        }
+
+        .quiz-panel {
+            display: none;
+            margin-top: 12px;
+        }
+        .quiz-panel.visible { display: block; }
+
+        .quiz-question {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .quiz-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            background: rgba(15, 23, 42, 0.6);
+            color: #e2e8f0;
+            font-size: 14px;
+            outline: none;
+        }
+        .quiz-input:focus { border-color: #8b5cf6; }
+
+        .quiz-feedback {
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+        }
+        .quiz-feedback.correct {
+            display: block;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+        .quiz-feedback.wrong {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .quiz-score {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .quiz-skip-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            background: transparent;
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .quiz-skip-btn:hover { color: #e2e8f0; border-color: #64748b; }
+
+        /* SVG Canvas */
+        .canvas-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a2332 0%, #0f172a 70%);
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            touch-action: none;
+        }
+        .svg-container:active { cursor: grabbing; }
+
+        .svg-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SVG Structure Hover */
+        .anatomy-structure {
+            cursor: pointer;
+            transition: filter 0.2s, opacity 0.3s;
+        }
+        .anatomy-structure:hover {
+            filter: brightness(1.3) drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
+        }
+        .anatomy-structure.highlighted {
+            filter: brightness(1.5) drop-shadow(0 0 10px rgba(139, 92, 246, 0.8));
+            animation: pulse-highlight 1.5s ease-in-out infinite;
+        }
+        .anatomy-structure.search-highlight {
+            filter: brightness(1.4) drop-shadow(0 0 12px rgba(234, 179, 8, 0.8));
+            animation: pulse-search 1s ease-in-out infinite;
+        }
+        .anatomy-structure.quiz-highlight {
+            filter: brightness(1.5) drop-shadow(0 0 14px rgba(139, 92, 246, 0.9));
+            animation: pulse-quiz 1.2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-highlight {
+            0%, 100% { filter: brightness(1.3) drop-shadow(0 0 6px rgba(59, 130, 246, 0.5)); }
+            50% { filter: brightness(1.6) drop-shadow(0 0 12px rgba(59, 130, 246, 0.8)); }
+        }
+        @keyframes pulse-search {
+            0%, 100% { filter: brightness(1.3) drop-shadow(0 0 8px rgba(234, 179, 8, 0.6)); }
+            50% { filter: brightness(1.6) drop-shadow(0 0 16px rgba(234, 179, 8, 1)); }
+        }
+        @keyframes pulse-quiz {
+            0%, 100% { filter: brightness(1.3) drop-shadow(0 0 10px rgba(139, 92, 246, 0.6)); }
+            50% { filter: brightness(1.7) drop-shadow(0 0 18px rgba(139, 92, 246, 1)); }
+        }
+
+        /* Layer opacity transitions */
+        .anatomy-layer {
+            transition: opacity 0.5s ease;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 13px;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 200;
+            max-width: 250px;
+            opacity: 0;
+            transition: opacity 0.15s;
+            backdrop-filter: blur(8px);
+        }
+        .tooltip.visible { opacity: 1; }
+        .tooltip-name {
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+        .tooltip-desc {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* Info Panel (Slide-in from right) */
+        .info-panel {
+            position: fixed;
+            top: 57px;
+            right: -420px;
+            width: 400px;
+            height: calc(100vh - 57px);
+            background: var(--bg-secondary);
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
+            z-index: 150;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            padding: 24px;
+        }
+        .info-panel.open { right: 0; }
+
+        .info-panel-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+            background: transparent;
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .info-panel-close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .info-panel-overlay {
+            position: fixed;
+            top: 57px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 140;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .info-panel-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .info-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            padding-right: 40px;
+        }
+
+        .info-layer-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .info-section {
+            margin-bottom: 16px;
+        }
+        .info-section h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        .info-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+
+        .info-clinical {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .info-clinical h4 {
+            color: #f87171;
+        }
+        .info-clinical p {
+            color: #fca5a5;
+        }
+
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 50;
+        }
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(30, 41, 59, 0.9);
+            color: #94a3b8;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .zoom-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            color: #e2e8f0;
+            border-color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-container { flex-direction: column; }
+            .control-panel {
+                width: 100%;
+                min-width: unset;
+                max-height: 45vh;
+                border-right: none;
+                border-bottom: 1px solid rgba(59, 130, 246, 0.15);
+            }
+            .canvas-area { min-height: 50vh; }
+            .info-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .control-panel { padding: 10px; }
+            .header-title { font-size: 14px; }
+        }
+
+        /* Scrollbar */
+        .control-panel::-webkit-scrollbar, .info-panel::-webkit-scrollbar, .search-results::-webkit-scrollbar {
+            width: 4px;
+        }
+        .control-panel::-webkit-scrollbar-track, .info-panel::-webkit-scrollbar-track { background: transparent; }
+        .control-panel::-webkit-scrollbar-thumb, .info-panel::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 2px;
+        }
+
+        /* Preset buttons */
+        .preset-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: transparent;
+            color: #94a3b8;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .preset-btn:hover {
+            border-color: var(--accent);
+            color: #e2e8f0;
+            background: rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header">
+    <a href="vetscan-version-selector.html" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Zurueck
+    </a>
+    <div class="header-title">VetScan Pro -- Anatomie-Schichtmodell</div>
+    <div style="width: 80px"></div>
+</header>
+
+<div class="main-container">
+    <!-- Left Control Panel -->
+    <aside class="control-panel" id="controlPanel">
+
+        <!-- Species Selector -->
+        <div class="panel-section">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2a3 3 0 00-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 00-3-3z" stroke="currentColor" stroke-width="1.5"/><circle cx="4" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/></svg>
+                Tierart
+            </h3>
+            <div style="display:flex;gap:8px;">
+                <button class="species-btn active" data-species="dog" onclick="switchSpecies('dog')">Hund</button>
+                <button class="species-btn" data-species="cat" onclick="switchSpecies('cat')">Katze</button>
+            </div>
+        </div>
+
+        <!-- Layer Controls -->
+        <div class="panel-section">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 10l6 3 6-3M2 7l6 3 6-3M2 4l6 3 6-3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                Schichten
+            </h3>
+
+            <div class="layer-control active" data-layer="skin">
+                <div class="layer-indicator" style="background:#d4a574"></div>
+                <div>
+                    <div class="layer-label">Haut / Integument</div>
+                    <div class="layer-sublabel">Epidermis, Dermis, Subkutis</div>
+                </div>
+            </div>
+            <input type="range" class="opacity-slider" data-layer="skin" min="0" max="100" value="100" oninput="setLayerOpacity('skin', this.value)">
+
+            <div class="layer-control active" data-layer="muscles">
+                <div class="layer-indicator" style="background:#c0392b"></div>
+                <div>
+                    <div class="layer-label">Muskulatur</div>
+                    <div class="layer-sublabel">Oberflaechlich + Tief</div>
+                </div>
+            </div>
+            <input type="range" class="opacity-slider" data-layer="muscles" min="0" max="100" value="100" oninput="setLayerOpacity('muscles', this.value)">
+
+            <div class="layer-control active" data-layer="organs">
+                <div class="layer-indicator" style="background:#e67e22"></div>
+                <div>
+                    <div class="layer-label">Organe</div>
+                    <div class="layer-sublabel">Herz, Lunge, Leber, etc.</div>
+                </div>
+            </div>
+            <input type="range" class="opacity-slider" data-layer="organs" min="0" max="100" value="100" oninput="setLayerOpacity('organs', this.value)">
+
+            <div class="layer-control active" data-layer="skeleton">
+                <div class="layer-indicator" style="background:#ecf0f1"></div>
+                <div>
+                    <div class="layer-label">Skelett</div>
+                    <div class="layer-sublabel">Knochen, Gelenke</div>
+                </div>
+            </div>
+            <input type="range" class="opacity-slider" data-layer="skeleton" min="0" max="100" value="100" oninput="setLayerOpacity('skeleton', this.value)">
+
+            <!-- Presets -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;">
+                <button class="preset-btn" onclick="presetAll()">Alle</button>
+                <button class="preset-btn" onclick="presetSkinOnly()">Nur Haut</button>
+                <button class="preset-btn" onclick="presetOrgans()">Nur Organe</button>
+                <button class="preset-btn" onclick="presetSkeleton()">Nur Skelett</button>
+                <button class="preset-btn" onclick="presetXRay()">Roentgen</button>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="panel-section">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Anatomie-Suche
+            </h3>
+            <div class="search-wrapper">
+                <span class="search-icon">&#128269;</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="z.B. Leber, Femur, Herz..." oninput="handleSearch(this.value)">
+            </div>
+            <div class="search-results" id="searchResults"></div>
+        </div>
+
+        <!-- Quiz Mode -->
+        <div class="panel-section">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 14A6 6 0 108 2a6 6 0 000 12z" stroke="currentColor" stroke-width="1.5"/><path d="M6 6a2 2 0 114 0c0 1-1 1.5-2 2M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Quiz-Modus
+            </h3>
+            <button class="quiz-btn" id="quizToggle" onclick="toggleQuiz()">Quiz starten</button>
+            <div class="quiz-panel" id="quizPanel">
+                <div class="quiz-question" id="quizQuestion">Welche Struktur ist hervorgehoben?</div>
+                <input type="text" class="quiz-input" id="quizInput" placeholder="Antwort eingeben..." onkeydown="if(event.key==='Enter')checkQuizAnswer()">
+                <div class="quiz-feedback" id="quizFeedback"></div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="quiz-skip-btn" onclick="checkQuizAnswer()">Pruefen</button>
+                    <button class="quiz-skip-btn" onclick="skipQuiz()">Ueberspringen</button>
+                    <button class="quiz-skip-btn" onclick="nextQuiz()">Naechste</button>
+                </div>
+                <div class="quiz-score" id="quizScore">Punkte: 0 / 0</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Canvas Area -->
+    <main class="canvas-area" id="canvasArea">
+        <div class="svg-container" id="svgContainer">
+
+<!-- =================== DOG SVG =================== -->
+<svg id="svgDog" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" style="display:block;">
+
+<!-- Layer 4: Skeleton (innermost, draw first) -->
+<g id="layer-skeleton-dog" class="anatomy-layer" data-layer="skeleton">
+
+    <!-- Skull -->
+    <g class="anatomy-structure" data-id="skull" data-name="Schaedel" data-layer="skeleton"
+       data-desc="Knoeche­rne Schutzhuelle fuer das Gehirn. Besteht aus Hirnschaedel (Neurocranium) und Gesichtsschaedel (Viscerocranium)."
+       data-clinical="Frakturen v.a. bei Trauma. Fontanellen bei Chihuahua/Toy-Rassen oft persistent (Hydrozephalus-Risiko).">
+        <path d="M160,200 Q140,180 130,170 Q120,155 125,140 Q130,125 145,120 Q160,115 175,120 Q185,125 190,140 Q195,155 190,170 Q185,185 180,195 Z" fill="#fdfefe" stroke="#bdc3c7" stroke-width="1.5"/>
+        <circle cx="155" cy="150" r="6" fill="#d5d8dc" stroke="#bdc3c7" stroke-width="1"/>
+    </g>
+
+    <!-- Mandible -->
+    <g class="anatomy-structure" data-id="mandible" data-name="Mandibula" data-layer="skeleton"
+       data-desc="Unterkiefer. Einziger frei beweglicher Schaedelknochen. Traegt die unteren Zaehne."
+       data-clinical="Mandibulafrakturen haeufig symphysaer (Katze) oder am Korpus (Hund). Achtung N. alveolaris inferior!">
+        <path d="M135,175 Q125,185 120,195 Q118,205 125,210 Q135,215 150,212 Q165,210 175,205 Q180,200 178,195" fill="none" stroke="#d5d8dc" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Cervical Vertebrae (7 HWK) -->
+    <g class="anatomy-structure" data-id="cervical-vertebrae" data-name="Halswirbelsaeule (7 HWK)" data-layer="skeleton"
+       data-desc="7 Halswirbel (C1-C7). Atlas (C1) und Axis (C2) ermoeglichen Kopfbewegung. Hund: relativ lang und beweglich."
+       data-clinical="Atlantoaxiale Instabilitaet bei Toy-Rassen. Discus-Hernia C2-C3 haeufig. Wobbler-Syndrom (CVI) v.a. Dogge/Dobermann.">
+        <path d="M188,190 Q210,195 230,200 Q250,205 270,215" fill="none" stroke="#fdfefe" stroke-width="6" stroke-linecap="round"/>
+        <!-- Vertebral segments -->
+        <line x1="195" y1="192" x2="195" y2="185" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="207" y1="195" x2="207" y2="188" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="219" y1="198" x2="219" y2="191" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="231" y1="202" x2="231" y2="195" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="243" y1="207" x2="243" y2="200" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="255" y1="211" x2="255" y2="204" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="265" y1="214" x2="265" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+    </g>
+
+    <!-- Thoracic Vertebrae (13 BWK) -->
+    <g class="anatomy-structure" data-id="thoracic-vertebrae" data-name="Brustwirbelsaeule (13 BWK)" data-layer="skeleton"
+       data-desc="13 Brustwirbel (T1-T13) mit zugehoerigen Rippen. Dornfortsaetze variieren in Laenge und Neigung (Antiklinaler Wirbel: T11)."
+       data-clinical="Discus-Hernia T12-L2 haeufig (Dackel!). Spondylose v.a. ventral. Wirbelkoerperfrakturen bei Trauma.">
+        <path d="M270,215 Q320,220 380,222 Q440,223 500,222" fill="none" stroke="#fdfefe" stroke-width="6" stroke-linecap="round"/>
+        <!-- Dorsal spinous processes -->
+        <line x1="285" y1="217" x2="285" y2="200" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="305" y1="218" x2="305" y2="199" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="325" y1="219" x2="325" y2="198" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="345" y1="220" x2="345" y2="200" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="365" y1="221" x2="365" y2="202" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="385" y1="222" x2="385" y2="204" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="405" y1="222" x2="405" y2="206" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="425" y1="222" x2="425" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="445" y1="223" x2="445" y2="208" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="465" y1="223" x2="465" y2="209" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="480" y1="222" x2="480" y2="209" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="492" y1="222" x2="492" y2="210" stroke="#d5d8dc" stroke-width="1.5"/>
+    </g>
+
+    <!-- Lumbar Vertebrae (7 LWK) -->
+    <g class="anatomy-structure" data-id="lumbar-vertebrae" data-name="Lendenwirbelsaeule (7 LWK)" data-layer="skeleton"
+       data-desc="7 Lendenwirbel (L1-L7). Massive Wirbelkoerper, breite Querfortsaetze. Keine Rippen."
+       data-clinical="Haeufigster Bandscheibenvorfall-Bereich (L1-L3). Cauda-equina-Syndrom am lumbosacralen Uebergang.">
+        <path d="M500,222 Q550,220 600,218 Q640,216 670,215" fill="none" stroke="#fdfefe" stroke-width="6" stroke-linecap="round"/>
+        <line x1="515" y1="221" x2="515" y2="210" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="535" y1="220" x2="535" y2="209" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="555" y1="219" x2="555" y2="208" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="575" y1="218" x2="575" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="595" y1="217" x2="595" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="615" y1="217" x2="615" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+        <line x1="635" y1="216" x2="635" y2="207" stroke="#d5d8dc" stroke-width="1.5"/>
+    </g>
+
+    <!-- Sacral + Caudal Vertebrae -->
+    <g class="anatomy-structure" data-id="sacral-vertebrae" data-name="Kreuzbein + Schwanzwirbel" data-layer="skeleton"
+       data-desc="3 verschmolzene Sakralwirbel + 6-23 Schwanzwirbel (rasseabhaengig). Sakrum bildet Dach des Beckens."
+       data-clinical="Schwanzfrakturen haeufig. Cauda-equina am lumbosacralen Uebergang.">
+        <path d="M670,215 Q690,216 700,218 Q720,222 750,228 Q780,235 810,245 Q830,252 845,258" fill="none" stroke="#fdfefe" stroke-width="4" stroke-linecap="round"/>
+    </g>
+
+    <!-- Ribs (13 pairs) -->
+    <g class="anatomy-structure" data-id="ribs" data-name="Rippen (13 Paare)" data-layer="skeleton"
+       data-desc="13 Rippenpaare: 9 sternale (echte), 4 asternale (falsche). Bilden den knoechernen Brustkorb. Letzte Rippe frei (fluktuierend)."
+       data-clinical="Rippenfrakturen bei Trauma. Rippentumoren moeglich. Flail Chest bei multiplen Frakturen.">
+        <!-- Simplified rib cage showing curved ribs -->
+        <path d="M285,217 Q275,250 280,290 Q285,320 295,340" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M305,218 Q292,255 296,300 Q300,335 310,355" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M325,219 Q310,260 312,310 Q316,350 325,365" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M345,220 Q328,265 330,315 Q333,355 340,370" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M365,221 Q348,268 350,318 Q352,355 358,372" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M385,222 Q370,265 372,315 Q374,350 378,368" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M405,222 Q390,262 392,310 Q394,345 397,362" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M425,222 Q412,260 414,305 Q416,335 418,352" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M445,223 Q433,258 435,300 Q437,328 439,342" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M465,223 Q455,255 457,295 Q459,320 460,332" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.8"/>
+        <path d="M480,222 Q472,250 474,288 Q475,310 476,322" fill="none" stroke="#e8e8e8" stroke-width="1.2" opacity="0.7"/>
+        <path d="M490,222 Q484,248 485,280 Q486,300 487,310" fill="none" stroke="#e8e8e8" stroke-width="1.1" opacity="0.6"/>
+        <path d="M498,222 Q494,245 495,272 Q496,290 496,298" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.5"/>
+        <!-- Sternum -->
+        <path d="M295,340 Q310,360 330,370 Q360,378 390,375 Q420,370 445,355 Q465,340 480,325 Q490,315 495,300" fill="none" stroke="#e8e8e8" stroke-width="2" opacity="0.7"/>
+    </g>
+
+    <!-- Scapula -->
+    <g class="anatomy-structure" data-id="scapula" data-name="Scapula (Schulterblatt)" data-layer="skeleton"
+       data-desc="Flacher, dreieckiger Knochen. Spina scapulae teilt Fossa supraspinata und infraspinata. Gelenkpfanne (Cavitas glenoidalis) fuer Humerus."
+       data-clinical="Scapulafrakturen selten. OCD der Cavitas glenoidalis moeglich. Mineralisierung der Supraspinatussehne.">
+        <path d="M270,210 Q255,230 250,260 Q248,285 255,300 Q262,280 275,260 Q285,240 280,220 Z" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1.5"/>
+        <line x1="268" y1="218" x2="260" y2="280" stroke="#bdc3c7" stroke-width="1"/>
+    </g>
+
+    <!-- Humerus -->
+    <g class="anatomy-structure" data-id="humerus" data-name="Humerus (Oberarmknochen)" data-layer="skeleton"
+       data-desc="Roehrenknochen des Oberarms. Proximaler Humeruskopf artikuliert mit Scapula, distal Trochlea/Capitulum mit Radius/Ulna."
+       data-clinical="Frakturen haeufig, v.a. suprakondylaer bei jungen Hunden. Inkomplette Verknoeche­rung des Condylus humeri (IOHC) bei Spaniels.">
+        <path d="M256,300 Q260,330 265,360 Q270,390 275,410" fill="none" stroke="#fdfefe" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Radius/Ulna -->
+    <g class="anatomy-structure" data-id="radius-ulna" data-name="Radius / Ulna" data-layer="skeleton"
+       data-desc="Radius: hauptsaechlich gewichttragend. Ulna: Olecranon bildet Ellbogenspitze. Beim Hund eng verbunden, wenig Rotation."
+       data-clinical="Radius/Ulna-Frakturen v.a. distal bei Toy-Rassen. Fragmentierter Proc. coronoideus (FPC) = haeufigste Ellbogengelenksdysplasie.">
+        <path d="M275,410 Q272,435 268,460 Q265,480 262,500" fill="none" stroke="#fdfefe" stroke-width="4" stroke-linecap="round"/>
+        <path d="M278,408 Q280,435 282,460 Q284,480 285,500" fill="none" stroke="#f0f0f0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Carpus/Metacarpals/Phalanges (Front) -->
+    <g class="anatomy-structure" data-id="front-paw-bones" data-name="Carpus, Metacarpalia, Phalangen (vorne)" data-layer="skeleton"
+       data-desc="Carpus: 7 Karpalknochen in 2 Reihen. 5 Metacarpalia (Mc I-V). Phalangen: je 3 pro Zehe (Mc I: nur 2). Krallenbein = Phalanx III."
+       data-clinical="Os carpi accessorium-Frakturen bei Rennhunden. Sesambeinerkrankung. Krallenprobleme (SLO).">
+        <rect x="255" y="500" width="35" height="8" rx="3" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1"/>
+        <line x1="260" y1="508" x2="258" y2="530" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="268" y1="508" x2="266" y2="532" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="275" y1="508" x2="274" y2="532" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="282" y1="508" x2="282" y2="530" stroke="#e8e8e8" stroke-width="2"/>
+    </g>
+
+    <!-- Pelvis -->
+    <g class="anatomy-structure" data-id="pelvis" data-name="Becken (Os coxae)" data-layer="skeleton"
+       data-desc="Bestehend aus Os ilium, Os ischii, Os pubis. Acetabulum = Hueftgelenkspfanne. Verbunden ueber Symphysis pelvis."
+       data-clinical="Beckenfrakturen bei Autounfall. Hueftgelenksdysplasie (HD): Inkongruenz Femurkopf/Acetabulum. Beckenosteotomie (TPO/DPO).">
+        <path d="M650,210 Q665,215 675,225 Q685,240 688,260 Q690,275 685,290 Q678,300 668,305 Q658,308 650,300 Q644,290 642,275 Q640,260 645,240 Q648,225 650,210 Z" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1.5"/>
+    </g>
+
+    <!-- Femur -->
+    <g class="anatomy-structure" data-id="femur" data-name="Femur (Oberschenkelknochen)" data-layer="skeleton"
+       data-desc="Laengster Roehrenknochen. Femurkopf artikuliert mit Acetabulum. Trochanter major = Ansatz Glutealmuskulatur. Distal: Kondylen fuer Kniegelenk."
+       data-clinical="Haeufige Frakturstelle. Zugang lateral unter Schonung des N. ischiadicus. Aseptische Femurkopfnekrose (Legg-Calve-Perthes) bei Toy-Rassen.">
+        <path d="M670,295 Q675,330 680,370 Q685,400 690,430" fill="none" stroke="#fdfefe" stroke-width="5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Patella -->
+    <g class="anatomy-structure" data-id="patella" data-name="Patella (Kniescheibe)" data-layer="skeleton"
+       data-desc="Groesstes Sesambein. In der Sehne des M. quadriceps femoris. Gleitet in der Trochlea femoris."
+       data-clinical="Patellaluxation: Grad I-IV, v.a. medial bei kleinen Rassen, lateral bei grossen. Chirurgisch ab Grad II-III.">
+        <ellipse cx="690" cy="432" rx="8" ry="10" fill="#fdfefe" stroke="#bdc3c7" stroke-width="1.5"/>
+    </g>
+
+    <!-- Tibia/Fibula -->
+    <g class="anatomy-structure" data-id="tibia-fibula" data-name="Tibia / Fibula" data-layer="skeleton"
+       data-desc="Tibia: hauptsaechlich gewichttragend. Tuberositas tibiae = Ansatz Lig. patellae. Fibula: duenn, lateral. Beim Hund nicht mit Tibia verschmolzen."
+       data-clinical="Tibiaplateau-Leveling-Osteotomie (TPLO) bei Kreuzbandriss. Tibiafrakturen haeufig bei jungen Hunden.">
+        <path d="M690,445 Q692,470 695,500 Q697,520 698,540" fill="none" stroke="#fdfefe" stroke-width="4" stroke-linecap="round"/>
+        <path d="M695,447 Q698,470 700,500 Q702,520 703,535" fill="none" stroke="#f0f0f0" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Tarsus/Metatarsals/Phalanges (Hind) -->
+    <g class="anatomy-structure" data-id="hind-paw-bones" data-name="Tarsus, Metatarsalia, Phalangen (hinten)" data-layer="skeleton"
+       data-desc="Tarsus: 7 Tarsalknochen, Calcaneus = Fersenhoecker. 4 Metatarsalia (Mt II-V), Mc I rudimentaer. Phalangen analog vorne."
+       data-clinical="Calcaneusfrakturen. Intertarsale Luxation. OCD des Talus moeglich.">
+        <rect x="690" y="540" width="30" height="8" rx="3" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1"/>
+        <line x1="695" y1="548" x2="693" y2="570" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="703" y1="548" x2="702" y2="572" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="710" y1="548" x2="710" y2="572" stroke="#e8e8e8" stroke-width="2"/>
+        <line x1="716" y1="548" x2="717" y2="570" stroke="#e8e8e8" stroke-width="2"/>
+    </g>
+</g>
+
+<!-- Layer 3: Organs -->
+<g id="layer-organs-dog" class="anatomy-layer" data-layer="organs">
+
+    <!-- Lung -->
+    <g class="anatomy-structure" data-id="lung" data-name="Lunge" data-layer="organs"
+       data-desc="Rechts 4 Lappen (Lobus cranialis, medius, caudalis, accessorius), links 2-3 Lappen (Lobus cranialis mit Pars cranialis/caudalis, Lobus caudalis). Gasaustausch ueber ca. 500 Mio. Alveolen."
+       data-clinical="Lungenodem bei Linksherzinsuffizienz. Lungentumoren: primaer selten, Metastasen haeufig. Pneumonie: bakteriell, aspirativ. Pneumothorax bei Trauma.">
+        <!-- Right lung (larger, 4 lobes) -->
+        <path d="M310,235 Q295,260 290,290 Q288,320 295,345 Q305,360 320,365 Q340,368 360,360 Q380,350 395,335 Q405,315 400,290 Q395,260 380,240 Q365,228 345,225 Q325,224 310,235 Z" fill="#f1948a" stroke="#e74c3c" stroke-width="1" opacity="0.85"/>
+        <!-- Lobe divisions -->
+        <path d="M330,230 Q325,290 335,360" fill="none" stroke="#e74c3c" stroke-width="0.8" opacity="0.5"/>
+        <path d="M360,232 Q355,290 360,355" fill="none" stroke="#e74c3c" stroke-width="0.8" opacity="0.5"/>
+
+        <!-- Left lung (smaller, visible behind) -->
+        <path d="M410,240 Q400,265 398,290 Q396,315 400,335 Q408,350 420,355 Q435,358 448,350 Q458,340 462,320 Q465,300 460,275 Q452,252 440,240 Q425,232 410,240 Z" fill="#fadbd8" stroke="#e74c3c" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Heart -->
+    <g class="anatomy-structure" data-id="heart" data-name="Herz" data-layer="organs"
+       data-desc="Im Mediastinum, 3.-6. Interkostalraum links. 4 Kammern. Herzspitze (Apex) nach links ventral. Perikard als Schutzhuelle. Beim Hund ca. 0.7-1.5% des KGW."
+       data-clinical="Auskultation links 3.-6. ICR. DCM v.a. grosse Rassen (Dobermann, Dogge). Mitralklappeninsuffizienz (MMVD) v.a. kleine Rassen (Cavalier). HCM v.a. Katze.">
+        <path d="M345,290 Q335,280 330,268 Q328,258 335,250 Q342,244 350,248 Q355,244 362,248 Q370,255 368,268 Q365,280 355,290 Q350,295 345,290 Z" fill="#a93226" stroke="#7b241c" stroke-width="1.5" opacity="0.9"/>
+        <!-- Aorta -->
+        <path d="M350,250 Q350,235 360,228 Q370,225 380,230" fill="none" stroke="#a93226" stroke-width="2.5" opacity="0.7"/>
+    </g>
+
+    <!-- Liver -->
+    <g class="anatomy-structure" data-id="liver" data-name="Leber" data-layer="organs"
+       data-desc="Cranial im Abdomen, direkt unter dem Zwerchfell. Beim Hund 6 Lappen. Wichtigstes Stoffwechselorgan: Entgiftung, Gallensaeureproduktion, Proteinsynthe­se, Glykogenspeicher."
+       data-clinical="Hepatopathien: Kupferspeicher­krankheit (Bedlington Terrier), portosystemischer Shunt (PSS), Hepatitis, Lebertumore. Leberenzyme: ALT, AP, GLDH.">
+        <path d="M430,310 Q415,305 400,310 Q388,318 385,330 Q383,345 390,355 Q400,365 420,370 Q445,375 470,370 Q490,365 500,355 Q508,345 505,330 Q500,318 490,312 Q475,305 455,308 Q442,305 430,310 Z" fill="#6e2c00" stroke="#4e1f00" stroke-width="1" opacity="0.85"/>
+    </g>
+
+    <!-- Stomach -->
+    <g class="anatomy-structure" data-id="stomach" data-name="Magen" data-layer="organs"
+       data-desc="Links im kranialen Abdomen, hinter der Leber. Einkammrig. Fundus, Corpus, Antrum pyloricum. Pylorus oeffnet in Duodenum."
+       data-clinical="Magendilatation-Volvulus (GDV) = Notfall bei grossen Rassen! Magenulzera durch NSAID. Fremdkoerper haeufig beim Hund.">
+        <path d="M420,375 Q405,370 395,378 Q388,388 392,400 Q398,412 415,418 Q435,422 455,415 Q465,408 462,395 Q458,382 445,375 Q432,370 420,375 Z" fill="#d4ac0d" stroke="#b7950b" stroke-width="1" opacity="0.8"/>
+    </g>
+
+    <!-- Spleen -->
+    <g class="anatomy-structure" data-id="spleen" data-name="Milz" data-layer="organs"
+       data-desc="Links im kranialen Abdomen, hinter dem Magen. Laenglich-zungenfoermig beim Hund. Funktionen: Blutfilter, Eisenrecycling, Immunabwehr, Blutspeicher."
+       data-clinical="Haeufig betroffen bei Haemangiosarkom, Milztorsion. Bei Trauma: Milzruptur -> Haemoabdomen. Splenomegalie bei Babesiose, Anaemie.">
+        <path d="M385,395 Q378,405 375,420 Q373,435 378,448 Q385,458 395,455 Q402,448 405,435 Q407,420 403,405 Q398,395 385,395 Z" fill="#7d3c98" stroke="#6c3483" stroke-width="1" opacity="0.8"/>
+    </g>
+
+    <!-- Small Intestine -->
+    <g class="anatomy-structure" data-id="small-intestine" data-name="Duenndarm (Jejunum/Ileum)" data-layer="organs"
+       data-desc="Duodenum, Jejunum, Ileum. Hauptort der Naehrstoffresorption. Jejunum bildet zahlreiche Schlingen im mittleren/ventralen Abdomen."
+       data-clinical="Fremdkoerper: linearer FK (Faden!) besonders gefaehrlich. Intussuszeption. IBD (Inflammatory Bowel Disease). Lymphom.">
+        <path d="M430,420 Q420,430 415,440 Q412,452 420,460 Q430,465 440,458 Q448,465 458,460 Q468,455 475,460 Q485,465 492,458 Q498,448 490,438 Q482,430 472,425 Q462,420 450,425 Q440,428 430,420 Z" fill="#f0b27a" stroke="#dc7633" stroke-width="1" opacity="0.75"/>
+        <!-- Additional loops -->
+        <path d="M435,458 Q440,470 455,472 Q470,470 478,462" fill="none" stroke="#dc7633" stroke-width="1" opacity="0.5"/>
+        <path d="M425,455 Q430,478 445,482 Q465,480 480,470" fill="none" stroke="#dc7633" stroke-width="0.8" opacity="0.4"/>
+    </g>
+
+    <!-- Large Intestine -->
+    <g class="anatomy-structure" data-id="large-intestine" data-name="Dickdarm (Colon)" data-layer="organs"
+       data-desc="Colon ascendens (rechts), Colon transversum (cranial), Colon descendens (links). Caecum beim Hund spiralfoermig. Hauptfunktion: Wasserresorption."
+       data-clinical="Obstipation v.a. Katze (Megacolon). Colitis. Rektumpolypen. Perianale Tumore. Koloskopie fuer Diagnostik.">
+        <path d="M510,390 Q520,400 525,420 Q528,445 520,465 Q510,480 500,488 Q480,495 460,490 Q440,488 425,495 Q415,502 410,490" fill="none" stroke="#af7ac5" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+    </g>
+
+    <!-- Kidneys -->
+    <g class="anatomy-structure" data-id="kidneys" data-name="Nieren" data-layer="organs"
+       data-desc="Retroperitoneal. Rechte Niere etwas cranialer als linke. Bohnenfoermig beim Hund. Funktionen: Filtration, Elektrolythaushalt, Erythropoietin, Renin."
+       data-clinical="Palpation bei Katze gut moeglich. CNE haeufigste Erkrankung der alten Katze. Akute Niereninsuffizienz: Leptospirose, Ethylenglykol, Lilien (Katze).">
+        <!-- Right kidney (slightly more cranial) -->
+        <ellipse cx="525" cy="295" rx="15" ry="22" fill="#a04000" stroke="#784212" stroke-width="1" opacity="0.85" transform="rotate(-10,525,295)"/>
+        <!-- Left kidney -->
+        <ellipse cx="475" cy="305" rx="15" ry="22" fill="#a04000" stroke="#784212" stroke-width="1" opacity="0.85" transform="rotate(5,475,305)"/>
+        <!-- Renal pelvis indicators -->
+        <path d="M522,290 Q518,295 522,300" fill="none" stroke="#784212" stroke-width="0.8"/>
+        <path d="M472,300 Q468,305 472,310" fill="none" stroke="#784212" stroke-width="0.8"/>
+    </g>
+
+    <!-- Bladder -->
+    <g class="anatomy-structure" data-id="bladder" data-name="Harnblase" data-layer="organs"
+       data-desc="Kaudoventral im Becken. Dehnbares Hohlorgan. Trigon­um vesicae mit Uretermuendungen und Urethra-Abgang."
+       data-clinical="Harnsteine (Struvit, Calciumoxalat). Blasentumor: Uebergangszellkarzinom (TCC). Zystitis haeufig. FLUTD/FIC bei Katze.">
+        <ellipse cx="620" cy="410" rx="20" ry="15" fill="#5dade2" stroke="#2e86c1" stroke-width="1" opacity="0.75"/>
+    </g>
+
+    <!-- Uterus/Prostate -->
+    <g class="anatomy-structure" data-id="uterus" data-name="Uterus / Prostata" data-layer="organs"
+       data-desc="Uterus bicornis: 2 Uterushoerner, Corpus uteri, Cervix. Ventral des Rektums. Prostata (maennl.): umgibt Urethra am Blasenhals."
+       data-clinical="Pyometra = Notfall! Ovariohysterektomie therapeutisch. Prostataerkrankungen: BPH, Prostatitis, Prostatazysten, -abszesse, -karzinom.">
+        <path d="M610,420 Q600,430 595,425 Q585,435 580,430" fill="none" stroke="#e8daef" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+        <path d="M640,420 Q645,430 650,425 Q655,435 660,430" fill="none" stroke="#e8daef" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    </g>
+
+    <!-- Diaphragm indicator -->
+    <g class="anatomy-structure" data-id="diaphragm" data-name="Zwerchfell (Diaphragma)" data-layer="organs"
+       data-desc="Kuppelfoermiger Muskel, trennt Thorax von Abdomen. Hiatus aorticus, Hiatus oesophageus, Foramen venae cavae."
+       data-clinical="Zwerchfellhernie (peritoneopericardial = kongenital, traumatisch). Hiatushernie. Rupturen bei Trauma haeufig.">
+        <path d="M490,300 Q470,320 440,335 Q410,345 385,340 Q370,335 365,320 Q355,305 350,290" fill="none" stroke="#f39c12" stroke-width="2" stroke-dasharray="5,3" opacity="0.6"/>
+    </g>
+</g>
+
+<!-- Layer 2: Muscles -->
+<g id="layer-muscles-dog" class="anatomy-layer" data-layer="muscles">
+
+    <!-- Trapezius -->
+    <g class="anatomy-structure" data-id="trapezius" data-name="M. trapezius" data-layer="muscles"
+       data-desc="Oberflaechlicher Schulterguertelmuskel. Pars cervicalis + Pars thoracica. Fixiert Scapula am Rumpf. Innervation: N. accessorius (XI)."
+       data-clinical="Atrophie bei N. accessorius-Laesion. Wichtiger Landmark fuer Zugang zur Halswirbelsaeule.">
+        <path d="M230,195 Q260,185 290,190 Q310,198 320,210 Q315,225 300,218 Q280,210 260,208 Q240,205 230,195 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.75"/>
+    </g>
+
+    <!-- Latissimus dorsi -->
+    <g class="anatomy-structure" data-id="latissimus" data-name="M. latissimus dorsi" data-layer="muscles"
+       data-desc="Groesster Rumpfmuskel. Ursprung: Fascia thoracolumbalis, letzte Rippen. Ansatz: Crista tuberculi minoris humeri. Zieht Gliedmasse nach kaudal."
+       data-clinical="Latissimus-dorsi-Lappen fuer plastische Chirurgie. Landmark fuer laterale Thorakotomie.">
+        <path d="M320,208 Q380,210 450,215 Q510,218 550,215 Q570,218 560,240 Q540,260 500,275 Q460,282 420,278 Q380,272 340,258 Q310,245 305,228 Q308,215 320,208 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Deltoideus -->
+    <g class="anatomy-structure" data-id="deltoideus" data-name="M. deltoideus" data-layer="muscles"
+       data-desc="Ueberdeckt kaudalen Teil des M. infraspinatus und M. supraspinatus. Pars scapularis + Pars acromialis. Abduktor und Beuger der Schulter."
+       data-clinical="Kontraktur moeglich (selten). Injektionsort (cave: N. axillaris).">
+        <path d="M260,230 Q250,250 248,270 Q252,285 265,290 Q278,280 282,265 Q285,248 275,235 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Biceps brachii -->
+    <g class="anatomy-structure" data-id="biceps" data-name="M. biceps brachii" data-layer="muscles"
+       data-desc="Zweikoepfiger Oberarmmuskel. Ursprung: Tuberculum supraglenoidale scapulae. Ansatz: Tuberositas radii. Beuger des Ellbogens."
+       data-clinical="Bizepssehnenentzuendung (Tenosynovitis). Arthroskopisch diagnosierbar. Haeufig bei sportlichen Hunden.">
+        <path d="M258,295 Q255,320 258,350 Q262,375 268,395 Q275,398 280,390 Q282,365 278,340 Q274,315 270,300 Q265,293 258,295 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.75"/>
+    </g>
+
+    <!-- Triceps brachii -->
+    <g class="anatomy-structure" data-id="triceps" data-name="M. triceps brachii" data-layer="muscles"
+       data-desc="Dreikoepfig: Caput longum, laterale, mediale. Hauptstrecker des Ellbogengelenks. Ansatz am Olecranon. Groesster Muskel der Vordergliedmasse."
+       data-clinical="Avulsion des Olecranons = Tricepsausfall. Kontraktur nach Frakturen bei Jungtieren (Quadriceps-Kontraktur-Aequivalent).">
+        <path d="M272,290 Q285,295 292,310 Q298,335 295,360 Q290,385 282,400 Q275,398 270,390 Q268,365 272,340 Q276,315 278,300 Q275,292 272,290 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Pectoralis -->
+    <g class="anatomy-structure" data-id="pectoralis" data-name="M. pectoralis superficialis/profundus" data-layer="muscles"
+       data-desc="Brustmuskulatur. Superficialis: Adduktion. Profundus: kraeftigster Adduktor, zieht Gliedmasse nach kaudal. Beidseitig V-foermig am Sternum."
+       data-clinical="Landmark fuer ventrale Thorakotomie. Pectoralis-profundus-Lappen fuer Wundrekonstruktion.">
+        <path d="M290,350 Q310,360 340,368 Q370,372 395,370 Q410,365 400,355 Q380,345 350,340 Q320,338 300,342 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.65"/>
+    </g>
+
+    <!-- Obliquus externus abdominis -->
+    <g class="anatomy-structure" data-id="obliquus-ext" data-name="M. obliquus externus abdominis" data-layer="muscles"
+       data-desc="Aeusserer schraeger Bauchmuskel. Fasern verlaufen kaudoventral. Bildet den aeusseren Leistenring. Unterstuetzt Bauchatmung und Bauchpresse."
+       data-clinical="Teil der Bauchwand-Schichten bei Laparotomie. Inguinalhernie am aeusseren Leistenring. Bauchwandrekonstruktion.">
+        <path d="M460,280 Q490,290 520,310 Q545,330 555,355 Q555,380 540,400 Q520,415 495,420 Q470,422 450,415 Q435,405 425,390 Q418,370 422,350 Q430,330 445,310 Q450,295 460,280 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.6"/>
+    </g>
+
+    <!-- Gluteal muscles -->
+    <g class="anatomy-structure" data-id="gluteus" data-name="M. gluteus medius/superficialis" data-layer="muscles"
+       data-desc="Gluteus medius: groesster Hinterhandmuskel, Strecker und Abduktor der Huefte. Gluteus superficialis: duenner, oberflaechlich. Ursprung: Os ilium."
+       data-clinical="Intramuskulaere Injektion moeglich (cave: N. ischiadicus!). Glutealatrophie bei Hueftgelenksdysplasie.">
+        <path d="M615,210 Q640,208 660,215 Q678,228 690,250 Q695,270 688,288 Q678,298 665,302 Q645,298 630,285 Q618,270 612,250 Q610,230 615,210 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Quadriceps femoris -->
+    <g class="anatomy-structure" data-id="quadriceps" data-name="M. quadriceps femoris" data-layer="muscles"
+       data-desc="Vierkoepfig: M. rectus femoris, M. vastus lateralis/medialis/intermedius. Hauptstrecker des Kniegelenks. Patellarsehne zum Tuberositas tibiae."
+       data-clinical="Quadriceps-Kontraktur bei Jungtieren nach Femurfraktur. Patellaluxation bei Funktionsstoerung. Ruptur selten.">
+        <path d="M665,300 Q670,320 678,350 Q685,380 690,410 Q695,425 698,440 Q690,445 682,440 Q675,420 668,395 Q660,370 655,340 Q652,320 658,305 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.75"/>
+    </g>
+
+    <!-- Gastrocnemius -->
+    <g class="anatomy-structure" data-id="gastrocnemius" data-name="M. gastrocnemius" data-layer="muscles"
+       data-desc="Zweikoepfiger Wadenmuskel. Ursprung: Tuber supracondylare des Femur. Ansatz: Tuber calcanei (Achillessehne). Strecker des Sprunggelenks."
+       data-clinical="Achillessehnenruptur: typisches Plantigradstehen. Sehnenscheidenganglien. Kontraktur bei Jungtieren.">
+        <path d="M685,445 Q688,470 692,500 Q695,520 697,540 Q703,538 706,520 Q708,500 705,475 Q702,455 698,445 Q692,442 685,445 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.7"/>
+    </g>
+
+    <!-- Tibialis cranialis -->
+    <g class="anatomy-structure" data-id="tibialis-cran" data-name="M. tibialis cranialis" data-layer="muscles"
+       data-desc="An der kranialen Tibiafla­che. Beuger des Sprunggelenks (Dorsalflexion). Wichtiger Antagonist des M. gastrocnemius."
+       data-clinical="Ruptur selten. Kompartmentsyndrom moeglich. Landmark fuer Tibiamarknagelzugang.">
+        <path d="M680,448 Q678,470 676,495 Q675,515 676,535 Q682,540 685,520 Q686,500 686,475 Q685,455 680,448 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.65"/>
+    </g>
+
+    <!-- Neck muscles (ventral) -->
+    <g class="anatomy-structure" data-id="neck-muscles" data-name="Halsmuskulatur" data-layer="muscles"
+       data-desc="M. sternocephalicus, M. brachiocephalicus, M. sternohyoideus. Bewegen und stabilisieren Kopf und Hals. Ueberlagern Jugularvene."
+       data-clinical="Jugularvene verlaeuft in der Jugularrinne zwischen M. sternocephalicus und M. brachiocephalicus -> Blutentnahme!">
+        <path d="M175,195 Q195,210 220,218 Q250,225 270,228 Q275,240 270,250 Q245,245 220,238 Q195,230 178,218 Q168,208 175,195 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.65"/>
+    </g>
+</g>
+
+<!-- Layer 1: Skin (outermost, drawn last) -->
+<g id="layer-skin-dog" class="anatomy-layer" data-layer="skin">
+
+    <!-- Main body outline -->
+    <g class="anatomy-structure" data-id="skin-body" data-name="Haut (Integument)" data-layer="skin"
+       data-desc="Groesstes Organ. Epidermis (Hornschicht), Dermis (Lederhaut), Subkutis (Unterhaut). Schutzt vor Umwelt, reguliert Temperatur, Sinnesorgan."
+       data-clinical="Dermatologie = haeufigster Konsultationsgrund! Allergien (Atopie, Futtermittelallergie), Pyodermie, Demodikose, Dermatophytose.">
+        <path d="M130,160 Q120,145 125,130 Q135,112 155,108 Q175,105 188,115 Q198,125 200,145 Q205,160 210,175 Q225,190 250,198 Q280,205 310,210 Q380,215 450,218 Q520,220 580,218 Q620,215 650,212 Q680,215 700,225 Q720,238 730,258 Q738,275 735,295 Q730,310 720,325 Q715,345 718,370 Q722,400 730,430 Q735,455 732,480 Q728,510 720,535 Q715,555 710,570 Q705,580 695,582 Q685,580 680,570 Q675,555 672,535 Q668,510 665,490 Q660,475 650,465 Q635,458 620,455 Q600,452 580,458 Q560,465 545,475 Q530,488 520,505 Q512,525 508,540 Q500,560 490,570 Q478,578 468,575 Q458,568 455,555 Q452,535 455,510 Q458,490 462,470 Q465,450 460,435 Q450,420 435,412 Q418,405 400,400 Q375,398 350,400 Q325,405 305,415 Q290,425 280,440 Q272,458 268,480 Q265,500 263,520 Q260,540 255,555 Q248,568 240,572 Q230,572 225,562 Q222,548 224,530 Q228,510 230,490 Q232,470 228,452 Q220,440 210,435 Q195,432 182,440 Q172,452 168,470 Q165,490 164,510 Q162,530 158,548 Q152,562 145,565 Q135,565 130,555 Q125,540 128,520 Q132,500 135,480" fill="#d4a574" stroke="#b8875a" stroke-width="2" opacity="0.85"/>
+    </g>
+
+    <!-- Ear -->
+    <g class="anatomy-structure" data-id="ear" data-name="Ohrmuschel (Pinna)" data-layer="skin"
+       data-desc="Trichterfoermig, leitet Schall zum Trommelfell. Beim Hund Stehohr oder Haengeohr je nach Rasse. Auriculaerer Knorpel."
+       data-clinical="Otitis externa (v.a. Haengeohren, Allergiker). Othaemat­om. Ohrmilben (Otodectes). Plattenepithelkarzinom (weisse Katzen).">
+        <path d="M165,130 Q155,105 160,85 Q168,70 178,75 Q188,82 185,100 Q183,115 180,128" fill="#d4a574" stroke="#b8875a" stroke-width="1.5" opacity="0.85"/>
+        <path d="M168,125 Q162,108 165,92 Q170,82 176,85 Q182,90 180,105 Q178,118 175,128" fill="#e8c9a0" stroke="#b8875a" stroke-width="0.8" opacity="0.7"/>
+    </g>
+
+    <!-- Nose -->
+    <g class="anatomy-structure" data-id="nose" data-name="Nasenspiegel (Planum nasale)" data-layer="skin"
+       data-desc="Unbehaarte, pigmentierte Hautregion an der Nasenspitze. Einzigartige Oberfla­chenmuster (wie Fingerabdruck). Wichtigstes Sinnesorgan."
+       data-clinical="Depigmentierung: Nasal Pyoderma, Discoid Lupus, Pemphigus. Hyperkeratose. Plattenepithelkarzinom bei depigmentierten Nasen.">
+        <ellipse cx="122" cy="170" rx="8" ry="6" fill="#2c3e50" stroke="#1a252f" stroke-width="1"/>
+    </g>
+
+    <!-- Eye region -->
+    <g class="anatomy-structure" data-id="eye" data-name="Auge" data-layer="skin"
+       data-desc="Bulbus oculi mit Adnexen (Lider, Konjunktiva, Traenendruese, Nickhaut = 3. Augenlid). Kornea, Linse, Retina. Tapetum lucidum fuer Nachtsicht."
+       data-clinical="KCS (Keratoconjunctivitis sicca), Katarakt, Glaukom, Ulcus corneae, Cherry Eye (Nickhautdruesen­prolaps), PRA.">
+        <ellipse cx="150" cy="148" rx="7" ry="5" fill="#2c3e50" stroke="#1a252f" stroke-width="1"/>
+        <ellipse cx="150" cy="148" rx="3" ry="3" fill="#5d4e37"/>
+    </g>
+
+    <!-- Thin skin region markers -->
+    <g class="anatomy-structure" data-id="thin-skin" data-name="Duenne Haut (Axilla, Inguinal)" data-layer="skin"
+       data-desc="Axillar- und Inguinalregion: duennste Haut, kaum Unterhautfett, gut durchblutet. Weniger behaart. Axilla: zwischen Brustwand und Oberarm."
+       data-clinical="Bevorzugte Stellen fuer Hautbiopsie bei Dermatitis. Empfindlich fuer Parasiten. Inguinal: Wichtig fuer Herniendiagnostik.">
+        <ellipse cx="300" cy="380" rx="18" ry="10" fill="none" stroke="#e8c9a0" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="300" y="398" text-anchor="middle" font-size="8" fill="#e8c9a0" opacity="0.6">Axilla</text>
+        <ellipse cx="580" cy="450" rx="18" ry="10" fill="none" stroke="#e8c9a0" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="580" y="468" text-anchor="middle" font-size="8" fill="#e8c9a0" opacity="0.6">Inguinal</text>
+    </g>
+
+    <!-- Thick skin region markers -->
+    <g class="anatomy-structure" data-id="thick-skin" data-name="Dicke Haut (Nacken, Ruecken)" data-layer="skin"
+       data-desc="Nacken und Ruecken: dickste Haut am Koerper, viel Unterhautfett. Subkutane Nackenfalte = 'Scruff'. Haarfollikeldichte variiert."
+       data-clinical="Subkutane Injektion bevorzugt im Nackenbereich (Scruff). Interscapular: Injektionsassoziiertes Sarkom bei Katze!">
+        <ellipse cx="240" cy="195" rx="20" ry="8" fill="none" stroke="#b8875a" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="240" y="183" text-anchor="middle" font-size="8" fill="#b8875a" opacity="0.6">Nacken</text>
+        <ellipse cx="440" cy="210" rx="25" ry="8" fill="none" stroke="#b8875a" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
+        <text x="440" y="198" text-anchor="middle" font-size="8" fill="#b8875a" opacity="0.6">Ruecken</text>
+    </g>
+</g>
+
+</svg>
+
+<!-- =================== CAT SVG =================== -->
+<svg id="svgCat" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet" style="display:none;">
+
+<!-- Layer 4: Skeleton (Cat) -->
+<g id="layer-skeleton-cat" class="anatomy-layer" data-layer="skeleton">
+
+    <!-- Skull (rounder than dog) -->
+    <g class="anatomy-structure" data-id="cat-skull" data-name="Schaedel (Katze)" data-layer="skeleton"
+       data-desc="Runder und kuerzer als beim Hund (brachyzephal bis mesozephal). Grosse Orbitae. Processus jugularis prominent."
+       data-clinical="Frakturen: v.a. Symphyse der Mandibula (haeufigste Katzen-Gesichtsfraktur). Oropharyngeale Tumoren.">
+        <path d="M165,195 Q148,178 142,162 Q138,145 145,132 Q155,122 170,120 Q185,122 195,132 Q202,145 198,162 Q192,178 185,195 Z" fill="#fdfefe" stroke="#bdc3c7" stroke-width="1.5"/>
+        <circle cx="162" cy="152" r="7" fill="#d5d8dc" stroke="#bdc3c7" stroke-width="1"/>
+    </g>
+
+    <!-- Mandible (Cat) -->
+    <g class="anatomy-structure" data-id="cat-mandible" data-name="Mandibula (Katze)" data-layer="skeleton"
+       data-desc="Kuerzer als beim Hund. Symphysis mandibulae = fibroese Verbindung (nicht verknoeche­rt). Weniger Zaehne als Hund (30 vs 42)."
+       data-clinical="Symphysaere Fraktur = haeufigste Mandibulafraktur der Katze! Cerclage-Draht als Therapie. Resorptive Laesionen (FORL/TR).">
+        <path d="M145,175 Q135,185 132,195 Q130,205 136,210 Q148,215 165,212 Q180,210 188,205 Q192,198 190,192" fill="none" stroke="#d5d8dc" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Flexible Spine (Cat - more vertebrae feel) -->
+    <g class="anatomy-structure" data-id="cat-spine" data-name="Wirbelsaeule (Katze)" data-layer="skeleton"
+       data-desc="Flexibler als beim Hund. 7 HWK, 13 BWK, 7 LWK, 3 SWK, 21-23 Schwanzwirbel. Intervertebralscheiben elastischer -> groessere Beweglichkeit."
+       data-clinical="Bandscheibenvorfaelle seltener als beim Hund. Wirbelluxation/-fraktur bei Fenstersturz (High-Rise Syndrome). FIP: Myelitis.">
+        <!-- Cervical -->
+        <path d="M192,188 Q215,195 240,200 Q265,208 280,215" fill="none" stroke="#fdfefe" stroke-width="5" stroke-linecap="round"/>
+        <!-- Thoracic -->
+        <path d="M280,215 Q340,220 400,222 Q460,223 510,222" fill="none" stroke="#fdfefe" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- Lumbar -->
+        <path d="M510,222 Q560,220 610,218 Q650,216 680,214" fill="none" stroke="#fdfefe" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- Sacral + Caudal (longer tail) -->
+        <path d="M680,214 Q710,218 730,225 Q760,238 790,250 Q820,262 850,270 Q880,275 900,276" fill="none" stroke="#fdfefe" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- Spinous processes -->
+        <line x1="300" y1="217" x2="300" y2="202" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="340" y1="220" x2="340" y2="205" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="380" y1="221" x2="380" y2="206" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="420" y1="222" x2="420" y2="208" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="460" y1="223" x2="460" y2="209" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="540" y1="221" x2="540" y2="208" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="580" y1="219" x2="580" y2="207" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="620" y1="217" x2="620" y2="206" stroke="#d5d8dc" stroke-width="1.2"/>
+        <line x1="660" y1="215" x2="660" y2="205" stroke="#d5d8dc" stroke-width="1.2"/>
+    </g>
+
+    <!-- Rudimentary Clavicle (Cat specific!) -->
+    <g class="anatomy-structure" data-id="cat-clavicle" data-name="Clavicula (rudimentaer)" data-layer="skeleton"
+       data-desc="Nur rudimentaer vorhanden, nicht mit Skelett verbunden! In Muskulatur eingebettet. Ermoeglicht extreme Schmalheit des Brustkorbs und Beweglichkeit."
+       data-clinical="Katzen koennen durch jeden Spalt, der so breit ist wie ihr Kopf. Seltenst klinisch relevant.">
+        <ellipse cx="265" cy="270" rx="8" ry="3" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1" transform="rotate(30,265,270)"/>
+        <text x="235" y="262" font-size="7" fill="#bdc3c7" opacity="0.6">rudimentaer!</text>
+    </g>
+
+    <!-- Ribs (Cat) -->
+    <g class="anatomy-structure" data-id="cat-ribs" data-name="Rippen (13 Paare, Katze)" data-layer="skeleton"
+       data-desc="Aehnlich dem Hund: 13 Paare, schmaeler. Brustkorb insgesamt schmaler und komprimierbarer."
+       data-clinical="Rippenfrakturen bei High-Rise-Syndrome. Brustkorb flexibel = bessere Ueberlebenschancen bei Trauma.">
+        <path d="M300,217 Q288,250 292,290 Q296,325 305,345" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.7"/>
+        <path d="M340,220 Q326,258 328,300 Q332,340 340,358" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.7"/>
+        <path d="M380,221 Q366,260 368,305 Q372,345 378,362" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.7"/>
+        <path d="M420,222 Q408,260 410,305 Q414,340 418,355" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.7"/>
+        <path d="M460,223 Q450,258 452,298 Q454,330 456,342" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.6"/>
+        <path d="M490,222 Q482,252 484,288 Q486,315 487,325" fill="none" stroke="#e8e8e8" stroke-width="1" opacity="0.5"/>
+        <!-- Sternum -->
+        <path d="M305,345 Q320,358 345,362 Q380,365 410,360 Q435,350 455,340 Q475,328 488,318" fill="none" stroke="#e8e8e8" stroke-width="1.5" opacity="0.6"/>
+    </g>
+
+    <!-- Scapula (Cat) -->
+    <g class="anatomy-structure" data-id="cat-scapula" data-name="Scapula (Katze)" data-layer="skeleton"
+       data-desc="Schmaler als beim Hund. Scapula ist nur muskulaer befestigt (kein funktionelles Schluesselbein) -> extreme Schulterbeweglichkeit."
+       data-clinical="Erlaubt extreme Sprungfaehigkeit und Landungsdaempfung.">
+        <path d="M275,210 Q262,228 258,255 Q256,275 262,290 Q268,278 278,260 Q286,240 283,222 Z" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1.5"/>
+    </g>
+
+    <!-- Forelimb bones (Cat) -->
+    <g class="anatomy-structure" data-id="cat-forelimb" data-name="Vordergliedmasse (Katze)" data-layer="skeleton"
+       data-desc="Humerus, Radius, Ulna, Carpus, 5 Metacarpalia, Phalangen. Digitigrad. Krallen retraktil (einziehbar) durch elastische Baender."
+       data-clinical="Retraktile Krallen = Krallenprobleme anders als Hund. Onychektomie (Krallenabreissung). Radius/Ulna-Frakturen bei Sturz.">
+        <path d="M263,290 Q266,320 270,360 Q274,390 278,410" fill="none" stroke="#fdfefe" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M278,410 Q276,435 274,460 Q272,480 270,498" fill="none" stroke="#fdfefe" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="260" y="498" width="28" height="7" rx="3" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1"/>
+        <line x1="264" y1="505" x2="263" y2="525" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="271" y1="505" x2="270" y2="527" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="278" y1="505" x2="278" y2="527" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="284" y1="505" x2="285" y2="525" stroke="#e8e8e8" stroke-width="1.8"/>
+    </g>
+
+    <!-- Pelvis (Cat) -->
+    <g class="anatomy-structure" data-id="cat-pelvis" data-name="Becken (Katze)" data-layer="skeleton"
+       data-desc="Schmaler als beim Hund. Beckenkanal enger, relevant bei Geburt."
+       data-clinical="Beckenfrakturen bei High-Rise-Syndrom. Enger Beckenkanal -> Dystokie moeglich. Obstipation/Megacolon nach Beckenfrakturen.">
+        <path d="M660,208 Q674,215 682,228 Q690,245 692,262 Q693,278 688,290 Q680,298 672,300 Q662,298 656,290 Q650,278 650,262 Q652,245 656,228 Q658,218 660,208 Z" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1.5"/>
+    </g>
+
+    <!-- Hindlimb bones (Cat) -->
+    <g class="anatomy-structure" data-id="cat-hindlimb" data-name="Hintergliedmasse (Katze)" data-layer="skeleton"
+       data-desc="Femur, Patella, Tibia, Fibula, Tarsus, 4 Metatarsalia, Phalangen. Hintergliedmassen laenger relativ zum Koerper als beim Hund -> Sprungkraft."
+       data-clinical="Femurkopfnekrose selten. Tibiafrakturen bei Fenstersturz. Achillessehnenruptur -> Plantigradstehen.">
+        <path d="M675,295 Q680,330 685,370 Q690,400 694,430" fill="none" stroke="#fdfefe" stroke-width="4.5" stroke-linecap="round"/>
+        <ellipse cx="694" cy="432" rx="7" ry="9" fill="#fdfefe" stroke="#bdc3c7" stroke-width="1"/>
+        <path d="M694,442 Q696,470 698,500 Q700,520 702,540" fill="none" stroke="#fdfefe" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="692" y="540" width="26" height="7" rx="3" fill="#f0f0f0" stroke="#bdc3c7" stroke-width="1"/>
+        <line x1="696" y1="547" x2="695" y2="567" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="703" y1="547" x2="703" y2="569" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="710" y1="547" x2="711" y2="569" stroke="#e8e8e8" stroke-width="1.8"/>
+        <line x1="715" y1="547" x2="716" y2="567" stroke="#e8e8e8" stroke-width="1.8"/>
+    </g>
+</g>
+
+<!-- Layer 3: Organs (Cat) -->
+<g id="layer-organs-cat" class="anatomy-layer" data-layer="organs">
+
+    <!-- Heart (Cat - HCM!) -->
+    <g class="anatomy-structure" data-id="cat-heart" data-name="Herz (Katze)" data-layer="organs"
+       data-desc="Kleiner als beim Hund relativ zum Koerpergewicht. 4.-6. ICR. Katzenherz eher kegelfoermig."
+       data-clinical="HCM (Hypertrophe Kardiomyopathie) = haeufigste Herzerkrankung der Katze! Asymptomatisch bis Thromboembolie (Aortenthrombose -> Hinterhandsymptome).">
+        <path d="M355,288 Q345,278 340,266 Q338,256 345,248 Q352,242 360,246 Q365,242 372,246 Q380,253 378,266 Q375,278 365,288 Q360,293 355,288 Z" fill="#a93226" stroke="#7b241c" stroke-width="1.5" opacity="0.9"/>
+    </g>
+
+    <!-- Lungs (Cat) -->
+    <g class="anatomy-structure" data-id="cat-lung" data-name="Lunge (Katze)" data-layer="organs"
+       data-desc="Aehnlich dem Hund: rechts 4 Lappen, links 2 (Lobus cranialis mit Pars cranialis + caudalis, Lobus caudalis). Etwas kleiner."
+       data-clinical="Asthma (feline Asthma) = allergische Bronchitis. Pleuralerguss (FIP, Chylothorax, Pyothorax). Lungenwuermer (Aelurostrongylus).">
+        <path d="M315,235 Q300,258 298,288 Q300,318 310,340 Q325,355 345,358 Q365,355 380,342 Q395,325 398,298 Q395,268 382,248 Q368,235 348,232 Q330,232 315,235 Z" fill="#f1948a" stroke="#e74c3c" stroke-width="1" opacity="0.8"/>
+        <path d="M410,242 Q402,265 400,290 Q400,315 406,332 Q415,345 428,348 Q440,345 450,335 Q458,318 460,295 Q458,268 448,250 Q438,240 425,238 Q415,238 410,242 Z" fill="#fadbd8" stroke="#e74c3c" stroke-width="1" opacity="0.65"/>
+    </g>
+
+    <!-- Liver (Cat) -->
+    <g class="anatomy-structure" data-id="cat-liver" data-name="Leber (Katze)" data-layer="organs"
+       data-desc="Relativ gross im Verhaeltnis zum Koerpergewicht. Hepatische Lipidose (Fettleber) = katzenspezifisch!"
+       data-clinical="Hepatische Lipidose: haeufigste Lebererkrankung der Katze. Entsteht bei Anorexie (>3 Tage!). Cholangitis/Cholangiohepatitis. Triaditis.">
+        <path d="M435,308 Q420,305 408,310 Q398,318 396,330 Q395,342 400,352 Q412,362 432,366 Q455,370 475,365 Q490,358 495,348 Q498,338 495,325 Q490,315 478,310 Q460,305 435,308 Z" fill="#6e2c00" stroke="#4e1f00" stroke-width="1" opacity="0.8"/>
+    </g>
+
+    <!-- Stomach (Cat) -->
+    <g class="anatomy-structure" data-id="cat-stomach" data-name="Magen (Katze)" data-layer="organs"
+       data-desc="Kleiner als beim Hund. Katzen sind obligate Karnivoren -> Magenflora angepasst. Haarballen (Trichobezoare) haeufig."
+       data-clinical="Haarballen (v.a. Langhaar). Fremdkoerper (lineare FK: Faden, Geschenkband!). IBD. Lymphom. GDV extrem selten bei Katze.">
+        <path d="M425,370 Q412,368 404,375 Q398,385 402,396 Q408,406 422,410 Q438,413 452,408 Q460,400 458,390 Q454,378 442,372 Q434,368 425,370 Z" fill="#d4ac0d" stroke="#b7950b" stroke-width="1" opacity="0.75"/>
+    </g>
+
+    <!-- Kidneys (Cat - palpable!) -->
+    <g class="anatomy-structure" data-id="cat-kidneys" data-name="Nieren (Katze)" data-layer="organs"
+       data-desc="Gut palpierbar (wichtig!). Bohnenfoermig. Relativ gross. Rechte etwas cranialer. Katzen: unikapsular, nicht gelappt."
+       data-clinical="CNE (Chronische Nierenerkrankung) = haeufigste Erkrankung der alten Katze. IRIS-Staging I-IV. Akut: Lilien, Ethylenglykol. Polyzystische Nierenerkrankung (PKD) bei Persern.">
+        <ellipse cx="530" cy="295" rx="16" ry="22" fill="#a04000" stroke="#784212" stroke-width="1" opacity="0.85" transform="rotate(-8,530,295)"/>
+        <ellipse cx="480" cy="305" rx="16" ry="22" fill="#a04000" stroke="#784212" stroke-width="1" opacity="0.85" transform="rotate(5,480,305)"/>
+    </g>
+
+    <!-- Small Caecum (Cat specific difference!) -->
+    <g class="anatomy-structure" data-id="cat-caecum" data-name="Caecum (Katze - klein!)" data-layer="organs"
+       data-desc="Deutlich kleiner als beim Hund! Katze = obligater Karnivore, daher weniger Fermentation im Blinddarm noetig. Kommafoermig."
+       data-clinical="Klinisch selten relevant (Gegensatz: Hund mit groesserem Caecum fuer Pflanzenverdauung). Caecale Inversion moeglich aber selten.">
+        <ellipse cx="515" cy="395" rx="6" ry="10" fill="#f0b27a" stroke="#dc7633" stroke-width="1" opacity="0.7"/>
+        <text x="528" y="398" font-size="7" fill="#dc7633" opacity="0.7">klein!</text>
+    </g>
+
+    <!-- Intestines (Cat) -->
+    <g class="anatomy-structure" data-id="cat-intestines" data-name="Darm (Katze)" data-layer="organs"
+       data-desc="Duenndarm relativ kuerzer als beim Hund (Karnivore). Dickdarm: Colon ascendens, transversum, descendens. Megacolon = katzenspezifisch."
+       data-clinical="Lineare Fremdkoerper = Notfall! IBD haeufig. GI-Lymphom (niedriggradig vs hochgradig). Megacolon: Obstipation -> Obstipation -> Megacolon.">
+        <path d="M435,410 Q425,420 420,432 Q418,445 425,452 Q435,458 445,452 Q455,458 465,452 Q475,445 472,435 Q468,425 458,418 Q448,412 435,410 Z" fill="#f0b27a" stroke="#dc7633" stroke-width="1" opacity="0.7"/>
+        <path d="M500,385 Q510,395 515,415 Q518,440 510,458 Q500,472 485,480 Q465,485 445,482 Q428,478 418,488" fill="none" stroke="#af7ac5" stroke-width="4.5" stroke-linecap="round" opacity="0.6"/>
+    </g>
+
+    <!-- Bladder (Cat - FLUTD!) -->
+    <g class="anatomy-structure" data-id="cat-bladder" data-name="Harnblase (Katze)" data-layer="organs"
+       data-desc="Im kaudoventralen Becken. Katzenspezifisch: FLUTD (Feline Lower Urinary Tract Disease) / FIC (Feline idiopathische Cystitis)."
+       data-clinical="FLUTD/FIC = haeufigster Vorstellungsgrund Katze Harntrakt. Harnroehrenobstruktion beim Kater = Notfall! Struvit-/Oxalatsteine. Stressbedingte Zystitis.">
+        <ellipse cx="625" cy="405" rx="18" ry="14" fill="#5dade2" stroke="#2e86c1" stroke-width="1" opacity="0.75"/>
+    </g>
+</g>
+
+<!-- Layer 2: Muscles (Cat) -->
+<g id="layer-muscles-cat" class="anatomy-layer" data-layer="muscles">
+
+    <g class="anatomy-structure" data-id="cat-muscles-body" data-name="Muskulatur (Katze)" data-layer="muscles"
+       data-desc="Grundsaetzlich aehnlich dem Hund, aber: Groessere Flexibilitaet durch fehlende Clavicula. M. cutaneus trunci besonders gut entwickelt (Hautschlag-Reflex)."
+       data-clinical="Hautschlag-Reflex (panniculus) als neurologischer Test. Muskelatrophie bei chronischer Erkrankung (CNE, Hyperthyreose).">
+        <!-- Neck/shoulder muscles -->
+        <path d="M195,195 Q225,200 260,210 Q285,218 295,228 Q292,245 278,255 Q260,248 240,240 Q215,230 195,218 Q185,208 195,195 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.65"/>
+        <!-- Back muscles -->
+        <path d="M295,215 Q380,215 460,218 Q530,220 580,218 Q620,216 640,214 Q655,218 648,235 Q630,250 580,260 Q520,268 460,265 Q400,262 340,255 Q310,248 300,235 Q296,225 295,215 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.6"/>
+        <!-- Gluteal -->
+        <path d="M630,210 Q655,210 672,220 Q688,235 695,258 Q698,275 692,290 Q682,298 668,298 Q652,292 640,278 Q630,262 628,242 Q627,225 630,210 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.65"/>
+        <!-- Forelimb muscles -->
+        <path d="M262,280 Q258,310 262,345 Q268,380 275,405 Q282,408 288,398 Q290,370 285,340 Q280,310 275,290 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.7"/>
+        <!-- Hindlimb muscles -->
+        <path d="M672,295 Q678,325 685,365 Q690,400 696,435 Q702,438 706,425 Q702,390 696,355 Q690,320 682,300 Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1" opacity="0.7"/>
+        <!-- Calf muscles -->
+        <path d="M690,442 Q694,468 698,498 Q700,520 702,538 Q708,536 710,518 Q710,495 707,470 Q704,450 698,442 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.65"/>
+        <!-- Abdominal muscles -->
+        <path d="M470,275 Q500,288 525,310 Q545,335 548,362 Q545,385 530,400 Q510,412 490,415 Q470,416 452,408 Q438,396 432,378 Q428,358 435,335 Q445,310 460,290 Z" fill="#c0392b" stroke="#922b21" stroke-width="1" opacity="0.55"/>
+    </g>
+</g>
+
+<!-- Layer 1: Skin (Cat) -->
+<g id="layer-skin-cat" class="anatomy-layer" data-layer="skin">
+
+    <!-- Main body outline -->
+    <g class="anatomy-structure" data-id="cat-skin-body" data-name="Haut (Katze)" data-layer="skin"
+       data-desc="Duenner und elastischer als beim Hund. Sehr lose am Rumpf (Nackenfalte, Flankenfalte). Haarkleid dichter (800-1600 Haare/cm2)."
+       data-clinical="Interscapulare Injektionsstelle -> Injektionsassoziiertes Sarkom (FISS)! Alternativ Gliedmassen. Allergie: Miliaere Dermatitis, eosinophiler Granulomkomplex.">
+        <path d="M138,158 Q128,140 132,120 Q140,100 158,95 Q172,92 183,98 Q192,108 195,125 Q198,142 202,160 Q210,172 225,185 Q250,198 280,205 Q340,212 420,216 Q500,220 570,218 Q620,215 658,212 Q685,214 705,224 Q725,238 735,258 Q742,278 738,300 Q732,320 722,340 Q718,360 722,385 Q728,418 735,445 Q740,475 738,505 Q734,530 726,550 Q720,565 712,575 Q702,582 692,578 Q684,570 680,555 Q676,535 674,515 Q670,495 665,480 Q658,468 645,460 Q630,455 612,452 Q590,450 570,455 Q548,462 530,475 Q515,490 506,510 Q498,532 494,548 Q488,565 478,572 Q466,576 458,568 Q452,556 454,538 Q458,515 462,495 Q465,475 462,458 Q454,440 440,430 Q420,422 398,418 Q370,415 345,418 Q318,422 298,432 Q282,445 275,462 Q270,482 268,505 Q266,528 262,548 Q256,562 248,568 Q238,570 232,560 Q228,545 230,525 Q234,505 236,485 Q238,465 232,450 Q222,440 210,436 Q195,434 184,442 Q175,455 172,472 Q170,495 168,518 Q166,538 162,552 Q156,564 148,565 Q138,562 134,550 Q130,535 132,515 Q136,495 139,475" fill="#c9a87c" stroke="#a88650" stroke-width="2" opacity="0.85"/>
+        <!-- Tail (long, elegant) -->
+        <path d="M738,300 Q755,295 770,292 Q790,290 810,292 Q840,298 870,305 Q895,312 910,318 Q920,322 925,328" fill="none" stroke="#c9a87c" stroke-width="10" stroke-linecap="round" opacity="0.85"/>
+    </g>
+
+    <!-- Ears (triangular, upright) -->
+    <g class="anatomy-structure" data-id="cat-ears" data-name="Ohren (Katze)" data-layer="skin"
+       data-desc="Aufrecht, dreieckig, sehr beweglich (180 Grad drehbar, 32 Muskeln!). Duenne Haut, gut durchblutete Innenseite."
+       data-clinical="Plattenepithelkarzinom an weissen Ohren! Ohrmilben (Otodectes cynotis). Polypen. Othaemat­om. Sonnenschutz bei weissen Katzen.">
+        <path d="M155,125 Q140,90 148,62 Q158,55 165,65 Q170,80 168,105 Q166,115 162,125" fill="#c9a87c" stroke="#a88650" stroke-width="1.5" opacity="0.85"/>
+        <path d="M158,118 Q148,95 152,72 Q158,66 163,72 Q166,85 165,108" fill="#e8c9a0" stroke="#a88650" stroke-width="0.8" opacity="0.6"/>
+        <path d="M180,120 Q188,85 195,62 Q200,55 206,65 Q208,82 202,105 Q198,115 192,125" fill="#c9a87c" stroke="#a88650" stroke-width="1.5" opacity="0.85"/>
+        <path d="M184,115 Q190,90 195,72 Q200,65 204,72 Q205,88 200,108" fill="#e8c9a0" stroke="#a88650" stroke-width="0.8" opacity="0.6"/>
+    </g>
+
+    <!-- Eye (Cat - vertical pupils) -->
+    <g class="anatomy-structure" data-id="cat-eye" data-name="Auge (Katze)" data-layer="skin"
+       data-desc="Sehr gross relativ zum Koerper. Schlitzpupille (vertikal) bei hellem Licht, rund bei Daemmerung. Tapetum lucidum gruenlich. Drittes Augenlid prominent."
+       data-clinical="Herpesvirus-Konjunktivitis (FHV-1). Iris-Melanose/-Melanom. Hypertensive Retinopathie (Netzhautabloesung bei Bluthochdruck). Uveitis (FIP, Toxoplasmose).">
+        <ellipse cx="157" cy="148" rx="8" ry="6" fill="#7fb83e" stroke="#3a6617" stroke-width="1.2"/>
+        <ellipse cx="157" cy="148" rx="2" ry="5" fill="#1a252f"/>
+    </g>
+
+    <!-- Nose (Cat) -->
+    <g class="anatomy-structure" data-id="cat-nose" data-name="Nasenspiegel (Katze)" data-layer="skin"
+       data-desc="Kleiner als beim Hund. Farbvariabel (rosa, schwarz, grau). Weniger Falten als Hundenasen."
+       data-clinical="Herpesvirus (FHV-1): Rhinitis, Nasenausfluss. Kryptokokkose: Nasengranulom. Nasenpolypen.">
+        <path d="M130,165 Q126,162 128,158 Q132,155 136,158 Q138,162 134,165 Z" fill="#f5b7b1" stroke="#e74c3c" stroke-width="0.8"/>
+    </g>
+
+    <!-- Whiskers -->
+    <g class="anatomy-structure" data-id="cat-whiskers" data-name="Vibrissen (Schnurrhaare)" data-layer="skin"
+       data-desc="12 lange Vibrissen pro Seite, in 4 Reihen. Propriozeptoren an der Basis. Messen Spaltenbreite, Luftstroemungen, Beruehrung im Dunkeln."
+       data-clinical="Niemals kuerzen! Wichtig fuer Orientierung. Vibrissen-Stress bei zu kleinen Futternaepfen.">
+        <line x1="140" y1="162" x2="105" y2="155" stroke="#888" stroke-width="0.6" opacity="0.5"/>
+        <line x1="140" y1="165" x2="102" y2="165" stroke="#888" stroke-width="0.6" opacity="0.5"/>
+        <line x1="140" y1="168" x2="105" y2="175" stroke="#888" stroke-width="0.6" opacity="0.5"/>
+        <line x1="140" y1="160" x2="108" y2="148" stroke="#888" stroke-width="0.6" opacity="0.4"/>
+    </g>
+</g>
+
+</svg>
+
+        </div>
+
+        <!-- Zoom Controls -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()" title="Vergroessern">+</button>
+            <button class="zoom-btn" onclick="zoomOut()" title="Verkleinern">-</button>
+            <button class="zoom-btn" onclick="resetView()" title="Zuruecksetzen" style="font-size:13px;">&#8634;</button>
+        </div>
+    </main>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+    <div class="tooltip-name" id="tooltipName"></div>
+    <div class="tooltip-desc" id="tooltipDesc"></div>
+</div>
+
+<!-- Info Panel Overlay -->
+<div class="info-panel-overlay" id="infoPanelOverlay" onclick="closeInfoPanel()"></div>
+
+<!-- Info Panel -->
+<aside class="info-panel" id="infoPanel">
+    <button class="info-panel-close" onclick="closeInfoPanel()">&times;</button>
+    <h2 class="info-title" id="infoTitle">--</h2>
+    <div class="info-layer-badge" id="infoLayerBadge">Schicht</div>
+    <div class="info-section">
+        <h4>Beschreibung</h4>
+        <p id="infoDesc">--</p>
+    </div>
+    <div class="info-section info-clinical">
+        <h4>Klinische Relevanz</h4>
+        <p id="infoClinical">--</p>
+    </div>
+</aside>
+
+<script>
+// ===================== STATE =====================
+const state = {
+    species: 'dog',
+    layers: { skin: 100, muscles: 100, organs: 100, skeleton: 100 },
+    zoom: 1,
+    panX: 0,
+    panY: 0,
+    isPanning: false,
+    startX: 0,
+    startY: 0,
+    quizActive: false,
+    quizScore: 0,
+    quizTotal: 0,
+    quizCurrent: null,
+    infoPanelOpen: false
+};
+
+const layerColors = {
+    skin: '#d4a574',
+    muscles: '#c0392b',
+    organs: '#e67e22',
+    skeleton: '#ecf0f1'
+};
+
+const layerNames = {
+    skin: 'Haut',
+    muscles: 'Muskulatur',
+    organs: 'Organe',
+    skeleton: 'Skelett'
+};
+
+// ===================== LAYER CONTROLS =====================
+function setLayerOpacity(layer, value) {
+    state.layers[layer] = parseInt(value);
+    const prefix = state.species === 'dog' ? 'dog' : 'cat';
+    const el = document.getElementById(`layer-${layer}-${prefix}`);
+    if (el) el.style.opacity = value / 100;
+
+    // Update slider
+    const slider = document.querySelector(`.opacity-slider[data-layer="${layer}"]`);
+    if (slider) slider.value = value;
+
+    // Update control active state
+    const ctrl = document.querySelector(`.layer-control[data-layer="${layer}"]`);
+    if (ctrl) {
+        if (parseInt(value) > 0) ctrl.classList.add('active');
+        else ctrl.classList.remove('active');
+    }
+}
+
+function toggleLayer(layer) {
+    const current = state.layers[layer];
+    setLayerOpacity(layer, current > 0 ? 0 : 100);
+}
+
+// Layer control click toggles
+document.querySelectorAll('.layer-control').forEach(ctrl => {
+    ctrl.addEventListener('click', (e) => {
+        if (e.target.classList.contains('opacity-slider')) return;
+        toggleLayer(ctrl.dataset.layer);
+    });
+});
+
+// Presets
+function presetAll() {
+    ['skin', 'muscles', 'organs', 'skeleton'].forEach(l => setLayerOpacity(l, 100));
+}
+function presetSkinOnly() {
+    setLayerOpacity('skin', 100);
+    setLayerOpacity('muscles', 0);
+    setLayerOpacity('organs', 0);
+    setLayerOpacity('skeleton', 0);
+}
+function presetOrgans() {
+    setLayerOpacity('skin', 0);
+    setLayerOpacity('muscles', 0);
+    setLayerOpacity('organs', 100);
+    setLayerOpacity('skeleton', 30);
+}
+function presetSkeleton() {
+    setLayerOpacity('skin', 0);
+    setLayerOpacity('muscles', 0);
+    setLayerOpacity('organs', 0);
+    setLayerOpacity('skeleton', 100);
+}
+function presetXRay() {
+    setLayerOpacity('skin', 15);
+    setLayerOpacity('muscles', 10);
+    setLayerOpacity('organs', 40);
+    setLayerOpacity('skeleton', 100);
+}
+
+// ===================== SPECIES SWITCH =====================
+function switchSpecies(species) {
+    state.species = species;
+    document.getElementById('svgDog').style.display = species === 'dog' ? 'block' : 'none';
+    document.getElementById('svgCat').style.display = species === 'cat' ? 'block' : 'none';
+
+    document.querySelectorAll('.species-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.species === species);
+    });
+
+    // Reapply opacities
+    Object.keys(state.layers).forEach(l => setLayerOpacity(l, state.layers[l]));
+
+    resetView();
+
+    // Reset quiz if active
+    if (state.quizActive) nextQuiz();
+}
+
+// ===================== PAN & ZOOM =====================
+const svgContainer = document.getElementById('svgContainer');
+
+function updateTransform() {
+    const svg = state.species === 'dog' ? document.getElementById('svgDog') : document.getElementById('svgCat');
+    svg.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+    svg.style.transformOrigin = 'center center';
+}
+
+function zoomIn() {
+    state.zoom = Math.min(state.zoom * 1.25, 5);
+    updateTransform();
+}
+
+function zoomOut() {
+    state.zoom = Math.max(state.zoom / 1.25, 0.3);
+    updateTransform();
+}
+
+function resetView() {
+    state.zoom = 1;
+    state.panX = 0;
+    state.panY = 0;
+    updateTransform();
+}
+
+// Mouse wheel zoom
+svgContainer.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (e.deltaY < 0) zoomIn();
+    else zoomOut();
+}, { passive: false });
+
+// Pan with mouse drag
+svgContainer.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.anatomy-structure')) return;
+    state.isPanning = true;
+    state.startX = e.clientX - state.panX;
+    state.startY = e.clientY - state.panY;
+    svgContainer.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!state.isPanning) return;
+    state.panX = e.clientX - state.startX;
+    state.panY = e.clientY - state.startY;
+    updateTransform();
+});
+
+window.addEventListener('mouseup', () => {
+    state.isPanning = false;
+    svgContainer.style.cursor = 'grab';
+});
+
+// Touch pan & pinch zoom
+let touchStartDist = 0;
+let touchStartZoom = 1;
+
+svgContainer.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchStartDist = Math.sqrt(dx*dx + dy*dy);
+        touchStartZoom = state.zoom;
+    } else if (e.touches.length === 1) {
+        state.isPanning = true;
+        state.startX = e.touches[0].clientX - state.panX;
+        state.startY = e.touches[0].clientY - state.panY;
+    }
+}, { passive: true });
+
+svgContainer.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        state.zoom = Math.max(0.3, Math.min(5, touchStartZoom * (dist / touchStartDist)));
+        updateTransform();
+    } else if (e.touches.length === 1 && state.isPanning) {
+        state.panX = e.touches[0].clientX - state.startX;
+        state.panY = e.touches[0].clientY - state.startY;
+        updateTransform();
+    }
+}, { passive: false });
+
+svgContainer.addEventListener('touchend', () => {
+    state.isPanning = false;
+});
+
+// ===================== TOOLTIP =====================
+const tooltip = document.getElementById('tooltip');
+const tooltipName = document.getElementById('tooltipName');
+const tooltipDesc = document.getElementById('tooltipDesc');
+
+function showTooltip(e, struct) {
+    tooltipName.textContent = struct.dataset.name;
+    tooltipDesc.textContent = struct.dataset.desc ? struct.dataset.desc.substring(0, 100) + '...' : '';
+    tooltip.style.left = (e.clientX + 15) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.classList.add('visible');
+}
+
+function hideTooltip() {
+    tooltip.classList.remove('visible');
+}
+
+// Event delegation for anatomy structures
+svgContainer.addEventListener('mouseover', (e) => {
+    const struct = e.target.closest('.anatomy-structure');
+    if (struct) showTooltip(e, struct);
+});
+
+svgContainer.addEventListener('mousemove', (e) => {
+    if (tooltip.classList.contains('visible')) {
+        const struct = e.target.closest('.anatomy-structure');
+        if (struct) {
+            tooltip.style.left = (e.clientX + 15) + 'px';
+            tooltip.style.top = (e.clientY - 10) + 'px';
+        }
+    }
+});
+
+svgContainer.addEventListener('mouseout', (e) => {
+    const struct = e.target.closest('.anatomy-structure');
+    if (struct) hideTooltip();
+});
+
+// ===================== INFO PANEL =====================
+svgContainer.addEventListener('click', (e) => {
+    const struct = e.target.closest('.anatomy-structure');
+    if (struct && !state.quizActive) {
+        openInfoPanel(struct);
+    }
+});
+
+function openInfoPanel(struct) {
+    const panel = document.getElementById('infoPanel');
+    const overlay = document.getElementById('infoPanelOverlay');
+
+    document.getElementById('infoTitle').textContent = struct.dataset.name || '--';
+    document.getElementById('infoDesc').textContent = struct.dataset.desc || 'Keine Beschreibung verfuegbar.';
+    document.getElementById('infoClinical').textContent = struct.dataset.clinical || 'Keine klinischen Daten verfuegbar.';
+
+    const layer = struct.dataset.layer || 'skin';
+    const badge = document.getElementById('infoLayerBadge');
+    badge.textContent = layerNames[layer] || layer;
+    badge.style.background = layerColors[layer] || '#3b82f6';
+
+    panel.classList.add('open');
+    overlay.classList.add('visible');
+    state.infoPanelOpen = true;
+}
+
+function closeInfoPanel() {
+    document.getElementById('infoPanel').classList.remove('open');
+    document.getElementById('infoPanelOverlay').classList.remove('visible');
+    state.infoPanelOpen = false;
+}
+
+// Escape key closes panel
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.infoPanelOpen) closeInfoPanel();
+});
+
+// ===================== SEARCH =====================
+function getAllStructures() {
+    const prefix = state.species === 'dog' ? 'svgDog' : 'svgCat';
+    const svg = document.getElementById(prefix);
+    return Array.from(svg.querySelectorAll('.anatomy-structure'));
+}
+
+function handleSearch(query) {
+    const results = document.getElementById('searchResults');
+    results.innerHTML = '';
+
+    // Clear previous highlights
+    document.querySelectorAll('.anatomy-structure.search-highlight').forEach(el => {
+        el.classList.remove('search-highlight');
+    });
+
+    if (!query || query.length < 2) return;
+
+    const q = query.toLowerCase();
+    const structures = getAllStructures();
+    const matches = structures.filter(s => {
+        const name = (s.dataset.name || '').toLowerCase();
+        const desc = (s.dataset.desc || '').toLowerCase();
+        const id = (s.dataset.id || '').toLowerCase();
+        return name.includes(q) || desc.includes(q) || id.includes(q);
+    });
+
+    matches.forEach(struct => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+
+        const layerBadge = document.createElement('span');
+        layerBadge.className = 'search-result-layer';
+        layerBadge.textContent = layerNames[struct.dataset.layer] || struct.dataset.layer;
+        layerBadge.style.background = layerColors[struct.dataset.layer] || '#3b82f6';
+
+        const text = document.createElement('span');
+        text.textContent = struct.dataset.name;
+
+        item.appendChild(layerBadge);
+        item.appendChild(text);
+
+        item.addEventListener('click', () => {
+            // Make sure layer is visible
+            const layer = struct.dataset.layer;
+            if (state.layers[layer] < 30) {
+                setLayerOpacity(layer, 80);
+            }
+
+            // Highlight
+            document.querySelectorAll('.anatomy-structure.search-highlight').forEach(el => {
+                el.classList.remove('search-highlight');
+            });
+            struct.classList.add('search-highlight');
+
+            // Scroll into view / center
+            resetView();
+
+            // Open info panel
+            openInfoPanel(struct);
+
+            // Remove highlight after 4 seconds
+            setTimeout(() => struct.classList.remove('search-highlight'), 4000);
+        });
+
+        results.appendChild(item);
+    });
+}
+
+// ===================== QUIZ MODE =====================
+function toggleQuiz() {
+    state.quizActive = !state.quizActive;
+    const btn = document.getElementById('quizToggle');
+    const panel = document.getElementById('quizPanel');
+
+    if (state.quizActive) {
+        btn.textContent = 'Quiz beenden';
+        btn.classList.add('active');
+        panel.classList.add('visible');
+        state.quizScore = 0;
+        state.quizTotal = 0;
+        updateQuizScore();
+        nextQuiz();
+    } else {
+        btn.textContent = 'Quiz starten';
+        btn.classList.remove('active');
+        panel.classList.remove('visible');
+        clearQuizHighlight();
+    }
+}
+
+function nextQuiz() {
+    clearQuizHighlight();
+    document.getElementById('quizFeedback').className = 'quiz-feedback';
+    document.getElementById('quizFeedback').style.display = 'none';
+    document.getElementById('quizInput').value = '';
+
+    const structures = getAllStructures().filter(s => {
+        // Only quiz structures whose layer is visible
+        const layer = s.dataset.layer;
+        return state.layers[layer] > 20;
+    });
+
+    if (structures.length === 0) {
+        document.getElementById('quizQuestion').textContent = 'Keine Strukturen sichtbar. Aktiviere mindestens eine Schicht.';
+        return;
+    }
+
+    const struct = structures[Math.floor(Math.random() * structures.length)];
+    state.quizCurrent = struct;
+
+    // Highlight the structure
+    struct.classList.add('quiz-highlight');
+
+    document.getElementById('quizQuestion').textContent = 'Welche Struktur ist hervorgehoben?';
+    document.getElementById('quizInput').focus();
+}
+
+function checkQuizAnswer() {
+    if (!state.quizCurrent) return;
+
+    const input = document.getElementById('quizInput').value.trim().toLowerCase();
+    const name = (state.quizCurrent.dataset.name || '').toLowerCase();
+    const id = (state.quizCurrent.dataset.id || '').toLowerCase();
+
+    const feedback = document.getElementById('quizFeedback');
+    state.quizTotal++;
+
+    // Flexible matching: check if input is a substantial substring
+    const normalizedName = name.replace(/[()\/\-]/g, ' ').replace(/\s+/g, ' ').trim();
+    const nameWords = normalizedName.split(' ');
+    const isCorrect = input.length >= 3 && (
+        name.includes(input) ||
+        id.includes(input) ||
+        nameWords.some(w => w.startsWith(input)) ||
+        input.includes(id.replace('cat-', ''))
+    );
+
+    if (isCorrect) {
+        state.quizScore++;
+        feedback.textContent = 'Richtig! ' + state.quizCurrent.dataset.name;
+        feedback.className = 'quiz-feedback correct';
+    } else {
+        feedback.textContent = 'Nicht ganz. Die Antwort war: ' + state.quizCurrent.dataset.name;
+        feedback.className = 'quiz-feedback wrong';
+    }
+    feedback.style.display = 'block';
+    updateQuizScore();
+}
+
+function skipQuiz() {
+    if (!state.quizCurrent) return;
+    const feedback = document.getElementById('quizFeedback');
+    feedback.textContent = 'Antwort: ' + state.quizCurrent.dataset.name;
+    feedback.className = 'quiz-feedback wrong';
+    feedback.style.display = 'block';
+    state.quizTotal++;
+    updateQuizScore();
+}
+
+function updateQuizScore() {
+    document.getElementById('quizScore').textContent = `Punkte: ${state.quizScore} / ${state.quizTotal}`;
+}
+
+function clearQuizHighlight() {
+    document.querySelectorAll('.anatomy-structure.quiz-highlight').forEach(el => {
+        el.classList.remove('quiz-highlight');
+    });
+}
+
+// ===================== KEYBOARD SHORTCUTS =====================
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+
+    switch(e.key) {
+        case '1': toggleLayer('skin'); break;
+        case '2': toggleLayer('muscles'); break;
+        case '3': toggleLayer('organs'); break;
+        case '4': toggleLayer('skeleton'); break;
+        case '+': case '=': zoomIn(); break;
+        case '-': zoomOut(); break;
+        case '0': resetView(); break;
+        case 'q': toggleQuiz(); break;
+        case 'a': presetAll(); break;
+    }
+});
+
+// ===================== INIT =====================
+window.addEventListener('DOMContentLoaded', () => {
+    // Set initial opacity
+    Object.keys(state.layers).forEach(l => setLayerOpacity(l, state.layers[l]));
+});
+</script>
+
+</body>
+</html>

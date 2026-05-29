@@ -46,6 +46,18 @@ jobs:
         
         # Copy V2.0 Demo (ausgraut, da noch nicht ready)
         cp vetscan-pro-3d-demo-v2.html deploy/ 2>/dev/null || true
+
+        # Professional veterinary learning tools (v11)
+        cp vetscan-clinical-exam.html deploy/ 2>/dev/null || true
+        cp vetscan-ddx-trainer.html deploy/ 2>/dev/null || true
+        cp vetscan-lab-interpreter.html deploy/ 2>/dev/null || true
+        cp vetscan-emergency-triage.html deploy/ 2>/dev/null || true
+        cp vetscan-pharma-calc.html deploy/ 2>/dev/null || true
+        cp vetscan-auscultation.html deploy/ 2>/dev/null || true
+        cp vetscan-radiology.html deploy/ 2>/dev/null || true
+        cp vetscan-surgical-approaches.html deploy/ 2>/dev/null || true
+        cp vetscan-pathology-cases.html deploy/ 2>/dev/null || true
+        cp vetscan-anatomy-layers.html deploy/ 2>/dev/null || true
         
         # Copy JS directory for Version 9
         cp -r js deploy/ 2>/dev/null || true

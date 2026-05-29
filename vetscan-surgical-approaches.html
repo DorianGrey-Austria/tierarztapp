@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Chirurgische Zugangswege</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --skin: #f5c6a0;
+            --subcutis: #fde68a;
+            --fascia: #a3e635;
+            --muscle-ext: #f87171;
+            --muscle-int: #ef4444;
+            --muscle-trans: #dc2626;
+            --peritoneum: #c084fc;
+            --organ: #60a5fa;
+            --bone: #e2e8f0;
+            --nerve: #facc15;
+            --vessel-artery: #ef4444;
+            --vessel-vein: #3b82f6;
+            --cave-bg: #fef2f2;
+            --cave-border: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 12px 16px;
+            min-height: 44px;
+            min-width: 44px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .back-link:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+
+        .approach-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 44px;
+        }
+        .approach-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59,130,246,0.15);
+        }
+        .approach-card.active {
+            border-color: #3b82f6;
+            background: #1e3a5f;
+        }
+
+        .category-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        .cat-abdomen { background: #1e3a5f; color: #60a5fa; }
+        .cat-weichteil { background: #1a3329; color: #4ade80; }
+        .cat-ortho { background: #3b1f1f; color: #f87171; }
+        .cat-hals { background: #3b2f1f; color: #fbbf24; }
+
+        .layer-strip {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            min-height: 44px;
+            user-select: none;
+        }
+        .layer-strip:hover { filter: brightness(1.1); }
+        .layer-strip.revealed {
+            opacity: 1;
+        }
+        .layer-strip.hidden-layer {
+            opacity: 0.3;
+            filter: grayscale(0.5);
+        }
+
+        .cave-box {
+            background: var(--cave-bg);
+            border: 2px solid var(--cave-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #991b1b;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .cave-box strong { color: #dc2626; }
+
+        .svg-container {
+            background: #0f172a;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .svg-container svg {
+            width: 100%;
+            height: auto;
+        }
+
+        .layer-animation {
+            transition: opacity 0.6s ease, transform 0.4s ease;
+        }
+        .layer-animation.layer-hidden {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        .info-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        .vessel-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .vessel-artery { background: rgba(239,68,68,0.15); color: #f87171; }
+        .vessel-vein { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .vessel-nerve { background: rgba(250,204,21,0.15); color: #fbbf24; }
+
+        .step-indicator {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .landmark-dot {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .landmark-dot:hover {
+            filter: drop-shadow(0 0 8px rgba(59,130,246,0.8));
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 50;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            max-width: 250px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .btn-primary {
+            min-height: 44px;
+            min-width: 44px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .tab-btn {
+            min-height: 44px;
+            min-width: 44px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        .tab-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.05); }
+        .tab-btn.active {
+            background: #1e3a5f;
+            color: #60a5fa;
+            border-color: #3b82f6;
+        }
+
+        .layer-toggle {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #334155;
+            background: #1e293b;
+            user-select: none;
+        }
+        .layer-toggle:hover { border-color: #475569; }
+        .layer-toggle.toggled-off { opacity: 0.4; }
+
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            border-radius: 10px;
+            background: #475569;
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .toggle-switch.on { background: #3b82f6; }
+        .toggle-switch::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+        .toggle-switch.on::after { transform: translateX(16px); }
+
+        .detail-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #334155;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="vetscan-version-selector.html" class="back-link">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                    Zurueck
+                </a>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <div>
+                    <h1 class="text-lg font-bold text-white">Chirurgische Zugangswege</h1>
+                    <p class="text-xs text-slate-400">Kleintierchirurgie -- Anatomische Landmarken & Schichtpraeparation</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="info-tag">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Lernmodus
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Category Filters -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button class="tab-btn active" data-filter="all" onclick="filterApproaches('all', this)">Alle Zugaenge</button>
+            <button class="tab-btn" data-filter="abdomen" onclick="filterApproaches('abdomen', this)">Abdominalchirurgie</button>
+            <button class="tab-btn" data-filter="weichteil" onclick="filterApproaches('weichteil', this)">Weichteilchirurgie</button>
+            <button class="tab-btn" data-filter="ortho" onclick="filterApproaches('ortho', this)">Orthopaedie</button>
+            <button class="tab-btn" data-filter="hals" onclick="filterApproaches('hals', this)">Hals-/Thoraxchirurgie</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Approach List -->
+            <div class="lg:col-span-4 space-y-2" id="approachList">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Right: Detail View -->
+            <div class="lg:col-span-8 space-y-4" id="detailView">
+                <div class="flex items-center justify-center h-96 text-slate-500 text-center">
+                    <div>
+                        <svg class="mx-auto mb-4" width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path d="M7.5 3.5C5.5 3.5 4 5 4 7c0 4 8 10 8 10s8-6 8-10c0-2-1.5-3.5-3.5-3.5S13 5 12 6c-1-1-2.5-2.5-4.5-2.5z"/>
+                        </svg>
+                        <p class="text-lg font-semibold mb-1">Chirurgischen Zugang waehlen</p>
+                        <p class="text-sm">Klicken Sie links auf einen Zugangsweg,<br>um die Schicht-fuer-Schicht-Darstellung zu sehen.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const approaches = [
+        {
+            id: 'mediane-laparotomie',
+            name: 'Mediane Laparotomie',
+            subtitle: 'Linea alba',
+            category: 'abdomen',
+            indication: 'Standard-Zugang Abdomen (OVH, Fremdkoerper-OP, Explorativ-Laparotomie)',
+            positioning: 'Rueckenlage, Vorder- und Hintergliedmassen fixiert, Bauch geschoren und aseptisch vorbereitet',
+            landmarks: [
+                'Processus xiphoideus (kranial)',
+                'Os pubis (kaudal)',
+                'Linea alba (weisse Mittellinie, avaskular)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Laengsinzision in der ventralen Mittellinie' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Stumpfes Praeparieren, Blutstillung der Subkutangefaesse' },
+                { name: 'Linea alba (Faszie)', color: '#a3e635', description: 'Avaskular! Inzision exakt in der Mittellinie. Anheben mit Pinzette, dann scharfe Eroeffnung.' },
+                { name: 'Peritoneum', color: '#c084fc', description: 'Eroeffnung vorsichtig, Finger unterschieben um Organverletzung zu vermeiden' },
+                { name: 'Abdomen', color: '#60a5fa', description: 'Zugang zur Bauchhoehle: Exploration, OP-Ziel identifizieren' }
+            ],
+            vessels: [],
+            nerves: [],
+            cave: 'Linea alba exakt treffen -- lateral davon liegt der M. rectus abdominis, der stark durchblutet ist! Bei der Eroeffnung des Peritoneums Finger unterschieben, um Darmperforation zu verhindern.',
+            svgView: 'ventral',
+            svgHighlight: 'abdomen-midline'
+        },
+        {
+            id: 'laterale-laparotomie',
+            name: 'Laterale Laparotomie',
+            subtitle: 'Flankenschnitt',
+            category: 'abdomen',
+            indication: 'Sectio caesarea (Katze), Nephrotomie, Ovarektomie lateral',
+            positioning: 'Seitenlage, betroffene Seite oben',
+            landmarks: [
+                'Letzte Rippe (kranial)',
+                'Huefthoecker / Tuber coxae (kaudal)',
+                'Querfortsaetze der Lendenwirbel (dorsal)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Vertikaler oder leicht schraeger Schnitt in der Flanke' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Stumpfe Praeparation' },
+                { name: 'M. obliquus externus abdominis', color: '#f87171', description: 'Aeussere schraege Bauchmuskulatur, Faserrichtung: kaudoventral. Stumpfe Trennung in Faserrichtung.' },
+                { name: 'M. obliquus internus abdominis', color: '#ef4444', description: 'Innere schraege Bauchmuskulatur, Faserrichtung: kranioventral (senkrecht zum Externus!)' },
+                { name: 'M. transversus abdominis', color: '#dc2626', description: 'Quere Bauchmuskulatur, duennste Schicht. Fasern horizontal.' },
+                { name: 'Peritoneum', color: '#c084fc', description: 'Vorsichtige Eroeffnung' }
+            ],
+            vessels: [],
+            nerves: [],
+            cave: 'Drei Muskelschichten mit unterschiedlichen Faserrichtungen -- "Grid-Iron" Technik: jede Schicht in ihrer Faserrichtung stumpf trennen fuer minimale Blutung und bessere Heilung.',
+            svgView: 'lateral',
+            svgHighlight: 'flank'
+        },
+        {
+            id: 'zystotomie',
+            name: 'Zystotomie',
+            subtitle: 'Blaseneroeffnung',
+            category: 'abdomen',
+            indication: 'Harnsteine (Urolithen), Blasentumor-Biopsie, Fremdkoerper',
+            positioning: 'Rueckenlage, kaudaler Bauchzugang',
+            landmarks: [
+                'Kaudales Abdomen',
+                'Harnblase: Apex vs. Trigone identifizieren',
+                'Avaskularerer Bereich der Blasenwand (ventral)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Kaudale mediane Laparotomie' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Stumpfe Praeparation' },
+                { name: 'Linea alba', color: '#a3e635', description: 'Eroeffnung in der Mittellinie' },
+                { name: 'Peritoneum', color: '#c084fc', description: 'Eroeffnung, Blase vorlagern' },
+                { name: 'Blasenwand (Serosa/Muskularis)', color: '#f472b6', description: 'Stay-Sutures setzen, Inzision auf avaskulaerer Ventralseite, Steine entfernen' },
+                { name: 'Blasenlumen', color: '#60a5fa', description: 'Gruendliche Spuelung, alle Konkremente entfernen, Harnroehre retrograd spuelen' }
+            ],
+            vessels: [
+                { name: 'A./V. vesicalis', type: 'artery' }
+            ],
+            nerves: [],
+            cave: 'Stay-Sutures an der Blase vor Inzision! Wasserdichter, zweischichtiger Verschluss (Schleimhaut + Serosa/Muskularis) mit resorbierbarem Nahtmaterial. Urinleckage = Peritonitis!',
+            svgView: 'ventral',
+            svgHighlight: 'bladder'
+        },
+        {
+            id: 'ovh',
+            name: 'Ovariohysterektomie',
+            subtitle: 'OVH Huendin',
+            category: 'weichteil',
+            indication: 'Kastration der Huendin, Pyometra, Ovarialtumor',
+            positioning: 'Rueckenlage, kaudale mediane Laparotomie',
+            landmarks: [
+                'Nabel (Inzision beginnt 1-2 cm kaudal)',
+                'Ovarien: kaudal der Niere',
+                'Uteruskervix: kranial der Harnblase'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Mediane Inzision kaudal des Nabels' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Praeparation zur Linea alba' },
+                { name: 'Linea alba', color: '#a3e635', description: 'Eroeffnung Bauchhoehle' },
+                { name: 'Peritoneum + Lig. suspensorium', color: '#c084fc', description: 'Ovar auffinden, Lig. suspensorium ovarii strecken oder durchtrennen fuer bessere Exposition' },
+                { name: 'Mesovarium + Gefaesspedikel', color: '#f87171', description: 'Doppelligatur der A./V. ovarica, Durchtrennung des Gefaesspedikels' },
+                { name: 'Lig. latum uteri + Uteruskoerper', color: '#f472b6', description: 'Kaudal verfolgen, Uterusgefaesse ligieren, Uterusstumpf absetzen' }
+            ],
+            vessels: [
+                { name: 'A./V. ovarica', type: 'artery' },
+                { name: 'A./V. uterina', type: 'artery' }
+            ],
+            nerves: [],
+            cave: 'Ureter verlaeuft nahe des Uterusstumpfes -- bei der kaudalen Ligatur nicht mitfassen! Lig. suspensorium vorsichtig strecken, nicht reissen. Gefaesspedikel nach Ligatur kontrollieren (Nachblutung).',
+            svgView: 'ventral',
+            svgHighlight: 'uterus'
+        },
+        {
+            id: 'kastration-ruede',
+            name: 'Kastration Ruede',
+            subtitle: 'Praeskrotaler Zugang',
+            category: 'weichteil',
+            indication: 'Elektive Kastration, Hodentumor, Kryptorchismus (inguinal/abdominal)',
+            positioning: 'Rueckenlage, Hintergliedmassen nach kaudal fixiert',
+            landmarks: [
+                'Skrotum',
+                'Praeskrotale Region (Inzision!)',
+                'Samenstrang palpierbar'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Praeskrotale Inzision, NICHT ueber dem Skrotum (schlechte Heilung!)' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Stumpfes Praeparieren zum Samenstrang' },
+                { name: 'Fascia spermatica externa', color: '#a3e635', description: 'Aeussere Samenstranghuelle eroeffnen' },
+                { name: 'Tunica vaginalis parietalis', color: '#c084fc', description: 'Offene Methode: Tunica eroeffnen. Geschlossene Methode: Tunica intakt lassen.' },
+                { name: 'Hoden + Nebenhoden', color: '#f472b6', description: 'Hoden vorlagern, Lig. caudae epididymidis durchtrennen' },
+                { name: 'Samenstrang (Ligatur)', color: '#f87171', description: 'Doppelligatur: A. testicularis, Ductus deferens, A. ductus deferentis. Transfixationsligatur bei grossen Hunden.' }
+            ],
+            vessels: [
+                { name: 'A. testicularis', type: 'artery' },
+                { name: 'A. ductus deferentis', type: 'artery' },
+                { name: 'Plexus pampiniformis', type: 'vein' }
+            ],
+            nerves: [],
+            cave: 'Praeskrotal inzidieren, NIEMALS direkt ueber dem Skrotum (duenne Haut, schlecht vaskularisiert, Selbsttrauma!). Bei der geschlossenen Methode verbleibt die Tunica vaginalis als zusaetzliche Barriere.',
+            svgView: 'ventral',
+            svgHighlight: 'inguinal'
+        },
+        {
+            id: 'mastektomie',
+            name: 'Mastektomie',
+            subtitle: 'Mammaleisten-Resektion',
+            category: 'weichteil',
+            indication: 'Mammatumor (haeufigster Tumor der Huendin), Mastitis',
+            positioning: 'Rueckenlage',
+            landmarks: [
+                'Mammakomplexe M1-M5 (kranial nach kaudal)',
+                'Lnn. axillares (Lymphknoten, kraniale Komplexe)',
+                'Lnn. inguinales superficiales (kaudale Komplexe)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Elliptische Umschneidung des Tumors/der Mammaleiste mit Sicherheitsabstand' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Praeparation in der Subkutis, Identifikation der Tumorausdehnung' },
+                { name: 'Mammagewebe', color: '#f472b6', description: 'En-bloc Resektion des betroffenen Gewebes' },
+                { name: 'Fascia trunci profunda', color: '#a3e635', description: 'Abpraeparation von der Bauchwand/Muskulatur, Gefaessversorgung ligieren' },
+                { name: 'Lymphknoten (regional)', color: '#818cf8', description: 'Inguinale LK bei kaudaler Leiste mit entfernen, axillaere LK nur bei Vergroesserung' }
+            ],
+            vessels: [
+                { name: 'A./V. epigastrica superficialis cranialis', type: 'artery' },
+                { name: 'A./V. epigastrica superficialis caudalis', type: 'artery' },
+                { name: 'A./V. pudenda externa', type: 'artery' }
+            ],
+            nerves: [],
+            cave: 'Lymphabfluss beachten: M1-M3 drainieren nach axillaer, M4-M5 nach inguinal. M3 hat variablen Abfluss in beide Richtungen! Grosser Wunddefekt -- ggf. Entlastungsinzisionen oder Drainagen.',
+            svgView: 'ventral',
+            svgHighlight: 'mamma'
+        },
+        {
+            id: 'lateraler-femur',
+            name: 'Lateraler Zugang Femur',
+            subtitle: 'Femurschaft',
+            category: 'ortho',
+            indication: 'Femurfraktur (Plattenosteosynthese, Marknagel)',
+            positioning: 'Seitenlage, betroffene Seite oben, Gliedmasse frei abgedeckt',
+            landmarks: [
+                'Trochanter major (proximal)',
+                'Lateraler Femurkondylus (distal)',
+                'Femurschaft palpierbar durch Muskulatur'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Laengsinzision ueber dem lateralen Femur vom Trochanter major zum Knie' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Stumpfe Praeparation' },
+                { name: 'Fascia lata', color: '#a3e635', description: 'Inzision der straffen Faszie, streng laengs' },
+                { name: 'M. biceps femoris (kaudal)', color: '#f87171', description: 'Nach kaudal retrahieren' },
+                { name: 'M. vastus lateralis', color: '#ef4444', description: 'Vom Femurschaft abheben oder Laengsspaltung -- Periostzugang' },
+                { name: 'Femurschaft (Periost)', color: '#e2e8f0', description: 'Periost minimal abheben, Fraktur darstellen, Implantat positionieren' }
+            ],
+            vessels: [],
+            nerves: [
+                { name: 'N. ischiadicus', location: 'dorsal/kaudal des Femurs' }
+            ],
+            cave: 'N. ischiadicus verlaeuft dorsal/kaudal -- NICHT nach kaudal-tief praeparieren! Bei Retraktion des M. biceps femoris den Nerv identifizieren und schuetzen. Periost minimal abheben fuer Frakturheilung.',
+            svgView: 'lateral',
+            svgHighlight: 'femur'
+        },
+        {
+            id: 'medialer-knie',
+            name: 'Medialer Zugang Kniegelenk',
+            subtitle: 'Kreuzbandchirurgie',
+            category: 'ortho',
+            indication: 'Kreuzbandruptur (TPLO, TTA, extrakapsulaere Stabilisierung), Meniskuslaesion',
+            positioning: 'Rueckenlage oder Seitenlage, Knie frei beweglich',
+            landmarks: [
+                'Patella (Kniescheibe)',
+                'Tuberositas tibiae (Schienbeinhoecker)',
+                'Mediales Kollateralband',
+                'Lig. patellae (Kniescheibenband)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Bogenfoermige Inzision medial, von proximal der Patella bis distal der Tuberositas tibiae' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Praeparation, Schonung der V. saphena medialis' },
+                { name: 'Mediales Retinaculum', color: '#a3e635', description: 'Inzision parapatellarer medial, Zugang zum Gelenkspalt' },
+                { name: 'Gelenkkapsel', color: '#c084fc', description: 'Arthrotomie: Eroeffnung der Gelenkkapsel, Inspektion von Kreuzband und Menisken' },
+                { name: 'Gelenkinnenraum', color: '#60a5fa', description: 'Meniskus inspizieren, Kreuzbandstumpf entfernen, ggf. Meniskektomie' }
+            ],
+            vessels: [
+                { name: 'V. saphena medialis', type: 'vein' },
+                { name: 'A. genus descendens', type: 'artery' }
+            ],
+            nerves: [],
+            cave: 'Mediales Kollateralband schonen! V. saphena medialis verlaeuft oberflaechlich und kann leicht verletzt werden. Bei TPLO zusaetzlich tibialer Osteotomie-Zugang notwendig.',
+            svgView: 'lateral',
+            svgHighlight: 'knee'
+        },
+        {
+            id: 'lateraler-ellbogen',
+            name: 'Lateraler Zugang Ellbogen',
+            subtitle: 'Processus coronoideus',
+            category: 'ortho',
+            indication: 'FPC (fragmentierter Processus coronoideus), Ellbogendysplasie, IPA',
+            positioning: 'Seitenlage, betroffene Seite oben, Ellbogen frei',
+            landmarks: [
+                'Epicondylus lateralis humeri',
+                'Olekranon (Ellbogenhoecker)',
+                'Radiuskopf'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Bogenfoermige Inzision ueber dem lateralen Epicondylus' },
+                { name: 'Subkutis', color: '#fde68a', description: 'Vorsichtige Praeparation' },
+                { name: 'Faszie + M. extensor digitorum communis', color: '#a3e635', description: 'Muskelursprung teilweise ablesen vom Epicondylus' },
+                { name: 'Gelenkkapsel', color: '#c084fc', description: 'Arthrotomie lateral, Inspektion des Processus coronoideus medialis ueber den lateralen Zugang eingeschraenkt' },
+                { name: 'Gelenk', color: '#60a5fa', description: 'Fragment identifizieren und entfernen, Knorpel beurteilen' }
+            ],
+            vessels: [],
+            nerves: [
+                { name: 'N. radialis (R. profundus)', location: 'lateral am Ellbogen, zwischen M. supinator und Radiuskopf' }
+            ],
+            cave: 'N. radialis (Ramus profundus) verlaeuft lateral am Ellbogen und kann bei tiefer Praeparation verletzt werden! Alternative: medialer Zugang fuer besseren Zugang zum Processus coronoideus medialis. Arthroskopie zunehmend als Standard.',
+            svgView: 'lateral',
+            svgHighlight: 'elbow'
+        },
+        {
+            id: 'ventraler-hals',
+            name: 'Ventraler Zugang Hals',
+            subtitle: 'Laryngotomie / Tracheotomie',
+            category: 'hals',
+            indication: 'Larynxparalyse (Tie-back), Trachealkollaps (Stent/Ringe), Notfall-Tracheotomie, Schilddruesenresektion',
+            positioning: 'Rueckenlage, Hals gestreckt, Kopf leicht ueberstreckt (Polster unter Hals)',
+            landmarks: [
+                'Larynx (Kehlkopf) tastbar',
+                'Trachealringe (palpierbar)',
+                'Fossa jugularis (kranial)',
+                'Manubrium sterni (kaudal)'
+            ],
+            layers: [
+                { name: 'Haut', color: '#f5c6a0', description: 'Ventrale Mittellinie am Hals, von Larynx nach kaudal' },
+                { name: 'Subkutis + Platysma', color: '#fde68a', description: 'Duenne Muskelschicht (Platysma), stumpf durchtrennen' },
+                { name: 'M. sternohyoideus (paarig)', color: '#f87171', description: 'Trennung in der Medianlinie (Raphe) -- avaskular! Beide Muskelbaeeuche werden nach lateral retrahiert.' },
+                { name: 'Trachea / Larynx', color: '#93c5fd', description: 'Trachealringe oder Schildknorpel sichtbar, OP-Ziel erreicht' }
+            ],
+            vessels: [
+                { name: 'V. jugularis externa', type: 'vein' },
+                { name: 'A. carotis communis', type: 'artery' }
+            ],
+            nerves: [
+                { name: 'N. laryngeus recurrens', location: 'im Sulcus tracheooesophageus, nahe der Trachea' }
+            ],
+            cave: 'V. jugularis externa liegt lateral -- bei medialer Praeparation sicher, aber Orientierung behalten! A. carotis communis und N. vagus liegen tiefer lateral. N. laryngeus recurrens verlaeuft im Sulcus tracheooesophageus und darf NICHT verletzt werden (Stimmlosigkeit, Schluckstoeeerungen)!',
+            svgView: 'ventral',
+            svgHighlight: 'throat'
+        }
+    ];
+
+    let currentApproach = null;
+    let revealedLayers = 0;
+    let layerVisibility = {};
+
+    function init() {
+        renderApproachList();
+    }
+
+    function renderApproachList(filter = 'all') {
+        const list = document.getElementById('approachList');
+        const catLabels = {
+            abdomen: 'Abdominalchirurgie',
+            weichteil: 'Weichteilchirurgie',
+            ortho: 'Orthopaedie',
+            hals: 'Hals-/Thoraxchirurgie'
+        };
+
+        let html = '';
+        let lastCat = '';
+
+        const filtered = filter === 'all' ? approaches : approaches.filter(a => a.category === filter);
+
+        filtered.forEach((a, idx) => {
+            if (a.category !== lastCat) {
+                lastCat = a.category;
+                html += `<div class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 ${idx > 0 ? 'mt-4' : ''} mb-1">${catLabels[a.category]}</div>`;
+            }
+            html += `
+                <div class="approach-card p-4 ${currentApproach && currentApproach.id === a.id ? 'active' : ''}"
+                     data-category="${a.category}"
+                     onclick="selectApproach('${a.id}')">
+                    <div class="flex items-start gap-3">
+                        <div class="step-indicator mt-0.5" style="background:${getCatColor(a.category)}20;color:${getCatColor(a.category)}">
+                            ${getFilteredIndex(filtered, a) + 1}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-semibold text-white text-sm">${a.name}</div>
+                            <div class="text-xs text-slate-400 mt-0.5">${a.subtitle}</div>
+                            <div class="mt-2">
+                                <span class="category-badge cat-${a.category}">${catLabels[a.category]}</span>
+                            </div>
+                        </div>
+                        <svg class="text-slate-500 flex-shrink-0 mt-1" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
+                </div>
+            `;
+        });
+
+        list.innerHTML = html;
+    }
+
+    function getFilteredIndex(filtered, approach) {
+        return filtered.indexOf(approach);
+    }
+
+    function getCatColor(cat) {
+        const colors = { abdomen: '#60a5fa', weichteil: '#4ade80', ortho: '#f87171', hals: '#fbbf24' };
+        return colors[cat] || '#94a3b8';
+    }
+
+    function filterApproaches(filter, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderApproachList(filter);
+    }
+
+    function selectApproach(id) {
+        currentApproach = approaches.find(a => a.id === id);
+        revealedLayers = 0;
+        layerVisibility = {};
+        currentApproach.layers.forEach((_, i) => { layerVisibility[i] = false; });
+        renderApproachList(document.querySelector('.tab-btn.active').dataset.filter);
+        renderDetail();
+    }
+
+    function renderDetail() {
+        const a = currentApproach;
+        if (!a) return;
+
+        const detail = document.getElementById('detailView');
+        const totalLayers = a.layers.length;
+        const progressPct = (revealedLayers / totalLayers) * 100;
+
+        detail.innerHTML = `
+            <div class="detail-section">
+                <div class="p-5 border-b border-slate-700">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <span class="category-badge cat-${a.category} mb-2 inline-block">${getCatLabel(a.category)}</span>
+                            <h2 class="text-2xl font-bold text-white mt-1">${a.name}</h2>
+                            <p class="text-slate-400 mt-1">${a.subtitle}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indication & Positioning -->
+                <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-slate-700">
+                    <div>
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Indikation</div>
+                        <p class="text-sm text-slate-300">${a.indication}</p>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Lagerung</div>
+                        <p class="text-sm text-slate-300">${a.positioning}</p>
+                    </div>
+                </div>
+
+                <!-- Landmarks -->
+                <div class="p-5 border-b border-slate-700">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Anatomische Landmarken</div>
+                    <div class="flex flex-wrap gap-2">
+                        ${a.landmarks.map(l => `<span class="info-tag"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>${l}</span>`).join('')}
+                    </div>
+                </div>
+
+                <!-- Vessels & Nerves -->
+                ${(a.vessels.length > 0 || a.nerves.length > 0) ? `
+                <div class="p-5 border-b border-slate-700">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Relevante Strukturen</div>
+                    <div class="flex flex-wrap gap-2">
+                        ${a.vessels.map(v => `<span class="vessel-indicator ${v.type === 'artery' ? 'vessel-artery' : 'vessel-vein'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>${v.name}</span>`).join('')}
+                        ${a.nerves.map(n => `<span class="vessel-indicator vessel-nerve"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>${n.name}</span>`).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- SVG Visualization -->
+            <div class="detail-section">
+                <div class="section-header flex items-center justify-between">
+                    <span>Anatomische Darstellung -- ${a.svgView === 'ventral' ? 'Ventralansicht' : 'Lateralansicht'}</span>
+                    <span class="text-xs font-normal text-slate-400">Klicken Sie auf markierte Bereiche</span>
+                </div>
+                <div class="svg-container p-4">
+                    ${renderSVG(a)}
+                </div>
+            </div>
+
+            <!-- Layer-by-Layer Section -->
+            <div class="detail-section">
+                <div class="section-header">
+                    <div class="flex items-center justify-between">
+                        <span>Schicht-fuer-Schicht Praeparation</span>
+                        <span class="text-xs font-normal">${revealedLayers} / ${totalLayers} Schichten</span>
+                    </div>
+                    <div class="progress-bar mt-3">
+                        <div class="progress-bar-fill" style="width:${progressPct}%"></div>
+                    </div>
+                </div>
+
+                <!-- Layer Strips -->
+                <div class="divide-y divide-slate-700/50" id="layerContainer">
+                    ${a.layers.map((layer, i) => `
+                        <div class="layer-strip ${i < revealedLayers ? 'revealed' : 'hidden-layer'}"
+                             style="background:${layer.color}15; border-left-color:${layer.color}"
+                             onclick="${i < revealedLayers ? `toggleLayerInfo(${i})` : ''}">
+                            <div class="step-indicator mr-3" style="background:${layer.color}30;color:${layer.color}">${i + 1}</div>
+                            <div class="flex-1">
+                                <span style="color:${layer.color}" class="font-semibold">${layer.name}</span>
+                                ${i < revealedLayers ? `<div class="text-xs text-slate-400 mt-1 layer-desc" id="layerDesc${i}" style="display:none">${layer.description}</div>` : ''}
+                            </div>
+                            ${i < revealedLayers ? `<svg class="text-slate-500" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>` : `<svg class="text-slate-600" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>`}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Reveal Button -->
+                <div class="p-4 flex gap-3 flex-wrap">
+                    ${revealedLayers < totalLayers ? `
+                        <button class="btn-primary bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-2" onclick="revealNextLayer()">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v16m0 0l-4-4m4 4l4-4"/></svg>
+                            Naechste Schicht eroeffnen
+                        </button>
+                    ` : ''}
+                    ${revealedLayers > 0 ? `
+                        <button class="btn-primary bg-slate-700 hover:bg-slate-600 text-white flex items-center gap-2" onclick="revealAllLayers()">
+                            Alle anzeigen
+                        </button>
+                        <button class="btn-primary bg-slate-700 hover:bg-slate-600 text-white flex items-center gap-2" onclick="resetLayers()">
+                            Zuruecksetzen
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- Layer Toggles -->
+            ${revealedLayers > 0 ? `
+            <div class="detail-section">
+                <div class="section-header">Schicht-Sichtbarkeit</div>
+                <div class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    ${a.layers.slice(0, revealedLayers).map((layer, i) => `
+                        <div class="layer-toggle ${layerVisibility[i] === false ? '' : ''}" onclick="toggleLayerVisibility(${i})">
+                            <div class="toggle-switch ${layerVisibility[i] !== false ? 'on' : ''}"></div>
+                            <div class="w-3 h-3 rounded-sm flex-shrink-0" style="background:${layer.color}"></div>
+                            <span class="text-xs text-slate-300 truncate">${layer.name}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+
+            <!-- CAVE Box -->
+            <div class="cave-box">
+                <strong>CAVE!</strong><br>
+                ${a.cave}
+            </div>
+
+            <!-- Nerve Detail (if applicable) -->
+            ${a.nerves.length > 0 ? `
+            <div class="detail-section">
+                <div class="section-header" style="color:#fbbf24">Nerven -- Gefaehrdete Strukturen</div>
+                <div class="p-5">
+                    ${a.nerves.map(n => `
+                        <div class="flex items-start gap-3 mb-3 last:mb-0">
+                            <svg class="text-yellow-400 flex-shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            <div>
+                                <div class="font-semibold text-yellow-300 text-sm">${n.name}</div>
+                                <div class="text-xs text-slate-400 mt-0.5">Lokalisation: ${n.location}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    function getCatLabel(cat) {
+        const labels = { abdomen: 'Abdominalchirurgie', weichteil: 'Weichteilchirurgie', ortho: 'Orthopaedie', hals: 'Hals-/Thoraxchirurgie' };
+        return labels[cat] || '';
+    }
+
+    function revealNextLayer() {
+        if (!currentApproach) return;
+        if (revealedLayers < currentApproach.layers.length) {
+            layerVisibility[revealedLayers] = true;
+            revealedLayers++;
+            renderDetail();
+        }
+    }
+
+    function revealAllLayers() {
+        if (!currentApproach) return;
+        revealedLayers = currentApproach.layers.length;
+        currentApproach.layers.forEach((_, i) => { layerVisibility[i] = true; });
+        renderDetail();
+    }
+
+    function resetLayers() {
+        revealedLayers = 0;
+        if (currentApproach) {
+            currentApproach.layers.forEach((_, i) => { layerVisibility[i] = false; });
+        }
+        renderDetail();
+    }
+
+    function toggleLayerInfo(idx) {
+        const desc = document.getElementById('layerDesc' + idx);
+        if (desc) {
+            desc.style.display = desc.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+
+    function toggleLayerVisibility(idx) {
+        layerVisibility[idx] = !layerVisibility[idx];
+        renderDetail();
+    }
+
+    function renderSVG(approach) {
+        if (approach.svgView === 'ventral') {
+            return renderVentralSVG(approach);
+        } else {
+            return renderLateralSVG(approach);
+        }
+    }
+
+    function renderVentralSVG(approach) {
+        const hl = approach.svgHighlight;
+        const hlColor = getCatColor(approach.category);
+
+        return `
+        <svg viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="max-height:500px">
+            <defs>
+                <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#475569"/>
+                    <stop offset="100%" stop-color="#334155"/>
+                </linearGradient>
+            </defs>
+
+            <!-- Grid lines -->
+            <g stroke="#1e293b" stroke-width="0.5" opacity="0.5">
+                ${Array.from({length: 10}, (_, i) => `<line x1="0" y1="${i*50}" x2="600" y2="${i*50}"/>`).join('')}
+                ${Array.from({length: 12}, (_, i) => `<line x1="${i*50}" y1="0" x2="${i*50}" y2="500"/>`).join('')}
+            </g>
+
+            <!-- Dog body outline - ventral view -->
+            <g transform="translate(300,250)">
+                <!-- Body ellipse -->
+                <ellipse cx="0" cy="0" rx="100" ry="160" fill="url(#bodyGrad)" stroke="#64748b" stroke-width="1.5"/>
+
+                <!-- Head -->
+                <ellipse cx="0" cy="-195" rx="50" ry="45" fill="url(#bodyGrad)" stroke="#64748b" stroke-width="1.5"/>
+                <!-- Ears -->
+                <ellipse cx="-45" cy="-210" rx="18" ry="30" fill="#3d4b5e" stroke="#64748b" stroke-width="1" transform="rotate(-15,-45,-210)"/>
+                <ellipse cx="45" cy="-210" rx="18" ry="30" fill="#3d4b5e" stroke="#64748b" stroke-width="1" transform="rotate(15,45,-210)"/>
+                <!-- Eyes -->
+                <circle cx="-18" cy="-200" r="4" fill="#94a3b8"/>
+                <circle cx="18" cy="-200" r="4" fill="#94a3b8"/>
+                <!-- Nose -->
+                <ellipse cx="0" cy="-185" rx="8" ry="5" fill="#1e293b"/>
+
+                <!-- Neck connection -->
+                <rect x="-35" y="-160" width="70" height="20" fill="url(#bodyGrad)" stroke="none"/>
+
+                <!-- Front legs -->
+                <rect x="-85" y="-100" width="22" height="90" rx="8" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+                <rect x="63" y="-100" width="22" height="90" rx="8" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+
+                <!-- Hind legs -->
+                <rect x="-95" y="80" width="26" height="95" rx="10" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+                <rect x="69" y="80" width="26" height="95" rx="10" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+
+                <!-- Tail -->
+                <path d="M0,155 Q10,175 5,195" stroke="#64748b" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+                <!-- Midline (Linea alba) -->
+                <line x1="0" y1="-140" x2="0" y2="140" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>
+                <text x="8" y="-125" fill="#94a3b8" font-size="9" opacity="0.7">Linea alba</text>
+
+                <!-- Xiphoid label -->
+                <circle cx="0" cy="-120" r="3" fill="#94a3b8" opacity="0.6"/>
+                <text x="10" y="-117" fill="#94a3b8" font-size="8" opacity="0.6">Proc. xiphoideus</text>
+
+                <!-- Pubis label -->
+                <circle cx="0" cy="130" r="3" fill="#94a3b8" opacity="0.6"/>
+                <text x="10" y="133" fill="#94a3b8" font-size="8" opacity="0.6">Pubis</text>
+
+                <!-- Nabel -->
+                <circle cx="0" cy="-20" r="3" fill="#94a3b8" opacity="0.5"/>
+                <text x="8" y="-17" fill="#94a3b8" font-size="8" opacity="0.5">Nabel</text>
+
+                <!-- Mammaleisten (bilateral) -->
+                <g opacity="0.3">
+                    <circle cx="-25" cy="-80" r="3" fill="#f472b6"/>
+                    <circle cx="25" cy="-80" r="3" fill="#f472b6"/>
+                    <circle cx="-25" cy="-40" r="3" fill="#f472b6"/>
+                    <circle cx="25" cy="-40" r="3" fill="#f472b6"/>
+                    <circle cx="-25" cy="0" r="3" fill="#f472b6"/>
+                    <circle cx="25" cy="0" r="3" fill="#f472b6"/>
+                    <circle cx="-25" cy="40" r="3" fill="#f472b6"/>
+                    <circle cx="25" cy="40" r="3" fill="#f472b6"/>
+                    <circle cx="-25" cy="80" r="3" fill="#f472b6"/>
+                    <circle cx="25" cy="80" r="3" fill="#f472b6"/>
+                </g>
+
+                <!-- Highlight based on approach -->
+                ${hl === 'abdomen-midline' ? `
+                    <line x1="0" y1="-120" x2="0" y2="130" stroke="${hlColor}" stroke-width="4" filter="url(#glow)" opacity="0.8"/>
+                    <text x="-80" y="0" fill="${hlColor}" font-size="11" font-weight="600">Mediane</text>
+                    <text x="-80" y="14" fill="${hlColor}" font-size="11" font-weight="600">Laparotomie</text>
+                ` : ''}
+                ${hl === 'bladder' ? `
+                    <ellipse cx="0" cy="100" rx="30" ry="22" fill="${hlColor}30" stroke="${hlColor}" stroke-width="2" filter="url(#glow)"/>
+                    <text x="35" y="105" fill="${hlColor}" font-size="11" font-weight="600">Harnblase</text>
+                ` : ''}
+                ${hl === 'uterus' ? `
+                    <path d="M-35,-10 Q-40,20 -20,40 L0,50 L20,40 Q40,20 35,-10" fill="${hlColor}20" stroke="${hlColor}" stroke-width="2" filter="url(#glow)"/>
+                    <circle cx="-35" cy="-10" r="8" fill="${hlColor}30" stroke="${hlColor}" stroke-width="1.5"/>
+                    <circle cx="35" cy="-10" r="8" fill="${hlColor}30" stroke="${hlColor}" stroke-width="1.5"/>
+                    <text x="45" y="-5" fill="${hlColor}" font-size="10" font-weight="600">Ovar</text>
+                    <text x="10" y="55" fill="${hlColor}" font-size="10" font-weight="600">Uterus</text>
+                ` : ''}
+                ${hl === 'inguinal' ? `
+                    <ellipse cx="0" cy="115" rx="20" ry="15" fill="${hlColor}30" stroke="${hlColor}" stroke-width="2" filter="url(#glow)"/>
+                    <text x="25" y="120" fill="${hlColor}" font-size="11" font-weight="600">Praeskrotal</text>
+                ` : ''}
+                ${hl === 'mamma' ? `
+                    <g filter="url(#glow)">
+                        <rect x="-35" y="-90" width="70" height="180" rx="15" fill="${hlColor}15" stroke="${hlColor}" stroke-width="2"/>
+                        ${[-80,-40,0,40,80].map((y,i) => `
+                            <circle cx="-25" cy="${y}" r="5" fill="${hlColor}50" stroke="${hlColor}" stroke-width="1"/>
+                            <circle cx="25" cy="${y}" r="5" fill="${hlColor}50" stroke="${hlColor}" stroke-width="1"/>
+                            <text x="35" y="${y+4}" fill="${hlColor}" font-size="8">M${i+1}</text>
+                        `).join('')}
+                    </g>
+                ` : ''}
+                ${hl === 'throat' ? `
+                    <rect x="-20" y="-155" width="40" height="30" rx="6" fill="${hlColor}30" stroke="${hlColor}" stroke-width="2" filter="url(#glow)"/>
+                    <text x="25" y="-138" fill="${hlColor}" font-size="10" font-weight="600">Larynx / Trachea</text>
+                    <!-- Tracheal rings -->
+                    ${[-150,-143,-136,-129].map(y => `<line x1="-12" y1="${y}" x2="12" y2="${y}" stroke="${hlColor}" stroke-width="1.5" opacity="0.6"/>`).join('')}
+                ` : ''}
+            </g>
+
+            <!-- View label -->
+            <text x="300" y="490" fill="#475569" font-size="11" text-anchor="middle" font-style="italic">Ventralansicht (Bauchlage, Blick von ventral)</text>
+        </svg>
+        `;
+    }
+
+    function renderLateralSVG(approach) {
+        const hl = approach.svgHighlight;
+        const hlColor = getCatColor(approach.category);
+
+        return `
+        <svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" style="max-height:420px">
+            <defs>
+                <filter id="glowL">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <linearGradient id="bodyGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#475569"/>
+                    <stop offset="100%" stop-color="#334155"/>
+                </linearGradient>
+            </defs>
+
+            <!-- Grid -->
+            <g stroke="#1e293b" stroke-width="0.5" opacity="0.4">
+                ${Array.from({length: 9}, (_, i) => `<line x1="0" y1="${i*50}" x2="700" y2="${i*50}"/>`).join('')}
+                ${Array.from({length: 14}, (_, i) => `<line x1="${i*50}" y1="0" x2="${i*50}" y2="420"/>`).join('')}
+            </g>
+
+            <!-- Dog body - lateral view -->
+            <g transform="translate(0,20)">
+                <!-- Body -->
+                <ellipse cx="350" cy="170" rx="180" ry="90" fill="url(#bodyGradL)" stroke="#64748b" stroke-width="1.5"/>
+
+                <!-- Head -->
+                <ellipse cx="560" cy="130" rx="60" ry="50" fill="url(#bodyGradL)" stroke="#64748b" stroke-width="1.5"/>
+                <!-- Neck -->
+                <path d="M530,150 Q500,150 490,160 Q480,170 470,170 L470,120 Q480,110 500,110 Q520,105 540,110" fill="url(#bodyGradL)" stroke="#64748b" stroke-width="1.5"/>
+                <!-- Ear -->
+                <ellipse cx="575" cy="85" rx="20" ry="30" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+                <!-- Eye -->
+                <circle cx="580" cy="120" r="5" fill="#94a3b8"/>
+                <!-- Nose -->
+                <ellipse cx="615" cy="135" rx="8" ry="6" fill="#1e293b"/>
+                <!-- Mouth -->
+                <path d="M612,142 Q600,150 590,148" stroke="#64748b" stroke-width="1" fill="none"/>
+
+                <!-- Front leg -->
+                <path d="M460,230 L455,310 L448,340 Q448,355 458,355 L470,355 Q478,355 478,340 L472,310 L468,230" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+
+                <!-- Hind leg -->
+                <path d="M240,220 Q230,250 225,280 L220,320 Q218,345 228,350 L240,350 Q250,345 248,320 L250,280 Q255,250 250,220" fill="#3d4b5e" stroke="#64748b" stroke-width="1"/>
+
+                <!-- Tail -->
+                <path d="M170,155 Q140,130 130,100 Q125,85 135,80" stroke="#64748b" stroke-width="10" fill="none" stroke-linecap="round"/>
+
+                <!-- Skeletal landmarks (subtle) -->
+                <!-- Spine line -->
+                <path d="M190,145 Q270,125 350,125 Q430,125 500,135" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.3" fill="none"/>
+
+                <!-- Ribs (subtle) -->
+                <g opacity="0.15" stroke="#94a3b8" stroke-width="0.8">
+                    ${[380,400,420,440].map(x => `<path d="M${x},130 Q${x-10},170 ${x-15},210" fill="none"/>`).join('')}
+                </g>
+
+                <!-- Highlight based on approach -->
+                ${hl === 'flank' ? `
+                    <rect x="280" y="130" width="80" height="90" rx="10" fill="${hlColor}25" stroke="${hlColor}" stroke-width="2" filter="url(#glowL)"/>
+                    <text x="285" y="125" fill="${hlColor}" font-size="11" font-weight="600">Flanke</text>
+                    <!-- Muscle fiber directions -->
+                    <g stroke="${hlColor}" stroke-width="1" opacity="0.5">
+                        <line x1="290" y1="155" x2="340" y2="185" stroke-dasharray="3,2"/>
+                        <line x1="290" y1="175" x2="340" y2="155" stroke-dasharray="3,2"/>
+                        <line x1="290" y1="195" x2="350" y2="195" stroke-dasharray="3,2"/>
+                    </g>
+                    <text x="355" y="158" fill="${hlColor}" font-size="8" opacity="0.8">Ext. obl.</text>
+                    <text x="355" y="178" fill="${hlColor}" font-size="8" opacity="0.8">Int. obl.</text>
+                    <text x="355" y="198" fill="${hlColor}" font-size="8" opacity="0.8">Transv.</text>
+                ` : ''}
+                ${hl === 'femur' ? `
+                    <!-- Femur bone highlight -->
+                    <path d="M248,185 L235,250 L230,285" stroke="${hlColor}" stroke-width="5" fill="none" filter="url(#glowL)" stroke-linecap="round"/>
+                    <circle cx="248" cy="185" r="8" fill="${hlColor}30" stroke="${hlColor}" stroke-width="1.5"/>
+                    <text x="195" y="185" fill="${hlColor}" font-size="10" font-weight="600">Trochanter major</text>
+                    <text x="175" y="290" fill="${hlColor}" font-size="10" font-weight="600">Femurkondylus</text>
+                    <!-- N. ischiadicus warning -->
+                    <path d="M255,195 Q265,230 260,270" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,3" fill="none"/>
+                    <text x="268" y="240" fill="#fbbf24" font-size="9">N. ischiadicus</text>
+                ` : ''}
+                ${hl === 'knee' ? `
+                    <!-- Knee joint highlight -->
+                    <circle cx="237" cy="280" r="22" fill="${hlColor}25" stroke="${hlColor}" stroke-width="2" filter="url(#glowL)"/>
+                    <text x="263" y="278" fill="${hlColor}" font-size="10" font-weight="600">Kniegelenk</text>
+                    <circle cx="237" cy="270" r="4" fill="${hlColor}" opacity="0.6"/>
+                    <text x="243" y="265" fill="${hlColor}" font-size="8">Patella</text>
+                    <circle cx="237" cy="295" r="3" fill="${hlColor}" opacity="0.5"/>
+                    <text x="245" y="300" fill="${hlColor}" font-size="8">Tub. tibiae</text>
+                ` : ''}
+                ${hl === 'elbow' ? `
+                    <!-- Elbow joint highlight -->
+                    <circle cx="462" cy="240" r="22" fill="${hlColor}25" stroke="${hlColor}" stroke-width="2" filter="url(#glowL)"/>
+                    <text x="488" y="238" fill="${hlColor}" font-size="10" font-weight="600">Ellbogen</text>
+                    <circle cx="462" cy="230" r="4" fill="${hlColor}" opacity="0.6"/>
+                    <text x="470" y="225" fill="${hlColor}" font-size="8">Epicondylus lat.</text>
+                    <!-- N. radialis warning -->
+                    <path d="M475,230 Q480,245 478,265" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4,3" fill="none"/>
+                    <text x="483" y="255" fill="#fbbf24" font-size="9">N. radialis</text>
+                ` : ''}
+            </g>
+
+            <!-- View label -->
+            <text x="350" y="410" fill="#475569" font-size="11" text-anchor="middle" font-style="italic">Lateralansicht (rechte Seite)</text>
+        </svg>
+        `;
+    }
+
+    // Initialize
+    init();
+    </script>
+</body>
+</html>

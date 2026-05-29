@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Notfall-Triage-System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        triage: {
+                            red: '#dc2626',
+                            orange: '#ea580c',
+                            yellow: '#ca8a04',
+                            green: '#16a34a'
+                        },
+                        emergency: {
+                            dark: '#1a0a0a',
+                            panel: '#2a1215',
+                            card: '#3a1a1e',
+                            accent: '#ff3344'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Puls-Animation fuer Notfall-Atmosphaere */
+        @keyframes pulse-emergency {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(220, 38, 38, 0); }
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(220, 38, 38, 0.3); }
+            50% { border-color: rgba(220, 38, 38, 0.8); }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            14% { transform: scale(1.15); }
+            28% { transform: scale(1); }
+            42% { transform: scale(1.1); }
+            56% { transform: scale(1); }
+        }
+
+        @keyframes siren-glow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes countdown-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes slide-in {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-slide-in { animation: slide-in 0.4s ease-out; }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+
+        .pulse-emergency { animation: pulse-emergency 1.5s ease-in-out infinite; }
+        .pulse-border { animation: pulse-border 1.5s ease-in-out infinite; }
+        .heartbeat { animation: heartbeat 1.2s ease-in-out infinite; }
+        .countdown-pulse { animation: countdown-pulse 1s ease-in-out infinite; }
+
+        .siren-bar {
+            background: linear-gradient(90deg, #dc2626, #ff6644, #dc2626, #ff6644, #dc2626);
+            background-size: 400% 100%;
+            animation: siren-glow 2s linear infinite;
+            height: 3px;
+        }
+
+        /* Triage-Farben */
+        .triage-red { background: linear-gradient(135deg, #991b1b, #dc2626); border-color: #ef4444; }
+        .triage-orange { background: linear-gradient(135deg, #9a3412, #ea580c); border-color: #f97316; }
+        .triage-yellow { background: linear-gradient(135deg, #854d0e, #ca8a04); border-color: #eab308; }
+        .triage-green { background: linear-gradient(135deg, #166534, #16a34a); border-color: #22c55e; }
+
+        .triage-btn {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .triage-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.2);
+        }
+        .triage-btn.selected {
+            ring: 3px;
+            transform: scale(1.05);
+        }
+
+        /* Entscheidungsbaum */
+        .decision-node {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .decision-node:hover {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .decision-node.correct {
+            border-color: #22c55e !important;
+            background: rgba(34, 197, 94, 0.1) !important;
+        }
+        .decision-node.incorrect {
+            border-color: #ef4444 !important;
+            background: rgba(239, 68, 68, 0.1) !important;
+        }
+
+        /* Timer */
+        .timer-critical {
+            color: #ef4444;
+            animation: countdown-pulse 0.5s ease-in-out infinite;
+        }
+
+        /* Progress Bar */
+        .progress-fill {
+            transition: width 0.5s ease;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #666; }
+
+        /* ABC-Badges */
+        .abc-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Score-Animation */
+        @keyframes score-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .score-pop { animation: score-pop 0.4s ease-out; }
+
+        /* Glasmorphism fuer schwebende Elemente */
+        .glass {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Touch Targets */
+        button, .decision-node, .triage-btn {
+            min-height: 44px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#0a0a0a]">
+
+    <!-- Sirenen-Leiste oben -->
+    <div class="siren-bar"></div>
+
+    <!-- App Container -->
+    <div id="app" class="max-w-5xl mx-auto px-4 py-6">
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <a href="vetscan-version-selector.html"
+                   class="text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Zurueck zur Uebersicht
+                </a>
+                <div id="header-score" class="text-sm font-mono text-gray-400"></div>
+            </div>
+            <div class="flex items-center justify-center gap-3 mb-2">
+                <span class="text-4xl heartbeat">&#x1F6A8;</span>
+                <h1 class="text-3xl md:text-4xl font-black text-white tracking-tight">
+                    Notfall-<span class="text-red-500">Triage</span>-System
+                </h1>
+            </div>
+            <p class="text-gray-400 text-sm max-w-xl mx-auto">
+                Zeitkritische Notfallszenarien mit ABC-Schema, Schock-Erkennung und Entscheidungsbaeumen.
+                Trainiere deine Faehigkeiten in der veterinaermedizinischen Notfallversorgung.
+            </p>
+        </header>
+
+        <!-- Dynamischer Inhalt -->
+        <div id="main-content"></div>
+
+    </div>
+
+    <!-- Sirenen-Leiste unten -->
+    <div class="siren-bar mt-8"></div>
+
+    <script>
+    // ==========================================
+    // DATEN: Notfall-Szenarien
+    // ==========================================
+
+    const SCENARIOS = [
+        {
+            id: 1,
+            title: "Magendrehung (GDV)",
+            species: "Hund",
+            breed: "Deutsche Dogge",
+            age: "6 Jahre",
+            weight: "58 kg",
+            icon: "\uD83D\uDC36",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Eine Deutsche Dogge wird notfallmaessig vorgestellt. Der Besitzer berichtet, der Hund habe vor ca. 2 Stunden gefressen und sei danach sehr unruhig geworden.",
+            symptoms: [
+                "Unproduktives Wuergen seit 45 Minuten",
+                "Deutlich aufgeblaehtes Abdomen, tympanisch",
+                "Extreme Unruhe, Hecheln, Speicheln",
+                "Tachykardie (HF 160/min), schwacher Puls",
+                "Blasse Schleimhaeute, KFZ 3 Sekunden"
+            ],
+            vitals: { hf: "160/min", af: "48/min", temp: "38.1 C", kfz: "3 s", sh: "blass-zyanotisch" },
+            abc: {
+                a: {
+                    question: "Atemwege: Wie beurteilst du die Atemwege?",
+                    options: [
+                        { text: "Atemwege frei, keine Obstruktion", correct: false, feedback: "Falsch. Durch die Magendilatation ist das Zwerchfell nach kranial verschoben, was die Atmung kompromittiert." },
+                        { text: "Kompromittiert durch Zwerchfellhochstand und Kompression", correct: true, feedback: "Korrekt! Der dilatierte Magen draengt das Zwerchfell nach kranial und schraenkt die Ventilation ein." },
+                        { text: "Obstruktion der oberen Atemwege durch Fremdkoerper", correct: false, feedback: "Nein. Das unproduktive Wuergen wird durch den Magenvolvulus verursacht, nicht durch einen Fremdkoerper." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Welche Atemmuster erwartest du?",
+                    options: [
+                        { text: "Normale Atmung, keine Auffaelligkeiten", correct: false, feedback: "Falsch. Bei GDV ist die Atmung durch den Zwerchfellhochstand und Schmerz immer kompromittiert." },
+                        { text: "Tachypnoe mit flacher, angestrengter Atmung", correct: true, feedback: "Richtig! Die eingeschraenkte Thoraxexpansion fuehrt zu kompensatorischer Tachypnoe mit reduziertem Tidalvolumen." },
+                        { text: "Langsame, tiefe Atemzuege (Bradypnoe)", correct: false, feedback: "Nein. Bradypnoe waere untypisch und wuerde auf eine zerebrale Beteiligung hindeuten." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Wie interpretierst du die Kreislaufsituation?",
+                    options: [
+                        { text: "Stabile Kreislaufsituation, keine Intervention noetig", correct: false, feedback: "Falsch! HF 160, schwacher Puls und KFZ 3s zeigen einen kompensierten Schock." },
+                        { text: "Kompensierter Schock durch Vena-cava-Kompression", correct: true, feedback: "Korrekt! Der rotierte Magen komprimiert die V. cava caudalis, reduziert den venoesen Rueckstrom und fuehrt zum obstruktiven/distributiven Schock." },
+                        { text: "Kardiogener Schock durch primaere Herzerkrankung", correct: false, feedback: "Nein. Der Schock ist hier obstruktiv bedingt, nicht primaer kardiogen -- obwohl kardiale Arrhythmien sekundaer auftreten koennen." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Grosslumiger Venenkatheter (2x), aggressive Fluessigkeitstherapie", correct: true, points: 20, feedback: "Essentiell! Schockrate kristalloide Infusion (60-90 ml/kg/h)." },
+                { text: "Magensonde oder trokargesteuerte Dekompression", correct: true, points: 25, feedback: "Richtig! Dekompression ist die wichtigste Sofortmassnahme zur Druckentlastung." },
+                { text: "Roentgen Thorax in 3 Ebenen", correct: false, points: -5, feedback: "Nicht priorisieren! Zuerst Stabilisierung, dann Diagnostik. Rechtsanliegende Lateralaufnahme genuegt zur Bestaetigung." },
+                { text: "EKG-Monitoring (ventrikuaere Arrhythmien!)", correct: true, points: 15, feedback: "Korrekt! GDV-Patienten entwickeln haeufig ventrikulaere Arrhythmien, die lebensbedrohlich werden koennen." },
+                { text: "Analgesie (z.B. Methadon 0.2 mg/kg IV)", correct: true, points: 15, feedback: "Wichtig! Schmerzmanagement verbessert die Kreislaufsituation und ist ethisch geboten." },
+                { text: "Abwarten und Besitzer beruhigen", correct: false, points: -15, feedback: "Gefaehrlich! GDV ist ein absoluter Notfall. Jede Verzoegerung verschlechtert die Prognose drastisch." },
+                { text: "Chirurgische Intervention vorbereiten (Gastropexie)", correct: true, points: 10, feedback: "Richtig! Die definitive Therapie ist chirurgisch (Derotation + Gastropexie). Parallel zur Stabilisierung vorbereiten." }
+            ],
+            optimalApproach: "GDV ist ein lebensbedrohlicher Notfall mit einer Mortalitaet von 15-30%. Die Therapie folgt einem klaren Protokoll: 1) Schocktherapie mit aggressiver Fluessigkeitssubstitution ueber zwei grosslumige Venenkatheter, 2) Dekompression des Magens (Sonde oder Trokar), 3) EKG-Monitoring wegen Arrhythmie-Risiko (v.a. VES), 4) Analgesie, 5) Sobald stabil: chirurgische Derotation und Gastropexie. Die Prognose verschlechtert sich mit jeder Stunde Verzoegerung -- Magenwandnekrose und DIC sind gefuerchtete Komplikationen."
+        },
+        {
+            id: 2,
+            title: "Harnroehrenobstruktion",
+            species: "Katze",
+            breed: "Europaeisch Kurzhaar",
+            age: "4 Jahre",
+            weight: "5.2 kg",
+            icon: "\uD83D\uDC31",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Ein kastrierter Kater wird vorgestellt. Der Besitzer berichtet, die Katze gehe seit gestern haeufig aufs Katzenklo, ohne Urin abzusetzen, und vokalisiere dabei.",
+            symptoms: [
+                "Strangurie (schmerzhafter Harnabsatz) seit 24 Stunden",
+                "Vokalisation beim Versuch zu urinieren",
+                "Prall gefuellte, schmerzhafte Harnblase palpierbar",
+                "Zunehmende Lethargie, Anorexie",
+                "Gelegentliches Erbrechen seit heute Morgen"
+            ],
+            vitals: { hf: "120/min (Bradykardie-Tendenz!)", af: "32/min", temp: "37.8 C", kfz: "2.5 s", sh: "blass-rosa" },
+            abc: {
+                a: {
+                    question: "Atemwege: Status der Atemwege?",
+                    options: [
+                        { text: "Atemwege frei, kein Problem in diesem Bereich", correct: true, feedback: "Korrekt. Bei reiner Harnroehrenobstruktion sind die Atemwege in der Regel nicht betroffen." },
+                        { text: "Wahrscheinlich Aspiration durch Erbrechen", correct: false, feedback: "Unwahrscheinlich. Das Erbrechen ist metabolisch bedingt (Uraemie), eine Aspiration ist selten." },
+                        { text: "Obstruktion durch Zungenschwellung", correct: false, feedback: "Nicht zutreffend. Eine Zungenschwellung ist kein typisches Symptom der Harnroehrenobstruktion." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Auffaelligkeiten bei der Atmung?",
+                    options: [
+                        { text: "Normale Atmung zu erwarten", correct: false, feedback: "Vorsicht! Bei fortgeschrittener Uraemie kann eine metabolische Azidose zu kompensatorischer Tachypnoe fuehren." },
+                        { text: "Moegliche kompensatorische Tachypnoe bei metabolischer Azidose", correct: true, feedback: "Richtig! Die postrenale Azotaemie fuehrt zur metabolischen Azidose, die respiratorisch kompensiert wird." },
+                        { text: "Bradypnoe durch Kalium-Effekte", correct: false, feedback: "Die Hyperkalaemie betrifft primaer das Herz, nicht direkt die Atemmuskulatur." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Was ist die groesste Gefahr?",
+                    options: [
+                        { text: "Dehydratation durch reduzierte Wasseraufnahme", correct: false, feedback: "Dehydratation ist ein Faktor, aber nicht die akut lebensbedrohliche Gefahr." },
+                        { text: "Hyperkalaemie mit kardialer Toxizitaet", correct: true, feedback: "Korrekt! Die Hyperkalaemie (K+ >7 mmol/l) kann zu Bradykardie, Arrhythmien und Herzstillstand fuehren. Die Bradykardie-Tendenz ist bereits ein Warnzeichen!" },
+                        { text: "Hypovolaemischer Schock durch Blutverlust", correct: false, feedback: "Es liegt kein signifikanter Blutverlust vor. Die Hauptgefahr ist metabolisch (Hyperkalaemie, Uraemie)." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Blutentnahme: Kalium, Kreatinin, Harnstoff, BGA", correct: true, points: 20, feedback: "Essentiell! Kaliumwert bestimmt das weitere Vorgehen und die Dringlichkeit." },
+                { text: "EKG-Monitoring starten", correct: true, points: 15, feedback: "Wichtig! Typische EKG-Veraenderungen bei Hyperkalaemie: spitze T-Wellen, verbreiterte QRS, fehlende P-Wellen." },
+                { text: "Bei Hyperkalaemie: Kalziumglukonat 10% (0.5-1 ml/kg langsam IV)", correct: true, points: 20, feedback: "Lebensrettend! Kalziumglukonat ist Kardioprotektiv und stabilisiert die Myokardzellmembran sofort." },
+                { text: "Harnkatheter legen unter Sedierung", correct: true, points: 25, feedback: "Korrekt! Definitive Therapie. Vorsichtig unter Sedierung (Cave: Keine Acepromazin bei Kreislaufinstabilitaet). Tomcat-Katheter." },
+                { text: "Sofort Roentgen der Harnwege", correct: false, points: -5, feedback: "Nicht priorisieren! Zuerst Stabilisierung des Patienten. Bildgebung kann warten." },
+                { text: "Infusionstherapie mit NaCl 0.9% (KEIN Ringer-Laktat!)", correct: true, points: 15, feedback: "Richtig! NaCl 0.9% ist kaliumfrei -- Ringer-Laktat enthaelt Kalium und ist kontraindiziert bei Hyperkalaemie." },
+                { text: "Dexamethason IV zur Entzuendungshemmung", correct: false, points: -5, feedback: "Nicht indiziert als Sofortmassnahme. Die Prioritaet liegt auf der Beseitigung der Obstruktion und Korrektur der Elektrolytstoerung." }
+            ],
+            optimalApproach: "Die Harnroehrenobstruktion beim Kater ist ein haeufiger, lebensbedrohlicher Notfall. Die akute Gefahr liegt in der Hyperkalaemie, die innerhalb von 24-48h zum Herzstillstand fuehren kann. Das Protokoll: 1) Sofort Blutentnahme (K+, Krea, Harnstoff, BGA), 2) EKG starten, 3) Bei K+ >7 mmol/l oder EKG-Veraenderungen: Kalziumglukonat IV als Kardioprotektive Sofortmassnahme, 4) NaCl 0.9%-Infusion (kein Ringer!), 5) Sedierung und vorsichtiges Legen eines Harnkatheters, 6) Post-obstruktive Diurese ueberwachen. Rezidivrate ohne Diaetumstellung: 30-50%."
+        },
+        {
+            id: 3,
+            title: "Pyometra (offene Form)",
+            species: "Hund",
+            breed: "Golden Retriever",
+            age: "8 Jahre",
+            weight: "32 kg",
+            icon: "\uD83D\uDC36",
+            triage: "orange",
+            triageLabel: "ORANGE -- Dringend",
+            presentation: "Eine intakte Huendin wird mit eitrigem Vaginalausfluss vorgestellt. Die letzte Laeufigkeit war vor ca. 6 Wochen. Seit 3 Tagen zunehmend schlapp.",
+            symptoms: [
+                "Eitriger, uebel riechender Vaginalausfluss",
+                "Fieber (39.8 C)",
+                "Polyurie/Polydipsie seit einer Woche",
+                "Anorexie seit 2 Tagen",
+                "Leicht aufgeblaehtes Abdomen, dolent"
+            ],
+            vitals: { hf: "130/min", af: "28/min", temp: "39.8 C", kfz: "2 s", sh: "geringgradig injiziert" },
+            abc: {
+                a: {
+                    question: "Atemwege: Beurteilung?",
+                    options: [
+                        { text: "Atemwege frei, keine Beeintraechtigung", correct: true, feedback: "Korrekt. Bei offener Pyometra sind die Atemwege typischerweise nicht betroffen." },
+                        { text: "Wahrscheinlich durch Fieber kompromittiert", correct: false, feedback: "Fieber beeintraechtigt nicht direkt die Atemwege." },
+                        { text: "Aspiration von Eiter moeglich", correct: false, feedback: "Das ist bei Pyometra nicht zutreffend. Der Ausfluss kommt vaginal, nicht oral." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Atmungsbeurteilung?",
+                    options: [
+                        { text: "Leichte Tachypnoe moeglich durch Fieber und Schmerz", correct: true, feedback: "Korrekt. Fieber und abdominaler Schmerz koennen zu leichter Tachypnoe fuehren. Keine primaere Lungenpathologie." },
+                        { text: "Schwere Dyspnoe zu erwarten", correct: false, feedback: "Bei unkomplizierter offener Pyometra ist keine schwere Dyspnoe zu erwarten." },
+                        { text: "Atmung ist irrelevant bei Pyometra", correct: false, feedback: "Falsch. ABC muss immer komplett durchgefuehrt werden. Bei Sepsis kann sich eine respiratorische Beteiligung entwickeln." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Kreislaufstatus?",
+                    options: [
+                        { text: "Vollstaendig stabiler Kreislauf", correct: false, feedback: "Die Tachykardie (130/min) und die Sepsis-Gefahr zeigen, dass der Kreislauf nicht voellig stabil ist." },
+                        { text: "Beginnende SIRS/Sepsis mit kompensierter Haemodynamik", correct: true, feedback: "Korrekt! Fieber + Tachykardie + Leukozytose erfuellen SIRS-Kriterien. Noch kompensiert, aber engmaschige Ueberwachung noetig." },
+                        { text: "Dekompensierter septischer Schock", correct: false, feedback: "Noch nicht dekompensiert -- KFZ 2s und SH noch akzeptabel. Aber Progression moeglich!" }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Venenkatheter legen, Blutentnahme (BB, Chemie, Gerinnung)", correct: true, points: 20, feedback: "Richtig! Umfassende Labordiagnostik zur Beurteilung von Organfunktion und Sepsis-Ausmass." },
+                { text: "Infusionstherapie zur Stabilisierung (kristalloide Loesung)", correct: true, points: 15, feedback: "Korrekt! Rehydratation und Kreislaufstabilisierung vor der OP." },
+                { text: "Breitspektrum-Antibiotikum IV (z.B. Amoxicillin-Clavulansaeure)", correct: true, points: 15, feedback: "Wichtig! Empirische Antibiose bei Verdacht auf Sepsis, idealerweise nach Probenentnahme fuer Kultur." },
+                { text: "Abdominaler Ultraschall", correct: true, points: 10, feedback: "Sinnvoll! Bestaetigt die Diagnose, zeigt Uterusgroesse und -inhalt, schliesst geschlossene Pyometra aus." },
+                { text: "Ovariohysterektomie planen (nach Stabilisierung)", correct: true, points: 20, feedback: "Die definitive Therapie! OHE ist die Standardbehandlung. Zeitpunkt: sobald der Patient stabil genug fuer die Narkose ist." },
+                { text: "Konservative Therapie mit Aglepristone versuchen", correct: false, points: -5, feedback: "Bei dieser Patientin (8J, keine Zuchtplanung angegeben, septische Tendenz) ist die chirurgische Therapie der Goldstandard. Aglepristone nur bei Zuchthuendinnen mit mildem Verlauf." },
+                { text: "NSAIDs als Erstmassnahme verabreichen", correct: false, points: -10, feedback: "Cave! NSAIDs sind bei dehydrierten/septischen Patienten nephrotoxisch. Erst Rehydratation, dann Analgesie mit Opioiden." }
+            ],
+            optimalApproach: "Die offene Pyometra ist ein dringender, aber nicht sofort lebensbedrohlicher Notfall (ORANGE), da der Eiter abfliessen kann. Das Management: 1) Venenkatheter + umfassende Blutuntersuchung, 2) Aggressive Fluessigkeitstherapie zur Korrektur der Dehydratation und Nierenunterstuetzung (PU/PD zeigt bereits renale Beteiligung durch E. coli-Endotoxine), 3) Breitspektrum-Antibiose IV, 4) Abdominaler Ultraschall zur Bestaetigung, 5) OHE innerhalb von 12-24h nach Stabilisierung. Eine geschlossene Pyometra waere TRIAGE ROT wegen Ruptur-Gefahr!"
+        },
+        {
+            id: 4,
+            title: "Parvovirose",
+            species: "Hund",
+            breed: "Mischling",
+            age: "12 Wochen",
+            weight: "3.8 kg",
+            icon: "\uD83D\uDC36",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Ein 12 Wochen alter, ungeimpfter Welpe wird mit akutem blutigem Durchfall und Erbrechen seit gestern Abend vorgestellt.",
+            symptoms: [
+                "Profuser, blutiger, uebelriechender Durchfall",
+                "Haeufiges Erbrechen (auch nach Wasser)",
+                "Schwere Lethargie, reagiert kaum auf Ansprache",
+                "Deutliche Dehydratation (Hautturgor >3 s)",
+                "Hypothermie (37.2 C)"
+            ],
+            vitals: { hf: "200/min", af: "44/min", temp: "37.2 C", kfz: "4 s", sh: "blass, trocken" },
+            abc: {
+                a: {
+                    question: "Atemwege: Beurteilung bei diesem Welpen?",
+                    options: [
+                        { text: "Atemwege frei, aber Aspirationsrisiko durch Erbrechen beachten", correct: true, feedback: "Korrekt! Lethargische Welpen haben ein erhoehtes Aspirationsrisiko bei anhaltendem Erbrechen." },
+                        { text: "Atemwege sicher frei, kein Risiko", correct: false, feedback: "Vorsicht! Bei schwerer Lethargie und Erbrechen besteht immer Aspirationsgefahr." },
+                        { text: "Sofortige Intubation notwendig", correct: false, feedback: "Noch nicht noetig. Aber Aspirationsrisiko muss beachtet und der Welpe entsprechend gelagert werden." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Atemfrequenz 44/min -- Interpretation?",
+                    options: [
+                        { text: "Normal fuer einen Welpen", correct: false, feedback: "Falsch. 44/min ist auch fuer einen Welpen zu hoch und zeigt eine kompensatorische Tachypnoe." },
+                        { text: "Kompensatorische Tachypnoe bei metabolischer Azidose und Schock", correct: true, feedback: "Korrekt! Dehydratation und Sepsis fuehren zur metabolischen Azidose, die respiratorisch kompensiert wird." },
+                        { text: "Hinweis auf primaere Lungenpathologie", correct: false, feedback: "Bei Parvovirose ist die Lunge primaer nicht betroffen. Die Tachypnoe ist metabolisch bedingt." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: KFZ 4s, HF 200/min, Hypothermie -- Diagnose?",
+                    options: [
+                        { text: "Kompensierter Schock", correct: false, feedback: "Nein! KFZ >3s und Hypothermie zeigen bereits eine Dekompensation!" },
+                        { text: "Dekompensierter hypovolaemischer/septischer Schock", correct: true, feedback: "Korrekt! Verlaengerte KFZ, Hypothermie trotz Infektion, und extreme Tachykardie zeigen einen dekompensierten Schock. Hoechste Dringlichkeit!" },
+                        { text: "Kardiogener Schock", correct: false, feedback: "Nein. Die Ursache ist hypovolaemisch (Fluessigkeitsverlust) und septisch (Darmbakterien-Translokation), nicht kardiogen." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Intravenoesen oder intraoessaeren Zugang legen", correct: true, points: 25, feedback: "Essentiell! Bei kollabierten Venen den intraoessaeren Zugang (Femur proximal) nicht scheuen -- lebensrettend!" },
+                { text: "Waerme zufuehren (Waermematte, -lampe, warme Infusion)", correct: true, points: 15, feedback: "Wichtig! Hypothermie verschlechtert die Prognose massiv. Aufwaermen ist Teil der Schocktherapie." },
+                { text: "Kristalloide Schockinfusion (Welpe: 60 ml/kg als Bolus)", correct: true, points: 20, feedback: "Korrekt! Schnelle Volumengabe, dann Reevaluation. Bei Welpen vorsichtig titrieren wegen geringer Reserve." },
+                { text: "Parvo-Schnelltest durchfuehren", correct: true, points: 10, feedback: "Sinnvoll zur Bestaetigung, aber darf die Therapie nicht verzoegern! Parallel zur Stabilisierung." },
+                { text: "Breitspektrum-Antibiose IV (z.B. Ampicillin + Enrofloxacin)", correct: true, points: 15, feedback: "Wichtig! Bakterielle Translokation aus dem geschaedigten Darm fuehrt zur Sepsis. Enrofloxacin bei Welpen kritisch wegen Knorpelschaeden -- Alternativ: Metronidazol." },
+                { text: "Antiemetika (Maropitant 1 mg/kg SC)", correct: true, points: 10, feedback: "Richtig! Reduziert Uebelkeit, Erbrechen und Fluessigkeitsverlust und verbessert die Futteraufnahme." },
+                { text: "Sofort feste Nahrung anbieten", correct: false, points: -10, feedback: "Kontraindiziert! Erst Stabilisierung und Antiemese, dann vorsichtig mit enteraler Ernaehrung beginnen (fruehes Feeding nach 12-24h Stabilisierung)." }
+            ],
+            optimalApproach: "Canine Parvovirose beim ungeimpften Welpen hat eine Mortalitaet von 30-90% ohne Therapie. Bei diesem Welpen liegt ein dekompensierter Schock vor -- hoechste Prioritaet! Protokoll: 1) Sofort IV/IO-Zugang, 2) Schockinfusion + Aufwaermen, 3) Parvo-Schnelltest parallel, 4) Breitspektrum-Antibiose wegen Sepsisgefahr, 5) Antiemese (Maropitant), 6) Intensive Ueberwachung: Blutzucker (Hypoglykaemie!), Elektrolyte, Albumin. Isolation des Patienten nicht vergessen -- Parvo ist hochkontagioes!"
+        },
+        {
+            id: 5,
+            title: "Autounfall / Polytrauma",
+            species: "Katze",
+            breed: "Europaeisch Kurzhaar",
+            age: "3 Jahre",
+            weight: "4.1 kg",
+            icon: "\uD83D\uDC31",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Eine Freigaengerkatze wurde am Strassenrand gefunden. Der Finder bringt sie in die Praxis. Die Katze liegt in Seitenlage und zeigt deutliche Dyspnoe.",
+            symptoms: [
+                "Schwere Dyspnoe mit abdominaler Atmung",
+                "Multiple Hautabschuerfungen, Blutung aus dem linken Nasenloch",
+                "Liegt in Seitenlage, kann nicht aufstehen",
+                "Schmerzaeusserung bei Palpation des Beckens",
+                "Anisokorie (links > rechts)"
+            ],
+            vitals: { hf: "240/min", af: "52/min (flach!)", temp: "36.9 C", kfz: "3.5 s", sh: "blass-zyanotisch" },
+            abc: {
+                a: {
+                    question: "Atemwege: Was hat Prioritaet?",
+                    options: [
+                        { text: "Atemwege pruefen, ggf. Blut/Schleim absaugen, HWS stabilisieren", correct: true, feedback: "Korrekt! Bei Trauma immer zuerst Atemwege sichern. Epistaxis deutet auf Gesichtstrauma hin -- Aspiration verhindern!" },
+                        { text: "Sofort Roentgen der Wirbelsaeule", correct: false, feedback: "Diagnostik hat nicht Prioritaet! Erst ABC sichern, dann Bildgebung." },
+                        { text: "Atemwege sind bei Katzen selten problematisch", correct: false, feedback: "Falsch! Gerade bei Trauma mit Epistaxis und Dyspnoe sind die Atemwege potentiell gefaehrdet." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Flache Atmung mit AF 52/min -- Verdachtsdiagnose?",
+                    options: [
+                        { text: "Stressbedingte Tachypnoe, abwarten", correct: false, feedback: "Gefaehrlich! Flache Tachypnoe bei Trauma ist IMMER pathologisch. Abwarten kann toedlich enden." },
+                        { text: "Pneumothorax oder Zwerchfellruptur bis zum Beweis des Gegenteils", correct: true, feedback: "Korrekt! Abdominale Atmung + Tachypnoe nach Trauma: Pneumothorax und Zwerchfellruptur muessen sofort ausgeschlossen werden. Thorax-FAST (TFAST) durchfuehren!" },
+                        { text: "Lungenkontusion, die sich von selbst bessert", correct: false, feedback: "Lungenkontusion ist moeglich, aber Pneumothorax/Zwerchfellhernie muessen ERST ausgeschlossen werden." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: HF 240, KFZ 3.5s, Hypothermie bei einer Katze?",
+                    options: [
+                        { text: "Normale Stressreaktion bei Katzen", correct: false, feedback: "Falsch! HF 240 mit verlaengerter KFZ und Hypothermie ist KEIN normaler Stress -- das ist Schock!" },
+                        { text: "Schock (hypovolaemisch durch innere Blutung wahrscheinlich)", correct: true, feedback: "Korrekt! Beckentrauma + Schockzeichen: Hoher Verdacht auf innere Blutung (Haemoabdomen, Haemothorax). AFAST durchfuehren!" },
+                        { text: "Neurogener Schock durch Wirbelsaeulenverletzung", correct: false, feedback: "Moeglich (Anisokorie!), aber hypovolaemischer Schock durch Blutung ist wahrscheinlicher und muss zuerst behandelt werden." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "O2-Supplementierung (Flow-by oder O2-Kaefig)", correct: true, points: 20, feedback: "Hoechste Prioritaet bei Dyspnoe! Sofort Sauerstoff bereitstellen." },
+                { text: "Venenkatheter + Schockinfusion (Katze: 40-60 ml/kg/h, titriert!)", correct: true, points: 20, feedback: "Korrekt! Bei Katzen vorsichtiger dosieren als bei Hunden. Kleine Boli von 10 ml/kg und Reevaluation." },
+                { text: "AFAST/TFAST Ultraschall (Freie Fluessigkeit?)", correct: true, points: 20, feedback: "Essentiell! FAST-Scan zeigt schnell freie Fluessigkeit in Thorax und Abdomen. Dauert nur 3-4 Minuten." },
+                { text: "Analgesie (Buprenorphin 0.02 mg/kg IV oder Methadon 0.1-0.2 mg/kg)", correct: true, points: 15, feedback: "Unverzichtbar! Traumapatienten haben starke Schmerzen. Opioide sind erste Wahl." },
+                { text: "Bei Verdacht auf Pneumothorax: Thorakozentese", correct: true, points: 15, feedback: "Korrekt! Therapeutische Thorakozentese kann lebensrettend sein und ist zugleich diagnostisch." },
+                { text: "Sofort alle Wunden chirurgisch versorgen", correct: false, points: -10, feedback: "Nicht jetzt! Hautwunden sind nicht lebensbedrohlich. Zuerst ABC und Stabilisierung, Wunden spaeter." },
+                { text: "Neuro-Check dokumentieren (Anisokorie!)", correct: true, points: 10, feedback: "Wichtig! Anisokorie kann auf Schaedel-Hirn-Trauma hinweisen. Regelmaaessige neurologische Kontrollen." }
+            ],
+            optimalApproach: "Polytrauma bei Katzen erfordert ein systematisches, priorisiertes Vorgehen. ABC hat absolute Prioritaet: 1) Atemwege sichern, O2 geben, 2) Thorax beurteilen (Pneumothorax? Zwerchfellruptur? -> TFAST + ggf. Thorakozentese), 3) Kreislauf stabilisieren (Venenkatheter, vorsichtige Fluessigkeitstherapie, Katzen sind voluemeneempfindlich!). Dann: AFAST fuer Haemoabdomen, Analgesie, Neuro-Check. Roentgen erst nach Stabilisierung! Beckentrauma bei Katzen heilt oft konservativ, Harnblase/Urethra muessen aber unbedingt auf Integritaet geprueft werden."
+        },
+        {
+            id: 6,
+            title: "Rattengift-Vergiftung",
+            species: "Hund",
+            breed: "Labrador Retriever",
+            age: "3 Jahre",
+            weight: "30 kg",
+            icon: "\uD83D\uDC36",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Ein Labrador wird vorgestellt, weil dem Besitzer blaeuliche Koederreste am Maul aufgefallen sind. Der Hund war vor ca. 30 Minuten alleine im Garten.",
+            symptoms: [
+                "Blaeuliche Verfaerbung an den Lefzen (Koederreste)",
+                "Derzeit noch klinisch unauffaellig",
+                "Kein Erbrechen bisher",
+                "Frisst und trinkt normal",
+                "Letzte Aufnahme ca. 30 Minuten her"
+            ],
+            vitals: { hf: "90/min", af: "20/min", temp: "38.5 C", kfz: "1.5 s", sh: "rosa, feucht" },
+            abc: {
+                a: {
+                    question: "Atemwege: Status?",
+                    options: [
+                        { text: "Frei, aber Koederreste im Maul entfernen", correct: true, feedback: "Korrekt! Atemwege frei, aber Maulhoehle inspizieren und Koederreste dokumentieren (wichtig fuer die Giftidentifikation!)." },
+                        { text: "Wahrscheinlich kompromittiert durch das Gift", correct: false, feedback: "Nein, 30 Minuten nach Aufnahme von Antikoagulanzien sind die Atemwege nicht betroffen." },
+                        { text: "Irrelevant bei Vergiftung", correct: false, feedback: "Falsch! ABC wird bei JEDEM Notfall durchgefuehrt." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Welche Probleme koennen spaeter auftreten?",
+                    options: [
+                        { text: "Keine, Rattengift betrifft nur die Leber", correct: false, feedback: "Falsch! Antikoagulanzien koennen zu Blutungen in der Lunge (Haemothorax) fuehren." },
+                        { text: "Dyspnoe durch Haemothorax/pulmonale Blutung (erst nach 24-72h)", correct: true, feedback: "Korrekt! Antikoagulanzien der 2. Generation (Brodifacoum, Bromadiolon) wirken erst nach 24-72h, wenn Gerinnungsfaktoren aufgebraucht sind." },
+                        { text: "Sofortige Atemnot durch Bronchospasmus", correct: false, feedback: "Falsch. Antikoagulanzien verursachen keinen Bronchospasmus. Die Wirkung tritt verzoegert ein." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Aktuell stabil -- warum trotzdem TRIAGE ROT?",
+                    options: [
+                        { text: "Weil der Hund bereits blasse Schleimhaeute hat", correct: false, feedback: "Nein, die SH sind aktuell rosa. Aber die Situation wird sich ohne Therapie verschlechtern!" },
+                        { text: "Weil die Dekontamination zeitkritisch ist (Fenster <2h)", correct: true, feedback: "Genau! Die Aufnahme liegt erst 30 Minuten zurueck -- induziertes Erbrechen ist noch moeglich und hochwirksam! Dieses Zeitfenster darf nicht verpasst werden." },
+                        { text: "Weil Antikoagulanzien sofort die Gerinnung hemmen", correct: false, feedback: "Die Wirkung tritt erst nach 24-72h ein (Halbwertszeit der vorhandenen Gerinnungsfaktoren). Aber genau deshalb ist JETZT Dekontamination so wichtig!" }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Emesis induzieren (Apomorphin 0.04 mg/kg IV oder konjunktival)", correct: true, points: 25, feedback: "Hoechste Prioritaet! Innerhalb von 2h nach Aufnahme ist induziertes Erbrechen die effektivste Dekontamination." },
+                { text: "Aktivkohle verabreichen (1-2 g/kg) nach Emesis", correct: true, points: 20, feedback: "Korrekt! Bindet verbleibendes Gift im GI-Trakt. Am besten 30 min nach erfolgreicher Emesis." },
+                { text: "Koederreste sichern und identifizieren", correct: true, points: 10, feedback: "Wichtig! Die genaue Substanz bestimmt die Therapiedauer (1. Generation: 1 Woche Vitamin K1, 2. Generation: 4-6 Wochen!)." },
+                { text: "Vitamin K1 starten (2.5-5 mg/kg/Tag oral, aufgeteilt)", correct: true, points: 15, feedback: "Richtig! Praeventiver Beginn mit Vitamin K1 -- Dauer abhaengig vom Wirkstoff. Cave: NICHT IV geben (Anaphylaxie-Risiko), SC oder oral." },
+                { text: "Gerinnungstest (PT) jetzt und nach 48-72h", correct: true, points: 15, feedback: "Korrekt! Baseline-Wert jetzt, Kontrollwert nach 48-72h um die Wirkung des Antikoagulans zu erfassen." },
+                { text: "Abwarten und in 3 Tagen wiederkommen lassen", correct: false, points: -20, feedback: "Gefaehrlich! Das Dekontaminationsfenster wuerde verpasst. Ohne Therapie kann der Hund in 3-5 Tagen verbluten!" },
+                { text: "Magenspuelung unter Narkose", correct: false, points: -5, feedback: "Nicht noetig, wenn Emesis moeglich ist. Magenspuelung ist invasiver und nur indiziert, wenn Erbrechen kontraindiziert/erfolglos ist." }
+            ],
+            optimalApproach: "Bei frischer Rattengift-Aufnahme (<2h) ist die Dekontamination entscheidend: 1) Sofort Emesis induzieren mit Apomorphin, 2) Nach erfolgreichem Erbrechen Aktivkohle verabreichen, 3) Koeder identifizieren (2. Generation: Brodifacoum, Bromadiolon -> 4-6 Wochen Therapie!), 4) Vitamin K1 oral starten (2.5-5 mg/kg/Tag, aufgeteilt auf 2-3 Gaben, MIT Futter fuer bessere Absorption), 5) PT-Monitoring: Baseline + 48-72h + 48h nach Absetzen von Vitamin K1. Die Prognose ist bei rechtzeitiger Therapie exzellent (>95% Ueberlebensrate)."
+        },
+        {
+            id: 7,
+            title: "Anaphylaxie nach Insektenstich",
+            species: "Hund",
+            breed: "Franzoesische Bulldogge",
+            age: "5 Jahre",
+            weight: "12 kg",
+            icon: "\uD83D\uDC36",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Eine Franzoesische Bulldogge wird notfallmaessig gebracht. Der Hund wurde vor 20 Minuten von einer Wespe gestochen und hat jetzt massive Gesichtsschwellung.",
+            symptoms: [
+                "Massive Gesichts- und Lidschwellung (Angiooedem)",
+                "Generalisierte Urtikaria (Quaddeln am ganzen Koerper)",
+                "Zunehmende Dyspnoe (brachyzephale Rasse!)",
+                "Speicheln, Wuergen",
+                "Erbrechen und Durchfall (akut)"
+            ],
+            vitals: { hf: "180/min", af: "50/min (stridoroeses Atemgeraeusch)", temp: "38.0 C", kfz: "2 s", sh: "hyperaemisch" },
+            abc: {
+                a: {
+                    question: "Atemwege: Welche besondere Gefahr besteht hier?",
+                    options: [
+                        { text: "Keine besondere Gefahr, Schwellung ist nur kosmetisch", correct: false, feedback: "Lebensgefaehrlich falsch! Angiooedem kann die oberen Atemwege komplett verlegen!" },
+                        { text: "Akute Atemwegsobstruktion durch Larynxoedem bei brachyzephaler Rasse", correct: true, feedback: "Korrekt! Brachyzephale Hunde haben ohnehin enge Atemwege. Larynxoedem bei Anaphylaxie kann rasch zur kompletten Obstruktion fuehren. Intubationsbereitschaft!" },
+                        { text: "Aspiration durch Erbrechen", correct: false, feedback: "Aspirationsgefahr besteht, aber die primaere Bedrohung ist die anaphylaktische Atemwegsschwellung." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Stridor bei AF 50 -- Handlungsbedarf?",
+                    options: [
+                        { text: "Abwarten, ob sich die Atmung bessert", correct: false, feedback: "Extrem gefaehrlich! Stridor zeigt eine Atemwegsobstruktion -- diese kann sich rapide verschlechtern!" },
+                        { text: "Sofortige Sauerstoffgabe und Intubationsbereitschaft", correct: true, feedback: "Korrekt! O2 sofort, Intubationsequipment bereithalten. Bei Progression: Intubation, im Extremfall Tracheotomie!" },
+                        { text: "Inhalative Bronchodilatatoren verabreichen", correct: false, feedback: "Bronchodilatatoren helfen bei unterem Atemwegsspasmus, nicht bei Larynxoedem (obere Atemwege)." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Welches Kreislaufproblem droht?",
+                    options: [
+                        { text: "Kein Kreislaufproblem, nur allergische Hautreaktion", correct: false, feedback: "Falsch! Anaphylaxie ist eine systemische Reaktion. Beim Hund ist das Zielorgan die Leber (portale Hypertension)!" },
+                        { text: "Distributiver Schock durch massive Vasodilatation und Kapillarleck", correct: true, feedback: "Korrekt! Histaminfreisetzung fuehrt zu Vasodilatation und erhoehter Gefaesspermeabilitaet. Beim Hund zusaetzlich: hepatovenoeser Stau mit GI-Symptomatik (Erbrechen, Durchfall)." },
+                        { text: "Kardiogener Schock durch direkte Herztoxizitaet", correct: false, feedback: "Anaphylaxie verursacht keinen primaer kardiogenen Schock, sondern einen distributiven Schock." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Adrenalin (Epinephrin) 0.01 mg/kg IM (1:1000)", correct: true, points: 30, feedback: "Lebensrettend! Adrenalin ist DAS Medikament der Anaphylaxie. Wirkt als Vasokonstriktor und Bronchodilatator." },
+                { text: "Venenkatheter + aggressive Fluessigkeitstherapie", correct: true, points: 20, feedback: "Essentiell! Distributiver Schock erfordert Volumensubstitution gegen das Kapillarleck." },
+                { text: "Dexamethason 0.1-0.2 mg/kg IV", correct: true, points: 15, feedback: "Korrekt! Glukokortikoide verhindern die Spaetphase der allergischen Reaktion (Wirkungseintritt erst nach 30-60 min)." },
+                { text: "Antihistaminikum (Diphenhydramin 2 mg/kg IM)", correct: true, points: 10, feedback: "Ergaenzend sinnvoll, aber NICHT als Ersatz fuer Adrenalin! Antihistaminika allein sind bei Anaphylaxie unzureichend." },
+                { text: "O2-Supplementierung und Intubationsbereitschaft", correct: true, points: 15, feedback: "Wichtig! Besonders bei dieser brachyzephalen Rasse sofort O2 und Notfall-Atemwegsmanagement bereithalten." },
+                { text: "Nur Kortison geben und beobachten", correct: false, points: -15, feedback: "Unzureichend! Kortison allein reicht bei Anaphylaxie nicht aus und wirkt zu langsam. Adrenalin ist die Erstlinientherapie!" },
+                { text: "Wespenstachel suchen und entfernen", correct: false, points: -5, feedback: "Zeitverschwendung in der Akutsituation. Die systemische Therapie hat Prioritaet. Den Stachel kann man spaeter suchen." }
+            ],
+            optimalApproach: "Anaphylaxie bei einem brachyzephalen Hund ist eine akute Lebensbedrohung! Therapieprotokoll: 1) Adrenalin 0.01 mg/kg IM (SOFORT, nicht warten!), 2) O2-Gabe und Atemwege sichern (brachyzephal = hohes Obstruktionsrisiko), 3) Venenkatheter + Schockinfusion, 4) Dexamethason IV (Spaetphasenprophylaxe), 5) Ggf. zweite Adrenalindosis nach 5-10 min. Merke: Beim Hund ist die Leber das Ziel-Schockorgan der Anaphylaxie (hepatovenoeser Stau -> GI-Symptomatik). Die Prognose ist bei schneller Adrenalingabe gut."
+        },
+        {
+            id: 8,
+            title: "Status epilepticus",
+            species: "Hund",
+            breed: "Border Collie",
+            age: "4 Jahre",
+            weight: "20 kg",
+            icon: "\uD83D\uDC36",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Ein Border Collie wird krampfend in die Praxis gebracht. Die Besitzerin berichtet, der Anfall dauere bereits seit mindestens 8 Minuten ohne Unterbrechung.",
+            symptoms: [
+                "Generalisierte tonisch-klonische Krampfaktivitaet",
+                "Bewusstlosigkeit, kein Ansprechen moeglich",
+                "Laterale Dekubituslage, Opisthotonus",
+                "Exzessive Salivation mit Schaum",
+                "Unkontrollierter Urin- und Kotabsatz"
+            ],
+            vitals: { hf: "190/min", af: "nicht beurteilbar (krampfend)", temp: "40.8 C (Hyperthermie!)", kfz: "1.5 s", sh: "hyperaemisch-zyanotisch" },
+            abc: {
+                a: {
+                    question: "Atemwege: Was ist die groesste Gefahr waehrend des Krampfens?",
+                    options: [
+                        { text: "Zungenbiss -- einen Beissblock einfuehren", correct: false, feedback: "NEIN! Niemals etwas in das Maul eines krampfenden Tieres einfuehren -- Verletzungsgefahr fuer Patient und Behandler!" },
+                        { text: "Aspiration von Speichel/Schaum und intermittierende Apnoe", correct: true, feedback: "Korrekt! Waehrend generalisierter Kraempfe kann es zu Apnoe-Phasen kommen. Patient in Seitenlage halten, Speichel ablaufen lassen." },
+                        { text: "Atemwege sind unproblematisch bei Krampfanfaellen", correct: false, feedback: "Falsch. Krampfende Tiere haben ein relevantes Risiko fuer Aspiration und Atemwegskompromittierung." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Warum ist die Hyperthermie (40.8 C) so gefaehrlich?",
+                    options: [
+                        { text: "Sie ist nicht gefaehrlich, das ist normales Krampf-Fieber", correct: false, feedback: "Falsch! Krampf-assoziierte Hyperthermie ueber 41 C kann zu Hirnoedem und irreversiblen Hirnschaeden fuehren!" },
+                        { text: "Muskulaere Hyperthermie kann Hirnschaden, DIC und Rhabdomyolyse verursachen", correct: true, feedback: "Korrekt! Die exzessive Muskelaktivitaet erzeugt Waerme schneller als der Koerper abfuehren kann. Ab 41.5 C drohen Hirnnekrose, DIC und Organversagen." },
+                        { text: "Sie zeigt eine begleitende Infektion an", correct: false, feedback: "Nein, die Hyperthermie ist hier muskulaer bedingt durch die Krampfaktivitaet, nicht durch eine Infektion." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Warum ist sofortige Krampfunterbrechung lebenswichtig?",
+                    options: [
+                        { text: "Nur wegen der Verletzungsgefahr beim Krampfen", correct: false, feedback: "Verletzungsgefahr ist ein Grund, aber nicht der wichtigste." },
+                        { text: "Exzitotoxischer Hirnschaden nach >5 min, Hyperthermie, Azidose, Rhabdomyolyse", correct: true, feedback: "Korrekt! Nach 5 Minuten kontinuierlichem Krampfen beginnt exzitotoxischer neuronaler Zelltod (Glutamat-Toxizitaet). Zusaetzlich: Laktatazidose, Hyperthermie, Rhabdomyolyse mit akutem Nierenversagen." },
+                        { text: "Nur um den Besitzer zu beruhigen", correct: false, feedback: "Voellig falsch. Status epilepticus ist eine lebensbedrohliche Notfallsituation." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Diazepam 0.5-1 mg/kg IV (oder rektal wenn kein Zugang)", correct: true, points: 30, feedback: "Erste Wahl! Schneller Wirkungseintritt (1-2 min IV). Bei fehlendem IV-Zugang: rektal als Notfallmassnahme." },
+                { text: "Venenkatheter legen (wenn moeglich waehrend des Krampfens)", correct: true, points: 15, feedback: "Essentiell, aber schwierig bei krampfendem Patienten. V. cephalica oder V. saphena lateralis versuchen." },
+                { text: "Aktive Kuehlung starten (feuchte Tuecher, Ventilator)", correct: true, points: 15, feedback: "Wichtig! Bei Temp >40 C aktiv kuehlen. Kein Eiswasser (Vasokonstriktion verlangsamt Waermeabgabe)!" },
+                { text: "Bei Therapieresistenz: Levetiracetam 30-60 mg/kg IV oder Phenobarbital 2-4 mg/kg IV", correct: true, points: 15, feedback: "Korrekt! Wenn Diazepam nach 2 Dosen nicht wirkt, Eskalation auf Phenobarbital oder Levetiracetam." },
+                { text: "Propofol-CRI als Ultima Ratio (0.1-0.6 mg/kg/min)", correct: true, points: 10, feedback: "Richtig fuer therapieresistenten Status epilepticus. Erfordert Intubation und Monitoring!" },
+                { text: "Festhalten und den Krampf abwarten", correct: false, points: -15, feedback: "Gefaehrlich! Status epilepticus >5 min verursacht Hirnschaeden. Sofortige medikamentoese Intervention noetig!" },
+                { text: "Sofort Blutabnahme und MRT organisieren", correct: false, points: -5, feedback: "Diagnostik hat NACH der Krampfunterbrechung Prioritaet. Erst stoppen, dann Ursache suchen! (Blut spaeter: Glu, Ca, Leber, NH3)" }
+            ],
+            optimalApproach: "Status epilepticus (Krampfdauer >5 min) ist ein neurologischer Notfall mit potentiell irreversiblen Hirnschaeden durch Exzitotoxizitaet. Sofortprotokoll: 1) Diazepam 0.5-1 mg/kg IV (oder rektal), wiederholbar nach 5 min (max 3x), 2) Gleichzeitig: Venenkatheter, aktive Kuehlung, 3) Bei Therapieresistenz: Phenobarbital 2-4 mg/kg IV oder Levetiracetam 30-60 mg/kg IV, 4) Ultima ratio: Propofol/Ketamin-CRI (Intensivstation!). Nach Stabilisierung: Ursachensuche (Blutbild, Glukose, Kalzium, Ammoniak, Gallensaeuren, ggf. MRT). Idiopathische Epilepsie beim Border Collie (rassetypisch) vs. strukturell vs. metabolisch."
+        },
+        {
+            id: 9,
+            title: "Akute Hufrehe (Laminitis)",
+            species: "Pferd",
+            breed: "Islandpferd",
+            age: "14 Jahre",
+            weight: "380 kg",
+            icon: "\uD83D\uDC34",
+            triage: "orange",
+            triageLabel: "ORANGE -- Dringend",
+            presentation: "Ein Islandpferd zeigt seit dem Morgen zunehmende Bewegungsunlust. Es steht mit untergeschobenen Hinterbeinen und verlagert staendig das Gewicht.",
+            symptoms: [
+                "Saegeboecke-Stellung (Gewichtsverlagerung nach hinten)",
+                "Deutliche Pulsation der Zehenarterien beidseits vorne",
+                "Warme Hufe, besonders an der Vordergliedmasse",
+                "Extreme Wendeschmerzhaftigkeit",
+                "Unwilligkeit zu gehen, Trippeln auf der Stelle"
+            ],
+            vitals: { hf: "52/min", af: "24/min", temp: "38.2 C", kfz: "2 s", sh: "rosa" },
+            abc: {
+                a: {
+                    question: "Atemwege: Beurteilung?",
+                    options: [
+                        { text: "Atemwege frei, nicht betroffen", correct: true, feedback: "Korrekt. Hufrehe betrifft primaer die Huflederhaut und kompromittiert die Atemwege nicht." },
+                        { text: "Moeglicherweise durch Schmerz kompromittiert", correct: false, feedback: "Schmerz kann die Atemfrequenz erhoehen, beeintraechtigt aber nicht die Atemwege selbst." },
+                        { text: "Obstruktion durch Futteraspiration", correct: false, feedback: "Kein Zusammenhang mit Hufrehe." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: Atemfrequenz 24/min beim Pferd?",
+                    options: [
+                        { text: "Leicht erhoehte AF, schmerzbedingt", correct: true, feedback: "Korrekt! Normale AF beim Pferd: 8-16/min. Die leichte Erhoehung ist schmerzbedingt." },
+                        { text: "Normale AF fuer ein Pferd", correct: false, feedback: "Nein, 24/min ist ueber dem Normalbereich (8-16/min) und reflektiert den Schmerzstress." },
+                        { text: "Hinweis auf Lungenoedem", correct: false, feedback: "Kein Zusammenhang. Die Tachypnoe ist schmerzbedingt." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: Warum ist die Pulsation der Zehenarterien relevant?",
+                    options: [
+                        { text: "Sie zeigt eine systemische Herzerkrankung an", correct: false, feedback: "Nein, die Pulsation der Zehenarterien ist ein lokales Entzuendungszeichen der Huflederhaut." },
+                        { text: "Vermehrte digitale Pulsation = Entzuendung und Ischaemie der Huflederhaut", correct: true, feedback: "Korrekt! Die verstaerkte Pulsation zeigt die lokale Entzuendung. Paradoxerweise besteht trotz Hyperpulsation eine Ischaemie der Lamellen durch Shunting des Blutes in AV-Anastomosen." },
+                        { text: "Sie ist ein Zufallsbefund ohne Bedeutung", correct: false, feedback: "Im Gegenteil -- verstaerkte digitale Pulsation ist ein Kardinalsymptom der Hufrehe!" }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "NSAID: Phenylbutazon 2.2-4.4 mg/kg IV oder Flunixin 1.1 mg/kg IV", correct: true, points: 20, feedback: "Wichtig! Schmerzmanagement ist essenziell und hat auch antientzuendliche Wirkung." },
+                { text: "Kryotherapie: Hufe in Eiswasser stellen (bis zum Karpalgelenk)", correct: true, points: 25, feedback: "Evidenzbasiert! Kryotherapie (Eiswasser) ist die wirksamste Massnahme zur Reduktion der Lamellaeren Entzuendung. Mindestens 48-72h durchfuehren!" },
+                { text: "Weichen Untergrund bereitstellen (Sand, Spaene)", correct: true, points: 15, feedback: "Korrekt! Entlastet den Huf und reduziert die mechanische Belastung der entzuendeten Lamellen." },
+                { text: "Ursachensuche: ECS/PPID, EMS, Fruktanreiche Weide, Belastungsrehe?", correct: true, points: 15, feedback: "Essentiell! Ohne Ursachenbehandlung kommt es zu Rezidiven. ACTH-Test (ECS), Insulin/Glukose (EMS) veranlassen." },
+                { text: "Roentgen der Hufe (Grad der Hufbeinrotation?)", correct: true, points: 10, feedback: "Wichtig fuer Prognose und Therapieplanung. Laterale Aufnahme zeigt Hufbeinrotation (Grad nach Obel) und Hufbeinsenkung." },
+                { text: "Sofort longieren, um die Durchblutung zu verbessern", correct: false, points: -20, feedback: "KONTRAINDIZIERT! Bewegung verschlimmert die Lamellaere Ischaemie und kann zum Ausschuhen fuehren!" },
+                { text: "Hufkorrektur-Beschlag sofort anfertigen lassen", correct: false, points: -5, feedback: "Nicht in der Akutphase! Erst Entzuendung reduzieren (Kryotherapie, NSAIDs), dann nach Roentgenbeurteilung Rehabilitations-Beschlag planen." }
+            ],
+            optimalApproach: "Akute Hufrehe ist ein dringender Notfall (ORANGE), der ohne rechtzeitige Therapie zu irreversibler Hufbeinrotation und -senkung fuehren kann. Soforttherapie: 1) Kryotherapie (Eiswasser bis zum Karpalgelenk, mindestens 48-72h -- beste Evidenz!), 2) NSAID (Phenylbutazon oder Flunixin), 3) Weicher Untergrund, 4) Absolute Boxenruhe. Diagnostik: Roentgen (Hufbeinposition), ACTH/Insulin (endokrine Ursachen). Bei Islandpferden ist EMS (Equines Metabolisches Syndrom) haeufig die Grundursache. Prognose abhaengig vom Grad der Rotation (Obel-Grad I-IV)."
+        },
+        {
+            id: 10,
+            title: "Schwere Kolik",
+            species: "Pferd",
+            breed: "Hannoveraner",
+            age: "9 Jahre",
+            weight: "550 kg",
+            icon: "\uD83D\uDC34",
+            triage: "red",
+            triageLabel: "ROT -- Sofort",
+            presentation: "Ein Warmblut-Wallach zeigt seit ca. 4 Stunden zunehmende Koliksymptome. Vorbehandlung durch den Besitzer mit 20 ml Metamizol oral blieb erfolglos.",
+            symptoms: [
+                "Starkes Schwitzen, periodisches Waelzen",
+                "Treten gegen den Bauch, Flehmen",
+                "Kein Kotabsatz seit >12 Stunden",
+                "Reduzierte bis fehlende Darmgeraeusche",
+                "Zunehmende Unruhe trotz Analgetika"
+            ],
+            vitals: { hf: "68/min", af: "28/min", temp: "37.8 C", kfz: "3 s", sh: "blass, trocken, toxischer Randsaum" },
+            abc: {
+                a: {
+                    question: "Atemwege: Worauf achten bei Kolik?",
+                    options: [
+                        { text: "Atemwege bei Kolik nicht relevant", correct: false, feedback: "Falsch! Bei schwerer Kolik und Magenueberladung besteht Aspirationsrisiko." },
+                        { text: "Atemwege frei, aber Nasogastralsondenreflux pruefen (Magenueberladung!)", correct: true, feedback: "Korrekt! Fehlender Kotabsatz + schwere Kolik -> Magenueberladung moeglich. Magenruptur droht wenn nicht entlastet wird!" },
+                        { text: "Sofort Tracheotomie vorbereiten", correct: false, feedback: "Nicht indiziert. Tracheotomie ist bei Kolik nicht die primaere Intervention." }
+                    ]
+                },
+                b: {
+                    question: "Breathing: AF 28/min beim Pferd mit Kolik?",
+                    options: [
+                        { text: "Normal, das Pferd ist nur aufgeregt", correct: false, feedback: "28/min ist deutlich erhoehte AF beim Pferd. Ursachen: Schmerz, Zwerchfellkompression, Azidose." },
+                        { text: "Schmerz- und stressbedingte Tachypnoe, ggf. Zwerchfellkompression durch geblaaehten Darm", correct: true, feedback: "Korrekt! Aufgegaste Darmabschnitte koennen das Zwerchfell nach kranial draengen und die Ventilation einschraenken." },
+                        { text: "Hinweis auf Pleuropneumonie als Kolik-Ursache", correct: false, feedback: "Pleuropneumonie ist eine Differentialdiagnose bei Fieber + Dyspnoe, aber hier nicht wahrscheinlich." }
+                    ]
+                },
+                c: {
+                    question: "Circulation: HF 68/min, KFZ 3s, toxischer Randsaum -- was bedeutet das?",
+                    options: [
+                        { text: "Leichte Dehydratation, unkomplizierte Kolik", correct: false, feedback: "Falsch! HF >60/min + toxischer Randsaum deuten auf eine schwere/chirurgische Kolik hin!" },
+                        { text: "Schwere, moeglicherweise chirurgische Kolik mit beginnendem Endotoxin-Schock", correct: true, feedback: "Korrekt! HF >60/min beim Pferd ist ein Alarmsignal. Toxischer Randsaum = Endotoxaemie durch transmurale Bakterien-Migration. Chirurgische Intervention wahrscheinlich noetig!" },
+                        { text: "Normale Schmerzreaktion, keine Sorge", correct: false, feedback: "Gefaehrlich falsch! Diese Befunde zeigen eine lebensbedrohliche Situation an." }
+                    ]
+                }
+            },
+            immediateActions: [
+                { text: "Nasogastralsonde legen (Refluxpruefung!)", correct: true, points: 25, feedback: "Essentiell! >4 Liter Reflux = Duenndarm-Ileus. Entlastung verhindert Magenruptur. Gleichzeitig diagnostisch und therapeutisch." },
+                { text: "Venenkatheter + Infusionstherapie (10-20 L/h Ringer-Laktat)", correct: true, points: 20, feedback: "Korrekt! Pferde benoetigen grosse Volumina. Dehydratation korrigieren, Endotoxin-Effekte bekaempfen." },
+                { text: "Analgesie: Flunixin-Meglumin 1.1 mg/kg IV", correct: true, points: 15, feedback: "Standardanalgetikum bei Pferdekolik. Hat zusaetzlich antiendotoxische Wirkung (0.25 mg/kg alle 8h fuer Anti-Endotoxin-Effekt)." },
+                { text: "Rektale Untersuchung", correct: true, points: 15, feedback: "Wichtig! Liefert Informationen ueber Darmposition, -fuellung, Spannung des Mesenteriums, Magenblinddarmbandspannung." },
+                { text: "Kontakt mit Pferdeklinik fuer moegliche Kolik-OP", correct: true, points: 15, feedback: "Bei dieser Schwere (HF >60, toxischer Randsaum, keine Analgesie-Antwort) ist die chirurgische Intervention wahrscheinlich. Fruehzeitiger Transport verbessert die Prognose!" },
+                { text: "Abwarten und 2 Stunden spaeter reevaluieren", correct: false, points: -20, feedback: "Lebensgefaehrlich! Bei dieser Kolik-Schwere zaehlt jede Stunde. Darmstrangulation fuehrt zu Nekrose innerhalb weniger Stunden!" },
+                { text: "Abfuehrmittel (Paraffinoel 2-4 L) per Nasogastralsonde", correct: false, points: -5, feedback: "Nur bei unkomplizierter Obstipationskolik sinnvoll. Bei V.a. chirurgische Kolik kontraindiziert -- und bei Duenndarm-Reflux sowieso nicht moeglich!" }
+            ],
+            optimalApproach: "Eine Kolik mit HF >60/min, toxischem Randsaum und Analgesie-Resistenz ist bis zum Beweis des Gegenteils eine chirurgische Kolik. Protokoll: 1) Nasogastralsonde (Reflux >4L = Duenndarm), 2) Rektale Untersuchung (Lageveraenderungen, Aufgasungen), 3) IV-Zugang + aggressive Infusionstherapie, 4) Flunixin IV (Analgesie + Anti-Endotoxin), 5) Sofortige Ueberweisung an Kolik-Klinik wenn: HF >60/min, Reflux >4L, keine Analgesie-Antwort, rektale Auffaelligkeiten. Die Mortalitaet steigt mit jeder Stunde Verzoegerung. Entscheidend ist die fruehe Entscheidung fuer oder gegen OP!"
+        }
+    ];
+
+    // ==========================================
+    // GAME STATE
+    // ==========================================
+
+    const state = {
+        currentView: 'menu', // menu, scenario, abc, actions, feedback, results
+        currentScenario: null,
+        scenarioIndex: 0,
+        abcStep: 0, // 0=A, 1=B, 2=C
+        abcAnswers: [],
+        selectedActions: [],
+        triageChoice: null,
+        timer: null,
+        timeLeft: 0,
+        totalScore: 0,
+        scenarioScore: 0,
+        scenariosCompleted: 0,
+        scenarioResults: [],
+        startTime: 0
+    };
+
+    // Timer-Konfiguration pro Triage
+    const TIMER_CONFIG = {
+        red: 120,    // 2 Minuten fuer ROT
+        orange: 180, // 3 Minuten fuer ORANGE
+        yellow: 240, // 4 Minuten fuer GELB
+        green: 300   // 5 Minuten fuer GRUEN
+    };
+
+    // ==========================================
+    // RENDER-FUNKTIONEN
+    // ==========================================
+
+    function render() {
+        const container = document.getElementById('main-content');
+        const headerScore = document.getElementById('header-score');
+
+        if (state.currentView !== 'menu') {
+            headerScore.textContent = `Punkte: ${state.totalScore} | Szenario ${state.scenariosCompleted + 1}/10`;
+        } else {
+            headerScore.textContent = state.scenariosCompleted > 0 ? `Punkte: ${state.totalScore}` : '';
+        }
+
+        switch (state.currentView) {
+            case 'menu': container.innerHTML = renderMenu(); break;
+            case 'scenario': container.innerHTML = renderScenario(); break;
+            case 'triage': container.innerHTML = renderTriage(); break;
+            case 'abc': container.innerHTML = renderABC(); break;
+            case 'actions': container.innerHTML = renderActions(); break;
+            case 'feedback': container.innerHTML = renderFeedback(); break;
+            case 'results': container.innerHTML = renderResults(); break;
+        }
+    }
+
+    function renderMenu() {
+        return `
+            <div class="animate-fade-in">
+                <!-- Triage-Erklaerung -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="text-2xl">&#x1F3E5;</span> Triage-Kategorien
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="triage-red rounded-xl p-4 text-center border-2">
+                            <div class="text-2xl font-black text-white">ROT</div>
+                            <div class="text-xs text-red-200 mt-1">Sofort behandeln</div>
+                            <div class="text-xs text-red-300 mt-1">Lebensbedrohlich</div>
+                        </div>
+                        <div class="triage-orange rounded-xl p-4 text-center border-2">
+                            <div class="text-2xl font-black text-white">ORANGE</div>
+                            <div class="text-xs text-orange-200 mt-1">Innerhalb 15 min</div>
+                            <div class="text-xs text-orange-300 mt-1">Schwer</div>
+                        </div>
+                        <div class="triage-yellow rounded-xl p-4 text-center border-2">
+                            <div class="text-2xl font-black text-white">GELB</div>
+                            <div class="text-xs text-yellow-200 mt-1">Innerhalb 30-60 min</div>
+                            <div class="text-xs text-yellow-300 mt-1">Moderat</div>
+                        </div>
+                        <div class="triage-green rounded-xl p-4 text-center border-2">
+                            <div class="text-2xl font-black text-white">GRUEN</div>
+                            <div class="text-xs text-green-200 mt-1">Kann warten</div>
+                            <div class="text-xs text-green-300 mt-1">Stabil</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABC-Schema -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="text-2xl">&#x1FA7A;</span> ABC-Schema
+                    </h2>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="bg-red-950/50 border border-red-900/50 rounded-xl p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="abc-badge bg-red-600 text-white">A</div>
+                                <div class="font-bold text-red-400">Airway</div>
+                            </div>
+                            <p class="text-sm text-gray-400">Atemwege frei? Obstruktion? Intubation, Tracheotomie</p>
+                        </div>
+                        <div class="bg-blue-950/50 border border-blue-900/50 rounded-xl p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="abc-badge bg-blue-600 text-white">B</div>
+                                <div class="font-bold text-blue-400">Breathing</div>
+                            </div>
+                            <p class="text-sm text-gray-400">Atmung vorhanden? Frequenz? O2-Supplementierung, Thoraxdrainage</p>
+                        </div>
+                        <div class="bg-purple-950/50 border border-purple-900/50 rounded-xl p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="abc-badge bg-purple-600 text-white">C</div>
+                                <div class="font-bold text-purple-400">Circulation</div>
+                            </div>
+                            <p class="text-sm text-gray-400">Puls? Herzfrequenz? Schleimhaeute? KFZ? Venenkatheter, Fluessigkeitstherapie</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schock-Erkennung -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="text-2xl">&#x26A1;</span> Schock-Erkennung
+                    </h2>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-yellow-950/40 border border-yellow-900/50 rounded-xl p-4">
+                            <h3 class="font-bold text-yellow-400 mb-2">Kompensierter Schock</h3>
+                            <ul class="text-sm text-gray-400 space-y-1">
+                                <li>&#x2022; Tachykardie</li>
+                                <li>&#x2022; Normale bis erhoehte KFZ</li>
+                                <li>&#x2022; Blasse Schleimhaeute</li>
+                                <li>&#x2022; Tachypnoe</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-950/40 border border-red-900/50 rounded-xl p-4">
+                            <h3 class="font-bold text-red-400 mb-2">Dekompensierter Schock</h3>
+                            <ul class="text-sm text-gray-400 space-y-1">
+                                <li>&#x2022; Bradykardie (Katze!)</li>
+                                <li>&#x2022; KFZ >3 Sekunden</li>
+                                <li>&#x2022; Blasse/graue Schleimhaeute</li>
+                                <li>&#x2022; Hypothermie, schwacher Puls</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-gray-800/50 rounded-xl p-4">
+                        <h3 class="font-bold text-emerald-400 mb-2">Schock-Therapie</h3>
+                        <p class="text-sm text-gray-400">Venenzugang, kristalloide Infusion (Hund: 60-90 ml/kg/h, Katze: 40-60 ml/kg/h), Waerme</p>
+                    </div>
+                </div>
+
+                <!-- Szenarien-Uebersicht -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                        <span class="text-2xl">&#x1F4CB;</span> 10 Notfallszenarien
+                    </h2>
+                    <div class="grid gap-3">
+                        ${SCENARIOS.map((s, i) => {
+                            const completed = state.scenarioResults.find(r => r.id === s.id);
+                            return `
+                            <div class="flex items-center gap-3 bg-gray-800/50 rounded-xl p-3 ${completed ? 'opacity-70' : ''}">
+                                <span class="text-2xl">${s.icon}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="font-semibold text-white text-sm truncate">${s.title}</div>
+                                    <div class="text-xs text-gray-500">${s.species} -- ${s.breed}, ${s.age}</div>
+                                </div>
+                                <span class="triage-${s.triage} text-xs font-bold px-3 py-1 rounded-full text-white border whitespace-nowrap">${s.triageLabel.split(' ')[0]}</span>
+                                ${completed ? `<span class="text-xs font-mono text-emerald-400">${completed.score}P</span>` : ''}
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Start-Button -->
+                <div class="text-center">
+                    <button onclick="startGame()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold text-lg px-10 py-4 rounded-2xl pulse-emergency transition-all hover:scale-105 shadow-lg shadow-red-900/50">
+                        ${state.scenariosCompleted > 0 ? 'Weiter trainieren' : 'Training starten'} &#x27A1;
+                    </button>
+                    ${state.scenariosCompleted > 0 ? `
+                    <button onclick="resetGame()"
+                        class="block mx-auto mt-3 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                        Von vorne beginnen
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderScenario() {
+        const s = state.currentScenario;
+        return `
+            <div class="animate-slide-in">
+                <!-- Timer-Bar -->
+                <div class="bg-gray-900 border ${state.timeLeft <= 30 ? 'border-red-600 pulse-border' : 'border-gray-700'} rounded-2xl p-4 mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-400">Verbleibende Zeit</span>
+                        <span class="text-2xl font-mono font-bold ${state.timeLeft <= 30 ? 'timer-critical' : 'text-white'}">${formatTime(state.timeLeft)}</span>
+                    </div>
+                    <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full progress-fill ${state.timeLeft <= 30 ? 'bg-red-500' : state.timeLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500'}"
+                             style="width: ${(state.timeLeft / TIMER_CONFIG[s.triage]) * 100}%"></div>
+                    </div>
+                </div>
+
+                <!-- Szenario-Header -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4">
+                    <div class="flex items-start gap-4 mb-4">
+                        <span class="text-5xl">${s.icon}</span>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h2 class="text-2xl font-black text-white">${s.title}</h2>
+                                <span class="triage-${s.triage} text-xs font-bold px-3 py-1 rounded-full text-white border">?</span>
+                            </div>
+                            <div class="text-sm text-gray-400 mt-1">${s.species} -- ${s.breed}, ${s.age}, ${s.weight}</div>
+                        </div>
+                    </div>
+
+                    <!-- Vorstellung -->
+                    <div class="bg-gray-800/50 rounded-xl p-4 mb-4">
+                        <h3 class="font-bold text-gray-300 text-sm mb-2">Vorstellungsgrund:</h3>
+                        <p class="text-gray-300">${s.presentation}</p>
+                    </div>
+
+                    <!-- Symptome -->
+                    <div class="bg-gray-800/50 rounded-xl p-4 mb-4">
+                        <h3 class="font-bold text-gray-300 text-sm mb-2">Klinische Befunde:</h3>
+                        <ul class="space-y-2">
+                            ${s.symptoms.map(sym => `
+                                <li class="flex items-start gap-2 text-sm text-gray-300">
+                                    <span class="text-red-400 mt-0.5">&#x25CF;</span>
+                                    <span>${sym}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- Vitalparameter -->
+                    <div class="bg-gray-800/50 rounded-xl p-4">
+                        <h3 class="font-bold text-gray-300 text-sm mb-3">Vitalparameter:</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                            <div class="bg-gray-900/80 rounded-lg p-3 text-center">
+                                <div class="text-xs text-gray-500 mb-1">HF</div>
+                                <div class="text-sm font-bold text-red-400">${s.vitals.hf}</div>
+                            </div>
+                            <div class="bg-gray-900/80 rounded-lg p-3 text-center">
+                                <div class="text-xs text-gray-500 mb-1">AF</div>
+                                <div class="text-sm font-bold text-blue-400">${s.vitals.af}</div>
+                            </div>
+                            <div class="bg-gray-900/80 rounded-lg p-3 text-center">
+                                <div class="text-xs text-gray-500 mb-1">Temp</div>
+                                <div class="text-sm font-bold text-yellow-400">${s.vitals.temp}</div>
+                            </div>
+                            <div class="bg-gray-900/80 rounded-lg p-3 text-center">
+                                <div class="text-xs text-gray-500 mb-1">KFZ</div>
+                                <div class="text-sm font-bold text-purple-400">${s.vitals.kfz}</div>
+                            </div>
+                            <div class="bg-gray-900/80 rounded-lg p-3 text-center">
+                                <div class="text-xs text-gray-500 mb-1">SH</div>
+                                <div class="text-sm font-bold text-pink-400">${s.vitals.sh}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weiter-Button -->
+                <div class="text-center">
+                    <button onclick="goToTriage()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50">
+                        Schritt 1: Triage-Kategorie waehlen &#x27A1;
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTriage() {
+        const s = state.currentScenario;
+        return `
+            <div class="animate-slide-in">
+                <!-- Timer -->
+                ${renderTimerBar(s)}
+
+                <!-- Szenario-Kurzinfo -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${s.icon}</span>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">${s.title}</h2>
+                            <p class="text-xs text-gray-500">${s.species} -- ${s.breed}, ${s.age}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Triage-Auswahl -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4">
+                    <h3 class="text-lg font-bold text-white mb-4">Welche Triage-Kategorie ordnest du diesem Patienten zu?</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="selectTriage('red')"
+                            class="triage-btn triage-red rounded-xl p-5 text-center border-2 ${state.triageChoice === 'red' ? 'ring-4 ring-red-400 scale-105' : ''}">
+                            <div class="text-3xl font-black text-white">ROT</div>
+                            <div class="text-sm text-red-200 mt-1 font-semibold">Sofort</div>
+                            <div class="text-xs text-red-300 mt-1">Lebensbedrohlich</div>
+                        </button>
+                        <button onclick="selectTriage('orange')"
+                            class="triage-btn triage-orange rounded-xl p-5 text-center border-2 ${state.triageChoice === 'orange' ? 'ring-4 ring-orange-400 scale-105' : ''}">
+                            <div class="text-3xl font-black text-white">ORANGE</div>
+                            <div class="text-sm text-orange-200 mt-1 font-semibold">Dringend</div>
+                            <div class="text-xs text-orange-300 mt-1">Innerhalb 15 min</div>
+                        </button>
+                        <button onclick="selectTriage('yellow')"
+                            class="triage-btn triage-yellow rounded-xl p-5 text-center border-2 ${state.triageChoice === 'yellow' ? 'ring-4 ring-yellow-400 scale-105' : ''}">
+                            <div class="text-3xl font-black text-white">GELB</div>
+                            <div class="text-sm text-yellow-200 mt-1 font-semibold">Bald</div>
+                            <div class="text-xs text-yellow-300 mt-1">Innerhalb 30-60 min</div>
+                        </button>
+                        <button onclick="selectTriage('green')"
+                            class="triage-btn triage-green rounded-xl p-5 text-center border-2 ${state.triageChoice === 'green' ? 'ring-4 ring-green-400 scale-105' : ''}">
+                            <div class="text-3xl font-black text-white">GRUEN</div>
+                            <div class="text-sm text-green-200 mt-1 font-semibold">Warten</div>
+                            <div class="text-xs text-green-300 mt-1">Stabil</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bestaetigen -->
+                ${state.triageChoice ? `
+                <div class="text-center animate-fade-in">
+                    <button onclick="confirmTriage()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50">
+                        Triage bestaetigen &#x27A1; ABC-Schema starten
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    function renderABC() {
+        const s = state.currentScenario;
+        const steps = ['a', 'b', 'c'];
+        const stepLabels = ['A -- Airway', 'B -- Breathing', 'C -- Circulation'];
+        const stepColors = ['red', 'blue', 'purple'];
+        const currentStep = steps[state.abcStep];
+        const abcData = s.abc[currentStep];
+
+        const triageCorrect = state.triageChoice === s.triage;
+        const triageFeedback = triageCorrect
+            ? `Korrekt! ${s.triageLabel} ist die richtige Einstufung.`
+            : `Die korrekte Einstufung waere ${s.triageLabel} gewesen.`;
+
+        return `
+            <div class="animate-slide-in">
+                <!-- Timer -->
+                ${renderTimerBar(s)}
+
+                <!-- Szenario-Kurzinfo + Triage-Ergebnis -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${s.icon}</span>
+                            <div>
+                                <h2 class="text-lg font-bold text-white">${s.title}</h2>
+                                <p class="text-xs text-gray-500">${s.species}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="triage-${s.triage} text-xs font-bold px-3 py-1 rounded-full text-white border">${s.triageLabel.split(' ')[0]}</span>
+                            <span class="text-sm ${triageCorrect ? 'text-emerald-400' : 'text-red-400'}">${triageCorrect ? 'Korrekt!' : 'Falsch'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ABC-Progress -->
+                <div class="flex gap-2 mb-4">
+                    ${steps.map((step, i) => {
+                        const isActive = i === state.abcStep;
+                        const isDone = i < state.abcStep;
+                        const color = stepColors[i];
+                        return `
+                        <div class="flex-1 rounded-xl p-3 border-2 transition-all ${isActive ? `bg-${color}-950/50 border-${color}-600` : isDone ? `bg-${color}-950/30 border-${color}-900/50 opacity-60` : 'bg-gray-800/30 border-gray-700/30 opacity-40'}">
+                            <div class="flex items-center gap-2">
+                                <div class="abc-badge ${isActive ? `bg-${color}-600` : isDone ? `bg-${color}-800` : 'bg-gray-700'} text-white text-sm" style="width:32px;height:32px;font-size:14px;">
+                                    ${isDone ? '&#x2713;' : step.toUpperCase()}
+                                </div>
+                                <span class="text-xs font-semibold ${isActive ? 'text-white' : 'text-gray-500'}">${stepLabels[i]}</span>
+                            </div>
+                        </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <!-- Frage -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="abc-badge bg-${stepColors[state.abcStep]}-600 text-white">${currentStep.toUpperCase()}</div>
+                        <h3 class="text-lg font-bold text-white">${abcData.question}</h3>
+                    </div>
+                    <div class="space-y-3">
+                        ${abcData.options.map((opt, i) => `
+                            <button onclick="selectABCAnswer(${i})"
+                                class="decision-node w-full text-left bg-gray-800/50 border border-gray-700 rounded-xl p-4 transition-all hover:border-gray-500">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-bold text-white flex-shrink-0 mt-0.5">
+                                        ${String.fromCharCode(65 + i)}
+                                    </div>
+                                    <span class="text-sm text-gray-300">${opt.text}</span>
+                                </div>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderABCFeedback(optionIndex) {
+        const s = state.currentScenario;
+        const steps = ['a', 'b', 'c'];
+        const currentStep = steps[state.abcStep];
+        const abcData = s.abc[currentStep];
+        const chosen = abcData.options[optionIndex];
+        const isCorrect = chosen.correct;
+
+        // Kurz Feedback anzeigen, dann weiter
+        const container = document.getElementById('main-content');
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in`;
+        feedbackDiv.innerHTML = `
+            <div class="bg-gray-900 border ${isCorrect ? 'border-emerald-600' : 'border-red-600'} rounded-2xl p-6 max-w-lg w-full shadow-2xl animate-slide-in">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="text-3xl">${isCorrect ? '&#x2705;' : '&#x274C;'}</span>
+                    <h3 class="text-lg font-bold ${isCorrect ? 'text-emerald-400' : 'text-red-400'}">
+                        ${isCorrect ? 'Korrekt!' : 'Nicht optimal'}
+                    </h3>
+                </div>
+                <p class="text-sm text-gray-300 mb-6">${chosen.feedback}</p>
+                <button onclick="this.closest('.fixed').remove(); nextABCStep()"
+                    class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-xl transition-all">
+                    ${state.abcStep < 2 ? 'Weiter zu ' + ['B -- Breathing', 'C -- Circulation'][state.abcStep] : 'Weiter zu Sofortmassnahmen'} &#x27A1;
+                </button>
+            </div>
+        `;
+        document.body.appendChild(feedbackDiv);
+    }
+
+    function renderActions() {
+        const s = state.currentScenario;
+        return `
+            <div class="animate-slide-in">
+                <!-- Timer -->
+                ${renderTimerBar(s)}
+
+                <!-- Szenario-Kurzinfo -->
+                <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <span class="text-3xl">${s.icon}</span>
+                        <div>
+                            <h2 class="text-lg font-bold text-white">${s.title}</h2>
+                            <p class="text-xs text-gray-500">${s.species} -- ABC abgeschlossen</p>
+                        </div>
+                        <span class="triage-${s.triage} text-xs font-bold px-3 py-1 rounded-full text-white border ml-auto">${s.triageLabel.split(' ')[0]}</span>
+                    </div>
+                </div>
+
+                <!-- Sofortmassnahmen -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4">
+                    <h3 class="text-lg font-bold text-white mb-2">Sofortmassnahmen waehlen</h3>
+                    <p class="text-sm text-gray-500 mb-4">Waehle alle Massnahmen, die du jetzt durchfuehren wuerdest. Korrekte Massnahmen geben Punkte, falsche kosten Punkte!</p>
+
+                    <div class="space-y-3">
+                        ${s.immediateActions.map((action, i) => {
+                            const isSelected = state.selectedActions.includes(i);
+                            return `
+                            <button onclick="toggleAction(${i})"
+                                class="decision-node w-full text-left border rounded-xl p-4 transition-all ${isSelected ? 'bg-red-950/30 border-red-600' : 'bg-gray-800/50 border-gray-700 hover:border-gray-500'}">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-7 h-7 rounded-lg ${isSelected ? 'bg-red-600' : 'bg-gray-700'} flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors">
+                                        ${isSelected ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+                                    </div>
+                                    <span class="text-sm text-gray-300">${action.text}</span>
+                                </div>
+                            </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Bestaetigen -->
+                <div class="text-center">
+                    <button onclick="confirmActions()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50 ${state.selectedActions.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                        ${state.selectedActions.length === 0 ? 'disabled' : ''}>
+                        Massnahmen bestaetigen &#x27A1; Auswertung
+                    </button>
+                    <p class="text-xs text-gray-600 mt-2">${state.selectedActions.length} Massnahme${state.selectedActions.length !== 1 ? 'n' : ''} ausgewaehlt</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderFeedback() {
+        const s = state.currentScenario;
+        const triageCorrect = state.triageChoice === s.triage;
+        const triagePoints = triageCorrect ? 30 : 0;
+
+        let abcPoints = 0;
+        state.abcAnswers.forEach((ansIdx, step) => {
+            const steps = ['a', 'b', 'c'];
+            if (s.abc[steps[step]].options[ansIdx].correct) abcPoints += 10;
+        });
+
+        let actionPoints = 0;
+        state.selectedActions.forEach(idx => {
+            actionPoints += s.immediateActions[idx].points;
+        });
+        // Penalty fuer nicht gewaehlte korrekte Aktionen
+        s.immediateActions.forEach((action, idx) => {
+            if (action.correct && !state.selectedActions.includes(idx)) {
+                actionPoints -= Math.floor(action.points * 0.3);
+            }
+        });
+
+        const timeBonus = Math.floor(state.timeLeft / TIMER_CONFIG[s.triage] * 20);
+        const totalScenarioScore = Math.max(0, triagePoints + abcPoints + actionPoints + timeBonus);
+
+        state.scenarioScore = totalScenarioScore;
+
+        return `
+            <div class="animate-slide-in">
+                <!-- Score-Header -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4 text-center">
+                    <h2 class="text-2xl font-black text-white mb-2">Auswertung: ${s.title}</h2>
+                    <div class="text-6xl font-black text-emerald-400 score-pop mb-2">${totalScenarioScore}</div>
+                    <div class="text-sm text-gray-500">Punkte fuer dieses Szenario</div>
+
+                    <!-- Score-Breakdown -->
+                    <div class="grid grid-cols-4 gap-3 mt-4">
+                        <div class="bg-gray-800/50 rounded-xl p-3">
+                            <div class="text-xs text-gray-500">Triage</div>
+                            <div class="text-lg font-bold ${triageCorrect ? 'text-emerald-400' : 'text-red-400'}">${triagePoints}P</div>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-xl p-3">
+                            <div class="text-xs text-gray-500">ABC</div>
+                            <div class="text-lg font-bold text-blue-400">${abcPoints}P</div>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-xl p-3">
+                            <div class="text-xs text-gray-500">Massnahmen</div>
+                            <div class="text-lg font-bold ${actionPoints >= 0 ? 'text-emerald-400' : 'text-red-400'}">${actionPoints}P</div>
+                        </div>
+                        <div class="bg-gray-800/50 rounded-xl p-3">
+                            <div class="text-xs text-gray-500">Zeitbonus</div>
+                            <div class="text-lg font-bold text-yellow-400">+${timeBonus}P</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Triage-Feedback -->
+                <div class="bg-gray-900 border ${triageCorrect ? 'border-emerald-800' : 'border-red-800'} rounded-2xl p-5 mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span>${triageCorrect ? '&#x2705;' : '&#x274C;'}</span>
+                        <h3 class="font-bold ${triageCorrect ? 'text-emerald-400' : 'text-red-400'}">
+                            Triage: ${triageCorrect ? 'Korrekt' : 'Falsch'}
+                        </h3>
+                    </div>
+                    <p class="text-sm text-gray-400">
+                        ${triageCorrect
+                            ? `Richtig erkannt: ${s.triageLabel}`
+                            : `Deine Wahl: ${getTriageLabel(state.triageChoice)} -- Korrekt waere: ${s.triageLabel}`
+                        }
+                    </p>
+                </div>
+
+                <!-- Massnahmen-Feedback -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-5 mb-4">
+                    <h3 class="font-bold text-white mb-3">Massnahmen-Auswertung:</h3>
+                    <div class="space-y-2">
+                        ${s.immediateActions.map((action, i) => {
+                            const wasSelected = state.selectedActions.includes(i);
+                            const isCorrectAction = action.correct;
+                            let statusClass, statusIcon;
+
+                            if (wasSelected && isCorrectAction) {
+                                statusClass = 'border-emerald-800 bg-emerald-950/20';
+                                statusIcon = '&#x2705;';
+                            } else if (wasSelected && !isCorrectAction) {
+                                statusClass = 'border-red-800 bg-red-950/20';
+                                statusIcon = '&#x274C;';
+                            } else if (!wasSelected && isCorrectAction) {
+                                statusClass = 'border-yellow-800 bg-yellow-950/20';
+                                statusIcon = '&#x26A0;';
+                            } else {
+                                statusClass = 'border-gray-800 bg-gray-900/50';
+                                statusIcon = '&#x2796;';
+                            }
+
+                            return `
+                            <div class="border rounded-xl p-3 ${statusClass}">
+                                <div class="flex items-start gap-2">
+                                    <span class="mt-0.5">${statusIcon}</span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm text-gray-300 font-medium">${action.text}</div>
+                                        <div class="text-xs text-gray-500 mt-1">${action.feedback}</div>
+                                        <div class="text-xs font-mono mt-1 ${action.points > 0 ? 'text-emerald-500' : 'text-red-500'}">
+                                            ${wasSelected ? (action.points > 0 ? '+' : '') + action.points + 'P' : isCorrectAction ? 'Nicht gewaehlt (-' + Math.floor(action.points * 0.3) + 'P)' : 'Korrekt nicht gewaehlt'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Optimale Vorgehensweise -->
+                <div class="bg-gray-900 border border-emerald-900/50 rounded-2xl p-5 mb-4">
+                    <h3 class="font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                        <span>&#x1F4D6;</span> Optimale Vorgehensweise
+                    </h3>
+                    <p class="text-sm text-gray-300 leading-relaxed">${s.optimalApproach}</p>
+                </div>
+
+                <!-- Weiter -->
+                <div class="text-center">
+                    <button onclick="nextScenario()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50">
+                        ${state.scenariosCompleted + 1 < SCENARIOS.length ? 'Naechstes Szenario' : 'Endergebnis anzeigen'} &#x27A1;
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderResults() {
+        const maxPossible = SCENARIOS.length * 150;
+        const percentage = Math.round((state.totalScore / maxPossible) * 100);
+        let grade, gradeColor, gradeText;
+
+        if (percentage >= 90) { grade = 'Exzellent'; gradeColor = 'text-emerald-400'; gradeText = 'Du bist bereit fuer die Notaufnahme!'; }
+        else if (percentage >= 75) { grade = 'Gut'; gradeColor = 'text-blue-400'; gradeText = 'Solide Grundlagen, einige Bereiche zum Vertiefen.'; }
+        else if (percentage >= 60) { grade = 'Befriedigend'; gradeColor = 'text-yellow-400'; gradeText = 'Grundverstaendnis vorhanden, weiteres Training empfohlen.'; }
+        else if (percentage >= 40) { grade = 'Ausbaufaehig'; gradeColor = 'text-orange-400'; gradeText = 'Die Notfallmedizin erfordert mehr Uebung.'; }
+        else { grade = 'Kritisch'; gradeColor = 'text-red-400'; gradeText = 'Intensives Studium der Notfallprotokolle dringend empfohlen.'; }
+
+        return `
+            <div class="animate-slide-in">
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-6 text-center">
+                    <h2 class="text-3xl font-black text-white mb-4">Trainingsergebnis</h2>
+                    <div class="text-7xl font-black ${gradeColor} score-pop mb-2">${state.totalScore}</div>
+                    <div class="text-lg text-gray-400 mb-1">von ${maxPossible} moeglichen Punkten (${percentage}%)</div>
+                    <div class="text-2xl font-bold ${gradeColor} mb-2">${grade}</div>
+                    <p class="text-sm text-gray-500">${gradeText}</p>
+                </div>
+
+                <!-- Einzelergebnisse -->
+                <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
+                    <h3 class="text-lg font-bold text-white mb-4">Einzelergebnisse</h3>
+                    <div class="space-y-2">
+                        ${state.scenarioResults.map(r => {
+                            const s = SCENARIOS.find(sc => sc.id === r.id);
+                            return `
+                            <div class="flex items-center gap-3 bg-gray-800/50 rounded-xl p-3">
+                                <span class="text-2xl">${s.icon}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-semibold text-white truncate">${s.title}</div>
+                                    <div class="text-xs text-gray-500">${r.triageCorrect ? 'Triage korrekt' : 'Triage falsch'}</div>
+                                </div>
+                                <span class="triage-${s.triage} text-xs font-bold px-2 py-0.5 rounded-full text-white border">${s.triageLabel.split(' ')[0]}</span>
+                                <span class="text-lg font-bold font-mono ${r.score >= 80 ? 'text-emerald-400' : r.score >= 40 ? 'text-yellow-400' : 'text-red-400'}">${r.score}P</span>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button onclick="resetGame()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-red-900/50">
+                        Erneut trainieren
+                    </button>
+                    <a href="vetscan-version-selector.html"
+                       class="block mt-3 text-sm text-gray-500 hover:text-gray-300 transition-colors">
+                        Zurueck zur Uebersicht
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTimerBar(s) {
+        return `
+            <div class="bg-gray-900 border ${state.timeLeft <= 30 ? 'border-red-600 pulse-border' : 'border-gray-700'} rounded-xl p-3 mb-4">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-semibold text-gray-500">Zeit</span>
+                    <span class="text-lg font-mono font-bold ${state.timeLeft <= 30 ? 'timer-critical' : 'text-white'}">${formatTime(state.timeLeft)}</span>
+                </div>
+                <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full progress-fill ${state.timeLeft <= 30 ? 'bg-red-500' : state.timeLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500'}"
+                         style="width: ${(state.timeLeft / TIMER_CONFIG[s.triage]) * 100}%"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // GAME-LOGIK
+    // ==========================================
+
+    function startGame() {
+        // Naechstes nicht abgeschlossenes Szenario finden
+        const completedIds = state.scenarioResults.map(r => r.id);
+        const nextScenario = SCENARIOS.find(s => !completedIds.includes(s.id));
+
+        if (!nextScenario) {
+            state.currentView = 'results';
+            render();
+            return;
+        }
+
+        state.currentScenario = nextScenario;
+        state.triageChoice = null;
+        state.abcStep = 0;
+        state.abcAnswers = [];
+        state.selectedActions = [];
+        state.scenarioScore = 0;
+        state.timeLeft = TIMER_CONFIG[nextScenario.triage];
+        state.startTime = Date.now();
+        state.currentView = 'scenario';
+
+        startTimer();
+        render();
+    }
+
+    function startTimer() {
+        if (state.timer) clearInterval(state.timer);
+        state.timer = setInterval(() => {
+            state.timeLeft--;
+            if (state.timeLeft <= 0) {
+                state.timeLeft = 0;
+                clearInterval(state.timer);
+                // Zeitablauf: Automatisch zur Auswertung
+                if (state.currentView !== 'feedback') {
+                    if (state.currentView === 'triage' && !state.triageChoice) {
+                        state.triageChoice = 'green'; // Default bei Zeitablauf
+                    }
+                    if (state.currentView === 'abc' || state.currentView === 'triage') {
+                        // Fehlende ABC-Antworten auffuellen
+                        while (state.abcAnswers.length < 3) {
+                            state.abcAnswers.push(0);
+                        }
+                    }
+                    state.currentView = 'feedback';
+                    render();
+                }
+            }
+            // Timer-Anzeige aktualisieren (nur Timer-Elemente)
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (state.timer) {
+            clearInterval(state.timer);
+            state.timer = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        const timerElements = document.querySelectorAll('.font-mono.font-bold');
+        timerElements.forEach(el => {
+            if (el.id !== 'header-score') {
+                el.textContent = formatTime(state.timeLeft);
+                if (state.timeLeft <= 30) {
+                    el.classList.add('timer-critical');
+                }
+            }
+        });
+        // Progress-Bar aktualisieren
+        const progressBars = document.querySelectorAll('.progress-fill');
+        progressBars.forEach(bar => {
+            if (state.currentScenario) {
+                const pct = (state.timeLeft / TIMER_CONFIG[state.currentScenario.triage]) * 100;
+                bar.style.width = pct + '%';
+                bar.className = `h-full rounded-full progress-fill ${state.timeLeft <= 30 ? 'bg-red-500' : state.timeLeft <= 60 ? 'bg-yellow-500' : 'bg-emerald-500'}`;
+            }
+        });
+    }
+
+    function goToTriage() {
+        state.currentView = 'triage';
+        render();
+    }
+
+    function selectTriage(choice) {
+        state.triageChoice = choice;
+        render();
+    }
+
+    function confirmTriage() {
+        if (!state.triageChoice) return;
+        state.abcStep = 0;
+        state.abcAnswers = [];
+        state.currentView = 'abc';
+        render();
+    }
+
+    function selectABCAnswer(optionIndex) {
+        state.abcAnswers.push(optionIndex);
+        renderABCFeedback(optionIndex);
+    }
+
+    function nextABCStep() {
+        if (state.abcStep < 2) {
+            state.abcStep++;
+            state.currentView = 'abc';
+        } else {
+            state.currentView = 'actions';
+        }
+        render();
+    }
+
+    function toggleAction(index) {
+        const idx = state.selectedActions.indexOf(index);
+        if (idx > -1) {
+            state.selectedActions.splice(idx, 1);
+        } else {
+            state.selectedActions.push(index);
+        }
+        render();
+    }
+
+    function confirmActions() {
+        if (state.selectedActions.length === 0) return;
+        stopTimer();
+
+        // Score berechnen
+        const s = state.currentScenario;
+        const triageCorrect = state.triageChoice === s.triage;
+        const triagePoints = triageCorrect ? 30 : 0;
+
+        let abcPoints = 0;
+        state.abcAnswers.forEach((ansIdx, step) => {
+            const steps = ['a', 'b', 'c'];
+            if (s.abc[steps[step]].options[ansIdx].correct) abcPoints += 10;
+        });
+
+        let actionPoints = 0;
+        state.selectedActions.forEach(idx => {
+            actionPoints += s.immediateActions[idx].points;
+        });
+        s.immediateActions.forEach((action, idx) => {
+            if (action.correct && !state.selectedActions.includes(idx)) {
+                actionPoints -= Math.floor(action.points * 0.3);
+            }
+        });
+
+        const timeBonus = Math.floor(state.timeLeft / TIMER_CONFIG[s.triage] * 20);
+        const totalScenarioScore = Math.max(0, triagePoints + abcPoints + actionPoints + timeBonus);
+
+        state.scenarioScore = totalScenarioScore;
+        state.totalScore += totalScenarioScore;
+        state.scenarioResults.push({
+            id: s.id,
+            score: totalScenarioScore,
+            triageCorrect: triageCorrect,
+            timeUsed: TIMER_CONFIG[s.triage] - state.timeLeft
+        });
+
+        state.currentView = 'feedback';
+        render();
+    }
+
+    function nextScenario() {
+        state.scenariosCompleted++;
+
+        const completedIds = state.scenarioResults.map(r => r.id);
+        const hasMore = SCENARIOS.some(s => !completedIds.includes(s.id));
+
+        if (!hasMore) {
+            state.currentView = 'results';
+        } else {
+            state.currentView = 'menu';
+        }
+        render();
+    }
+
+    function resetGame() {
+        state.currentView = 'menu';
+        state.currentScenario = null;
+        state.scenarioIndex = 0;
+        state.abcStep = 0;
+        state.abcAnswers = [];
+        state.selectedActions = [];
+        state.triageChoice = null;
+        state.totalScore = 0;
+        state.scenarioScore = 0;
+        state.scenariosCompleted = 0;
+        state.scenarioResults = [];
+        stopTimer();
+        render();
+    }
+
+    // ==========================================
+    // HILFSFUNKTIONEN
+    // ==========================================
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function getTriageLabel(triage) {
+        const labels = {
+            red: 'ROT -- Sofort',
+            orange: 'ORANGE -- Dringend',
+            yellow: 'GELB -- Bald',
+            green: 'GRUEN -- Warten'
+        };
+        return labels[triage] || triage;
+    }
+
+    // ==========================================
+    // INIT
+    // ==========================================
+
+    render();
+
+    </script>
+</body>
+</html>

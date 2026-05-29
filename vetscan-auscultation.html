@@ -1,0 +1,2905 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Auskultation-Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --accent: #06b6d4;
+            --accent-light: #22d3ee;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --glass-bg: rgba(30, 41, 59, 0.85);
+            --glass-border: rgba(148, 163, 184, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            margin-bottom: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--primary-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title .badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent);
+            border-radius: 9999px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        /* Species Tabs */
+        .species-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 4px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            width: fit-content;
+        }
+
+        .species-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.25s;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .species-tab:hover {
+            color: var(--text-primary);
+            background: rgba(148, 163, 184, 0.1);
+        }
+
+        .species-tab.active {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent);
+            border-color: rgba(6, 182, 212, 0.3);
+            font-weight: 600;
+        }
+
+        .species-tab .species-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Main Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-header h2 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* SVG Anatomy View */
+        .anatomy-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.03), transparent 70%);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .anatomy-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Auscultation Points */
+        .ausc-point {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ausc-point circle.point-bg {
+            transition: all 0.3s;
+        }
+
+        .ausc-point:hover circle.point-bg {
+            r: 14;
+            filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+        }
+
+        .ausc-point.active circle.point-bg {
+            fill: var(--accent);
+            r: 14;
+            filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.8));
+        }
+
+        .ausc-point text {
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            fill: white;
+            font-size: 10px;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .ausc-point .point-label {
+            font-size: 9px;
+            font-weight: 500;
+            fill: var(--text-secondary);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .ausc-point:hover .point-label,
+        .ausc-point.active .point-label {
+            opacity: 1;
+            fill: var(--accent-light);
+        }
+
+        /* Pulse Wave Canvas */
+        .pulse-canvas-container {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            margin-top: 12px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .pulse-canvas-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pulse-info {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .pulse-label {
+            position: absolute;
+            top: 6px;
+            left: 10px;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        /* Sound Wave Animation */
+        .sound-wave-container {
+            height: 60px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .sound-wave-container canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .finding-card {
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.4);
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .finding-card:hover {
+            background: rgba(15, 23, 42, 0.6);
+            border-color: rgba(148, 163, 184, 0.25);
+        }
+
+        .finding-card.active {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        .finding-card .finding-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .finding-card .finding-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .finding-card .finding-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .tag-normal {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .tag-pathological {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .tag-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+
+        .tag-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        /* Grade Scale */
+        .grade-scale {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .grade-bar {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(148, 163, 184, 0.15);
+            transition: background 0.3s;
+        }
+
+        .grade-bar.filled {
+            background: var(--accent);
+        }
+
+        .grade-bar.filled-warn {
+            background: var(--warning);
+        }
+
+        .grade-bar.filled-danger {
+            background: var(--danger);
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            gap: 4px;
+            padding: 3px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .mode-btn.active {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Region Toggle */
+        .region-toggle {
+            display: flex;
+            gap: 4px;
+            padding: 3px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .region-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .region-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .region-btn.active {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        /* Quiz Mode */
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+        }
+
+        .quiz-question {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .quiz-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+
+        .quiz-feedback {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .quiz-feedback.correct {
+            display: block;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+        }
+
+        .quiz-feedback.wrong {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .quiz-score {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 10px;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .quiz-score-num {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .quiz-score-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .quiz-btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn-primary {
+            background: rgba(6, 182, 212, 0.2);
+            color: var(--accent);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .quiz-btn-primary:hover {
+            background: rgba(6, 182, 212, 0.3);
+        }
+
+        /* Scrollable detail area */
+        .detail-scroll {
+            max-height: calc(100vh - 260px);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .detail-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detail-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .detail-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 4px;
+        }
+
+        /* Heart animation indicator */
+        .heart-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .heart-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: heartbeat 1s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.4); opacity: 1; }
+        }
+
+        /* Lung animation indicator */
+        .lung-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        /* SVG body outline */
+        .body-outline {
+            fill: none;
+            stroke: rgba(148, 163, 184, 0.25);
+            stroke-width: 2;
+        }
+
+        .body-fill {
+            fill: rgba(148, 163, 184, 0.03);
+        }
+
+        .organ-outline {
+            fill: none;
+            stroke-width: 1.5;
+            opacity: 0.4;
+            transition: opacity 0.3s;
+        }
+
+        .organ-fill {
+            opacity: 0.06;
+            transition: opacity 0.3s;
+        }
+
+        .anatomy-container:hover .organ-outline {
+            opacity: 0.6;
+        }
+
+        .anatomy-container:hover .organ-fill {
+            opacity: 0.1;
+        }
+
+        /* Side indicator */
+        .side-indicator {
+            font-size: 10px;
+            fill: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 8px;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+
+            .species-tabs {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .anatomy-container {
+                aspect-ratio: 4 / 3;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-primary);
+            pointer-events: none;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            transition: opacity 0.15s;
+            max-width: 200px;
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        /* Stethoscope icon */
+        .steth-icon {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* No selection state text */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 0.85rem;
+        }
+
+        /* Arrhythmia list */
+        .arrhythmia-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .arrhythmia-item {
+            display: flex;
+            align-items: start;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .arrhythmia-item .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        /* View selector (links/rechts) */
+        .view-selector {
+            display: flex;
+            gap: 4px;
+            padding: 3px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .view-btn {
+            padding: 4px 12px;
+            border-radius: 7px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .view-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .view-btn.active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <svg class="steth-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--accent);">
+                    <path d="M6 2v6a6 6 0 0 0 12 0V2" stroke-linecap="round"/>
+                    <circle cx="18" cy="16" r="2"/>
+                    <path d="M18 14v-2" stroke-linecap="round"/>
+                    <path d="M18 18v1a3 3 0 0 1-3 3h-1a3 3 0 0 1-3-3v-2" stroke-linecap="round"/>
+                    <line x1="4" y1="2" x2="4" y2="4" stroke-linecap="round"/>
+                    <line x1="8" y1="2" x2="8" y2="4" stroke-linecap="round"/>
+                </svg>
+                <h1>Auskultation-Simulator</h1>
+                <span class="badge">VetScan Pro</span>
+            </div>
+            <a href="vetscan-version-selector.html" class="back-link">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10 12L6 8l4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Zur Uebersicht
+            </a>
+        </div>
+
+        <!-- Species Tabs -->
+        <div class="species-tabs" id="speciesTabs">
+            <div class="species-tab active" data-species="dog" onclick="setSpecies('dog')">
+                <span class="species-icon">&#128054;</span> Hund
+            </div>
+            <div class="species-tab" data-species="cat" onclick="setSpecies('cat')">
+                <span class="species-icon">&#128049;</span> Katze
+            </div>
+            <div class="species-tab" data-species="horse" onclick="setSpecies('horse')">
+                <span class="species-icon">&#128014;</span> Pferd
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Left: Anatomy + Waveform -->
+            <div style="display:flex;flex-direction:column;gap:16px;">
+                <!-- Controls -->
+                <div class="card">
+                    <div class="card-body" style="padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <div class="region-toggle" id="regionToggle">
+                                <button class="region-btn active" data-region="heart" onclick="setRegion('heart')">
+                                    <span class="heart-indicator"><span class="heart-dot"></span></span>
+                                    Herz
+                                </button>
+                                <button class="region-btn" data-region="lung" onclick="setRegion('lung')">
+                                    <span class="heart-indicator"><span class="lung-dot"></span></span>
+                                    Lunge
+                                </button>
+                            </div>
+                            <div class="view-selector" id="viewSelector">
+                                <button class="view-btn active" data-view="left" onclick="setView('left')">Links</button>
+                                <button class="view-btn" data-view="right" onclick="setView('right')">Rechts</button>
+                            </div>
+                        </div>
+                        <div class="mode-toggle" id="modeToggle">
+                            <button class="mode-btn active" data-mode="explore" onclick="setMode('explore')">Erkunden</button>
+                            <button class="mode-btn" data-mode="quiz" onclick="setMode('quiz')">Quiz</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anatomy SVG -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 id="anatomyTitle">Herzauskultation -- Hund (linke Seite)</h2>
+                        <span id="speciesNote" style="font-size:0.72rem;color:var(--text-muted);"></span>
+                    </div>
+                    <div class="card-body" style="padding:12px;">
+                        <div class="anatomy-container" id="anatomyContainer">
+                            <!-- SVG injected by JS -->
+                        </div>
+                        <!-- Pulse Wave -->
+                        <div class="pulse-canvas-container" id="pulseContainer">
+                            <span class="pulse-label" id="pulseLabel">Herzfrequenz</span>
+                            <span class="pulse-info" id="pulseInfo">80 bpm</span>
+                            <canvas id="pulseCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sound Waveform Card (visible when finding selected) -->
+                <div class="card" id="waveformCard" style="display:none;">
+                    <div class="card-header">
+                        <h2 id="waveformTitle">Herzton-Visualisierung</h2>
+                    </div>
+                    <div class="card-body" style="padding:12px;">
+                        <div class="sound-wave-container">
+                            <canvas id="soundCanvas"></canvas>
+                        </div>
+                        <div id="soundDescription" style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Detail Panel -->
+            <div>
+                <!-- Explore Mode -->
+                <div class="card" id="explorePanel">
+                    <div class="card-header">
+                        <h2 id="detailTitle">Befunde</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="detail-scroll" id="detailContent">
+                            <div class="empty-state" id="emptyState">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+                                </svg>
+                                <p>Klicke auf einen Auskultationspunkt, um Befunde anzuzeigen.</p>
+                            </div>
+                            <div class="detail-panel" id="detailPanel" style="display:none;">
+                                <!-- Findings injected by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Mode -->
+                <div class="card quiz-container" id="quizPanel">
+                    <div class="card-header">
+                        <h2>Quiz-Modus</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="quiz-score">
+                            <div>
+                                <div class="quiz-score-num" id="quizScoreNum">0/0</div>
+                                <div class="quiz-score-label">Richtige Antworten</div>
+                            </div>
+                        </div>
+                        <div id="quizContent">
+                            <div class="quiz-question" id="quizQuestion"></div>
+                            <div class="quiz-hint" id="quizHint">Klicke auf den richtigen Auskultationspunkt im Schema.</div>
+                            <div class="quiz-feedback" id="quizFeedback"></div>
+                            <div style="margin-top:16px;display:flex;gap:8px;">
+                                <button class="quiz-btn quiz-btn-primary" onclick="nextQuizQuestion()">Naechste Frage</button>
+                                <button class="quiz-btn quiz-btn-primary" onclick="resetQuiz()" style="opacity:0.7;">Zuruecksetzen</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+    // ==========================================================
+    //  STATE
+    // ==========================================================
+    let currentSpecies = 'dog';
+    let currentRegion = 'heart';
+    let currentView = 'left';
+    let currentMode = 'explore';
+    let selectedPoint = null;
+    let selectedFinding = null;
+    let quizScore = { correct: 0, total: 0 };
+    let currentQuiz = null;
+    let pulseAnimId = null;
+    let soundAnimId = null;
+
+    // ==========================================================
+    //  MEDICAL DATA
+    // ==========================================================
+    const DATA = {
+        dog: {
+            name: 'Hund',
+            heartRate: { min: 60, max: 140, unit: 'bpm' },
+            respRate: { min: 10, max: 30, unit: '/min' },
+            notes: 'Sinusarrhythmie ist normal beim Hund!',
+            heart: {
+                left: [
+                    {
+                        id: 'mitral',
+                        label: 'Mitralklappe',
+                        short: 'M',
+                        location: 'Links, 5. ICR',
+                        x: 0.38, y: 0.52,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 (systolisch, lauter) und S2 (diastolisch, leiser) klar abgrenzbar. "Lub-Dub"-Rhythmus. S1 entsteht durch Schluss der AV-Klappen (Mitral + Trikuspidal), S2 durch Schluss der Semilunarklappen (Aorten- + Pulmonalklappe).',
+                            wave: 'normal'
+                        },
+                        pathological: [
+                            {
+                                title: 'Mitralklappeninsuffizienz',
+                                desc: 'Systolisches Herzgeraeusch (zwischen S1 und S2). Haeufigste erworbene Herzkrankheit bei alten kleinen Hunden (Cavalier King Charles, Dackel). Degenerative Klappenveraenderung (Endokardiose).',
+                                severity: 'warning',
+                                wave: 'systolic_murmur',
+                                grades: true
+                            },
+                            {
+                                title: 'Subaortenstenose (ueber Mitralpunkt hoerbar)',
+                                desc: 'Systolisches Ejektionsgeraeusch, crescendo-decrescendo. Kann nach links-apikal ausstrahlen. Kongenitale Erkrankung, haeufig bei grossen Rassen (Boxer, Golden Retriever, Neufundlaender).',
+                                severity: 'danger',
+                                wave: 'ejection'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'aortic',
+                        label: 'Aortenklappe',
+                        short: 'A',
+                        location: 'Links, 4. ICR cranial',
+                        x: 0.35, y: 0.42,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar, S2 betont an diesem Punkt. Kein ueberlagerndes Geraeusch.',
+                            wave: 'normal'
+                        },
+                        pathological: [
+                            {
+                                title: 'Subaortenstenose',
+                                desc: 'Systolisches Ejektionsgeraeusch, Punctum maximum an der linken Herzbasis. Crescendo-Decrescendo-Charakter. Grad I-VI/VI moeglich. Haeufig bei grossen Rassen.',
+                                severity: 'danger',
+                                wave: 'ejection'
+                            },
+                            {
+                                title: 'Aorteninsuffizienz',
+                                desc: 'Diastolisches Decrescendo-Geraeusch. Selten beim Hund. Kann sekundaer bei Endokarditis oder schwerer Subaortenstenose auftreten.',
+                                severity: 'warning',
+                                wave: 'diastolic_murmur'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'pulmonic',
+                        label: 'Pulmonalklappe',
+                        short: 'P',
+                        location: 'Links, 3. ICR',
+                        x: 0.32, y: 0.34,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Gelegentlich leises funktionelles Geraeusch bei jungen Hunden moeglich (Grad I-II/VI, ohne klinische Relevanz).',
+                            wave: 'normal'
+                        },
+                        pathological: [
+                            {
+                                title: 'Pulmonalstenose',
+                                desc: 'Systolisches Ejektionsgeraeusch, Punctum maximum links, 3. ICR. Kongenitale Erkrankung, haeufig bei Bulldoggen, Beagle, Terriern. Kann zu Rechtsherzversagen fuehren.',
+                                severity: 'danger',
+                                wave: 'ejection'
+                            },
+                            {
+                                title: 'PDA (Ductus arteriosus)',
+                                desc: 'Kontinuierliches ("Maschinen"-)Geraeusch, systolisch-diastolisch ohne Pause. Punctum maximum links cranio-dorsal. Kongenital, haeufig bei Maltesern, Pudeln, Deutschen Schaeferhunden.',
+                                severity: 'danger',
+                                wave: 'continuous'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'tricuspid',
+                        label: 'Trikuspidalklappe',
+                        short: 'T',
+                        location: 'Rechts, 3.-4. ICR',
+                        x: 0.40, y: 0.46,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. S1 kann an diesem Punkt besonders gut beurteilt werden. Regulaerer Rhythmus oder physiologische Sinusarrhythmie.',
+                            wave: 'normal'
+                        },
+                        pathological: [
+                            {
+                                title: 'Trikuspidalinsuffizienz',
+                                desc: 'Systolisches Geraeusch rechts, 3.-4. ICR. Kann primaer (Dysplasie) oder sekundaer (bei Rechtsherzdilatation, z.B. durch Pulmonalstenose oder pulmonale Hypertension) auftreten.',
+                                severity: 'warning',
+                                wave: 'systolic_murmur'
+                            },
+                            {
+                                title: 'VSD (Ventrikelseptumdefekt)',
+                                desc: 'Lautes systolisches Geraeusch, oft rechts-sternal hoerbar. Kongenitaler Defekt. Ggf. mit Schwirren (Thrill) tastbar.',
+                                severity: 'danger',
+                                wave: 'systolic_murmur'
+                            }
+                        ]
+                    }
+                ],
+                arrhythmias: [
+                    { name: 'Sinusarrhythmie', severity: 'normal', desc: 'Physiologisch beim Hund! Herzfrequenz variiert mit der Atmung (schneller bei Inspiration). Kein Behandlungsbedarf.' },
+                    { name: 'Vorhofflimmern', severity: 'danger', desc: 'Absolut unregelmaessiger Rhythmus ("irregularly irregular"). Vor allem bei grossen Rassen mit dilatativer Kardiomyopathie. S1 variiert in Lautstaerke.' },
+                    { name: 'Ventrikulaere Extrasystolen (VES)', severity: 'warning', desc: 'Vorzeitige Herzschlaege mit kompensatorischer Pause. Koennen bei Boxern als arrhythmogene rechtsventrikulaere Kardiomyopathie (ARVC) bedeutsam sein.' },
+                    { name: 'AV-Block 2. Grades', severity: 'warning', desc: 'Unregelmaessiger Rhythmus mit "ausgelassenen" Schlaegen. Bei Hunden gelegentlich physiologisch (hoher Vagotonus), aber abklaerungsbeduerftig.' }
+                ]
+            },
+            lung: {
+                left: [
+                    {
+                        id: 'lung_cranial',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral',
+                        x: 0.30, y: 0.38,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Leises vesikulaeres Atemgeraeusch: weiches, rauschartig-inspiratorisches Geraeusch. Uebergang zu bronchialem Atemgeraeusch moeglich (nahe der grossen Atemwege).',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Verschaerftes Vesikulaeratmen',
+                                desc: 'Lauteres, raueres Atemgeraeusch als normal. Fruehes Zeichen einer Bronchitis oder beginnenden Pneumonie.',
+                                severity: 'warning',
+                                wave: 'harsh_vesicular'
+                            },
+                            {
+                                title: 'Bronchialatmen (pathologisch)',
+                                desc: 'Ueber peripheren Lungenfeldern hoerbares Bronchialatmen deutet auf Konsolidierung (Pneumonie). Normalerweise nur ueber Trachea und grossen Bronchien.',
+                                severity: 'danger',
+                                wave: 'bronchial'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_middle',
+                        label: 'Mittleres Lungenfeld',
+                        short: 'ML',
+                        location: 'Mitte Thorax',
+                        x: 0.42, y: 0.44,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Vesikulaeratmen: leise, gleichmaessig, vorwiegend inspiratorisch. Keine Nebengeraeusche.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Knistern/Crackles',
+                                desc: 'Feine oder grobe diskontinuierliche Geraeusche ("Knistern", "Knacken"). Hinweis auf Pneumonie, Lungenoedem oder Lungenfibrose. Feine Crackles: inspiratorisch bei Fibrose. Grobe Crackles: Oedem, Exsudat.',
+                                severity: 'danger',
+                                wave: 'crackles'
+                            },
+                            {
+                                title: 'Giemen/Wheezes',
+                                desc: 'Kontinuierliche, pfeifende/giemende Geraeusche. Hinweis auf Bronchokonstriktion. Beim Hund seltener als bei Katze und Pferd.',
+                                severity: 'warning',
+                                wave: 'wheezes'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal',
+                        x: 0.55, y: 0.40,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Leises Vesikulaeratmen. In den dorsalen Abschnitten physiologisch sehr leise.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Daempfung / Fehlendes Atemgeraeusch',
+                                desc: 'Abgeschwaechtes oder fehlendes Atemgeraeusch. Ventral: Pleuraerguss (Fluessigkeit daempft). Dorsal: Pneumothorax (Luft zwischen Lunge und Brustwand).',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            },
+                            {
+                                title: 'Pleurales Reibegeraeusch',
+                                desc: 'Knarrendes, ledernes Geraeusch bei In- und Exspiration. Hinweis auf trockene Pleuritis (Entzuendung der Brustfellblaetter). Selten, da sich meist schnell Erguss bildet.',
+                                severity: 'warning',
+                                wave: 'pleural_rub'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'lung_cranial_r',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral rechts',
+                        x: 0.30, y: 0.38,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Vesikulaeratmen: leise, gleichmaessig. Rechts ist der Mittellappen vorhanden (fehlt links), daher etwas groesseres Auskultationsfeld cranio-ventral.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Bronchialatmen',
+                                desc: 'Ueber peripheren Feldern pathologisch. Hinweis auf Konsolidierung des Mittellappens (Pneumonie).',
+                                severity: 'danger',
+                                wave: 'bronchial'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal_r',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal rechts',
+                        x: 0.55, y: 0.40,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Leises Vesikulaeratmen. Seitenvergleich wichtig: Asymmetrie deutet auf einseitige Pathologie.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Daempfung bei Pleuraerguss',
+                                desc: 'Ventral fehlendes Atemgeraeusch mit scharfer horizontaler Grenze ("fluid line"). Ursachen: Chylothorax, Haemothorax, Pyothorax, Neoplasie.',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        cat: {
+            name: 'Katze',
+            heartRate: { min: 120, max: 220, unit: 'bpm' },
+            respRate: { min: 20, max: 40, unit: '/min' },
+            notes: 'Keine respiratorische Sinusarrhythmie (anders als Hund)!',
+            heart: {
+                left: [
+                    {
+                        id: 'mitral_cat',
+                        label: 'Mitralklappe',
+                        short: 'M',
+                        location: 'Links, 5.-6. ICR',
+                        x: 0.40, y: 0.54,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar, schneller Rhythmus (120-220/min). Regelmaessig -- keine Sinusarrhythmie bei der Katze! Hohe Herzfrequenz macht Auskultation anspruchsvoll. Schnurren kann Auskultation ueberlagern (Tipp: Wasserhahn aufdrehen oder Alkoholtupfer vor die Nase).',
+                            wave: 'normal_fast'
+                        },
+                        pathological: [
+                            {
+                                title: 'Systolisches Geraeusch bei HCM',
+                                desc: 'Hypertrophe Kardiomyopathie (HCM) ist die haeufigste Herzerkrankung der Katze. Systolisches Geraeusch durch dynamische LVOT-Obstruktion (SAM = systolic anterior motion der Mitralklappe). Oft Grad II-IV/VI. Cave: Viele Katzen mit HCM haben KEIN Geraeusch!',
+                                severity: 'danger',
+                                wave: 'systolic_murmur'
+                            },
+                            {
+                                title: 'Dynamische Obstruktion (DOLVOT)',
+                                desc: 'Geraeuschintensitaet variiert mit Herzfrequenz und Fuellungszustand. Lauter bei Tachykardie und Dehydration. Stressbedingt im Untersuchungsraum oft verstaerkt.',
+                                severity: 'warning',
+                                wave: 'ejection'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'aortic_cat',
+                        label: 'Aortenklappe',
+                        short: 'A',
+                        location: 'Links, 4. ICR cranial',
+                        x: 0.37, y: 0.44,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Regelmaessiger Rhythmus.',
+                            wave: 'normal_fast'
+                        },
+                        pathological: [
+                            {
+                                title: 'Aortenstenose',
+                                desc: 'Selten bei der Katze. Systolisches Ejektionsgeraeusch an der Herzbasis.',
+                                severity: 'warning',
+                                wave: 'ejection'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'pulmonic_cat',
+                        label: 'Pulmonalklappe',
+                        short: 'P',
+                        location: 'Links, 2.-3. ICR',
+                        x: 0.34, y: 0.36,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Funktionelle Geraeusche (ohne Krankheitswert) koennen bei jungen, schlanken Katzen vorkommen.',
+                            wave: 'normal_fast'
+                        },
+                        pathological: [
+                            {
+                                title: 'Funktionelles Geraeusch',
+                                desc: 'Leises systolisches Geraeusch (Grad I-II/VI) ohne strukturelle Anomalie. Haeufig bei anaemischen, fiebrigen oder gestressten Katzen. Verschwindet mit Behandlung der Grundursache.',
+                                severity: 'info',
+                                wave: 'soft_murmur'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'tricuspid_cat',
+                        label: 'Trikuspidalklappe',
+                        short: 'T',
+                        location: 'Rechts, 3.-4. ICR',
+                        x: 0.42, y: 0.48,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Regelmaessig.',
+                            wave: 'normal_fast'
+                        },
+                        pathological: [
+                            {
+                                title: 'Galopprhythmus (S3)',
+                                desc: 'Zusaetzlicher dritter Herzton (S3, protodiastolisch). Entsteht durch schnelle ventrikulaere Fuellung bei steifer Kammerwand. WICHTIGER Hinweis auf HCM, RCM (restriktive KMP) oder DCM! Dringend Echokardiografie empfohlen.',
+                                severity: 'danger',
+                                wave: 'gallop'
+                            }
+                        ]
+                    }
+                ],
+                arrhythmias: [
+                    { name: 'Keine Sinusarrhythmie', severity: 'info', desc: 'Anders als beim Hund ist eine respiratorische Sinusarrhythmie bei der Katze NICHT physiologisch und sollte abgeklaert werden.' },
+                    { name: 'Tachykardie (>220/min)', severity: 'warning', desc: 'Kann stressbedingt sein, aber auch Hinweis auf Hyperthyreose, Herzinsuffizienz oder Schmerz. Schilddruesenwerte (T4) kontrollieren!' },
+                    { name: 'Vorhofflimmern', severity: 'danger', desc: 'Selten bei der Katze (kleines Herz). Wenn vorhanden, deutet es auf massive Vorhofdilatation hin -- sehr ernste Prognose.' }
+                ]
+            },
+            lung: {
+                left: [
+                    {
+                        id: 'lung_cranial_cat',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral',
+                        x: 0.32, y: 0.40,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Sehr leises Vesikulaeratmen. Katzen haben physiologisch sehr leise Atemgeraeusche -- bereits "normal lautes" Atmen kann pathologisch sein!',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Wheezes (felines Asthma)',
+                                desc: 'Exspiratorische Giemen/Pfeifen. Felines Asthma (chronische Bronchitis) ist haeufig! Bronchokonstriktion mit Schleimproduktion. Besonders bei Siamesen praedisponiert. Therapie: inhalative Glukokortikoide.',
+                                severity: 'danger',
+                                wave: 'wheezes'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal_cat',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal',
+                        x: 0.52, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Sehr leises Vesikulaeratmen bis kaum hoerbar.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Crackles bei Lungenoedem',
+                                desc: 'Feine inspiratorische Knistergeraeusche. Bei der Katze oft durch kardiogenes Lungenoedem bei HCM. Verteilung diffuser als beim Hund. Notfall!',
+                                severity: 'danger',
+                                wave: 'crackles'
+                            },
+                            {
+                                title: 'Daempfung bei Pleuraerguss',
+                                desc: 'Ventral abgeschwaechtes/fehlendes Atemgeraeusch. Haeufige Ursachen: FIP, Lymphom, Chylothorax, Pyothorax, Herzversagen.',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'lung_cranial_cat_r',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral rechts',
+                        x: 0.32, y: 0.40,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Sehr leises Vesikulaeratmen.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Verschaerftes Atmen',
+                                desc: 'Lauteres Atemgeraeusch als normal. Fruehes Zeichen bei Asthma oder Bronchitis.',
+                                severity: 'warning',
+                                wave: 'harsh_vesicular'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal_cat_r',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal rechts',
+                        x: 0.52, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Sehr leises Vesikulaeratmen. Seitenvergleich!',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Daempfung',
+                                desc: 'Fehlendes Atemgeraeusch bei Pleuraerguss oder Zwerchfellhernie.',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        horse: {
+            name: 'Pferd',
+            heartRate: { min: 28, max: 44, unit: 'bpm' },
+            respRate: { min: 8, max: 16, unit: '/min' },
+            notes: 'S3 und S4 koennen beim Pferd normal sein!',
+            heart: {
+                left: [
+                    {
+                        id: 'mitral_horse',
+                        label: 'Mitralklappe',
+                        short: 'M',
+                        location: 'Links, 5. ICR',
+                        x: 0.32, y: 0.55,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 klar hoerbar. Zusaetzlich S3 (protodiastolisch) und S4 (praesystolisch) moeglich -- beim Pferd physiologisch! Langsamer, kraeftiger Rhythmus (28-44/min). Auskultation ueber grosses Herzfeld moeglich.',
+                            wave: 'normal_horse'
+                        },
+                        pathological: [
+                            {
+                                title: 'Mitralklappeninsuffizienz',
+                                desc: 'Systolisches Geraeusch, Punctum maximum links apikal. Haeufig bei aelteren Pferden. Kann lange kompensiert bleiben. Bei hochgradiger Insuffizienz: Leistungsinsuffizienz, Vorhofflimmern.',
+                                severity: 'warning',
+                                wave: 'systolic_murmur'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'aortic_horse',
+                        label: 'Aortenklappe',
+                        short: 'A',
+                        location: 'Links, 4. ICR',
+                        x: 0.29, y: 0.45,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Physiologisches systolisches Ejektionsgeraeusch moeglich (haeufig beim Pferd, Grad I-III/VI, kein Krankheitswert). Entsteht durch grosse Blutmengen und Turbulenzen in der Aorta.',
+                            wave: 'normal_horse'
+                        },
+                        pathological: [
+                            {
+                                title: 'Aortenklappeninsuffizienz',
+                                desc: 'Diastolisches, musikalisches ("seufzendes") Geraeusch. Relativ haeufig bei aelteren Pferden. Oft als "Aortic regurgitation murmur" bezeichnet. Kann Leistungsfaehigkeit beeintraechtigen.',
+                                severity: 'warning',
+                                wave: 'diastolic_murmur'
+                            },
+                            {
+                                title: 'Physiologisches Ejektionsgeraeusch',
+                                desc: 'Systolisches Crescendo-Decrescendo-Geraeusch, leise (I-III/VI). Beim Pferd NORMAL! Verschwindet oder verstaerkt sich bei Belastung. Keine Therapie noetig.',
+                                severity: 'normal',
+                                wave: 'ejection'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'pulmonic_horse',
+                        label: 'Pulmonalklappe',
+                        short: 'P',
+                        location: 'Links, 3. ICR',
+                        x: 0.26, y: 0.37,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. Gelegentlich leises Ejektionsgeraeusch.',
+                            wave: 'normal_horse'
+                        },
+                        pathological: [
+                            {
+                                title: 'Pulmonalklappeninsuffizienz',
+                                desc: 'Diastolisches Geraeusch. Selten klinisch relevant beim Pferd.',
+                                severity: 'info',
+                                wave: 'diastolic_murmur'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'tricuspid_horse',
+                        label: 'Trikuspidalklappe',
+                        short: 'T',
+                        location: 'Rechts, 3.-4. ICR',
+                        x: 0.35, y: 0.48,
+                        normal: {
+                            title: 'Normaler Befund',
+                            desc: 'S1 und S2 hoerbar. S4 (praesystolischer Ton) kann hier besonders gut gehoert werden.',
+                            wave: 'normal_horse'
+                        },
+                        pathological: [
+                            {
+                                title: 'Trikuspidalinsuffizienz',
+                                desc: 'Systolisches Geraeusch rechts. Relativ haeufig bei aelteren Pferden. Oft mild und klinisch unbedeutend. Bei hochgradiger Form: Stauung der Jugularvenen, Oedem.',
+                                severity: 'warning',
+                                wave: 'systolic_murmur'
+                            }
+                        ]
+                    }
+                ],
+                arrhythmias: [
+                    { name: 'AV-Block 2. Grades', severity: 'normal', desc: 'Beim Pferd in Ruhe physiologisch! Durch hohen Vagotonus. Verschwindet bei Bewegung/Aufregung. Kein Behandlungsbedarf.' },
+                    { name: 'Vorhofflimmern', severity: 'danger', desc: 'Haeufigste klinisch relevante Arrhythmie beim Pferd. "Irregularly irregular". Leistungsabfall, kann bei Rennpferden gefaehrlich sein. Therapie: Chinidin oder transvenoese Kardioversion.' },
+                    { name: 'Sinusbradykardie', severity: 'normal', desc: 'Niedrige Herzfrequenz (<28/min) in Ruhe. Beim trainierten Pferd physiologisch (hoher Vagotonus).' },
+                    { name: 'Ventrikulaere Tachykardie', severity: 'danger', desc: 'Schneller, regelmaessiger Rhythmus ventrikulaeren Ursprungs. Notfall! Kann zu Synkope oder ploetzlichem Tod fuehren.' }
+                ]
+            },
+            lung: {
+                left: [
+                    {
+                        id: 'lung_cranial_horse',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral',
+                        x: 0.24, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Vesikulaeratmen: leise, breit, inspiratorisch betont. Grosses Auskultationsfeld beim Pferd (Lungengrenze reicht weit caudal). Mit Rebreathing-Bag vertieftes Atmen provozierbar.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Verschaerftes Atmen',
+                                desc: 'Lauteres Atemgeraeusch. Fruehes Zeichen bei RAO (Recurrent Airway Obstruction, "Dampf"). Rebreathing-Bag-Test verstaerkt den Befund.',
+                                severity: 'warning',
+                                wave: 'harsh_vesicular'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_middle_horse',
+                        label: 'Mittleres Lungenfeld',
+                        short: 'ML',
+                        location: 'Mitte Thorax',
+                        x: 0.38, y: 0.48,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Vesikulaeratmen, gleichmaessig und leise.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Wheezes bei RAO',
+                                desc: 'Exspiratorische Giemen/Pfeifen. RAO (Recurrent Airway Obstruction, frueher COPD/Daempfigkeit). Ausgeloest durch Staub, Schimmel, Heuallergene. Besonders in Boxenhaltung. Exspiratorische Dyspnoe mit doppelschlaegiger Bauchatmung ("Dampfrinne").',
+                                severity: 'danger',
+                                wave: 'wheezes'
+                            },
+                            {
+                                title: 'Crackles bei Pneumonie',
+                                desc: 'Inspiratorische Knistergeraeusche. Hinweis auf Pneumonie (z.B. Rhodococcus equi bei Fohlen, Transportfieber bei adulten Pferden).',
+                                severity: 'danger',
+                                wave: 'crackles'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal_horse',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal',
+                        x: 0.55, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Sehr leises Vesikulaeratmen. Lungengrenze per Perkussion bestimmbar (normalerweise bis 16.-17. ICR dorsal).',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Daempfung bei Pleuraerguss',
+                                desc: 'Ventral fehlendes Atemgeraeusch. Haeufig bei Pleuropneumonie. Perkussion zeigt horizontale Daempfungslinie.',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            }
+                        ]
+                    }
+                ],
+                right: [
+                    {
+                        id: 'lung_cranial_horse_r',
+                        label: 'Craniales Lungenfeld',
+                        short: 'CL',
+                        location: 'Cranio-ventral rechts',
+                        x: 0.24, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Vesikulaeratmen.',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Trachealrasseln',
+                                desc: 'Feuchte Geraeusche ueber den oberen Atemwegen. Hinweis auf Schleimakkumulation.',
+                                severity: 'warning',
+                                wave: 'crackles'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'lung_caudal_horse_r',
+                        label: 'Caudales Lungenfeld',
+                        short: 'KL',
+                        location: 'Caudo-dorsal rechts',
+                        x: 0.55, y: 0.42,
+                        normal: {
+                            title: 'Normales Atemgeraeusch',
+                            desc: 'Leises Vesikulaeratmen. Seitenvergleich mit links!',
+                            wave: 'vesicular'
+                        },
+                        pathological: [
+                            {
+                                title: 'Fehlendes Atemgeraeusch',
+                                desc: 'Pneumothorax oder massiver Erguss. Notfall!',
+                                severity: 'danger',
+                                wave: 'diminished'
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    };
+
+    // ==========================================================
+    //  QUIZ DATA
+    // ==========================================================
+    function getQuizQuestions() {
+        const qs = [];
+        const sp = DATA[currentSpecies];
+        const region = currentRegion;
+        const data = sp[region];
+
+        // Questions about locating points
+        const allPoints = [...(data.left || []), ...(data.right || [])];
+        allPoints.forEach(p => {
+            if (p.pathological) {
+                p.pathological.forEach(path => {
+                    qs.push({
+                        question: `Wo auskultierst du bei Verdacht auf "${path.title}" beim ${sp.name}?`,
+                        answerId: p.id,
+                        explanation: `${p.label} (${p.location}): ${path.desc.substring(0, 120)}...`,
+                        view: data.left.find(lp => lp.id === p.id) ? 'left' : 'right'
+                    });
+                });
+            }
+        });
+
+        // Normal vs pathological
+        allPoints.forEach(p => {
+            qs.push({
+                question: `Wo hoerst du den normalen Befund der ${p.label} beim ${sp.name}?`,
+                answerId: p.id,
+                explanation: `${p.label} (${p.location}): ${p.normal.desc.substring(0, 120)}...`,
+                view: data.left.find(lp => lp.id === p.id) ? 'left' : 'right'
+            });
+        });
+
+        return qs;
+    }
+
+    // ==========================================================
+    //  SVG GENERATORS
+    // ==========================================================
+    function generateDogSVG(points, region, view) {
+        const heartColor = '#ef4444';
+        const lungColor = '#3b82f6';
+        const organColor = region === 'heart' ? heartColor : lungColor;
+
+        return `
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Grid -->
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(148,163,184,0.06)" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="500" fill="url(#grid)"/>
+
+            <!-- Side indicator -->
+            <text x="20" y="30" class="side-indicator">${view === 'left' ? 'LINKE SEITE' : 'RECHTE SEITE'}</text>
+
+            <!-- Dog body outline -->
+            <path class="body-fill" d="M 180,280 C 180,240 200,180 240,160 C 260,150 280,140 300,130
+                C 320,120 340,115 360,110 C 370,108 380,100 385,85 C 390,70 400,55 415,50
+                C 430,45 440,50 445,60 C 448,68 450,80 448,90 C 446,100 440,110 435,115
+                C 440,116 450,118 460,120 C 500,130 540,145 570,165
+                C 600,185 620,210 630,235 C 640,260 642,285 640,300
+                C 638,315 635,325 628,340 C 625,348 620,355 618,365
+                C 616,380 618,400 620,420 C 622,435 620,445 610,448
+                C 600,450 595,445 592,435 C 588,420 585,400 582,385
+                C 578,370 570,360 560,355
+                C 520,345 460,340 400,340
+                C 340,340 300,345 270,350
+                C 260,352 250,360 245,375
+                C 240,390 238,410 235,425
+                C 232,440 228,450 218,452
+                C 208,454 200,448 198,438
+                C 196,425 198,405 200,390
+                C 202,375 200,360 195,350
+                C 188,335 182,315 180,300 Z"/>
+
+            <path class="body-outline" d="M 180,280 C 180,240 200,180 240,160 C 260,150 280,140 300,130
+                C 320,120 340,115 360,110 C 370,108 380,100 385,85 C 390,70 400,55 415,50
+                C 430,45 440,50 445,60 C 448,68 450,80 448,90 C 446,100 440,110 435,115
+                C 440,116 450,118 460,120 C 500,130 540,145 570,165
+                C 600,185 620,210 630,235 C 640,260 642,285 640,300
+                C 638,315 635,325 628,340 C 625,348 620,355 618,365
+                C 616,380 618,400 620,420 C 622,435 620,445 610,448
+                C 600,450 595,445 592,435 C 588,420 585,400 582,385
+                C 578,370 570,360 560,355
+                C 520,345 460,340 400,340
+                C 340,340 300,345 270,350
+                C 260,352 250,360 245,375
+                C 240,390 238,410 235,425
+                C 232,440 228,450 218,452
+                C 208,454 200,448 198,438
+                C 196,425 198,405 200,390
+                C 202,375 200,360 195,350
+                C 188,335 182,315 180,300 Z"/>
+
+            <!-- Ear -->
+            <path class="body-outline" d="M 405,55 C 395,30 410,15 425,20 C 435,23 440,35 445,50"/>
+
+            <!-- Eye -->
+            <circle cx="420" cy="80" r="6" fill="rgba(148,163,184,0.15)" stroke="rgba(148,163,184,0.3)" stroke-width="1"/>
+
+            <!-- Nose -->
+            <ellipse cx="448" cy="105" rx="5" ry="4" fill="rgba(148,163,184,0.2)"/>
+
+            <!-- Tail -->
+            <path class="body-outline" d="M 180,275 C 165,255 155,230 160,210 C 163,195 170,190 175,195"/>
+
+            ${region === 'heart' ? `
+            <!-- Heart organ -->
+            <ellipse cx="300" cy="260" rx="45" ry="50" class="organ-fill" fill="${heartColor}"/>
+            <ellipse cx="300" cy="260" rx="45" ry="50" class="organ-outline" stroke="${heartColor}"/>
+            <!-- Heart chambers hint -->
+            <path d="M 300,215 C 280,230 270,260 300,310" class="organ-outline" stroke="${heartColor}" opacity="0.2"/>
+            ` : `
+            <!-- Lung organ -->
+            <ellipse cx="340" cy="240" rx="100" ry="70" class="organ-fill" fill="${lungColor}"/>
+            <ellipse cx="340" cy="240" rx="100" ry="70" class="organ-outline" stroke="${lungColor}"/>
+            <!-- Bronchial tree hint -->
+            <path d="M 300,200 L 330,230 M 330,230 L 360,210 M 330,230 L 350,260 M 330,230 L 310,250"
+                  class="organ-outline" stroke="${lungColor}" opacity="0.2" stroke-width="1"/>
+            `}
+
+            <!-- ICR labels -->
+            ${view === 'left' ? `
+            <text x="210" y="185" style="font-size:8px;fill:rgba(148,163,184,0.3);font-family:Inter,sans-serif;">3.ICR</text>
+            <text x="230" y="215" style="font-size:8px;fill:rgba(148,163,184,0.3);font-family:Inter,sans-serif;">4.ICR</text>
+            <text x="250" y="260" style="font-size:8px;fill:rgba(148,163,184,0.3);font-family:Inter,sans-serif;">5.ICR</text>
+            ` : `
+            <text x="260" y="220" style="font-size:8px;fill:rgba(148,163,184,0.3);font-family:Inter,sans-serif;">3.ICR</text>
+            <text x="270" y="245" style="font-size:8px;fill:rgba(148,163,184,0.3);font-family:Inter,sans-serif;">4.ICR</text>
+            `}
+
+            <!-- Auscultation Points -->
+            ${points.map(p => `
+            <g class="ausc-point" data-id="${p.id}" onclick="selectPoint('${p.id}')"
+               onmouseenter="showTooltip(event, '${p.label}\\n${p.location}')" onmouseleave="hideTooltip()">
+                <circle class="point-bg" cx="${p.x * 800}" cy="${p.y * 500}" r="11"
+                    fill="${region === 'heart' ? 'rgba(239,68,68,0.6)' : 'rgba(59,130,246,0.6)'}"
+                    stroke="${region === 'heart' ? '#ef4444' : '#3b82f6'}" stroke-width="2"/>
+                <circle cx="${p.x * 800}" cy="${p.y * 500}" r="16" fill="none"
+                    stroke="${region === 'heart' ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}" stroke-width="1" stroke-dasharray="3,3">
+                    <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <text x="${p.x * 800}" y="${p.y * 500}" dy="0.5">${p.short}</text>
+                <text x="${p.x * 800}" y="${p.y * 500 + 22}" class="point-label">${p.label}</text>
+            </g>
+            `).join('')}
+        </svg>`;
+    }
+
+    function generateCatSVG(points, region, view) {
+        const heartColor = '#ef4444';
+        const lungColor = '#3b82f6';
+
+        return `
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(148,163,184,0.06)" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="500" fill="url(#grid)"/>
+
+            <text x="20" y="30" class="side-indicator">${view === 'left' ? 'LINKE SEITE' : 'RECHTE SEITE'}</text>
+
+            <!-- Cat body -->
+            <path class="body-fill" d="M 200,300 C 200,260 215,210 250,185 C 270,170 290,160 310,150
+                C 330,140 350,132 370,128 C 380,126 390,118 395,105 C 398,95 402,80 410,70
+                C 415,63 420,58 430,55 C 435,53 440,56 442,62
+                C 444,68 445,78 443,88 C 441,98 436,108 432,115
+                C 438,116 448,118 458,122 C 490,134 520,150 545,172
+                C 570,195 585,220 595,248 C 605,275 608,300 605,318
+                C 602,335 598,345 590,358 C 586,365 582,372 580,382
+                C 578,395 580,415 582,430 C 584,442 580,450 572,452
+                C 564,454 558,448 556,438 C 552,422 550,405 548,390
+                C 545,378 538,368 528,362
+                C 490,352 440,348 390,348
+                C 340,348 305,352 280,358
+                C 270,360 262,368 258,380
+                C 254,395 252,415 250,430
+                C 248,442 244,450 236,452
+                C 228,454 222,448 220,438
+                C 218,425 220,405 222,390
+                C 224,375 222,365 218,355
+                C 210,340 204,325 200,310 Z"/>
+
+            <path class="body-outline" d="M 200,300 C 200,260 215,210 250,185 C 270,170 290,160 310,150
+                C 330,140 350,132 370,128 C 380,126 390,118 395,105 C 398,95 402,80 410,70
+                C 415,63 420,58 430,55 C 435,53 440,56 442,62
+                C 444,68 445,78 443,88 C 441,98 436,108 432,115
+                C 438,116 448,118 458,122 C 490,134 520,150 545,172
+                C 570,195 585,220 595,248 C 605,275 608,300 605,318
+                C 602,335 598,345 590,358 C 586,365 582,372 580,382
+                C 578,395 580,415 582,430 C 584,442 580,450 572,452
+                C 564,454 558,448 556,438 C 552,422 550,405 548,390
+                C 545,378 538,368 528,362
+                C 490,352 440,348 390,348
+                C 340,348 305,352 280,358
+                C 270,360 262,368 258,380
+                C 254,395 252,415 250,430
+                C 248,442 244,450 236,452
+                C 228,454 222,448 220,438
+                C 218,425 220,405 222,390
+                C 224,375 222,365 218,355
+                C 210,340 204,325 200,310 Z"/>
+
+            <!-- Cat ears (pointed) -->
+            <path class="body-outline" d="M 400,72 L 388,30 L 405,58" fill="rgba(148,163,184,0.03)"/>
+            <path class="body-outline" d="M 425,60 L 440,22 L 445,55" fill="rgba(148,163,184,0.03)"/>
+
+            <!-- Eye -->
+            <ellipse cx="420" cy="85" rx="7" ry="5" fill="rgba(148,163,184,0.15)" stroke="rgba(148,163,184,0.3)" stroke-width="1"/>
+
+            <!-- Whiskers -->
+            <line x1="440" y1="100" x2="470" y2="95" stroke="rgba(148,163,184,0.15)" stroke-width="0.5"/>
+            <line x1="440" y1="105" x2="472" y2="105" stroke="rgba(148,163,184,0.15)" stroke-width="0.5"/>
+            <line x1="440" y1="110" x2="470" y2="115" stroke="rgba(148,163,184,0.15)" stroke-width="0.5"/>
+
+            <!-- Tail -->
+            <path class="body-outline" d="M 200,295 C 175,270 155,240 140,220 C 128,205 120,195 118,200 C 116,208 125,220 135,235"/>
+
+            ${region === 'heart' ? `
+            <ellipse cx="320" cy="270" rx="38" ry="42" class="organ-fill" fill="${heartColor}"/>
+            <ellipse cx="320" cy="270" rx="38" ry="42" class="organ-outline" stroke="${heartColor}"/>
+            ` : `
+            <ellipse cx="350" cy="255" rx="85" ry="60" class="organ-fill" fill="${lungColor}"/>
+            <ellipse cx="350" cy="255" rx="85" ry="60" class="organ-outline" stroke="${lungColor}"/>
+            `}
+
+            ${points.map(p => `
+            <g class="ausc-point" data-id="${p.id}" onclick="selectPoint('${p.id}')"
+               onmouseenter="showTooltip(event, '${p.label}\\n${p.location}')" onmouseleave="hideTooltip()">
+                <circle class="point-bg" cx="${p.x * 800}" cy="${p.y * 500}" r="11"
+                    fill="${region === 'heart' ? 'rgba(239,68,68,0.6)' : 'rgba(59,130,246,0.6)'}"
+                    stroke="${region === 'heart' ? '#ef4444' : '#3b82f6'}" stroke-width="2"/>
+                <circle cx="${p.x * 800}" cy="${p.y * 500}" r="16" fill="none"
+                    stroke="${region === 'heart' ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}" stroke-width="1" stroke-dasharray="3,3">
+                    <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <text x="${p.x * 800}" y="${p.y * 500}" dy="0.5">${p.short}</text>
+                <text x="${p.x * 800}" y="${p.y * 500 + 22}" class="point-label">${p.label}</text>
+            </g>
+            `).join('')}
+        </svg>`;
+    }
+
+    function generateHorseSVG(points, region, view) {
+        const heartColor = '#ef4444';
+        const lungColor = '#3b82f6';
+
+        return `
+        <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(148,163,184,0.06)" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect width="800" height="500" fill="url(#grid)"/>
+
+            <text x="20" y="30" class="side-indicator">${view === 'left' ? 'LINKE SEITE' : 'RECHTE SEITE'}</text>
+
+            <!-- Horse body -->
+            <path class="body-fill" d="M 130,300 C 130,265 145,220 170,195 C 190,175 210,160 235,148
+                C 260,136 285,128 310,122 C 330,118 348,112 360,100 C 370,90 378,75 385,60
+                C 390,48 398,35 410,28 C 420,22 430,20 438,25 C 445,30 448,40 445,52
+                C 442,62 435,75 428,85 C 422,93 418,100 420,108
+                C 422,115 430,120 442,125 C 460,132 485,142 510,158
+                C 540,178 565,200 585,225 C 605,252 618,280 625,305
+                C 630,325 630,340 625,355 C 622,365 618,375 615,388
+                C 612,405 614,430 616,452 C 618,468 614,478 604,480
+                C 594,482 588,475 586,462 C 583,445 580,425 577,408
+                C 573,392 566,378 555,368
+                C 520,355 470,348 410,346
+                C 350,344 300,348 260,355
+                C 248,358 238,368 232,385
+                C 226,405 222,430 220,452
+                C 218,468 214,478 204,480
+                C 194,482 188,475 186,462
+                C 184,445 186,425 188,408
+                C 190,392 186,378 178,365
+                C 165,345 148,325 138,310 Z"/>
+
+            <path class="body-outline" d="M 130,300 C 130,265 145,220 170,195 C 190,175 210,160 235,148
+                C 260,136 285,128 310,122 C 330,118 348,112 360,100 C 370,90 378,75 385,60
+                C 390,48 398,35 410,28 C 420,22 430,20 438,25 C 445,30 448,40 445,52
+                C 442,62 435,75 428,85 C 422,93 418,100 420,108
+                C 422,115 430,120 442,125 C 460,132 485,142 510,158
+                C 540,178 565,200 585,225 C 605,252 618,280 625,305
+                C 630,325 630,340 625,355 C 622,365 618,375 615,388
+                C 612,405 614,430 616,452 C 618,468 614,478 604,480
+                C 594,482 588,475 586,462 C 583,445 580,425 577,408
+                C 573,392 566,378 555,368
+                C 520,355 470,348 410,346
+                C 350,344 300,348 260,355
+                C 248,358 238,368 232,385
+                C 226,405 222,430 220,452
+                C 218,468 214,478 204,480
+                C 194,482 188,475 186,462
+                C 184,445 186,425 188,408
+                C 190,392 186,378 178,365
+                C 165,345 148,325 138,310 Z"/>
+
+            <!-- Horse ear -->
+            <path class="body-outline" d="M 405,30 L 395,5 L 410,22" fill="rgba(148,163,184,0.03)"/>
+            <path class="body-outline" d="M 425,25 L 435,3 L 440,20" fill="rgba(148,163,184,0.03)"/>
+
+            <!-- Eye -->
+            <circle cx="415" cy="52" r="5" fill="rgba(148,163,184,0.15)" stroke="rgba(148,163,184,0.3)" stroke-width="1"/>
+
+            <!-- Nostril -->
+            <ellipse cx="445" cy="48" rx="4" ry="3" fill="rgba(148,163,184,0.15)"/>
+
+            <!-- Mane -->
+            <path class="body-outline" d="M 370,95 C 355,85 345,95 340,110 C 335,125 338,135 345,140"
+                  stroke="rgba(148,163,184,0.15)" fill="none"/>
+
+            <!-- Tail -->
+            <path class="body-outline" d="M 130,295 C 115,280 100,275 90,280 C 80,286 85,300 95,310 C 105,318 110,330 108,345"
+                  stroke="rgba(148,163,184,0.2)" fill="none"/>
+
+            ${region === 'heart' ? `
+            <ellipse cx="250" cy="280" rx="50" ry="55" class="organ-fill" fill="${heartColor}"/>
+            <ellipse cx="250" cy="280" rx="50" ry="55" class="organ-outline" stroke="${heartColor}"/>
+            ` : `
+            <ellipse cx="330" cy="260" rx="120" ry="75" class="organ-fill" fill="${lungColor}"/>
+            <ellipse cx="330" cy="260" rx="120" ry="75" class="organ-outline" stroke="${lungColor}"/>
+            <path d="M 260,220 L 300,260 M 300,260 L 340,235 M 300,260 L 330,290 M 300,260 L 270,280"
+                  class="organ-outline" stroke="${lungColor}" opacity="0.15" stroke-width="1"/>
+            `}
+
+            ${points.map(p => `
+            <g class="ausc-point" data-id="${p.id}" onclick="selectPoint('${p.id}')"
+               onmouseenter="showTooltip(event, '${p.label}\\n${p.location}')" onmouseleave="hideTooltip()">
+                <circle class="point-bg" cx="${p.x * 800}" cy="${p.y * 500}" r="11"
+                    fill="${region === 'heart' ? 'rgba(239,68,68,0.6)' : 'rgba(59,130,246,0.6)'}"
+                    stroke="${region === 'heart' ? '#ef4444' : '#3b82f6'}" stroke-width="2"/>
+                <circle cx="${p.x * 800}" cy="${p.y * 500}" r="16" fill="none"
+                    stroke="${region === 'heart' ? 'rgba(239,68,68,0.2)' : 'rgba(59,130,246,0.2)'}" stroke-width="1" stroke-dasharray="3,3">
+                    <animate attributeName="r" values="16;20;16" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <text x="${p.x * 800}" y="${p.y * 500}" dy="0.5">${p.short}</text>
+                <text x="${p.x * 800}" y="${p.y * 500 + 22}" class="point-label">${p.label}</text>
+            </g>
+            `).join('')}
+        </svg>`;
+    }
+
+    // ==========================================================
+    //  WAVEFORM RENDERERS (Canvas)
+    // ==========================================================
+    const WAVE_TYPES = {
+        normal: { name: 'S1-S2 (Lub-Dub)', color: '#10b981', fn: drawNormalHeart },
+        normal_fast: { name: 'S1-S2 schnell', color: '#10b981', fn: drawNormalHeartFast },
+        normal_horse: { name: 'S1-S2-S3-S4', color: '#10b981', fn: drawNormalHorse },
+        systolic_murmur: { name: 'Systolisches Geraeusch', color: '#f59e0b', fn: drawSystolicMurmur },
+        diastolic_murmur: { name: 'Diastolisches Geraeusch', color: '#f59e0b', fn: drawDiastolicMurmur },
+        continuous: { name: 'Kontinuierliches Geraeusch', color: '#ef4444', fn: drawContinuous },
+        ejection: { name: 'Ejektionsgeraeusch', color: '#f59e0b', fn: drawEjection },
+        gallop: { name: 'Galopprhythmus (S3)', color: '#ef4444', fn: drawGallop },
+        soft_murmur: { name: 'Leises Geraeusch', color: '#60a5fa', fn: drawSoftMurmur },
+        vesicular: { name: 'Vesikulaeratmen', color: '#10b981', fn: drawVesicular },
+        harsh_vesicular: { name: 'Verschaerftes Atmen', color: '#f59e0b', fn: drawHarshVesicular },
+        bronchial: { name: 'Bronchialatmen', color: '#ef4444', fn: drawBronchial },
+        crackles: { name: 'Crackles/Knistern', color: '#ef4444', fn: drawCrackles },
+        wheezes: { name: 'Wheezes/Giemen', color: '#f59e0b', fn: drawWheezes },
+        diminished: { name: 'Abgeschwaecht', color: '#64748b', fn: drawDiminished },
+        pleural_rub: { name: 'Pleurales Reiben', color: '#f59e0b', fn: drawPleuralRub }
+    };
+
+    function drawNormalHeart(ctx, w, h, t) {
+        const period = 180;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t) % period) / period;
+            let y = h / 2;
+            // S1 (lub) - larger
+            if (phase > 0.05 && phase < 0.15) {
+                const s = (phase - 0.05) / 0.1;
+                y -= Math.sin(s * Math.PI) * h * 0.35 * Math.sin(s * Math.PI * 6);
+            }
+            // S2 (dub) - smaller
+            else if (phase > 0.35 && phase < 0.42) {
+                const s = (phase - 0.35) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.2 * Math.sin(s * Math.PI * 5);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawNormalHeartFast(ctx, w, h, t) {
+        const period = 100;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 1.5) % period) / period;
+            let y = h / 2;
+            if (phase > 0.05 && phase < 0.13) {
+                const s = (phase - 0.05) / 0.08;
+                y -= Math.sin(s * Math.PI) * h * 0.3 * Math.sin(s * Math.PI * 6);
+            }
+            else if (phase > 0.30 && phase < 0.36) {
+                const s = (phase - 0.30) / 0.06;
+                y -= Math.sin(s * Math.PI) * h * 0.18 * Math.sin(s * Math.PI * 5);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawNormalHorse(ctx, w, h, t) {
+        const period = 240;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.6) % period) / period;
+            let y = h / 2;
+            // S4 (presystolic)
+            if (phase > 0.0 && phase < 0.04) {
+                const s = (phase - 0.0) / 0.04;
+                y -= Math.sin(s * Math.PI) * h * 0.1 * Math.sin(s * Math.PI * 4);
+            }
+            // S1
+            if (phase > 0.06 && phase < 0.16) {
+                const s = (phase - 0.06) / 0.1;
+                y -= Math.sin(s * Math.PI) * h * 0.35 * Math.sin(s * Math.PI * 5);
+            }
+            // S2
+            else if (phase > 0.32 && phase < 0.39) {
+                const s = (phase - 0.32) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.22 * Math.sin(s * Math.PI * 5);
+            }
+            // S3 (protodiastolic)
+            else if (phase > 0.45 && phase < 0.50) {
+                const s = (phase - 0.45) / 0.05;
+                y -= Math.sin(s * Math.PI) * h * 0.08 * Math.sin(s * Math.PI * 3);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawSystolicMurmur(ctx, w, h, t) {
+        const period = 180;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t) % period) / period;
+            let y = h / 2;
+            // S1
+            if (phase > 0.05 && phase < 0.12) {
+                const s = (phase - 0.05) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.3 * Math.sin(s * Math.PI * 6);
+            }
+            // Murmur between S1 and S2
+            else if (phase > 0.14 && phase < 0.32) {
+                const s = (phase - 0.14) / 0.18;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.2 * Math.sin((x + t) * 0.3) + env * h * 0.08 * Math.sin((x + t) * 0.7);
+            }
+            // S2
+            else if (phase > 0.34 && phase < 0.40) {
+                const s = (phase - 0.34) / 0.06;
+                y -= Math.sin(s * Math.PI) * h * 0.18 * Math.sin(s * Math.PI * 5);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawDiastolicMurmur(ctx, w, h, t) {
+        const period = 180;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t) % period) / period;
+            let y = h / 2;
+            // S1
+            if (phase > 0.05 && phase < 0.12) {
+                const s = (phase - 0.05) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.3 * Math.sin(s * Math.PI * 6);
+            }
+            // S2
+            else if (phase > 0.30 && phase < 0.36) {
+                const s = (phase - 0.30) / 0.06;
+                y -= Math.sin(s * Math.PI) * h * 0.2 * Math.sin(s * Math.PI * 5);
+            }
+            // Diastolic murmur (after S2, decrescendo)
+            else if (phase > 0.38 && phase < 0.70) {
+                const s = (phase - 0.38) / 0.32;
+                const env = 1 - s; // decrescendo
+                y -= env * h * 0.15 * Math.sin((x + t) * 0.4);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawContinuous(ctx, w, h, t) {
+        const period = 180;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t) % period) / period;
+            let y = h / 2;
+            // Continuous machinery murmur - no silent gap
+            const env = 0.6 + 0.4 * Math.sin(phase * Math.PI * 2);
+            y -= env * h * 0.2 * Math.sin((x + t) * 0.25) + env * h * 0.1 * Math.sin((x + t) * 0.6);
+            // S1 peak
+            if (phase > 0.05 && phase < 0.12) {
+                const s = (phase - 0.05) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.15;
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawEjection(ctx, w, h, t) {
+        const period = 180;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t) % period) / period;
+            let y = h / 2;
+            // S1
+            if (phase > 0.05 && phase < 0.10) {
+                const s = (phase - 0.05) / 0.05;
+                y -= Math.sin(s * Math.PI) * h * 0.25 * Math.sin(s * Math.PI * 6);
+            }
+            // Diamond-shaped ejection murmur
+            else if (phase > 0.12 && phase < 0.30) {
+                const s = (phase - 0.12) / 0.18;
+                const env = Math.sin(s * Math.PI); // crescendo-decrescendo
+                y -= env * h * 0.25 * Math.sin((x + t) * 0.35);
+            }
+            // S2
+            else if (phase > 0.32 && phase < 0.37) {
+                const s = (phase - 0.32) / 0.05;
+                y -= Math.sin(s * Math.PI) * h * 0.15 * Math.sin(s * Math.PI * 5);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawGallop(ctx, w, h, t) {
+        const period = 140;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 1.2) % period) / period;
+            let y = h / 2;
+            // S1
+            if (phase > 0.05 && phase < 0.13) {
+                const s = (phase - 0.05) / 0.08;
+                y -= Math.sin(s * Math.PI) * h * 0.3 * Math.sin(s * Math.PI * 5);
+            }
+            // S2
+            else if (phase > 0.30 && phase < 0.36) {
+                const s = (phase - 0.30) / 0.06;
+                y -= Math.sin(s * Math.PI) * h * 0.2 * Math.sin(s * Math.PI * 5);
+            }
+            // S3 (gallop)
+            else if (phase > 0.45 && phase < 0.52) {
+                const s = (phase - 0.45) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.18 * Math.sin(s * Math.PI * 4);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawSoftMurmur(ctx, w, h, t) {
+        const period = 140;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 1.3) % period) / period;
+            let y = h / 2;
+            // S1
+            if (phase > 0.05 && phase < 0.12) {
+                const s = (phase - 0.05) / 0.07;
+                y -= Math.sin(s * Math.PI) * h * 0.25 * Math.sin(s * Math.PI * 5);
+            }
+            // Soft murmur
+            else if (phase > 0.14 && phase < 0.28) {
+                const s = (phase - 0.14) / 0.14;
+                y -= Math.sin(s * Math.PI) * h * 0.06 * Math.sin((x + t) * 0.4);
+            }
+            // S2
+            else if (phase > 0.30 && phase < 0.35) {
+                const s = (phase - 0.30) / 0.05;
+                y -= Math.sin(s * Math.PI) * h * 0.15 * Math.sin(s * Math.PI * 5);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    // -- Lung waveforms --
+    function drawVesicular(ctx, w, h, t) {
+        const period = 300;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.4) % period) / period;
+            let y = h / 2;
+            // Inspiration (longer, louder)
+            if (phase > 0.05 && phase < 0.40) {
+                const s = (phase - 0.05) / 0.35;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.12 * (Math.sin((x + t) * 0.15) + 0.3 * Math.sin((x + t) * 0.4));
+            }
+            // Expiration (shorter, quieter)
+            else if (phase > 0.50 && phase < 0.70) {
+                const s = (phase - 0.50) / 0.20;
+                const env = Math.sin(s * Math.PI) * 0.4;
+                y -= env * h * 0.08 * Math.sin((x + t) * 0.15);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawHarshVesicular(ctx, w, h, t) {
+        const period = 280;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.45) % period) / period;
+            let y = h / 2;
+            if (phase > 0.05 && phase < 0.42) {
+                const s = (phase - 0.05) / 0.37;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.22 * (Math.sin((x + t) * 0.2) + 0.5 * Math.sin((x + t) * 0.55));
+            }
+            else if (phase > 0.50 && phase < 0.75) {
+                const s = (phase - 0.50) / 0.25;
+                const env = Math.sin(s * Math.PI) * 0.6;
+                y -= env * h * 0.14 * Math.sin((x + t) * 0.2);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawBronchial(ctx, w, h, t) {
+        const period = 260;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.5) % period) / period;
+            let y = h / 2;
+            // Inspiration = expiration in intensity
+            if (phase > 0.05 && phase < 0.35) {
+                const s = (phase - 0.05) / 0.30;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.25 * Math.sin((x + t) * 0.22);
+            }
+            else if (phase > 0.45 && phase < 0.75) {
+                const s = (phase - 0.45) / 0.30;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.25 * Math.sin((x + t) * 0.22);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawCrackles(ctx, w, h, t) {
+        const period = 300;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.4) % period) / period;
+            let y = h / 2;
+            // Base breath sound
+            if (phase > 0.05 && phase < 0.40) {
+                const s = (phase - 0.05) / 0.35;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.1 * Math.sin((x + t) * 0.15);
+                // Add crackles
+                const cracklePhase = ((x + t * 3) % 17) / 17;
+                if (cracklePhase < 0.15) {
+                    y -= env * h * 0.25 * (Math.random() - 0.5);
+                }
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawWheezes(ctx, w, h, t) {
+        const period = 300;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.4) % period) / period;
+            let y = h / 2;
+            // Inspiration
+            if (phase > 0.05 && phase < 0.35) {
+                const s = (phase - 0.05) / 0.30;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.1 * Math.sin((x + t) * 0.15);
+            }
+            // Expiration with wheezes
+            else if (phase > 0.45 && phase < 0.80) {
+                const s = (phase - 0.45) / 0.35;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.2 * Math.sin((x + t) * 0.8) + env * h * 0.08 * Math.sin((x + t) * 1.3);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    function drawDiminished(ctx, w, h, t) {
+        const period = 300;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.3) % period) / period;
+            let y = h / 2;
+            // Very faint
+            if (phase > 0.1 && phase < 0.4) {
+                const s = (phase - 0.1) / 0.30;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.03 * Math.sin((x + t) * 0.12);
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    function drawPleuralRub(ctx, w, h, t) {
+        const period = 280;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + t * 0.45) % period) / period;
+            let y = h / 2;
+            // Inspiration rub
+            if (phase > 0.08 && phase < 0.35) {
+                const s = (phase - 0.08) / 0.27;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.18 * Math.sin((x + t) * 0.5) * (0.5 + 0.5 * Math.sin((x + t) * 1.2));
+            }
+            // Expiration rub
+            else if (phase > 0.50 && phase < 0.72) {
+                const s = (phase - 0.50) / 0.22;
+                const env = Math.sin(s * Math.PI);
+                y -= env * h * 0.15 * Math.sin((x + t) * 0.5) * (0.5 + 0.5 * Math.sin((x + t) * 1.1));
+            }
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+    }
+
+    // ==========================================================
+    //  PULSE WAVE ANIMATION
+    // ==========================================================
+    let pulseT = 0;
+    function animatePulse() {
+        const canvas = document.getElementById('pulseCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const w = rect.width;
+        const h = rect.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const sp = DATA[currentSpecies];
+        const hr = (sp.heartRate.min + sp.heartRate.max) / 2;
+        const speed = hr / 80;
+
+        // Draw pulse wave
+        ctx.beginPath();
+        const period = 200 / speed;
+        for (let x = 0; x < w; x++) {
+            const phase = ((x + pulseT * speed) % period) / period;
+            let y = h / 2;
+
+            if (phase > 0.1 && phase < 0.3) {
+                const s = (phase - 0.1) / 0.2;
+                // Upstroke
+                if (s < 0.3) y -= (s / 0.3) * h * 0.35;
+                // Peak
+                else if (s < 0.5) y -= h * 0.35;
+                // Downstroke with dicrotic notch
+                else {
+                    const d = (s - 0.5) / 0.5;
+                    y -= (1 - d) * h * 0.35;
+                    // Dicrotic notch
+                    if (d > 0.3 && d < 0.5) {
+                        y -= 0.08 * h * Math.sin((d - 0.3) / 0.2 * Math.PI);
+                    }
+                }
+            }
+
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+
+        ctx.strokeStyle = 'rgba(6, 182, 212, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Baseline
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        pulseT += 1.5;
+        pulseAnimId = requestAnimationFrame(animatePulse);
+    }
+
+    // ==========================================================
+    //  SOUND WAVEFORM ANIMATION
+    // ==========================================================
+    let soundT = 0;
+    let currentWaveType = null;
+
+    function animateSound() {
+        const canvas = document.getElementById('soundCanvas');
+        if (!canvas || !currentWaveType) return;
+        const ctx = canvas.getContext('2d');
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const w = rect.width;
+        const h = rect.height;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Baseline
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        // Draw the wave
+        const wt = WAVE_TYPES[currentWaveType];
+        if (wt && wt.fn) {
+            wt.fn(ctx, w, h, soundT);
+        }
+
+        soundT += 1.2;
+        soundAnimId = requestAnimationFrame(animateSound);
+    }
+
+    // ==========================================================
+    //  UI LOGIC
+    // ==========================================================
+    function setSpecies(species) {
+        currentSpecies = species;
+        selectedPoint = null;
+        selectedFinding = null;
+
+        document.querySelectorAll('.species-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.species === species);
+        });
+
+        updatePulseInfo();
+        renderAnatomy();
+        renderDetails();
+        if (currentMode === 'quiz') {
+            resetQuiz();
+            loadQuizQuestion();
+        }
+    }
+
+    function setRegion(region) {
+        currentRegion = region;
+        selectedPoint = null;
+        selectedFinding = null;
+
+        document.querySelectorAll('.region-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.region === region);
+        });
+
+        updatePulseInfo();
+        renderAnatomy();
+        renderDetails();
+        if (currentMode === 'quiz') {
+            resetQuiz();
+            loadQuizQuestion();
+        }
+    }
+
+    function setView(view) {
+        currentView = view;
+        selectedPoint = null;
+        selectedFinding = null;
+
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === view);
+        });
+
+        renderAnatomy();
+        renderDetails();
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        selectedPoint = null;
+        selectedFinding = null;
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        document.getElementById('explorePanel').style.display = mode === 'explore' ? '' : 'none';
+        document.getElementById('quizPanel').classList.toggle('active', mode === 'quiz');
+
+        if (mode === 'quiz') {
+            resetQuiz();
+            loadQuizQuestion();
+        }
+
+        renderAnatomy();
+        renderDetails();
+    }
+
+    function updatePulseInfo() {
+        const sp = DATA[currentSpecies];
+        const pulseInfo = document.getElementById('pulseInfo');
+        const pulseLabel = document.getElementById('pulseLabel');
+
+        if (currentRegion === 'heart') {
+            pulseInfo.textContent = `${sp.heartRate.min}-${sp.heartRate.max} ${sp.heartRate.unit}`;
+            pulseLabel.textContent = 'Herzfrequenz';
+        } else {
+            pulseInfo.textContent = `${sp.respRate.min}-${sp.respRate.max} ${sp.respRate.unit}`;
+            pulseLabel.textContent = 'Atemfrequenz';
+        }
+    }
+
+    function getPoints() {
+        const sp = DATA[currentSpecies];
+        const regionData = sp[currentRegion];
+        return regionData[currentView] || [];
+    }
+
+    function renderAnatomy() {
+        const container = document.getElementById('anatomyContainer');
+        const points = getPoints();
+        const sp = DATA[currentSpecies];
+
+        // Update title
+        const regionName = currentRegion === 'heart' ? 'Herzauskultation' : 'Lungenauskultation';
+        const viewName = currentView === 'left' ? 'linke Seite' : 'rechte Seite';
+        document.getElementById('anatomyTitle').textContent = `${regionName} -- ${sp.name} (${viewName})`;
+        document.getElementById('speciesNote').textContent = sp.notes;
+
+        let svgHTML = '';
+        switch (currentSpecies) {
+            case 'dog': svgHTML = generateDogSVG(points, currentRegion, currentView); break;
+            case 'cat': svgHTML = generateCatSVG(points, currentRegion, currentView); break;
+            case 'horse': svgHTML = generateHorseSVG(points, currentRegion, currentView); break;
+        }
+        container.innerHTML = svgHTML;
+
+        // Highlight selected
+        if (selectedPoint) {
+            const el = container.querySelector(`[data-id="${selectedPoint}"]`);
+            if (el) el.classList.add('active');
+        }
+    }
+
+    function selectPoint(id) {
+        if (currentMode === 'quiz') {
+            handleQuizAnswer(id);
+            return;
+        }
+
+        selectedPoint = id;
+        selectedFinding = null;
+        renderAnatomy();
+        renderDetails();
+    }
+
+    function renderDetails() {
+        const panel = document.getElementById('detailPanel');
+        const empty = document.getElementById('emptyState');
+        const waveCard = document.getElementById('waveformCard');
+
+        if (!selectedPoint) {
+            panel.style.display = 'none';
+            empty.style.display = '';
+            waveCard.style.display = 'none';
+            if (soundAnimId) {
+                cancelAnimationFrame(soundAnimId);
+                soundAnimId = null;
+            }
+            return;
+        }
+
+        panel.style.display = '';
+        empty.style.display = 'none';
+
+        const points = getPoints();
+        const point = points.find(p => p.id === selectedPoint);
+        if (!point) return;
+
+        document.getElementById('detailTitle').textContent = `${point.label} (${point.location})`;
+
+        let html = '';
+
+        // Normal finding
+        html += `
+        <div class="finding-card ${selectedFinding === 'normal' ? 'active' : ''}" onclick="selectFinding('normal', '${point.normal.wave}')">
+            <div class="finding-title">${point.normal.title}</div>
+            <div class="finding-desc">${point.normal.desc}</div>
+            <span class="finding-tag tag-normal">Normal</span>
+        </div>`;
+
+        // Pathological findings
+        if (point.pathological) {
+            point.pathological.forEach((p, i) => {
+                const tagClass = p.severity === 'danger' ? 'tag-pathological' :
+                                 p.severity === 'warning' ? 'tag-warning' :
+                                 p.severity === 'normal' ? 'tag-normal' : 'tag-info';
+                const tagLabel = p.severity === 'danger' ? 'Pathologisch' :
+                                 p.severity === 'warning' ? 'Beachten' :
+                                 p.severity === 'normal' ? 'Physiologisch' : 'Information';
+
+                html += `
+                <div class="finding-card ${selectedFinding === 'path_' + i ? 'active' : ''}" onclick="selectFinding('path_${i}', '${p.wave}')">
+                    <div class="finding-title">${p.title}</div>
+                    <div class="finding-desc">${p.desc}</div>
+                    <span class="finding-tag ${tagClass}">${tagLabel}</span>
+                    ${p.grades ? `
+                    <div style="margin-top:8px;">
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:4px;">Geraeuschgrade (I-VI/VI):</div>
+                        <div class="grade-scale">
+                            <div class="grade-bar filled" title="I/VI: Kaum hoerbar"></div>
+                            <div class="grade-bar filled" title="II/VI: Leise, aber hoerbar"></div>
+                            <div class="grade-bar filled-warn" title="III/VI: Mittel laut"></div>
+                            <div class="grade-bar filled-warn" title="IV/VI: Laut, mit Schwirren"></div>
+                            <div class="grade-bar filled-danger" title="V/VI: Sehr laut"></div>
+                            <div class="grade-bar filled-danger" title="VI/VI: Ohne Stethoskop hoerbar"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.6rem;color:var(--text-muted);margin-top:3px;">
+                            <span>I - kaum hoerbar</span>
+                            <span>VI - mit Schwirren</span>
+                        </div>
+                    </div>` : ''}
+                </div>`;
+            });
+        }
+
+        // Arrhythmias section (for heart region)
+        if (currentRegion === 'heart') {
+            const arrhythmias = DATA[currentSpecies].heart.arrhythmias;
+            if (arrhythmias && arrhythmias.length > 0) {
+                html += `
+                <div style="margin-top:8px;padding:14px 16px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(15,23,42,0.4);">
+                    <div style="font-size:0.8rem;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Rhythmusauffaelligkeiten</div>
+                    <div class="arrhythmia-list">
+                        ${arrhythmias.map(a => {
+                            const dotColor = a.severity === 'normal' ? '#10b981' : a.severity === 'warning' ? '#f59e0b' : a.severity === 'danger' ? '#ef4444' : '#60a5fa';
+                            return `
+                            <div class="arrhythmia-item">
+                                <div class="dot" style="background:${dotColor};"></div>
+                                <div>
+                                    <strong style="color:var(--text-primary);font-size:0.78rem;">${a.name}</strong>
+                                    <div style="margin-top:2px;">${a.desc}</div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            }
+        }
+
+        panel.innerHTML = html;
+
+        // Show waveform if a finding is selected
+        if (selectedFinding) {
+            showWaveform();
+        } else {
+            waveCard.style.display = 'none';
+        }
+    }
+
+    function selectFinding(findingId, waveType) {
+        selectedFinding = findingId;
+        currentWaveType = waveType;
+        renderDetails();
+        showWaveform();
+    }
+
+    function showWaveform() {
+        const waveCard = document.getElementById('waveformCard');
+        waveCard.style.display = '';
+
+        const wt = WAVE_TYPES[currentWaveType];
+        if (wt) {
+            document.getElementById('waveformTitle').textContent = wt.name;
+            document.getElementById('soundDescription').textContent = '';
+        }
+
+        // Start sound animation
+        if (soundAnimId) cancelAnimationFrame(soundAnimId);
+        soundT = 0;
+        animateSound();
+    }
+
+    // ==========================================================
+    //  QUIZ
+    // ==========================================================
+    let quizQuestions = [];
+    let currentQuizIndex = 0;
+
+    function resetQuiz() {
+        quizScore = { correct: 0, total: 0 };
+        currentQuizIndex = 0;
+        quizQuestions = shuffle(getQuizQuestions());
+        document.getElementById('quizScoreNum').textContent = '0/0';
+        document.getElementById('quizFeedback').className = 'quiz-feedback';
+        document.getElementById('quizFeedback').style.display = 'none';
+    }
+
+    function loadQuizQuestion() {
+        if (quizQuestions.length === 0) {
+            quizQuestions = shuffle(getQuizQuestions());
+        }
+        if (quizQuestions.length === 0) return;
+
+        currentQuiz = quizQuestions[currentQuizIndex % quizQuestions.length];
+        document.getElementById('quizQuestion').textContent = currentQuiz.question;
+        document.getElementById('quizHint').textContent = `Klicke auf den richtigen Auskultationspunkt im Schema. (${currentQuiz.view === 'left' ? 'Linke' : 'Rechte'} Seite)`;
+        document.getElementById('quizFeedback').className = 'quiz-feedback';
+        document.getElementById('quizFeedback').style.display = 'none';
+
+        // Switch view if needed
+        if (currentView !== currentQuiz.view) {
+            setView(currentQuiz.view);
+        }
+    }
+
+    function handleQuizAnswer(pointId) {
+        if (!currentQuiz) return;
+
+        const feedback = document.getElementById('quizFeedback');
+        quizScore.total++;
+
+        if (pointId === currentQuiz.answerId) {
+            quizScore.correct++;
+            feedback.className = 'quiz-feedback correct';
+            feedback.textContent = 'Richtig! ' + currentQuiz.explanation;
+            feedback.style.display = 'block';
+
+            // Briefly highlight the point
+            const el = document.querySelector(`[data-id="${pointId}"]`);
+            if (el) {
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 1500);
+            }
+        } else {
+            feedback.className = 'quiz-feedback wrong';
+            const correctPoint = getPoints().find(p => p.id === currentQuiz.answerId);
+            feedback.textContent = `Leider falsch. Die richtige Antwort ist: ${correctPoint ? correctPoint.label : currentQuiz.answerId}. ${currentQuiz.explanation}`;
+            feedback.style.display = 'block';
+
+            // Highlight correct point
+            const el = document.querySelector(`[data-id="${currentQuiz.answerId}"]`);
+            if (el) {
+                el.classList.add('active');
+                setTimeout(() => el.classList.remove('active'), 2500);
+            }
+        }
+
+        document.getElementById('quizScoreNum').textContent = `${quizScore.correct}/${quizScore.total}`;
+    }
+
+    function nextQuizQuestion() {
+        currentQuizIndex++;
+        loadQuizQuestion();
+    }
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // ==========================================================
+    //  TOOLTIP
+    // ==========================================================
+    function showTooltip(event, text) {
+        const tooltip = document.getElementById('tooltip');
+        tooltip.innerHTML = text.replace('\\n', '<br>');
+        tooltip.classList.add('visible');
+
+        const rect = event.target.closest('svg').getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        tooltip.style.left = (event.clientX + 12) + 'px';
+        tooltip.style.top = (event.clientY - 30) + 'px';
+    }
+
+    function hideTooltip() {
+        document.getElementById('tooltip').classList.remove('visible');
+    }
+
+    // ==========================================================
+    //  INIT
+    // ==========================================================
+    function init() {
+        updatePulseInfo();
+        renderAnatomy();
+        renderDetails();
+        animatePulse();
+    }
+
+    // Handle resize for canvas
+    window.addEventListener('resize', () => {
+        // Canvases auto-resize in their animation loops
+    });
+
+    init();
+    </script>
+</body>
+</html>

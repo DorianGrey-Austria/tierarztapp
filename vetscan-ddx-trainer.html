@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan DDx-Trainer - Differentialdiagnose Training</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vet: {
+                            primary: '#667eea',
+                            secondary: '#764ba2',
+                            accent: '#00d4aa',
+                            dark: '#1a1a2e',
+                            surface: '#16213e',
+                            card: '#0f3460',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .glass-accent {
+            background: rgba(0, 212, 170, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 212, 170, 0.2);
+        }
+
+        .option-btn {
+            min-height: 48px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .option-btn:hover:not(.locked) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .option-btn.selected {
+            background: rgba(102, 126, 234, 0.25);
+            border-color: rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 212, 170, 0.2);
+            border-color: rgba(0, 212, 170, 0.6);
+            box-shadow: 0 0 15px rgba(0, 212, 170, 0.2);
+        }
+
+        .option-btn.incorrect {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .option-btn.missed {
+            background: rgba(234, 179, 8, 0.12);
+            border-color: rgba(234, 179, 8, 0.4);
+        }
+
+        .option-btn.locked {
+            cursor: default;
+        }
+
+        .priority-badge {
+            min-width: 28px;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 212, 170, 0.3); }
+            50% { box-shadow: 0 0 20px rgba(0, 212, 170, 0.5); }
+        }
+
+        .difficulty-easy { border-left: 4px solid #00d4aa; }
+        .difficulty-medium { border-left: 4px solid #f59e0b; }
+        .difficulty-hard { border-left: 4px solid #ef4444; }
+
+        .species-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .touch-target {
+            min-height: 44px;
+            min-width: 44px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- App Container -->
+    <div id="app" class="max-w-5xl mx-auto px-4 py-6">
+
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-6 fade-in">
+            <a href="vetscan-version-selector.html"
+               class="touch-target glass rounded-xl px-4 py-2 flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Zur&uuml;ck
+            </a>
+            <div class="text-center flex-1">
+                <h1 class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
+                    DDx-Trainer
+                </h1>
+                <p class="text-xs md:text-sm text-white/50 mt-1">Differentialdiagnose Training</p>
+            </div>
+            <div class="w-20"></div>
+        </header>
+
+        <!-- Start Screen -->
+        <div id="startScreen" class="fade-in">
+            <div class="glass-strong rounded-2xl p-6 md:p-10 text-center max-w-2xl mx-auto mb-8">
+                <div class="text-6xl mb-4">&#x1F9EA;</div>
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-3">Differentialdiagnose-Trainer</h2>
+                <p class="text-white/70 mb-6 leading-relaxed">
+                    Trainiere systematisches differentialdiagnostisches Denken.
+                    Dir werden Symptomkomplexe pr&auml;sentiert &mdash; w&auml;hle die korrekten
+                    Differentialdiagnosen und priorisiere sie nach Wahrscheinlichkeit.
+                </p>
+
+                <div class="glass rounded-xl p-4 mb-6 text-left">
+                    <h3 class="font-semibold text-white mb-3">Schwierigkeitsstufe w&auml;hlen:</h3>
+                    <div class="grid gap-3">
+                        <button onclick="startGame('beginner')"
+                                class="touch-target w-full glass rounded-xl px-5 py-4 text-left hover:bg-white/10 transition-all group difficulty-easy">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-emerald-400">Anf&auml;nger</span>
+                                    <p class="text-sm text-white/50 mt-1">4 Antwortoptionen &middot; Grundlegende F&auml;lle</p>
+                                </div>
+                                <svg class="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <button onclick="startGame('advanced')"
+                                class="touch-target w-full glass rounded-xl px-5 py-4 text-left hover:bg-white/10 transition-all group difficulty-medium">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-amber-400">Fortgeschritten</span>
+                                    <p class="text-sm text-white/50 mt-1">6 Antwortoptionen &middot; Komplexere Symptome</p>
+                                </div>
+                                <svg class="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <button onclick="startGame('expert')"
+                                class="touch-target w-full glass rounded-xl px-5 py-4 text-left hover:bg-white/10 transition-all group difficulty-hard">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="font-bold text-red-400">Experte</span>
+                                    <p class="text-sm text-white/50 mt-1">8&ndash;10 Antwortoptionen &middot; Alle F&auml;lle</p>
+                                </div>
+                                <svg class="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="glass rounded-xl p-3">
+                        <div class="text-2xl font-bold text-emerald-400">15</div>
+                        <div class="text-xs text-white/50">Klinische F&auml;lle</div>
+                    </div>
+                    <div class="glass rounded-xl p-3">
+                        <div class="text-2xl font-bold text-purple-400">3</div>
+                        <div class="text-xs text-white/50">Tierarten</div>
+                    </div>
+                    <div class="glass rounded-xl p-3">
+                        <div class="text-2xl font-bold text-amber-400">3</div>
+                        <div class="text-xs text-white/50">Schwierigkeitsgrade</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="hidden">
+
+            <!-- Top Bar: Progress + Score -->
+            <div class="glass rounded-xl px-4 py-3 mb-4 flex items-center justify-between fade-in">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <svg class="progress-ring w-12 h-12" viewBox="0 0 40 40">
+                            <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="3"/>
+                            <circle id="progressCircle" cx="20" cy="20" r="16" fill="none" stroke="url(#progressGrad)" stroke-width="3"
+                                    stroke-dasharray="100.53" stroke-dashoffset="100.53" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#667eea"/>
+                                    <stop offset="100%" stop-color="#00d4aa"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <span id="caseNumber" class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">1/15</span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-white/50">Fall</div>
+                        <div id="difficultyLabel" class="text-xs font-semibold text-emerald-400">Leicht</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-xs text-white/50">Punkte</div>
+                        <div id="scoreDisplay" class="text-lg font-bold text-white">0</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-white/50">Genauigkeit</div>
+                        <div id="accuracyDisplay" class="text-lg font-bold text-emerald-400">--%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Case Presentation -->
+            <div id="casePanel" class="glass-strong rounded-2xl p-5 md:p-6 mb-4 slide-up">
+                <div class="flex items-start gap-4 mb-4">
+                    <div id="speciesIcon" class="species-icon"></div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 id="caseTitle" class="text-lg md:text-xl font-bold text-white"></h2>
+                            <span id="caseDiffBadge" class="text-xs px-2 py-0.5 rounded-full font-semibold"></span>
+                        </div>
+                        <p id="casePatient" class="text-sm text-white/60 mt-1"></p>
+                    </div>
+                </div>
+
+                <div class="glass rounded-xl p-4 mb-4">
+                    <h3 class="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Symptome / Befunde</h3>
+                    <div id="symptomsList" class="space-y-2"></div>
+                </div>
+
+                <div id="instructionText" class="text-sm text-white/60 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>W&auml;hle die korrekten Differentialdiagnosen in der Reihenfolge ihrer Wahrscheinlichkeit (wahrscheinlichste zuerst).</span>
+                </div>
+            </div>
+
+            <!-- Answer Options -->
+            <div id="optionsContainer" class="space-y-2 mb-4"></div>
+
+            <!-- Action Buttons -->
+            <div id="actionBar" class="flex gap-3 mb-4">
+                <button id="submitBtn" onclick="submitAnswer()" disabled
+                        class="touch-target flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl px-6 py-3 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-purple-500/25">
+                    Antwort pr&uuml;fen
+                </button>
+                <button id="nextBtn" onclick="nextCase()" class="hidden touch-target flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl px-6 py-3 hover:shadow-lg hover:shadow-emerald-500/25 transition-all">
+                    N&auml;chster Fall
+                </button>
+            </div>
+
+            <!-- Explanation Panel -->
+            <div id="explanationPanel" class="hidden glass-accent rounded-2xl p-5 md:p-6 mb-4 slide-up scrollbar-thin" style="max-height: 60vh; overflow-y: auto;">
+                <h3 class="font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Aufl&ouml;sung &amp; Erkl&auml;rung
+                </h3>
+                <div id="explanationContent" class="space-y-3 text-sm leading-relaxed"></div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="hidden fade-in">
+            <div class="glass-strong rounded-2xl p-6 md:p-10 text-center max-w-2xl mx-auto">
+                <div class="text-6xl mb-4">&#x1F3C6;</div>
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">Training abgeschlossen!</h2>
+                <p class="text-white/60 mb-6">Hier ist deine Auswertung:</p>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="glass rounded-xl p-4">
+                        <div id="finalScore" class="text-3xl font-bold text-emerald-400">0</div>
+                        <div class="text-xs text-white/50">Gesamtpunkte</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div id="finalAccuracy" class="text-3xl font-bold text-purple-400">0%</div>
+                        <div class="text-xs text-white/50">Genauigkeit</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div id="finalCorrect" class="text-3xl font-bold text-blue-400">0/15</div>
+                        <div class="text-xs text-white/50">Korrekte DDx</div>
+                    </div>
+                    <div class="glass rounded-xl p-4">
+                        <div id="finalGrade" class="text-3xl font-bold text-amber-400">--</div>
+                        <div class="text-xs text-white/50">Bewertung</div>
+                    </div>
+                </div>
+
+                <div id="resultDetails" class="glass rounded-xl p-4 mb-6 text-left max-h-64 overflow-y-auto scrollbar-thin">
+                    <h3 class="font-semibold text-white mb-3 text-sm">Detailansicht pro Fall:</h3>
+                    <div id="resultsList" class="space-y-2"></div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="resetGame()"
+                            class="touch-target flex-1 glass text-white font-semibold rounded-xl px-6 py-3 hover:bg-white/10 transition-all">
+                        Neues Training
+                    </button>
+                    <a href="vetscan-version-selector.html"
+                       class="touch-target flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl px-6 py-3 flex items-center justify-center hover:shadow-lg transition-all">
+                        Zur&uuml;ck zum Men&uuml;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    //  MEDICAL CASE DATABASE
+    // ============================================================
+    const CASES = [
+        // ---- EASY (1-4) ----
+        {
+            id: 1,
+            difficulty: 'easy',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '3 Jahre, m\u00e4nnlich, Mischling, 15 kg',
+            title: 'Akutes Erbrechen & Durchfall',
+            symptoms: [
+                'Seit 24 Stunden rezidivierendes Erbrechen',
+                'W\u00e4ssriger Durchfall, teilweise blutig',
+                'Inappetenz, Lethargie',
+                'Leicht dehydriert (Hautturgor reduziert)',
+                'Temperatur 39,4 \u00b0C (leicht erh\u00f6ht)'
+            ],
+            correctDDx: [
+                { name: 'Gastroenteritis (infekti\u00f6s/aliment\u00e4r)', priority: 1 },
+                { name: 'Fremdk\u00f6rper (gastrointestinal)', priority: 2 },
+                { name: 'Pankreatitis', priority: 3 },
+                { name: 'Parvovirose', priority: 4 },
+                { name: 'Intoxikation', priority: 5 }
+            ],
+            distractors: [
+                'Hypothyreose', 'Epilepsie', 'Tracheobronchitis',
+                'Herzinsuffizienz', 'Harnwegsinfektion'
+            ],
+            explanations: {
+                'Gastroenteritis (infekti\u00f6s/aliment\u00e4r)': 'H\u00e4ufigste Ursache f\u00fcr akutes Erbrechen und Durchfall beim Hund. Oft durch Futterumstellung, Diatfehler oder virale/bakterielle Erreger ausgel\u00f6st. Anamnese bzgl. Futter\u00e4nderung oder M\u00fcllfressen erfragen.',
+                'Fremdk\u00f6rper (gastrointestinal)': 'Besonders bei jungen Hunden h\u00e4ufig. Kann zu partiellem oder komplettem Ileus f\u00fchren. R\u00f6ntgen (ggf. mit Kontrastmittel) und Ultraschall zur Diagnostik.',
+                'Pankreatitis': 'Akute Pankreatitis zeigt sich mit Erbrechen, Durchfall und abdominalen Schmerzen. Lipase/Amylase und cPLI erh\u00f6ht. Risikofaktor: fettreiche Mahlzeit.',
+                'Parvovirose': 'Hochkontagios, v.a. bei ungeimpften Junghunden. Blutiger Durchfall, schwere Dehydratation, Leukopenie. ELISA-Schnelltest aus Kot.',
+                'Intoxikation': 'Diverse Substanzen m\u00f6glich (Schokolade, Trauben, Xylitol, Rattengift etc.). Anamnese entscheidend. Ggf. Aktivkohle und spezifisches Antidot.'
+            },
+            summary: 'Bei einem jungen Hund mit akutem Erbrechen und Durchfall steht die infekti\u00f6se/aliment\u00e4re Gastroenteritis an erster Stelle. Fremdk\u00f6rper sind bei Junghunden immer auszuschlie\u00dfen. Parvovirose muss bei unvollst\u00e4ndigem Impfstatus bedacht werden.'
+        },
+        {
+            id: 2,
+            difficulty: 'easy',
+            species: 'cat',
+            speciesLabel: 'Katze',
+            patient: '10 Jahre, weiblich kastriert, EKH, 4,2 kg',
+            title: 'Polydipsie & Gewichtsverlust',
+            symptoms: [
+                'Vermehrte Wasseraufnahme seit ca. 3 Wochen',
+                'Progressiver Gewichtsverlust trotz gutem Appetit',
+                'Fellqualit\u00e4t verschlechtert',
+                'Polyurie (Besitzer berichtet h\u00e4ufigeres Urinieren)',
+                'Leicht erh\u00f6hte Herzfrequenz'
+            ],
+            correctDDx: [
+                { name: 'Hyperthyreose', priority: 1 },
+                { name: 'Diabetes mellitus', priority: 2 },
+                { name: 'Chronische Nierenerkrankung (CNE)', priority: 3 },
+                { name: 'Lymphom', priority: 4 }
+            ],
+            distractors: [
+                'FIP', 'Hepatische Lipidose', 'FLUTD',
+                'Asthma', 'Pankreatitis', 'Gingivitis'
+            ],
+            explanations: {
+                'Hyperthyreose': 'H\u00e4ufigste Endokrinopathie der \u00e4lteren Katze. Typische Trias: Gewichtsverlust, Polyphagie, Tachykardie. T4 erh\u00f6ht, ggf. palpable Schilddr\u00fcse. Therapie: Methimazol, Radiojod oder Thyreoidektomie.',
+                'Diabetes mellitus': 'Zweith\u00e4ufigste Endokrinopathie bei Katzen. PU/PD, Gewichtsverlust, Plantigradie m\u00f6glich. Blutzucker und Fructosamin zur Diagnose. H\u00e4ufig Typ-2-Diabetes mit Insulinresistenz.',
+                'Chronische Nierenerkrankung (CNE)': 'Sehr h\u00e4ufig bei \u00e4lteren Katzen. PU/PD durch verminderte Konzentrierf\u00e4higkeit der Niere. SDMA, Kreatinin, Harnstoff erh\u00f6ht, USG erniedrigt. IRIS-Staging empfohlen.',
+                'Lymphom': 'H\u00e4ufigste Neoplasie der Katze. Alimenthares Lymphom kann Gewichtsverlust und PU/PD verursachen (v.a. bei renaler Beteiligung). Feinnadelaspiration oder Biopsie zur Diagnose.'
+            },
+            summary: 'Bei einer 10-j\u00e4hrigen Katze mit PU/PD und Gewichtsverlust muss immer die klassische Trias Hyperthyreose, Diabetes mellitus und CNE abgekl\u00e4rt werden. Ein Basisprofil (Blutbild, Chemie, T4, Urinanalyse) kl\u00e4rt die meisten F\u00e4lle.'
+        },
+        {
+            id: 3,
+            difficulty: 'easy',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '8 Jahre, m\u00e4nnlich kastriert, Yorkshire Terrier, 4 kg',
+            title: 'Chronischer Husten',
+            symptoms: [
+                'Seit 4 Wochen zunehmender Husten, v.a. nachts',
+                'W\u00fcrgereiz nach dem Husten',
+                'Leichte Belastungsintoleranz',
+                'Herzger\u00e4usch Grad III/VI links apikal',
+                'Leicht erh\u00f6hte Atemfrequenz in Ruhe'
+            ],
+            correctDDx: [
+                { name: 'Herzinsuffizienz (Mitralinsuffizienz)', priority: 1 },
+                { name: 'Trachealkollaps', priority: 2 },
+                { name: 'Tracheobronchitis', priority: 3 },
+                { name: 'Pneumonie', priority: 4 },
+                { name: 'Lungentumor', priority: 5 }
+            ],
+            distractors: [
+                'Fremdk\u00f6rper', 'Larynxparalyse', 'Asthma',
+                'Megaoesophagus', 'Zwingerhusten'
+            ],
+            explanations: {
+                'Herzinsuffizienz (Mitralinsuffizienz)': 'Herzger\u00e4usch + \u00e4lterer Kleinhund = Mitralklappenendokardiose sehr wahrscheinlich. Das Herzger\u00e4usch und die Belastungsintoleranz sind Leitbefunde. R\u00f6ntgen Thorax und Echokardiographie zur Diagnosesicherung.',
+                'Trachealkollaps': 'Typisch f\u00fcr kleine Rassen (Yorkshire Terrier!). \"Gqnsehusten\"-artiger Husten. Fluoroskopie oder Endoskopie zur dynamischen Beurteilung. Grading I\u2013IV.',
+                'Tracheobronchitis': 'Infekti\u00f6se (Zwingerhusten) oder chronische Form. Trockener Husten, oft durch Druck auf Trachea ausl\u00f6sbar. Meist selbstlimitierend bei der infekti\u00f6sen Form.',
+                'Pneumonie': 'Bakteriell, viral oder aspirationsbedingt. Fieber, produktiver Husten, ver\u00e4ndertes Atemger\u00e4usch. R\u00f6ntgen zeigt alveol\u00e4re Verschattungen.',
+                'Lungentumor': 'Prim\u00e4re Lungentumoren oder Metastasen. Chronischer Husten, ggf. Dyspnoe und Gewichtsverlust. Thoraxr\u00f6ntgen in 3 Ebenen obligat.'
+            },
+            summary: 'Bei einem \u00e4lteren Yorkshire Terrier mit Husten und Herzger\u00e4usch ist die Mitralinsuffizienz die wahrscheinlichste Ursache. Yorkshire Terrier sind zudem pr\u00e4disponiert f\u00fcr Trachealkollaps \u2013 beide Erkrankungen k\u00f6nnen gleichzeitig vorliegen.'
+        },
+        {
+            id: 4,
+            difficulty: 'easy',
+            species: 'cat',
+            speciesLabel: 'Katze',
+            patient: '5 Jahre, m\u00e4nnlich kastriert, BKH, 6,5 kg',
+            title: 'Harnabsatzprobleme',
+            symptoms: [
+                'Seit 2 Tagen h\u00e4ufiger Harnabsatz in kleinen Mengen',
+                'Vokalisieren beim Urinieren',
+                'Haematurie (r\u00f6tlich verf\u00e4rbter Urin)',
+                'Leckaktivit\u00e4t am Pr\u00e4putium verst\u00e4rkt',
+                'Periurie (Urinabsatz au\u00dferhalb der Katzentoilette)'
+            ],
+            correctDDx: [
+                { name: 'FLUTD / Feline idiopathische Zystitis (FIC)', priority: 1 },
+                { name: 'Harnsteine (Urolithiasis)', priority: 2 },
+                { name: 'Harnwegsinfektion', priority: 3 },
+                { name: 'Urethraobstruktion', priority: 4 },
+                { name: 'Blasentumor', priority: 5 }
+            ],
+            distractors: [
+                'CNE', 'Diabetes mellitus', 'Hyperthyreose',
+                'Prostataerkrankung', 'Verhaltensproblem'
+            ],
+            explanations: {
+                'FLUTD / Feline idiopathische Zystitis (FIC)': 'H\u00e4ufigste Ursache (ca. 60-70%) bei Katzen unter 10 Jahren mit LUTS. Stressassoziiert, sterile Entz\u00fcndung. Diagnose per Ausschluss. Multimodale Therapie inkl. Stressreduktion, Feuchtfutter.',
+                'Harnsteine (Urolithiasis)': 'Struvitsteine (durch alkalischen pH) oder Calciumoxalatsteine. R\u00f6ntgen und Ultraschall zur Diagnostik. Struvit di\u00e4tetisch aufl\u00f6sbar, Oxalat nur chirurgisch.',
+                'Harnwegsinfektion': 'Bei jungen Katzen selten (<2%), bei \u00e4lteren Katzen h\u00e4ufiger. Urinkultur mit Antibiogramm ist Goldstandard. Cave: Bei m\u00e4nnlichen Katzen an Obstruktion denken!',
+                'Urethraobstruktion': 'Notfall! V.a. bei m\u00e4nnlichen Katzen durch anatomisch enge Urethra. Palpation: gro\u00dfe, pralle Harnblase. Sofortige Katheterisierung n\u00f6tig. Hyperkali\u00e4mie kann lebensbedrohlich sein.',
+                'Blasentumor': 'Selten bei Katzen, aber differentialdiagnostisch zu bedenken. Transitionalzellkarzinom am h\u00e4ufigsten. Ultraschall und ggf. traumatische Katheterisierung zur Zytologie.'
+            },
+            summary: 'FLUTD/FIC ist die h\u00e4ufigste Ursache bei jungen Katern. Wichtig: Immer Palpation der Harnblase \u2013 eine pralle, nicht exprimierbare Blase bedeutet Obstruktion und ist ein Notfall! M\u00e4nnliche Katzen sind durch die enge Urethra pr\u00e4disponiert.'
+        },
+
+        // ---- MEDIUM (5-8) ----
+        {
+            id: 5,
+            difficulty: 'medium',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '6 Jahre, m\u00e4nnlich, Deutsche Dogge, 55 kg',
+            title: 'Akutes Abdomen mit aufgebl\u00e4htem Bauch',
+            symptoms: [
+                'Pl\u00f6tzliche Unruhe, Hecheln, Speicheln',
+                'Stark aufgetriebenes Abdomen (tympanisch)',
+                'Erfolglose Brechversuche (unproduktives W\u00fcrgen)',
+                'Tachykardie (180/min), schwacher Puls',
+                'Blasse Schleimh\u00e4ute, verl\u00e4ngerte KFZ (>3 Sek.)',
+                'Akuter Beginn vor ca. 2 Stunden nach F\u00fctterung'
+            ],
+            correctDDx: [
+                { name: 'Magendilatation-Volvulus (GDV)', priority: 1 },
+                { name: 'Milztorsion', priority: 2 },
+                { name: 'Peritonitis', priority: 3 },
+                { name: 'H\u00e4moabdomen', priority: 4 }
+            ],
+            distractors: [
+                'Pankreatitis', 'Magentumor', 'Gastritis',
+                'Fremdk\u00f6rper', 'Megakolon', 'Pyometra'
+            ],
+            explanations: {
+                'Magendilatation-Volvulus (GDV)': 'Absoluter Notfall! Klassische Pr\u00e4sentation bei gro\u00dfer Rasse: tympanisches Abdomen, unproduktives W\u00fcrgen, Kreislaufschock. Sofortige Stabilisierung (Schockinfusion, Magenentlastung) und Notfall-OP (Gastropexie). Mortalit\u00e4t ohne Therapie nahe 100%.',
+                'Milztorsion': 'Kann isoliert oder mit GDV auftreten. Akute Schmerzen, ggf. Schock durch H\u00e4moabdomen. Ultraschall zeigt vergr\u00f6\u00dferte Milz mit fehlendem Blutfluss. Splenektomie indiziert.',
+                'Peritonitis': 'Durch Organperforation (Darm, Magen, Gallenblase). Akuter Bauch, Fieber, Schock. Abdominozentese: tr\u00fcbe, zellreiche Fl\u00fcssigkeit. Chirurgische Exploration obligat.',
+                'H\u00e4moabdomen': 'Blutung in die Bauchh\u00f6hle (Milztumor, Trauma, Gerinnungsst\u00f6rung). Bl\u00e4sse, Tachykardie, Bauchumfang nimmt zu. Abdominozentese zeigt Blut. Ultraschall: freie Fl\u00fcssigkeit.'
+            },
+            summary: 'Deutsche Dogge + akut aufgebl\u00e4htes Abdomen + unproduktives W\u00fcrgen = GDV bis zum Beweis des Gegenteils. Dies ist ein absoluter Notfall mit sofortigem Handlungsbedarf. R\u00f6ntgen (rechtslaterale Aufnahme) zeigt den typischen \"Double-Bubble\"-Effekt.'
+        },
+        {
+            id: 6,
+            difficulty: 'medium',
+            species: 'horse',
+            speciesLabel: 'Pferd',
+            patient: '12 Jahre, Wallach, Hannoveraner, 580 kg',
+            title: 'Akute Kolik',
+            symptoms: [
+                'Scharren, Fl\u00e4hmen, wiederholt Hinlegen und Aufstehen',
+                'Blick zum Flankenbereich',
+                'Reduzierte bis fehlende Darmger\u00e4usche',
+                'Schwitzen, Tachykardie (60/min)',
+                'Rektalbefund: Gasgef\u00fcllte Darmschlingen palpierbar',
+                'Nasogastraler Reflux: ca. 4 Liter'
+            ],
+            correctDDx: [
+                { name: 'Spastische Kolik (Krampfkolik)', priority: 1 },
+                { name: 'Obstipation (Verstopfungskolik)', priority: 2 },
+                { name: 'D\u00fcnndarmverlagerung', priority: 3 },
+                { name: 'Strangulation', priority: 4 },
+                { name: 'Magen\u00fcberladung', priority: 5 }
+            ],
+            distractors: [
+                'Hufrehe', 'Rhabdomyolyse', 'Pleuropneumonie',
+                'Botulismus', 'Hernia inguinalis'
+            ],
+            explanations: {
+                'Spastische Kolik (Krampfkolik)': 'H\u00e4ufigste Kolikform (>60%). Durch Spasmen der glatten Darmmuskulatur, oft stressassoziiert oder nach Futterumstellung. Meist gutes Ansprechen auf Metamizol/Buscopan. Gute Prognose.',
+                'Obstipation (Verstopfungskolik)': 'V.a. im Colon und Caecum. H\u00e4ufig durch Dehydratation, mangelnde Bewegung oder schlechte Futterqualit\u00e4t. Rektale Palpation zeigt verhartete Ingesta. Therapie: Infusionen, Paraffin\u00f6l, ggf. Einlauf.',
+                'D\u00fcnndarmverlagerung': 'D\u00fcnndarm kann sich in verschiedene Positionen verlagern. Nasogastraler Reflux deutet auf D\u00fcnndarm-Ileus hin. Ultraschall zeigt erweiterte, stehende D\u00fcnndarmschlingen. Oft chirurgisches Vorgehen n\u00f6tig.',
+                'Strangulation': 'Abschn\u00fcrung des Darms mit Gef\u00e4\u00dfkompromittierung. Strangulationskolik = chirurgischer Notfall. Starke, nicht auf Analgetika ansprechende Schmerzen. Zunehmend toxischer Schock. Schnelle OP entscheidend f\u00fcr Prognose.',
+                'Magen\u00fcberladung': 'Durch \u00fcberm\u00e4\u00dfige Futteraufnahme (z.B. Zugang zu Kraftfuttersack). Magenruptur-Gefahr! Nasogastralsonde zur Entlastung obligat. Der hier beschriebene Reflux von 4 Litern ist ein wichtiger Hinweis.'
+            },
+            summary: 'Kolik ist die h\u00e4ufigste Notfallpraesentation beim Pferd. Der nasogastrale Reflux deutet auf D\u00fcnndarm-Beteiligung hin. Entscheidend ist die Differenzierung zwischen konservativ und chirurgisch zu behandelnder Kolik. Wiederholte klinische Untersuchungen und Ansprechen auf Analgesie sind die wichtigsten Entscheidungshilfen.'
+        },
+        {
+            id: 7,
+            difficulty: 'medium',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '5 Jahre, m\u00e4nnlich, Labrador Retriever, 32 kg',
+            title: 'Lahmheit Vordergliedma\u00dfe',
+            symptoms: [
+                'Seit 3 Wochen intermittierende Lahmheit vorne links',
+                'St\u00fctzbeinlahmheit Grad II/IV',
+                'Schmerzhaftigkeit bei Ellbogenextension',
+                'Krepitation im Ellbogengelenk',
+                'Keine Schwellung oder W\u00e4rme sichtbar',
+                'Lahmheit verschlechtert sich nach Ruhe'
+            ],
+            correctDDx: [
+                { name: 'Ellbogendysplasie (ED)', priority: 1 },
+                { name: 'Osteochondrosis dissecans (OCD)', priority: 2 },
+                { name: 'Fraktur', priority: 3 },
+                { name: 'Weichteiltrauma (Sehne/Band)', priority: 4 },
+                { name: 'Panosteitis', priority: 5 }
+            ],
+            distractors: [
+                'H\u00fcftgelenksdysplasie', 'Kreuzbandriss',
+                'Patellaluxation', 'Spondylose', 'Diskopathie'
+            ],
+            explanations: {
+                'Ellbogendysplasie (ED)': 'Labrador Retriever ist eine der am h\u00e4ufigsten betroffenen Rassen. Umfasst FPC (fragmentierter Processus coronoideus), IPA (isolierter Processus anconaeus), OCD und Inkongruenz. Krepitation und Schmerz bei Extension sind typisch. R\u00f6ntgen und ggf. CT/Arthroskopie zur Diagnose.',
+                'Osteochondrosis dissecans (OCD)': 'St\u00f6rung der enchondralen Ossifikation mit Knorpellappenbildung. Humeroradialgelenk am h\u00e4ufigsten beim Hund betroffen. Arthroskopische Entfernung des Knorpellappens.',
+                'Fraktur': 'Obwohl kein Trauma berichtet wird, k\u00f6nnen Erm\u00fcdungsfrakturen oder pathologische Frakturen schleichend auftreten. R\u00f6ntgen in 2 Ebenen zum Ausschluss.',
+                'Weichteiltrauma (Sehne/Band)': 'Sehnenverletzungen (z.B. Bizepssehne) oder Bandsch\u00e4den. Ultraschall ist hilfreich. Meist Schwellung und W\u00e4rme vorhanden, was hier nicht der Fall ist.',
+                'Panosteitis': 'Selbstlimitierende Knochenentz\u00fcndung bei jungen, gro\u00dfrassigen Hunden (meist 5\u201318 Monate). Wandernde Lahmheit. Bei 5 Jahren eher unwahrscheinlich, aber differentialdiagnostisch zu erw\u00e4hnen.'
+            },
+            summary: 'Ein junger Labrador mit Ellbogenlahmheit und Krepitation hat mit hoher Wahrscheinlichkeit eine Ellbogendysplasie. Das R\u00f6ntgen (4 Projektionen: ML, CrCd, Pronation, Supination) ist der erste Diagnostikschritt. CT hat die h\u00f6chste Sensitivit\u00e4t.'
+        },
+        {
+            id: 8,
+            difficulty: 'medium',
+            species: 'cat',
+            speciesLabel: 'Katze',
+            patient: '3 Jahre, m\u00e4nnlich kastriert, Perser, 5 kg',
+            title: 'Akute Hinterhandl\u00e4hmung',
+            symptoms: [
+                'Pl\u00f6tzlicher Beginn: kann nicht mehr auf Hinterbeinen stehen',
+                'Vokalisieren vor Schmerzen',
+                'Hintergliedma\u00dfen kalt und blass',
+                'Femoralpuls nicht palpierbar beidseits',
+                'Zyanotische Ballen an den Hinterpfoten',
+                'Herzger\u00e4usch (systolisch, Grad III/VI)'
+            ],
+            correctDDx: [
+                { name: 'Aortenthrombose (Sattelthrombus)', priority: 1 },
+                { name: 'Thromboembolie (andere Lokalisation)', priority: 2 },
+                { name: 'Trauma (Wirbels\u00e4ule/Becken)', priority: 3 },
+                { name: 'Bandscheibenvorfall', priority: 4 }
+            ],
+            distractors: [
+                'Epilepsie', 'Hyperthyreose', 'Toxoplasmose',
+                'Polymyopathie', 'Hypokali\u00e4mie', 'CNE'
+            ],
+            explanations: {
+                'Aortenthrombose (Sattelthrombus)': 'Klassische Pr\u00e4sentation: akute Hinterhandl\u00e4hmung + kalte Pfoten + fehlender Femoralpuls + Schmerzen = Aortenthrombose nahezu bewiesen. Meist Folge einer kardialen Grunderkrankung (HCM bei Katzen). Echokardiographie obligat. Prognose vorsichtig bis schlecht.',
+                'Thromboembolie (andere Lokalisation)': 'Thromboembolien k\u00f6nnen auch eine einzelne Gliedma\u00dfe betreffen (A. femoralis, A. brachialis). Gleiche Pathogenese wie Sattelthrombus, aber weniger dramatisch.',
+                'Trauma (Wirbels\u00e4ule/Becken)': 'K\u00f6nnte akute Parese verursachen, aber fehlende Pulse und kalte Extremit\u00e4ten sprechen gegen rein traumatische Genese. Anamnese wichtig.',
+                'Bandscheibenvorfall': 'Bei Katzen viel seltener als beim Hund. W\u00fcrde keine vaskul\u00e4ren Symptome (fehlende Pulse, kalte Pfoten) verursachen. Neurologische Defizite ohne vaskul\u00e4re Beteiligung.'
+            },
+            summary: 'Die \"5 P\" des akuten arteriellen Verschlusses: Pain (Schmerz), Pallor (Bl\u00e4sse), Pulselessness (Pulslosigkeit), Paralysis (L\u00e4hmung), Poikilothermie (K\u00e4lte). Alle 5 sind hier erf\u00fcllt. Zugrunde liegt fast immer eine HCM (hypertrophe Kardiomyopathie).'
+        },
+
+        // ---- HARD (9-15) ----
+        {
+            id: 9,
+            difficulty: 'hard',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '7 Jahre, weiblich kastriert, Pudel, 8 kg',
+            title: 'PU/PD + Alopezie + H\u00e4ngebauch',
+            symptoms: [
+                'Polyurie/Polydipsie seit mehreren Monaten',
+                'Symmetrische bilaterale Alopezie am Rumpf',
+                'Abdominale Distension (H\u00e4ngebauch, Stammfettsucht)',
+                'Hautatrophie, Calcinosis cutis',
+                'Muskelschw\u00e4che, Belastungsintoleranz',
+                'Hecheln in Ruhe',
+                'Rezidivierende Harnwegsinfektionen'
+            ],
+            correctDDx: [
+                { name: 'Hyperadrenokortizismus (Cushing-Syndrom)', priority: 1 },
+                { name: 'Diabetes mellitus', priority: 2 },
+                { name: 'Hypothyreose', priority: 3 },
+                { name: 'Iatrogener Cushing (Kortison-Therapie)', priority: 4 }
+            ],
+            distractors: [
+                'Nebenniereninsuffizienz (Addison)', 'Akromegalie',
+                'Hyperaldosteronismus', 'Alopezie X',
+                'Sertolizell-Tumor', 'Ovarialzysten'
+            ],
+            explanations: {
+                'Hyperadrenokortizismus (Cushing-Syndrom)': 'Klassisches klinisches Bild: PU/PD + Alopezie + H\u00e4ngebauch + Hautverdunnung = Cushing. 80-85% hypophys\u00e4r (PDH), 15-20% adrenal (AT). Diagnostik: LDDS-Test, ACTH-Stimulationstest, Urin-Kortisol/Kreatinin-Ratio. ACTH-Stimulationstest unterscheidet iatrogen vs. spontan.',
+                'Diabetes mellitus': 'PU/PD ist Leitsymptom, aber Alopezie und H\u00e4ngebauch sind untypisch. Cushing und Diabetes k\u00f6nnen koexistieren! Cushing verursacht Insulinresistenz. Blutzucker und Fructosamin messen.',
+                'Hypothyreose': 'Kann Alopezie und Lethargie verursachen, aber H\u00e4ngebauch und PU/PD sind untypisch. \"Tragic face\" bei myxoedem\u00e4t\u00f6ser Verlaufsform. T4, fT4, TSH zur Diagnostik.',
+                'Iatrogener Cushing (Kortison-Therapie)': 'Identisches klinisches Bild wie spontaner Cushing, aber durch exogene Kortikosteroidgabe verursacht. Anamnese entscheidend! ACTH-Stimulationstest zeigt supprimierte Nebennieren. Ausschleichen der Medikation n\u00f6tig.'
+            },
+            summary: 'Die Kombination aus PU/PD, symmetrischer Alopezie, H\u00e4ngebauch und Hautverdunnung ist pathognomonisch f\u00fcr Cushing. Immer nach Kortison-Gabe in der Anamnese fragen (Tabletten, Ohrentropfen, Hautsalben!). Ein Basisprofil zeigt oft: Stress-Leukogramm, erh\u00f6hte ALP, niedriges USG.'
+        },
+        {
+            id: 10,
+            difficulty: 'hard',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '10 Jahre, weiblich intakt, Golden Retriever, 30 kg',
+            title: 'Fieber + Vaginalausfluss + Polydipsie',
+            symptoms: [
+                'Fieber 40,2 \u00b0C seit 2 Tagen',
+                'Mukopurulenter bis blutiger Vaginalausfluss',
+                'Polydipsie / Polyurie',
+                'Inappetenz, Lethargie',
+                'Abdominale Distension, schmerzhaft bei Palpation',
+                'Letzte L\u00e4ufigkeit vor ca. 6\u20138 Wochen',
+                'Leukozytose (28.000/\u00b5L), Linksverschiebung'
+            ],
+            correctDDx: [
+                { name: 'Pyometra', priority: 1 },
+                { name: 'Metritis', priority: 2 },
+                { name: 'Vaginitis', priority: 3 },
+                { name: 'Uterusneoplasie', priority: 4 }
+            ],
+            distractors: [
+                'Harnwegsinfektion', 'Endometritis', 'Ovarialzyste',
+                'Mammatumor', 'Peritonitis', 'Cushing'
+            ],
+            explanations: {
+                'Pyometra': 'Klassische Pr\u00e4sentation: intakte H\u00fcndin, 4\u20138 Wochen nach L\u00e4ufigkeit, Fieber, Vaginalausfluss (offene Pyometra), PU/PD, Leukozytose. Ultraschall zeigt fl\u00fcssigkeitsgef\u00fcllten Uterus. Therapie der Wahl: Ovariohysterektomie. Bei geschlossener Pyometra kein Ausfluss \u2013 noch gef\u00e4hrlicher!',
+                'Metritis': 'Uterusinfektion, meist post partum oder post abortum. Klinisch \u00e4hnlich wie Pyometra, aber zeitlicher Zusammenhang mit Geburt/Abort. Schwerer Allgemeinzustand, septischer Schock m\u00f6glich.',
+                'Vaginitis': 'Entz\u00fcndung der Vagina, oft bei jungen H\u00fcndinnen. Weniger systemische Symptome als Pyometra. Vaginaler Ausfluss, aber kein Fieber und keine PU/PD. Vaginoskopie zur Diagnostik.',
+                'Uterusneoplasie': 'Selten beim Hund. Kann \u00e4hnliche Symptome wie Pyometra verursachen. Ultraschall zeigt eher solide Masse statt Fl\u00fcssigkeit. Histologische Abkl\u00e4rung nach Chirurgie.'
+            },
+            summary: 'Intakte H\u00fcndin + Fieber + Vaginalausfluss + PU/PD 6\u20138 Wochen post oestrum = Pyometra bis zum Beweis des Gegenteils. Dies ist ein potenziell lebensbedrohlicher Notfall (Uterusruptur, Septik\u00e4mie). PU/PD entsteht durch E.-coli-Endotoxin-vermittelte Blockade der ADH-Rezeptoren in der Niere.'
+        },
+        {
+            id: 11,
+            difficulty: 'hard',
+            species: 'horse',
+            speciesLabel: 'Pferd',
+            patient: '4 Jahre, Stute, Warmblut, 520 kg',
+            title: 'Husten + Nasenausfluss + Fieber',
+            symptoms: [
+                'Fieber 39,8 \u00b0C, seit 3 Tagen',
+                'Mucopurulenter bilateraler Nasenausfluss',
+                'Feuchter Husten, verst\u00e4rkt bei Belastung',
+                'Mandibularlymphknoten vergr\u00f6\u00dfert, schmerzhaft',
+                'Inappetenz, Mattigkeit',
+                'Kontakt zu neuem Pferd im Stall vor 10 Tagen'
+            ],
+            correctDDx: [
+                { name: 'Druse (Streptococcus equi)', priority: 1 },
+                { name: 'Equine Influenza', priority: 2 },
+                { name: 'EHV (Equines Herpesvirus)', priority: 3 },
+                { name: 'Bakterielle Pneumonie', priority: 4 },
+                { name: 'RAO (Recurrent Airway Obstruction)', priority: 5 }
+            ],
+            distractors: [
+                'Druse (atypisch)', 'Rhodococcus-equi-Pneumonie',
+                'Lungenwurm', 'EIPH', 'Pleuropneumonie'
+            ],
+            explanations: {
+                'Druse (Streptococcus equi)': 'Hochkontagiose Infektion der oberen Atemwege. Typisch: Fieber, mucopurulenter Nasenausfluss, stark geschwollene Mandibularlymphknoten (k\u00f6nnen abszedieren). Kontakt zu neuem Pferd = Exposition! Abstrich/PCR zur Diagnose. Quarant\u00e4ne obligat.',
+                'Equine Influenza': 'Akuter Beginn, trockener Husten, Fieber, seroser bis mucoser Nasenausfluss. Hochkontagios. Nasentupfer PCR. Inkubationszeit 1\u20133 Tage. Impfstatus pr\u00fcfen!',
+                'EHV (Equines Herpesvirus)': 'EHV-1 und EHV-4 verursachen respiratorische Symptome. EHV-1 kann zus\u00e4tzlich Abort und neurologische Symptome (EHM) verursachen. Nasentupfer PCR. Quarant\u00e4ne!',
+                'Bakterielle Pneumonie': 'Sekund\u00e4r nach viraler Infektion oder durch Aspiration. Fieber, produktiver Husten, Dyspnoe. Auskultation: Rasselger\u00e4usche, versch\u00e4rftes Atemger\u00e4usch. TBS (Tracheobronchialsekret) f\u00fcr Kultur.',
+                'RAO (Recurrent Airway Obstruction)': 'Chronische Atemwegserkrankung, allergisch bedingt (Staubexposition). Aber: Fieber und akuter Beginn mit Lymphknotenschwellung sprechen gegen RAO. Bei 4 Jahren zudem eher untypisch.'
+            },
+            summary: 'Junges Pferd + Fieber + Nasenausfluss + Lymphknotenschwellung + Kontakt zu neuem Pferd = Druse ist die Top-Differentialdiagnose. Sofortige Quarant\u00e4ne des betroffenen Tieres und aller Kontakttiere. Temperaturmonitoring aller Pferde im Bestand.'
+        },
+        {
+            id: 12,
+            difficulty: 'hard',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '2 Jahre, m\u00e4nnlich, Boxer, 28 kg',
+            title: 'Generalisierte Lymphknotenschwellung',
+            symptoms: [
+                'Multiple vergroesserte periphere Lymphknoten (submandibulqr, praskpulqr, inguinal, popliteal)',
+                'Lymphknoten derb, nicht schmerzhaft, verschieblich',
+                'Gewichtsverlust seit 4 Wochen',
+                'Intermittierendes Fieber',
+                'Leichte Splenomegalie (Ultraschall)',
+                'Blutbild: milde An\u00e4mie'
+            ],
+            correctDDx: [
+                { name: 'Multizentriaches Lymphom', priority: 1 },
+                { name: 'Leishmaniose', priority: 2 },
+                { name: 'Ehrlichiose', priority: 3 },
+                { name: 'Immunmediierte Erkrankung', priority: 4 },
+                { name: 'Metastatische Neoplasie', priority: 5 }
+            ],
+            distractors: [
+                'Babesiose', 'Brucellose', 'Toxoplasmose',
+                'Histiozyt\u00e4res Sarkom', 'Thymom'
+            ],
+            explanations: {
+                'Multizentriaches Lymphom': 'H\u00e4ufigste h\u00e4matopoietische Neoplasie des Hundes. Boxer sind pr\u00e4disponiert! Generalisierte, schmerzlose Lymphknotenvergr\u00f6\u00dferung ist das Leitsymptom. FNA (Feinnadelaspiration) aller vergr\u00f6\u00dferten LK f\u00fcr Zytologie. Staging mit Blutbild, Chemie, Thoraxr\u00f6ntgen, Ultraschall. Chemotherapie (CHOP-Protokoll) ist Standardtherapie.',
+                'Leishmaniose': 'Reiseanamnese entscheidend! Mittelmeerraum endemisch. Generalisierte Lymphadenopathie, Gewichtsverlust, Hautl\u00e4sionen, Epistaxis, Niereninsuffizienz. Serologie, PCR, Knochenmarkszytologie. Behandlung: Miltefosin + Allopurinol.',
+                'Ehrlichiose': 'Durch Zecken (Rhipicephalus sanguineus) \u00fcbertragen. Akute Phase: Fieber, Lymphadenopathie, Thrombozytopenie. Chronische Phase: Panzytopenie. Snap-Test, PCR, IFT. Therapie: Doxycyclin.',
+                'Immunmediierte Erkrankung': 'Sterile Lymphadenitis, SLE (systemischer Lupus erythematodes). Weniger h\u00e4ufig, aber differentialdiagnostisch zu bedenken. ANA-Test, ggf. Lymphknotenbiopsie.',
+                'Metastatische Neoplasie': 'Verschiedene Prim\u00e4rtumoren k\u00f6nnen in Lymphknoten metastasieren. Bei generalisierter Beteiligung eher multizentriaches Lymphom als Metastasen. Zytologie differenziert.'
+            },
+            summary: 'Boxer + jung + generalisierte schmerzlose Lymphknotenschwellung = Lymphom ist die Top-Differentialdiagnose. Die FNA mit Zytologie ist der schnellste diagnostische Schritt. Bei Verdacht auf Lymphom immer Vollst\u00e4ndiges Staging vor Therapiebeginn.'
+        },
+        {
+            id: 13,
+            difficulty: 'hard',
+            species: 'cat',
+            speciesLabel: 'Katze',
+            patient: '8 Jahre, m\u00e4nnlich kastriert, Maine Coon, 7 kg',
+            title: 'Ikterus',
+            symptoms: [
+                'Gelbf\u00e4rbung der Skleren, Schleimh\u00e4ute und Innenohrmuscheln',
+                'Inappetenz seit 5 Tagen',
+                'Lethargie, Gewichtsverlust',
+                'Hepatomegalie bei Palpation',
+                'Bilirubin stark erh\u00f6ht (Serum und Urin)',
+                'Leberenzyme (ALT, ALP) deutlich erh\u00f6ht'
+            ],
+            correctDDx: [
+                { name: 'Hepatische Lipidose', priority: 1 },
+                { name: 'Cholangitis/Cholangiohepatitis', priority: 2 },
+                { name: 'FIP (feucht)', priority: 3 },
+                { name: 'Haemolyse (IMHA)', priority: 4 },
+                { name: 'Gallengangsobstruktion', priority: 5 }
+            ],
+            distractors: [
+                'Pankreatitis', 'Hepatisches Lymphom',
+                'Toxoplasmose', 'Hyperthyreose',
+                'Leberegel'
+            ],
+            explanations: {
+                'Hepatische Lipidose': 'H\u00e4ufigste Lebererkrankung der Katze! Entsteht nach Anorexiephase (>3\u20135 Tage) durch massive Fetteinlagerung in Hepatozyten. \u00dcbergewichtige Katzen pr\u00e4disponiert. Diagnostik: Ultraschall (hyperechogene Leber), FNA-Zytologie. Therapie: Naso\u00f6sophageale oder PEG-Sonde zur forcierten Ern\u00e4hrung. Prognose bei fr\u00fcher Therapie gut.',
+                'Cholangitis/Cholangiohepatitis': 'Entz\u00fcndung der Galleng\u00e4nge und Leber. Neutrophile Form (akut, bakteriell) oder lymphozyt\u00e4re Form (chronisch, immunmediiert). Teil der \"Triaditis\" (+ Pankreatitis + IBD). Leberbiopsie f\u00fcr definitive Diagnose.',
+                'FIP (feucht)': 'Feuchte Form zeigt Ergussbildung (Aszites, Thoraxerguss) mit hohem Proteingehalt. Ikterus ist h\u00e4ufig. Rivaltaprobe positiv. Junge Katzen und Mehrkatzenhaushalte pr\u00e4disponiert. Seit 2023 antivirale Therapie (GS-441524) m\u00f6glich.',
+                'Haemolyse (IMHA)': 'Pr\u00e4hepatischer Ikterus durch erh\u00f6hten Erythrozytenabbau. An\u00e4mie, Sph\u00e4rozyten, positiver Coombs-Test. Bilirubin erh\u00f6ht, aber Leberenzyme k\u00f6nnen normal sein. Differenzierung: An\u00e4mie + Reticulocytose + erh\u00f6htes indirektes Bilirubin.',
+                'Gallengangsobstruktion': 'Mechanisch durch Cholelithen, Pankreaskopftumor oder Duodenaltumor. Posthepatischer Ikterus mit erh\u00f6htem direktem Bilirubin und ALP >>> ALT. Ultraschall zeigt dilatierte Galleng\u00e4nge. Chirurgische Intervention oft n\u00f6tig.'
+            },
+            summary: 'Bei einer ikterischen Katze mit Anorexie-Anamnese ist die hepatische Lipidose die wahrscheinlichste Diagnose. Wichtig: Die Lipidose ist oft sekund\u00e4r \u2013 immer nach der Prim\u00e4rursache der Anorexie suchen! Die Differenzierung praehepatisch (Haemolyse) vs. hepatisch vs. posthepatisch (Obstruktion) ist der erste diagnostische Schritt.'
+        },
+        {
+            id: 14,
+            difficulty: 'hard',
+            species: 'dog',
+            speciesLabel: 'Hund',
+            patient: '4 Jahre, m\u00e4nnlich, Franz\u00f6sische Bulldogge, 12 kg',
+            title: 'Krampfanf\u00e4lle',
+            symptoms: [
+                'Zwei generalisierte tonisch-klonische Anf\u00e4lle in 24 Stunden',
+                'Anfallsdauer jeweils ca. 2\u20133 Minuten',
+                'Postiktale Desorientierung, vor\u00fcbergehende Blindheit',
+                'Zwischen den Anf\u00e4llen: neurologisch unauff\u00e4llig',
+                'Kein Fieber, keine Intoxikationsanamnese',
+                'Interiktale Phase: Hund wirkt normal'
+            ],
+            correctDDx: [
+                { name: 'Idiopathische Epilepsie', priority: 1 },
+                { name: 'Intoxikation', priority: 2 },
+                { name: 'Enzephalitis (GME, NME)', priority: 3 },
+                { name: 'Intrakranieller Tumor', priority: 4 },
+                { name: 'Metabolisch (Hypoglyk\u00e4mie, Leberenzephalopathie)', priority: 5 }
+            ],
+            distractors: [
+                'Narkolepsie', 'Vestibul\u00e4rsyndrom', 'Tetanus',
+                'Hydrozephalus', 'Synkope'
+            ],
+            explanations: {
+                'Idiopathische Epilepsie': 'H\u00e4ufigste Anfallsursache bei Hunden zwischen 1\u20135 Jahren. Genetische Pr\u00e4disposition bei vielen Rassen (auch Franz. Bulldogge). Diagnose per Ausschluss: normales MRT, normaler Liquor, normales Blutbild. Therapie: Antiepileptika (Phenobarbital, Kaliumbromid, Levetiracetam).',
+                'Intoxikation': 'Viele Substanzen k\u00f6nnen Krampfanf\u00e4lle ausl\u00f6sen: Metaldehyd (Schneckenkorn), Organophosphate, Schokolade (Theobromin), Xylitol, Cannabis. Anamnese und toxikologische Untersuchung. Obwohl keine Intoxikationsanamnese vorliegt, kann die Aufnahme unbemerkt erfolgt sein.',
+                'Enzephalitis (GME, NME)': 'GME (granulomat\u00f6se Meningoenzephalitis) und NME (nekrotisierende Meningoenzephalitis) bei Kleinhundrassen. MRT zeigt L\u00e4sionen. Liquoranalyse: Pleozytose. Therapie: Immunsuppression (Prednisolon, Cytarabin).',
+                'Intrakranieller Tumor': 'Bei \u00e4lteren Hunden h\u00e4ufiger (>5 Jahre), aber auch bei j\u00fcngeren m\u00f6glich. Meningeom am h\u00e4ufigsten. MRT mit Kontrastmittel zur Diagnose. Progrediente neurologische Defizite zwischen den Anf\u00e4llen.',
+                'Metabolisch (Hypoglyk\u00e4mie, Leberenzephalopathie)': 'Hypoglyk\u00e4mie (Insulinom, Sepsis, Leberversagen) und Leberenzephalopathie (portosystemischer Shunt, Leberinsuffizienz) k\u00f6nnen Anf\u00e4lle verursachen. Blutchemie (Glukose, Ammoniak, Galls\u00e4uren) zum Ausschluss.'
+            },
+            summary: 'Bei einem 4-j\u00e4hrigen Hund mit Krampfanf\u00e4llen und normalem interiktalem neurologischen Status ist die idiopathische Epilepsie die wahrscheinlichste Diagnose. Tier I-Diagnostik: Blutbild, Chemie, Harnanalyse. Tier II: MRT + Liquor. Erst nach Ausschluss struktureller und metabolischer Ursachen darf die Diagnose gestellt werden.'
+        },
+        {
+            id: 15,
+            difficulty: 'hard',
+            species: 'horse',
+            speciesLabel: 'Pferd',
+            patient: '9 Jahre, Wallach, Deutsches Reitpony, 380 kg',
+            title: 'Nicht-belastbare Lahmheit vorne',
+            symptoms: [
+                'Hochgradige Lahmheit vorne rechts (Grad IV/V), akuter Beginn',
+                'Vermehrte Pulsation der Aa. digitales beidseits',
+                'Huf warm bei Palpation',
+                'Trachtenfussung (Pferd versucht Zehenbereich zu entlasten)',
+                'Saegeboeckstellung (beide Vorderbeine nach vorne gestellt)',
+                'Palpation mit Hufzange: diffuse Schmerzreaktion'
+            ],
+            correctDDx: [
+                { name: 'Hufrehe (Laminitis)', priority: 1 },
+                { name: 'Hufgeschwuer (Hufabszess)', priority: 2 },
+                { name: 'Hufgelenksentz\u00fcndung (Arthritis)', priority: 3 },
+                { name: 'Fraktur (Hufbein, Strahlbein)', priority: 4 },
+                { name: 'Sehnenschaden (tiefe Beugesehne)', priority: 5 }
+            ],
+            distractors: [
+                'Hufknorpelverkn\u00f6cherung', 'Hufrollensyndrom (Podotrochlose)',
+                'Griffelbeinsfraktur', 'Huflederhautentz\u00fcndung',
+                'Krongelenksarthrose'
+            ],
+            explanations: {
+                'Hufrehe (Laminitis)': 'Klassische Pr\u00e4sentation: bilaterale Vorderhandlahmheit, Saegeboeckstellung, verst\u00e4rkte Digitalpulsation, warme Hufe, Trachtenfussung. Diffuse Hufzangenreaktion (vs. fokale bei Abszess). Ursachen: metabolisch (EMS, PPID), aliment\u00e4r (Fruktan, Getreide), toxisch (Endotoxaemie). R\u00f6ntgen: Rotation/Senkung des Hufbeins.',
+                'Hufgeschwuer (Hufabszess)': 'H\u00e4ufigste Einzelursache f\u00fcr akute Lahmheit beim Pferd. Meist unilateral! Starke Pulsation, Hufzange zeigt fokalen Schmerz. Wird hier durch die bilaterale Pr\u00e4sentation und die Saegeboeckstellung weniger wahrscheinlich.',
+                'Hufgelenksentz\u00fcndung (Arthritis)': 'Septisch (nach Nageltritt, iatrogen) oder aseptisch. Starke Lahmheit, Schwellung im Kronbereich m\u00f6glich. Intrasynoviale Diagnostik. Septische Arthritis = Notfall (Gelenklavage).',
+                'Fraktur (Hufbein, Strahlbein)': 'Hufbeinfraktur nach Trauma oder pathologisch. Starke Lahmheit, positive Hufzange. R\u00f6ntgen in mehreren Ebenen. Strahlbeinfraktur selten, aber hochgradig lahm. CT f\u00fcr genaue Beurteilung.',
+                'Sehnenschaden (tiefe Beugesehne)': 'L\u00e4sion der tiefen Beugesehne im Hufbereich. Beugeprobe positiv, Ultraschall und MRT diagnostisch. Eher nicht bilateral und nicht mit warmen Hufen und verst\u00e4rkter Digitalpulsation bilateral assoziiert.'
+            },
+            summary: 'Bilaterale Vorderhandlahmheit + Saegeboeckstellung + verst\u00e4rkte Digitalpulsation bilateral + warme Hufe = Hufrehe ist die eindeutige Top-Differentialdiagnose. Sofortma\u00dfnahmen: Boxenruhe auf weichem Untergrund, NSAIDs (Phenylbutazon/Flunixin), Kuehlung. R\u00f6ntgen zur Beurteilung der Hufbeinposition. Parallel: Abkl\u00e4rung der Grundursache (EMS/PPID-Screening).'
+        }
+    ];
+
+    // ============================================================
+    //  GAME STATE
+    // ============================================================
+    const SPECIES_ICONS = {
+        dog: '\u{1F415}',
+        cat: '\u{1F408}',
+        horse: '\u{1F40E}'
+    };
+
+    const DIFFICULTY_CONFIG = {
+        beginner: { label: 'Anf\u00e4nger', optionCount: 4, color: 'text-emerald-400', bgColor: 'bg-emerald-400/20 text-emerald-300' },
+        advanced: { label: 'Fortgeschritten', optionCount: 6, color: 'text-amber-400', bgColor: 'bg-amber-400/20 text-amber-300' },
+        expert: { label: 'Experte', optionCount: 10, color: 'text-red-400', bgColor: 'bg-red-400/20 text-red-300' }
+    };
+
+    const CASE_DIFFICULTY_LABELS = {
+        easy: { label: 'Leicht', color: 'bg-emerald-400/20 text-emerald-300', border: 'difficulty-easy' },
+        medium: { label: 'Mittel', color: 'bg-amber-400/20 text-amber-300', border: 'difficulty-medium' },
+        hard: { label: 'Schwer', color: 'bg-red-400/20 text-red-300', border: 'difficulty-hard' }
+    };
+
+    let gameState = {
+        difficulty: 'beginner',
+        currentCaseIndex: 0,
+        cases: [],
+        score: 0,
+        totalCorrect: 0,
+        totalPossible: 0,
+        selectedOptions: [],
+        locked: false,
+        results: []
+    };
+
+    // ============================================================
+    //  GAME LOGIC
+    // ============================================================
+
+    function shuffleArray(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function startGame(difficulty) {
+        gameState.difficulty = difficulty;
+        gameState.currentCaseIndex = 0;
+        gameState.score = 0;
+        gameState.totalCorrect = 0;
+        gameState.totalPossible = 0;
+        gameState.results = [];
+
+        // Shuffle cases
+        gameState.cases = shuffleArray(CASES);
+
+        document.getElementById('startScreen').classList.add('hidden');
+        document.getElementById('gameScreen').classList.remove('hidden');
+        document.getElementById('resultsScreen').classList.add('hidden');
+
+        loadCase();
+    }
+
+    function buildOptions(caseData) {
+        const config = DIFFICULTY_CONFIG[gameState.difficulty];
+        const correctNames = caseData.correctDDx.map(d => d.name);
+        const allDistractors = shuffleArray(caseData.distractors);
+
+        const optionCount = config.optionCount;
+        const maxCorrect = Math.min(correctNames.length, optionCount);
+
+        // Ensure all correct answers fit, fill rest with distractors
+        let selectedCorrect, distractorCount;
+
+        if (gameState.difficulty === 'beginner') {
+            // For beginner: show fewer correct options to keep it simple
+            selectedCorrect = correctNames.slice(0, Math.min(3, correctNames.length));
+            distractorCount = optionCount - selectedCorrect.length;
+        } else {
+            selectedCorrect = [...correctNames];
+            distractorCount = Math.max(0, optionCount - selectedCorrect.length);
+        }
+
+        const selectedDistractors = allDistractors.slice(0, distractorCount);
+        const allOptions = shuffleArray([
+            ...selectedCorrect.map(name => ({ name, isCorrect: true, priority: caseData.correctDDx.find(d => d.name === name)?.priority || 99 })),
+            ...selectedDistractors.map(name => ({ name, isCorrect: false, priority: null }))
+        ]);
+
+        return allOptions;
+    }
+
+    function loadCase() {
+        if (gameState.currentCaseIndex >= gameState.cases.length) {
+            showResults();
+            return;
+        }
+
+        const caseData = gameState.cases[gameState.currentCaseIndex];
+        const options = buildOptions(caseData);
+
+        gameState.selectedOptions = [];
+        gameState.locked = false;
+        gameState.currentOptions = options;
+
+        // Update progress
+        const total = gameState.cases.length;
+        const current = gameState.currentCaseIndex + 1;
+        document.getElementById('caseNumber').textContent = `${current}/${total}`;
+        const circle = document.getElementById('progressCircle');
+        const circumference = 2 * Math.PI * 16;
+        circle.style.strokeDashoffset = circumference - (current / total) * circumference;
+
+        // Difficulty label
+        const diffConfig = CASE_DIFFICULTY_LABELS[caseData.difficulty];
+        document.getElementById('difficultyLabel').textContent = diffConfig.label;
+        document.getElementById('difficultyLabel').className = `text-xs font-semibold ${DIFFICULTY_CONFIG[gameState.difficulty].color}`;
+
+        // Case info
+        document.getElementById('speciesIcon').textContent = SPECIES_ICONS[caseData.species] || '';
+        document.getElementById('caseTitle').textContent = caseData.title;
+        document.getElementById('casePatient').textContent = `${caseData.speciesLabel} \u2013 ${caseData.patient}`;
+
+        const badge = document.getElementById('caseDiffBadge');
+        badge.textContent = diffConfig.label;
+        badge.className = `text-xs px-2 py-0.5 rounded-full font-semibold ${diffConfig.color}`;
+
+        // Symptoms
+        const symptomsList = document.getElementById('symptomsList');
+        symptomsList.innerHTML = caseData.symptoms.map(s =>
+            `<div class="flex items-start gap-2">
+                <span class="text-emerald-400 mt-0.5 flex-shrink-0">\u25B8</span>
+                <span class="text-white/80 text-sm">${s}</span>
+            </div>`
+        ).join('');
+
+        // Options
+        const container = document.getElementById('optionsContainer');
+        container.innerHTML = options.map((opt, i) =>
+            `<button id="opt-${i}" onclick="toggleOption(${i})"
+                     class="option-btn glass rounded-xl px-4 py-3 w-full text-left flex items-center gap-3 transition-all">
+                <span id="badge-${i}" class="priority-badge bg-white/10 text-white/50 text-sm">\u2013</span>
+                <span class="text-sm md:text-base text-white/90 flex-1">${opt.name}</span>
+            </button>`
+        ).join('');
+
+        // Show/hide buttons
+        document.getElementById('submitBtn').classList.remove('hidden');
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('nextBtn').classList.add('hidden');
+        document.getElementById('explanationPanel').classList.add('hidden');
+        document.getElementById('instructionText').classList.remove('hidden');
+
+        // Update score display
+        updateScoreDisplay();
+
+        // Animate
+        document.getElementById('casePanel').classList.add('slide-up');
+        setTimeout(() => document.getElementById('casePanel').classList.remove('slide-up'), 500);
+    }
+
+    function toggleOption(index) {
+        if (gameState.locked) return;
+
+        const pos = gameState.selectedOptions.indexOf(index);
+        if (pos >= 0) {
+            // Deselect
+            gameState.selectedOptions.splice(pos, 1);
+            document.getElementById(`opt-${index}`).classList.remove('selected');
+        } else {
+            // Select
+            gameState.selectedOptions.push(index);
+            document.getElementById(`opt-${index}`).classList.add('selected');
+        }
+
+        // Update priority badges
+        gameState.currentOptions.forEach((_, i) => {
+            const badge = document.getElementById(`badge-${i}`);
+            const selPos = gameState.selectedOptions.indexOf(i);
+            if (selPos >= 0) {
+                badge.textContent = selPos + 1;
+                badge.className = 'priority-badge bg-blue-500/30 text-blue-300 text-sm';
+            } else {
+                badge.textContent = '\u2013';
+                badge.className = 'priority-badge bg-white/10 text-white/50 text-sm';
+            }
+        });
+
+        document.getElementById('submitBtn').disabled = gameState.selectedOptions.length === 0;
+    }
+
+    function submitAnswer() {
+        if (gameState.locked || gameState.selectedOptions.length === 0) return;
+        gameState.locked = true;
+
+        const caseData = gameState.cases[gameState.currentCaseIndex];
+        const options = gameState.currentOptions;
+
+        // Determine correct options in this set
+        const correctIndices = options.map((o, i) => o.isCorrect ? i : -1).filter(i => i >= 0);
+        const correctNames = new Set(correctIndices.map(i => options[i].name));
+
+        let selectionScore = 0;
+        let priorityScore = 0;
+        let totalCorrectInSet = correctIndices.length;
+
+        // Score selection
+        gameState.selectedOptions.forEach(idx => {
+            if (options[idx].isCorrect) {
+                selectionScore++;
+            }
+        });
+
+        // Score priority (order)
+        const selectedCorrectInOrder = gameState.selectedOptions.filter(idx => options[idx].isCorrect);
+        selectedCorrectInOrder.forEach((idx, userRank) => {
+            const correctPriority = options[idx].priority;
+            // Award points based on how close the user's rank matches the correct priority
+            const diff = Math.abs((userRank + 1) - correctPriority);
+            if (diff === 0) priorityScore += 3; // Perfect
+            else if (diff === 1) priorityScore += 2; // Close
+            else if (diff === 2) priorityScore += 1; // Acceptable
+        });
+
+        // Penalty for wrong selections
+        const wrongSelections = gameState.selectedOptions.filter(idx => !options[idx].isCorrect).length;
+
+        const maxSelectionScore = totalCorrectInSet;
+        const maxPriorityScore = totalCorrectInSet * 3;
+        const totalMaxScore = maxSelectionScore * 10 + maxPriorityScore * 5;
+        const rawScore = Math.max(0, selectionScore * 10 + priorityScore * 5 - wrongSelections * 8);
+        const caseScore = Math.min(rawScore, totalMaxScore);
+
+        gameState.score += caseScore;
+        gameState.totalCorrect += selectionScore;
+        gameState.totalPossible += totalCorrectInSet;
+
+        // Visual feedback
+        options.forEach((opt, i) => {
+            const btn = document.getElementById(`opt-${i}`);
+            const badge = document.getElementById(`badge-${i}`);
+            btn.classList.add('locked');
+            btn.classList.remove('selected');
+
+            if (opt.isCorrect && gameState.selectedOptions.includes(i)) {
+                // Correctly selected
+                btn.classList.add('correct');
+                badge.className = 'priority-badge bg-emerald-500/30 text-emerald-300 text-sm';
+                const correctP = opt.priority;
+                badge.textContent = `\u2713${correctP}`;
+            } else if (opt.isCorrect && !gameState.selectedOptions.includes(i)) {
+                // Missed correct
+                btn.classList.add('missed');
+                badge.className = 'priority-badge bg-amber-500/30 text-amber-300 text-sm';
+                badge.textContent = `!${opt.priority}`;
+            } else if (!opt.isCorrect && gameState.selectedOptions.includes(i)) {
+                // Wrong selection
+                btn.classList.add('incorrect');
+                badge.className = 'priority-badge bg-red-500/30 text-red-300 text-sm';
+                badge.textContent = '\u2717';
+            } else {
+                // Correctly not selected
+                badge.textContent = '\u2013';
+                badge.className = 'priority-badge bg-white/5 text-white/20 text-sm';
+            }
+        });
+
+        // Store result
+        gameState.results.push({
+            caseId: caseData.id,
+            title: caseData.title,
+            species: caseData.speciesLabel,
+            difficulty: caseData.difficulty,
+            score: caseScore,
+            maxScore: totalMaxScore,
+            correctSelected: selectionScore,
+            totalCorrect: totalCorrectInSet,
+            wrongSelected: wrongSelections
+        });
+
+        // Show explanation
+        showExplanation(caseData, caseScore, totalMaxScore);
+
+        // Update buttons
+        document.getElementById('submitBtn').classList.add('hidden');
+        document.getElementById('nextBtn').classList.remove('hidden');
+        document.getElementById('instructionText').classList.add('hidden');
+
+        updateScoreDisplay();
+    }
+
+    function showExplanation(caseData, caseScore, maxScore) {
+        const panel = document.getElementById('explanationPanel');
+        const content = document.getElementById('explanationContent');
+
+        const pct = maxScore > 0 ? Math.round(caseScore / maxScore * 100) : 0;
+        const pctColor = pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-red-400';
+
+        let html = `
+            <div class="glass rounded-xl p-3 mb-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-white/70">Ergebnis dieses Falls:</span>
+                    <span class="${pctColor} font-bold">${caseScore}/${maxScore} Punkte (${pct}%)</span>
+                </div>
+            </div>
+            <p class="text-white/80 mb-3">${caseData.summary}</p>
+            <h4 class="font-semibold text-white/90 mb-2">Erkl\u00e4rung der Differentialdiagnosen:</h4>
+        `;
+
+        // Show explanations for correct DDx in priority order
+        caseData.correctDDx.forEach(ddx => {
+            if (caseData.explanations[ddx.name]) {
+                html += `
+                    <div class="glass rounded-lg p-3 mb-2">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="priority-badge bg-emerald-500/20 text-emerald-300" style="width:22px;height:22px;font-size:0.65rem;">${ddx.priority}</span>
+                            <span class="font-semibold text-white/90 text-sm">${ddx.name}</span>
+                        </div>
+                        <p class="text-white/60 text-xs leading-relaxed ml-8">${caseData.explanations[ddx.name]}</p>
+                    </div>
+                `;
+            }
+        });
+
+        content.innerHTML = html;
+        panel.classList.remove('hidden');
+        panel.classList.add('slide-up');
+        setTimeout(() => panel.classList.remove('slide-up'), 500);
+
+        // Scroll explanation into view
+        setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+    }
+
+    function nextCase() {
+        gameState.currentCaseIndex++;
+        if (gameState.currentCaseIndex >= gameState.cases.length) {
+            showResults();
+        } else {
+            loadCase();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    function updateScoreDisplay() {
+        document.getElementById('scoreDisplay').textContent = gameState.score;
+        if (gameState.totalPossible > 0) {
+            const acc = Math.round(gameState.totalCorrect / gameState.totalPossible * 100);
+            document.getElementById('accuracyDisplay').textContent = `${acc}%`;
+        } else {
+            document.getElementById('accuracyDisplay').textContent = '--%';
+        }
+    }
+
+    // ============================================================
+    //  RESULTS
+    // ============================================================
+
+    function showResults() {
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('resultsScreen').classList.remove('hidden');
+
+        const totalPossibleScore = gameState.results.reduce((s, r) => s + r.maxScore, 0);
+        const pct = totalPossibleScore > 0 ? Math.round(gameState.score / totalPossibleScore * 100) : 0;
+
+        document.getElementById('finalScore').textContent = gameState.score;
+        document.getElementById('finalAccuracy').textContent = `${pct}%`;
+        document.getElementById('finalCorrect').textContent = `${gameState.totalCorrect}/${gameState.totalPossible}`;
+
+        let grade = '--';
+        if (pct >= 90) grade = 'Exzellent';
+        else if (pct >= 75) grade = 'Sehr gut';
+        else if (pct >= 60) grade = 'Gut';
+        else if (pct >= 45) grade = 'Befriedigend';
+        else grade = 'Weiter \u00fcben';
+
+        const gradeEl = document.getElementById('finalGrade');
+        gradeEl.textContent = grade;
+        gradeEl.className = `text-xl font-bold ${pct >= 75 ? 'text-emerald-400' : pct >= 45 ? 'text-amber-400' : 'text-red-400'}`;
+
+        // Detailed results
+        const list = document.getElementById('resultsList');
+        list.innerHTML = gameState.results.map((r, i) => {
+            const rPct = r.maxScore > 0 ? Math.round(r.score / r.maxScore * 100) : 0;
+            const diffLabel = CASE_DIFFICULTY_LABELS[r.difficulty];
+            const pctColor = rPct >= 80 ? 'text-emerald-400' : rPct >= 50 ? 'text-amber-400' : 'text-red-400';
+            return `
+                <div class="flex items-center justify-between py-2 border-b border-white/5">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <span class="text-xs ${diffLabel.color} px-1.5 py-0.5 rounded-full flex-shrink-0">${diffLabel.label}</span>
+                        <span class="text-xs text-white/70 truncate">${r.species}: ${r.title}</span>
+                    </div>
+                    <div class="flex items-center gap-3 flex-shrink-0 ml-2">
+                        <span class="text-xs text-white/40">${r.correctSelected}/${r.totalCorrect} DDx</span>
+                        <span class="text-xs font-semibold ${pctColor}">${rPct}%</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetGame() {
+        document.getElementById('resultsScreen').classList.add('hidden');
+        document.getElementById('startScreen').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    </script>
+</body>
+</html>

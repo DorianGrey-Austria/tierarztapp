@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan - Klinische Untersuchung Step-by-Step</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vet: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        med: {
+                            green: '#10b981',
+                            red: '#ef4444',
+                            yellow: '#f59e0b',
+                            orange: '#f97316',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0fdf4 100%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .species-btn {
+            min-height: 44px;
+            min-width: 44px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .species-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.25);
+        }
+
+        .species-btn.active {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+
+        .check-item {
+            min-height: 44px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .check-item:hover {
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        .check-item.status-normal {
+            border-left: 4px solid #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .check-item.status-abnormal {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .check-item.status-unchecked {
+            border-left: 4px solid #d1d5db;
+        }
+
+        .status-toggle {
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .status-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .status-toggle.active-normal {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .status-toggle.active-abnormal {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .tooltip-trigger {
+            position: relative;
+        }
+
+        .tooltip-content {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            min-width: 220px;
+            max-width: 320px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.825rem;
+            line-height: 1.5;
+            white-space: normal;
+            pointer-events: none;
+        }
+
+        .tooltip-trigger:hover .tooltip-content,
+        .tooltip-trigger:focus .tooltip-content {
+            display: block;
+        }
+
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(15, 23, 42, 0.85);
+        }
+
+        .progress-fill {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-card {
+            transition: all 0.3s ease;
+        }
+
+        .section-card.collapsed .section-body {
+            display: none;
+        }
+
+        .section-card .section-toggle {
+            transition: transform 0.3s ease;
+        }
+
+        .section-card.collapsed .section-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .befund-input {
+            min-height: 44px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .befund-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+        }
+
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            .glass, .glass-strong, .glass-dark {
+                background: white !important;
+                backdrop-filter: none !important;
+                border: 1px solid #e5e7eb !important;
+            }
+            .section-card .section-body { display: block !important; }
+            .check-item.status-normal { border-left: 4px solid #10b981 !important; }
+            .check-item.status-abnormal { border-left: 4px solid #ef4444 !important; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .summary-overlay.visible {
+            display: flex;
+        }
+
+        .summary-panel {
+            max-height: 90vh;
+            overflow-y: auto;
+            width: 95%;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+    <!-- Header -->
+    <header class="max-w-5xl mx-auto mb-6 fade-in">
+        <div class="flex items-center justify-between mb-4">
+            <a href="vetscan-version-selector.html"
+               class="no-print inline-flex items-center gap-2 text-vet-600 hover:text-vet-800 transition-colors min-h-[44px] px-3 rounded-lg hover:bg-white/50">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span class="text-sm font-medium">Alle Versionen</span>
+            </a>
+            <span class="text-xs text-slate-400 font-mono">VetScan Clinical Exam v1.0</span>
+        </div>
+
+        <div class="glass-strong rounded-2xl p-6 md:p-8 shadow-lg">
+            <div class="flex items-start gap-4">
+                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-vet-500 to-vet-700 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800">Klinische Untersuchung</h1>
+                    <p class="text-slate-500 mt-1">Systematischer Untersuchungsgang -- Step by Step</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto" id="app">
+
+        <!-- Species Selection -->
+        <section class="mb-6 no-print fade-in">
+            <div class="glass rounded-xl p-5 shadow-sm">
+                <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Tierart ausw\u00e4hlen</h2>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="selectSpecies('hund')"
+                            class="species-btn active flex items-center gap-3 px-5 py-3 rounded-xl font-semibold text-sm bg-white border border-slate-200 text-slate-700"
+                            id="btn-hund">
+                        <span class="text-2xl">&#128054;</span>
+                        <span>Hund</span>
+                    </button>
+                    <button onclick="selectSpecies('katze')"
+                            class="species-btn flex items-center gap-3 px-5 py-3 rounded-xl font-semibold text-sm bg-white border border-slate-200 text-slate-700"
+                            id="btn-katze">
+                        <span class="text-2xl">&#128049;</span>
+                        <span>Katze</span>
+                    </button>
+                    <button onclick="selectSpecies('pferd')"
+                            class="species-btn flex items-center gap-3 px-5 py-3 rounded-xl font-semibold text-sm bg-white border border-slate-200 text-slate-700"
+                            id="btn-pferd">
+                        <span class="text-2xl">&#128014;</span>
+                        <span>Pferd</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Bar -->
+        <section class="mb-6 fade-in">
+            <div class="glass rounded-xl p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-slate-600">Untersuchungsfortschritt</span>
+                    <span class="text-sm font-bold text-vet-600" id="progress-text">0 / 0 Punkte</span>
+                </div>
+                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="progress-fill h-full rounded-full bg-gradient-to-r from-vet-400 to-med-green" id="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-slate-400">
+                    <span id="count-normal" class="text-emerald-600 font-medium">0 o.b.B.</span>
+                    <span id="count-abnormal" class="text-red-500 font-medium">0 abweichend</span>
+                    <span id="count-unchecked">0 offen</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Examination Sections Container -->
+        <div id="sections-container"></div>
+
+        <!-- Action Buttons -->
+        <section class="mt-8 mb-12 flex flex-wrap gap-3 justify-center no-print fade-in">
+            <button onclick="showSummary()"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-vet-500 to-vet-600 text-white font-semibold shadow-lg hover:shadow-xl hover:from-vet-600 hover:to-vet-700 transition-all min-h-[44px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Zusammenfassung
+            </button>
+            <button onclick="resetAll()"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 transition-all min-h-[44px]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Zur\u00fccksetzen
+            </button>
+        </section>
+    </main>
+
+    <!-- Summary Overlay -->
+    <div class="summary-overlay" id="summary-overlay">
+        <div class="summary-panel glass-strong rounded-2xl p-6 md:p-8 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-slate-800">Befund\u00fcbersicht</h2>
+                <div class="flex gap-2">
+                    <button onclick="window.print()"
+                            class="no-print inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-vet-500 text-white text-sm font-medium hover:bg-vet-600 transition-colors min-h-[44px]">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Drucken
+                    </button>
+                    <button onclick="closeSummary()"
+                            class="no-print inline-flex items-center justify-center w-11 h-11 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script>
+    // =========================================================================
+    // Medical Data
+    // =========================================================================
+
+    const SPECIES_DATA = {
+        hund: {
+            name: 'Hund',
+            icon: '&#128054;',
+            temperatur: { min: 38.0, max: 39.0, unit: '\u00b0C' },
+            herzfrequenz: { min: 60, max: 120, unit: '/min', note: 'Gro\u00dfe Rassen eher 60\u201380, kleine Rassen 80\u2013120' },
+            atemfrequenz: { min: 15, max: 30, unit: '/min' },
+        },
+        katze: {
+            name: 'Katze',
+            icon: '&#128049;',
+            temperatur: { min: 38.0, max: 39.5, unit: '\u00b0C' },
+            herzfrequenz: { min: 120, max: 180, unit: '/min', note: 'Stressbedingt in der Praxis oft h\u00f6her' },
+            atemfrequenz: { min: 20, max: 40, unit: '/min' },
+        },
+        pferd: {
+            name: 'Pferd',
+            icon: '&#128014;',
+            temperatur: { min: 37.5, max: 38.5, unit: '\u00b0C' },
+            herzfrequenz: { min: 28, max: 44, unit: '/min', note: 'Sportpferde in Ruhe teils unter 28/min' },
+            atemfrequenz: { min: 8, max: 16, unit: '/min' },
+        }
+    };
+
+    function buildSections(species) {
+        const sd = SPECIES_DATA[species];
+        return [
+            {
+                id: 'signalement',
+                title: '1. Signalement',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>',
+                items: [
+                    { id: 'sig-art', label: 'Tierart', tooltip: 'Hund, Katze, Pferd, etc.' },
+                    { id: 'sig-rasse', label: 'Rasse', tooltip: 'Rassebezeichnung oder Mischling. Rassepr\u00e4dispositionen beachten.' },
+                    { id: 'sig-alter', label: 'Alter', tooltip: 'Exaktes Alter oder Sch\u00e4tzung. Relevant f\u00fcr Differentialdiagnosen und Normalwerte.' },
+                    { id: 'sig-geschlecht', label: 'Geschlecht', tooltip: 'M\u00e4nnlich/weiblich, kastriert/intakt. Einfluss auf hormonelle Erkrankungen.' },
+                    { id: 'sig-gewicht', label: 'Gewicht', tooltip: 'In kg. Basis f\u00fcr Dosierungsberechnungen und Ern\u00e4hrungszustand.' },
+                    { id: 'sig-fellfarbe', label: 'Fellfarbe / Abzeichen', tooltip: 'Identifikation und ggf. rassespezifische Pr\u00e4dispositionen (z.\u00a0B. Merle-Gen).' },
+                ]
+            },
+            {
+                id: 'anamnese',
+                title: '2. Anamnese',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>',
+                items: [
+                    { id: 'ana-grund', label: 'Vorstellungsgrund', tooltip: 'Hauptbeschwerde des Besitzers \u2013 in dessen Worten dokumentieren.' },
+                    { id: 'ana-dauer', label: 'Dauer der Symptome', tooltip: 'Seit wann? Pl\u00f6tzlich oder schleichend? Verschlechterung?' },
+                    { id: 'ana-vorerkrankungen', label: 'Vorerkrankungen', tooltip: 'Chronische Erkrankungen, fr\u00fchere OPs, bekannte Allergien.' },
+                    { id: 'ana-impfstatus', label: 'Impfstatus', tooltip: 'Letzte Impfung wann? Grundimmunisierung vollst\u00e4ndig? Impfpass vorhanden?' },
+                    { id: 'ana-entwurmung', label: 'Entwurmung / Parasitenprophylaxe', tooltip: 'Letztes Pr\u00e4parat und Zeitpunkt. Regelm\u00e4\u00dfigkeit.' },
+                    { id: 'ana-futter', label: 'F\u00fctterung', tooltip: 'Futterart (Trocken/Nass/BARF), Marke, Menge, Leckerlis, Erg\u00e4nzungen.' },
+                    { id: 'ana-haltung', label: 'Haltung / Umfeld', tooltip: 'Wohnungshaltung vs. Freigang, andere Tiere, Auslandsaufenthalte.' },
+                ]
+            },
+            {
+                id: 'allgemein',
+                title: '3. Allgemeinuntersuchung',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>',
+                items: [
+                    { id: 'allg-verhalten', label: 'Verhalten / Bewusstsein', tooltip: 'Abstufungen: aufmerksam (normal) \u2192 ruhig \u2192 apathisch \u2192 somnolent (schl\u00e4frig, weckbar) \u2192 sopor\u00f6s (nur starke Reize) \u2192 komat\u00f6s (nicht weckbar). Auch: \u00e4ngstlich, aggressiv.' },
+                    { id: 'allg-haltung', label: 'K\u00f6rperhaltung und Bewegung', tooltip: 'Physiologisch: entspannte Haltung, symmetrisch. Pathologisch: Aufkr\u00fcmmen, Schmerzschonen, Kopfschiefhaltung, Ataxie.' },
+                    { id: 'allg-bcs', label: 'Ern\u00e4hrungszustand / BCS', tooltip: 'Body Condition Score 1\u20139:\n1 = kachektisch (Rippen, Wirbel, Beckenknochen stark sichtbar)\n2\u20133 = untergewichtig\n4\u20135 = ideal (Rippen tastbar, Taille sichtbar)\n6\u20137 = \u00fcbergewichtig\n8\u20139 = adip\u00f6s (keine Taille, massive Fettdepots)' },
+                    { id: 'allg-pflege', label: 'Pflegezustand', tooltip: 'Fell: gl\u00e4nzend, stumpf, verfilzt? Krallen: \u00fcberlang? Ohren/Augen: sauber? Hinweis auf Haltungsbedingungen und Allgemeinzustand.' },
+                ]
+            },
+            {
+                id: 'schleimhaeute',
+                title: '4a. Schleimh\u00e4ute',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>',
+                items: [
+                    { id: 'sh-farbe', label: 'Farbe der Schleimh\u00e4ute', tooltip: 'Normal: rosarot (feucht, gl\u00e4nzend)\nBlass: An\u00e4mie, Schock, Vasokonstriktion\nIkterisch (gelb): Lebererkrankung, H\u00e4molyse\nZyanotisch (blau-violett): Sauerstoffmangel\nHyper\u00e4misch (dunkelrot): Sepsis, Fieber, Intoxikation\nPetechien: Gerinnungsst\u00f6rung' },
+                    { id: 'sh-feucht', label: 'Feuchtigkeit', tooltip: 'Normal: feucht, gl\u00e4nzend. Trocken/klebrig: Dehydratation, Fieber.' },
+                    { id: 'sh-kfz', label: 'Kapill\u00e4re F\u00fcllungszeit (KFZ)', tooltip: 'Normal: < 2 Sekunden\nVerl\u00e4ngert (> 2 Sek): Kreislaufinsuffizienz, Schock, Dehydratation\nVerk\u00fcrzt (< 1 Sek): Hyperdynamischer Kreislauf (z.\u00a0B. Sepsis)\nMethode: Fingerruck auf Zahnfleisch, Entf\u00e4rbung beobachten.' },
+                ]
+            },
+            {
+                id: 'lymphknoten',
+                title: '4b. Lymphknoten',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>',
+                items: [
+                    { id: 'ln-mandibular', label: 'Lnn. mandibulares', tooltip: 'Unterkiefer-Lymphknoten. Normal: klein, glatt, verschieblich, nicht schmerzhaft. Vergr\u00f6\u00dferung bei: Entz\u00fcndung Maulh\u00f6hle/Kopf, Neoplasie.' },
+                    { id: 'ln-praeskapular', label: 'Lnn. cervicales superficiales (pr\u00e4skapular)', tooltip: 'Vor dem Schulterblatt. Normal: bei Hund/Katze erbsengro\u00df tastbar, verschieblich. Vergr\u00f6\u00dferung bei: lokale Entz\u00fcndung, Lymphom.' },
+                    { id: 'ln-popliteal', label: 'Lnn. poplitei', tooltip: 'Kniekehlen-Lymphknoten. Normal: bohnen- bis haselnussgro\u00df (gr\u00f6\u00dfenabh\u00e4ngig), glatt, verschieblich. Vergr\u00f6\u00dferung bei: Entz\u00fcndung Hintergliedma\u00dfe, systemische Erkrankung.' },
+                    { id: 'ln-allgemein', label: 'Allgemeine Beurteilung', tooltip: 'Pr\u00fcfe: Gr\u00f6\u00dfe, Konsistenz (weich/derb/hart), Verschieblichkeit (frei/verwachsen), Schmerzhaftigkeit, Symmetrie. Generalisierte Lymphadenopathie: Lymphom, Infektionskrankheit.' },
+                ]
+            },
+            {
+                id: 'temperatur',
+                title: '4c. K\u00f6rpertemperatur',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+                items: [
+                    { id: 'temp-messung', label: 'Rektaltemperatur', tooltip: `Normal ${sd.name}: ${sd.temperatur.min}\u2013${sd.temperatur.max}${sd.temperatur.unit}\nSubfebrile Temperatur: knapp \u00fcber Normalbereich\nFieber (Pyrexie): deutlich erh\u00f6ht\nHyperthermie: exogene W\u00e4rme (z.\u00a0B. Hitzschlag)\nHypothermie: unter Normalbereich \u2013 Schock, Narkose, Neugeborene` },
+                    { id: 'temp-thermometer', label: 'Thermometer-Kontrolle', tooltip: 'Digitales Fieberthermometer rektal. Auf Kotreste am Thermometer achten (Konsistenz, Farbe, Blut, Schleim).' },
+                ]
+            },
+            {
+                id: 'herz',
+                title: '4d. Herz-Kreislauf-System',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>',
+                items: [
+                    { id: 'herz-freq', label: 'Herzfrequenz', tooltip: `Normal ${sd.name}: ${sd.herzfrequenz.min}\u2013${sd.herzfrequenz.max}${sd.herzfrequenz.unit}\n${sd.herzfrequenz.note ? sd.herzfrequenz.note : ''}\nTachykardie: erh\u00f6ht (Schmerz, Fieber, Aufregung, Herzerkrankung)\nBradykardie: erniedrigt (trainierte Tiere, Hypothermie, Vagotonus)` },
+                    { id: 'herz-toene', label: 'Herzt\u00f6ne / Auskultation', tooltip: 'Physiologisch: 2 Herzt\u00f6ne (S1 = Schluss AV-Klappen, S2 = Schluss Taschenklappen)\nPathologisch: Herzger\u00e4usche (Grad I\u2013VI), Arrhythmien, ged\u00e4mpfte Herzt\u00f6ne\nAuskultationspunkte: links 3.\u20135. ICR, rechts 3.\u20134. ICR' },
+                    { id: 'herz-puls', label: 'Pulsqualit\u00e4t', tooltip: 'Palpation: A. femoralis (Hund/Katze), A. facialis / A. transversa faciei (Pferd)\nBeurteilung: Frequenz, Rhythmus, F\u00fcllung (kr\u00e4ftig/schwach), Qualit\u00e4t (hart/weich)\nPulsdefizit: Herzaktion ohne tastbaren Puls = Arrhythmie' },
+                    { id: 'herz-schleimhaut-perfusion', label: 'Periphere Perfusion', tooltip: 'KFZ (siehe Schleimh\u00e4ute), Hauttemperatur der Extremit\u00e4ten, Venenstauprobe am Hals.' },
+                ]
+            },
+            {
+                id: 'atmung',
+                title: '4e. Atmungsapparat',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>',
+                items: [
+                    { id: 'atm-freq', label: 'Atemfrequenz', tooltip: `Normal ${sd.name}: ${sd.atemfrequenz.min}\u2013${sd.atemfrequenz.max}${sd.atemfrequenz.unit}\nTachypnoe: erh\u00f6ht (Fieber, Schmerz, Atemnot, Aufregung)\nBradypnoe: erniedrigt (ZNS-Depression)\nApnoe: Atemstillstand` },
+                    { id: 'atm-typ', label: 'Atemtyp', tooltip: 'Kostoabdominal (normal): Brust und Bauch bewegen sich synchron\nKostal (betont thorakal): Bauchschmerz, Zwerchfellproblem\nAbdominal (betont abdominal): Thoraxschmerz, Rippenfraktur\nDyspnoe: erschwerte Atmung, Maulatmung (bei Katze immer Notfall!)' },
+                    { id: 'atm-geraeusche', label: 'Lungenger\u00e4usche / Auskultation', tooltip: 'Normal: vesikul\u00e4res Atemger\u00e4usch (leises Rauschen)\nPathologisch:\n\u2022 Versch\u00e4rft: Bronchitis\n\u2022 Rasseln (feucht): Lungen\u00f6dem, Pneumonie\n\u2022 Giemen (trocken): Bronchokonstriktion, Asthma\n\u2022 Abgeschw\u00e4cht/fehlend: Pleuraerguss, Pneumothorax' },
+                    { id: 'atm-nase', label: 'Nasenausfluss', tooltip: 'Ser\u00f6s (klar): Reizung, fr\u00fche Infektion\nMuk\u00f6s (schleimig): chronische Entz\u00fcndung\nPurulent (eitrig): bakterielle Infektion\nH\u00e4morrhagisch (blutig): Trauma, Neoplasie, Gerinnungsst\u00f6rung\nEin-/beidseitig beachten!' },
+                ]
+            },
+            {
+                id: 'abdomen',
+                title: '4f. Abdomen',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>',
+                items: [
+                    { id: 'abd-form', label: 'Form und Umfang', tooltip: 'Normal: symmetrisch, der K\u00f6rpergr\u00f6\u00dfe angemessen\nAufget\u00e4nkt: Aszites, Meteorismus, Organomegalie, Tr\u00e4chtigkeit\nEingefallen: Dehydratation, Kachexie, Schmerz' },
+                    { id: 'abd-palpation', label: 'Palpation', tooltip: 'Hund/Katze: bimanuell durch Bauchwand. Leber, Milz, Nieren, Blase, Darm, ggf. Uterus beurteilen.\nPferd: rektale Untersuchung.\nAchte auf: Schmerzhaftigkeit, Umfangsvermehrungen, Fluktuation, Organvergr\u00f6\u00dferungen.' },
+                    { id: 'abd-darm', label: 'Darmger\u00e4usche / Auskultation', tooltip: 'Normal: regelm\u00e4\u00dfige Borborygmi (Darmger\u00e4usche)\nVerst\u00e4rkt: Diarrh\u00f6, Hyperperistaltik\nVermindert/fehlend: Ileus, Peritonitis\nBeim Pferd besonders wichtig: alle 4 Quadranten auskultieren!' },
+                    { id: 'abd-schmerz', label: 'Schmerzhaftigkeit', tooltip: 'Dolenz bei Palpation? Abwehrspannung? Aufkr\u00fcmmen?\nLokalisation: kranial (Magen, Leber), mittig (Darm), kaudal (Blase, Uterus)\nBeim Pferd: Koliksymptome beachten (Flehmen, Scharren, Wälzen).' },
+                ]
+            },
+            {
+                id: 'bewegung',
+                title: '4g. Bewegungsapparat',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>',
+                items: [
+                    { id: 'bew-gang', label: 'Gangbild', tooltip: 'Im Schritt und Trab beurteilen. Lahmheit:\nGrad 0: lahmheitsfrei\nGrad 1: undeutlich geringgradig\nGrad 2: deutlich geringgradig\nGrad 3: mittelgradig\nGrad 4: hochgradig\nGrad 5: keine Belastung der Gliedma\u00dfe\nSt\u00fctzbein- vs. Hangbeinlahmheit unterscheiden.' },
+                    { id: 'bew-gelenke', label: 'Gelenke', tooltip: 'Inspektion: Schwellung, W\u00e4rme, R\u00f6tung?\nPalpation: F\u00fcllung, Schmerzhaftigkeit, Krepitation?\nFunktion: Bewegungsumfang (ROM), Instabilit\u00e4t?\nHund: v.\u00a0a. Knie (Kreuzband!), H\u00fcfte (HD), Ellbogen (ED)' },
+                    { id: 'bew-muskulatur', label: 'Muskulatur', tooltip: 'Symmetrie, Atrophie (einseitig = Schonung), Tonus (schlaff/normal/erh\u00f6ht), Schmerzhaftigkeit bei Palpation.' },
+                ]
+            },
+            {
+                id: 'haut',
+                title: '4h. Haut und Fell',
+                icon: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>',
+                items: [
+                    { id: 'haut-turgor', label: 'Hautelastizit\u00e4t (Hautturgor)', tooltip: 'Hautfaltentest: Nacken-/Schulterfalte aufziehen.\nNormal: sofortiges Verstreichen (< 1 Sek)\n1\u20132 Sek: ca. 5% Dehydratation\n3\u20135 Sek: ca. 8% Dehydratation\n> 5 Sek / stehenbleibend: > 10% Dehydratation (Notfall!)' },
+                    { id: 'haut-parasiten', label: 'Parasiten', tooltip: 'Fl\u00f6he: Flohkot (schwarze Kr\u00fcmel, auf feuchtem Papier rot)?\nZecken: v.\u00a0a. Kopf, Ohren, Achseln, Leiste\nMilben: Haarausfall, Schuppen, Juckreiz\nL\u00e4use/Haarlinge: im Fell sichtbar' },
+                    { id: 'haut-laesionen', label: 'Hautl\u00e4sionen', tooltip: 'Prim\u00e4r: Makula, Papel, Pustel, Vesikel, Quaddel\nSekund\u00e4r: Kruste, Schuppe, Erosion, Ulkus, Narbe, Lichenifikation\nVerteilung: fokal, multifokal, generalisiert, symmetrisch?\nJuckreiz (Pruritus): Grad 1\u20135 einsch\u00e4tzen' },
+                    { id: 'haut-fell', label: 'Fellqualit\u00e4t', tooltip: 'Gl\u00e4nzend und geschmeidig = gesund\nStumpf, trocken, spr\u00f6de: Mangelern\u00e4hrung, systemische Erkrankung\nAlopezie: Haarausfall (lokal/diffus, symmetrisch?)\nHypotrichose: verd\u00fcnntes Fell' },
+                ]
+            },
+        ];
+    }
+
+    // =========================================================================
+    // App State
+    // =========================================================================
+
+    let currentSpecies = 'hund';
+    let examState = {}; // { itemId: { status: 'normal'|'abnormal'|null, befund: '' } }
+
+    // =========================================================================
+    // Species Selection
+    // =========================================================================
+
+    function selectSpecies(species) {
+        currentSpecies = species;
+        document.querySelectorAll('.species-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-' + species).classList.add('active');
+        renderSections();
+    }
+
+    // =========================================================================
+    // Render Sections
+    // =========================================================================
+
+    function renderSections() {
+        const sections = buildSections(currentSpecies);
+        const container = document.getElementById('sections-container');
+
+        // Preserve existing state values
+        const allItemIds = new Set();
+        sections.forEach(s => s.items.forEach(i => allItemIds.add(i.id)));
+
+        // Initialize missing items
+        allItemIds.forEach(id => {
+            if (!examState[id]) {
+                examState[id] = { status: null, befund: '' };
+            }
+        });
+
+        let html = '';
+        sections.forEach(section => {
+            html += renderSection(section);
+        });
+
+        container.innerHTML = html;
+        updateProgress();
+    }
+
+    function renderSection(section) {
+        const isCollapsed = false;
+        let itemsHtml = '';
+        section.items.forEach(item => {
+            itemsHtml += renderItem(item);
+        });
+
+        return `
+        <div class="section-card mb-4 fade-in ${isCollapsed ? 'collapsed' : ''}" id="section-${section.id}">
+            <div class="glass-strong rounded-xl shadow-sm overflow-hidden">
+                <button onclick="toggleSection('${section.id}')"
+                        class="w-full flex items-center gap-3 px-5 py-4 text-left hover:bg-white/50 transition-colors min-h-[44px]">
+                    <span class="section-toggle text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </span>
+                    <span class="text-vet-600">${section.icon}</span>
+                    <h3 class="font-semibold text-slate-800 flex-1">${section.title}</h3>
+                    <span class="text-xs text-slate-400 font-medium" id="section-count-${section.id}">
+                        ${getSectionCount(section)}
+                    </span>
+                </button>
+                <div class="section-body border-t border-slate-100">
+                    ${itemsHtml}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    function getSectionCount(section) {
+        let done = 0;
+        section.items.forEach(item => {
+            if (examState[item.id] && examState[item.id].status !== null) done++;
+        });
+        return `${done}/${section.items.length}`;
+    }
+
+    function renderItem(item) {
+        const state = examState[item.id] || { status: null, befund: '' };
+        const statusClass = state.status === 'normal' ? 'status-normal' :
+                           state.status === 'abnormal' ? 'status-abnormal' : 'status-unchecked';
+
+        const normalActive = state.status === 'normal' ? 'active-normal' : '';
+        const abnormalActive = state.status === 'abnormal' ? 'active-abnormal' : '';
+
+        const tooltipFormatted = (item.tooltip || '').replace(/\n/g, '<br>');
+
+        return `
+        <div class="check-item ${statusClass} px-5 py-3 border-b border-slate-50 last:border-b-0" id="item-${item.id}">
+            <div class="flex items-start gap-3">
+                <div class="flex gap-1 flex-shrink-0 mt-0.5">
+                    <button onclick="toggleStatus('${item.id}', 'normal')"
+                            class="status-toggle ${normalActive}"
+                            title="o.b.B. (ohne besonderen Befund)"
+                            aria-label="Normal markieren">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                    <button onclick="toggleStatus('${item.id}', 'abnormal')"
+                            class="status-toggle ${abnormalActive}"
+                            title="Abweichender Befund"
+                            aria-label="Abweichend markieren">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-medium text-slate-700 text-sm">${item.label}</span>
+                        <div class="tooltip-trigger no-print">
+                            <button class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-vet-100 text-vet-600 hover:bg-vet-200 transition-colors text-xs font-bold"
+                                    aria-label="Hilfe">?</button>
+                            <div class="tooltip-content glass-dark text-white rounded-xl shadow-xl">
+                                <p class="font-semibold text-vet-300 mb-1 text-xs uppercase tracking-wider">Was ist normal?</p>
+                                <p class="text-slate-200">${tooltipFormatted}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="text"
+                           class="befund-input w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white/70 focus:outline-none placeholder-slate-350"
+                           placeholder="Befund eingeben..."
+                           value="${escapeHtml(state.befund)}"
+                           onchange="updateBefund('${item.id}', this.value)"
+                           oninput="updateBefund('${item.id}', this.value)">
+                </div>
+            </div>
+        </div>`;
+    }
+
+    // =========================================================================
+    // Interactions
+    // =========================================================================
+
+    function toggleSection(sectionId) {
+        const card = document.getElementById('section-' + sectionId);
+        if (card) card.classList.toggle('collapsed');
+    }
+
+    function toggleStatus(itemId, status) {
+        if (!examState[itemId]) examState[itemId] = { status: null, befund: '' };
+        examState[itemId].status = examState[itemId].status === status ? null : status;
+
+        // Re-render item visuals
+        const itemEl = document.getElementById('item-' + itemId);
+        if (itemEl) {
+            const state = examState[itemId];
+            itemEl.className = 'check-item ' +
+                (state.status === 'normal' ? 'status-normal' :
+                 state.status === 'abnormal' ? 'status-abnormal' : 'status-unchecked') +
+                ' px-5 py-3 border-b border-slate-50 last:border-b-0';
+
+            const toggles = itemEl.querySelectorAll('.status-toggle');
+            toggles[0].className = 'status-toggle ' + (state.status === 'normal' ? 'active-normal' : '');
+            toggles[1].className = 'status-toggle ' + (state.status === 'abnormal' ? 'active-abnormal' : '');
+        }
+
+        updateProgress();
+        updateSectionCounts();
+    }
+
+    function updateBefund(itemId, value) {
+        if (!examState[itemId]) examState[itemId] = { status: null, befund: '' };
+        examState[itemId].befund = value;
+    }
+
+    function updateSectionCounts() {
+        const sections = buildSections(currentSpecies);
+        sections.forEach(section => {
+            const countEl = document.getElementById('section-count-' + section.id);
+            if (countEl) countEl.textContent = getSectionCount(section);
+        });
+    }
+
+    function updateProgress() {
+        const sections = buildSections(currentSpecies);
+        let total = 0, done = 0, normal = 0, abnormal = 0;
+
+        sections.forEach(section => {
+            section.items.forEach(item => {
+                total++;
+                const state = examState[item.id];
+                if (state && state.status !== null) {
+                    done++;
+                    if (state.status === 'normal') normal++;
+                    else abnormal++;
+                }
+            });
+        });
+
+        const unchecked = total - done;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        document.getElementById('progress-bar').style.width = pct + '%';
+        document.getElementById('progress-text').textContent = `${done} / ${total} Punkte (${pct}%)`;
+        document.getElementById('count-normal').textContent = `${normal} o.b.B.`;
+        document.getElementById('count-abnormal').textContent = `${abnormal} abweichend`;
+        document.getElementById('count-unchecked').textContent = `${unchecked} offen`;
+    }
+
+    // =========================================================================
+    // Summary
+    // =========================================================================
+
+    function showSummary() {
+        const sections = buildSections(currentSpecies);
+        const sd = SPECIES_DATA[currentSpecies];
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('de-DE', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        let html = `
+            <div class="mb-4 p-4 rounded-xl bg-vet-50 border border-vet-100">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-2xl">${sd.icon}</span>
+                    <div>
+                        <p class="font-bold text-slate-800">Klinische Untersuchung -- ${sd.name}</p>
+                        <p class="text-xs text-slate-500">Erstellt: ${dateStr}</p>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-500 mt-2 grid grid-cols-3 gap-2">
+                    <span>Temperatur: ${sd.temperatur.min}\u2013${sd.temperatur.max}${sd.temperatur.unit}</span>
+                    <span>HF: ${sd.herzfrequenz.min}\u2013${sd.herzfrequenz.max}${sd.herzfrequenz.unit}</span>
+                    <span>AF: ${sd.atemfrequenz.min}\u2013${sd.atemfrequenz.max}${sd.atemfrequenz.unit}</span>
+                </div>
+            </div>`;
+
+        let hasAbnormal = false;
+
+        sections.forEach(section => {
+            let sectionHtml = '';
+            let sectionHasContent = false;
+
+            section.items.forEach(item => {
+                const state = examState[item.id] || { status: null, befund: '' };
+                if (state.status !== null || state.befund.trim()) {
+                    sectionHasContent = true;
+                    const statusIcon = state.status === 'normal'
+                        ? '<span class="text-emerald-600 font-bold text-xs">o.b.B.</span>'
+                        : state.status === 'abnormal'
+                        ? '<span class="text-red-500 font-bold text-xs">ABWEICHEND</span>'
+                        : '<span class="text-slate-400 text-xs">--</span>';
+
+                    if (state.status === 'abnormal') hasAbnormal = true;
+
+                    const befundText = state.befund.trim()
+                        ? `<span class="text-slate-600 text-sm ml-2">${escapeHtml(state.befund)}</span>`
+                        : '';
+
+                    sectionHtml += `
+                        <div class="flex items-start gap-2 py-1.5 border-b border-slate-50 last:border-b-0
+                                    ${state.status === 'abnormal' ? 'bg-red-50/50 px-2 -mx-2 rounded' : ''}">
+                            <span class="w-24 flex-shrink-0">${statusIcon}</span>
+                            <span class="font-medium text-sm text-slate-700 w-48 flex-shrink-0">${item.label}</span>
+                            ${befundText}
+                        </div>`;
+                }
+            });
+
+            if (sectionHasContent) {
+                html += `
+                    <div class="mb-4">
+                        <h3 class="font-semibold text-slate-800 text-sm mb-2 pb-1 border-b border-slate-200">${section.title}</h3>
+                        <div>${sectionHtml}</div>
+                    </div>`;
+            }
+        });
+
+        if (hasAbnormal) {
+            html += `
+                <div class="mt-4 p-4 rounded-xl bg-red-50 border border-red-200">
+                    <p class="font-semibold text-red-700 text-sm flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Abweichende Befunde dokumentiert -- weitere Diagnostik erw\u00e4gen.
+                    </p>
+                </div>`;
+        }
+
+        // Count stats
+        let total = 0, done = 0, normalCount = 0, abnormalCount = 0;
+        sections.forEach(s => s.items.forEach(i => {
+            total++;
+            const st = examState[i.id];
+            if (st && st.status) { done++; if (st.status === 'normal') normalCount++; else abnormalCount++; }
+        }));
+
+        html += `
+            <div class="mt-4 p-3 rounded-lg bg-slate-50 text-center text-xs text-slate-500">
+                Gesamt: ${done}/${total} untersucht | ${normalCount} o.b.B. | ${abnormalCount} abweichend | ${total - done} offen
+            </div>`;
+
+        document.getElementById('summary-content').innerHTML = html;
+        document.getElementById('summary-overlay').classList.add('visible');
+    }
+
+    function closeSummary() {
+        document.getElementById('summary-overlay').classList.remove('visible');
+    }
+
+    // Close summary on Escape
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeSummary();
+    });
+
+    // Close summary on backdrop click
+    document.getElementById('summary-overlay').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closeSummary();
+    });
+
+    // =========================================================================
+    // Reset
+    // =========================================================================
+
+    function resetAll() {
+        if (!confirm('Alle Befunde zur\u00fccksetzen? Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.')) return;
+        examState = {};
+        renderSections();
+    }
+
+    // =========================================================================
+    // Utils
+    // =========================================================================
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    // =========================================================================
+    // Init
+    // =========================================================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+        selectSpecies('hund');
+    });
+
+    </script>
+</body>
+</html>

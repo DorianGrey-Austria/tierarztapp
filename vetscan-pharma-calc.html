@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Pharmakologie-Dosierungsrechner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vet: {
+                            primary: '#1e3a5f',
+                            secondary: '#2d6a4f',
+                            accent: '#40916c',
+                            dark: '#0d1b2a',
+                            light: '#e8f5e9',
+                            danger: '#c62828',
+                            warning: '#f57f17',
+                            safe: '#2e7d32',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; }
+            .print-section { break-inside: avoid; }
+        }
+        .print-only { display: none; }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-warning {
+            animation: pulseWarn 1.5s ease-in-out 3;
+        }
+        @keyframes pulseWarn {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(198, 40, 40, 0); }
+        }
+
+        .drug-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .drug-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            height: 44px;
+        }
+
+        select, input, button {
+            min-height: 44px;
+            font-size: 16px;
+        }
+
+        .category-badge {
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+
+        .interaction-line {
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        .interaction-line::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 2px;
+        }
+        .interaction-line.danger::before { background: #c62828; }
+        .interaction-line.warning::before { background: #f57f17; }
+        .interaction-line.info::before { background: #1565c0; }
+
+        .receipt-container {
+            background: white;
+            border: 2px solid #1e3a5f;
+            font-family: "Courier New", monospace;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fade-in { animation: none; }
+            .pulse-warning { animation: none; }
+            .drug-card { transition: none; }
+        }
+
+        .search-highlight {
+            background: #fff59d;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-vet-primary to-vet-dark text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Pharmakologie-Dosierungsrechner</h1>
+                    <p class="text-blue-200 text-sm mt-1">VetScan Pro -- Veterinärmedizinische Dosierungsberechnung</p>
+                </div>
+                <a href="vetscan-version-selector.html"
+                   class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-sm font-medium transition-colors min-h-[44px]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                    Zurück zur Übersicht
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Disclaimer -->
+    <div class="bg-amber-50 border-b border-amber-200 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-2">
+            <p class="text-amber-800 text-xs md:text-sm text-center">
+                <strong>Lernzwecke:</strong> Dieser Rechner dient ausschließlich zu Ausbildungszwecken. Dosierungen immer anhand aktueller Fachinformation und klinischer Beurteilung verifizieren.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- Patient Setup -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-6 no-print">
+            <h2 class="text-lg font-bold text-vet-primary mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Patientendaten
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="species" class="block text-sm font-semibold text-gray-700 mb-1">Spezies</label>
+                    <select id="species" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary focus:ring-2 focus:ring-vet-primary/20 outline-none transition-colors bg-white">
+                        <option value="">-- Spezies wählen --</option>
+                        <option value="hund">Hund</option>
+                        <option value="katze">Katze</option>
+                        <option value="pferd">Pferd</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="weight" class="block text-sm font-semibold text-gray-700 mb-1">Körpergewicht (kg)</label>
+                    <input type="number" id="weight" min="0.1" max="1000" step="0.1" placeholder="z.B. 25.0"
+                           class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary focus:ring-2 focus:ring-vet-primary/20 outline-none transition-colors">
+                </div>
+                <div>
+                    <label for="patientName" class="block text-sm font-semibold text-gray-700 mb-1">Patientenname (optional)</label>
+                    <input type="text" id="patientName" placeholder="z.B. Bello"
+                           class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary focus:ring-2 focus:ring-vet-primary/20 outline-none transition-colors">
+                </div>
+            </div>
+            <div id="speciesWarnings" class="mt-3"></div>
+        </section>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left: Drug Selection -->
+            <div class="lg:col-span-2 space-y-6">
+
+                <!-- Search & Filter -->
+                <section class="bg-white rounded-xl shadow-md p-6 no-print">
+                    <h2 class="text-lg font-bold text-vet-primary mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        Medikamentensuche
+                    </h2>
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <input type="text" id="drugSearch" placeholder="Medikament suchen..."
+                               class="flex-1 min-w-[200px] border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary focus:ring-2 focus:ring-vet-primary/20 outline-none transition-colors">
+                        <select id="categoryFilter" class="border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary outline-none transition-colors bg-white">
+                            <option value="all">Alle Kategorien</option>
+                            <option value="antibiotika">Antibiotika</option>
+                            <option value="nsaid">Analgetika/NSAID</option>
+                            <option value="opioide">Opioide</option>
+                            <option value="kortikosteroide">Kortikosteroide</option>
+                            <option value="sedativa">Sedativa/Anästhetika</option>
+                            <option value="herz">Herz-Kreislauf</option>
+                            <option value="sonstige">Sonstige</option>
+                        </select>
+                    </div>
+                    <div id="drugList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                        <!-- Filled by JS -->
+                    </div>
+                </section>
+
+                <!-- Dosage Calculator -->
+                <section id="calculatorSection" class="bg-white rounded-xl shadow-md p-6 hidden fade-in no-print">
+                    <h2 class="text-lg font-bold text-vet-primary mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        Dosierungsberechnung: <span id="selectedDrugName" class="text-vet-secondary"></span>
+                    </h2>
+
+                    <div id="drugCaveWarnings" class="mb-4"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="routeSelect" class="block text-sm font-semibold text-gray-700 mb-1">Applikationsweg</label>
+                            <select id="routeSelect" class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary outline-none transition-colors bg-white">
+                            </select>
+                        </div>
+                        <div>
+                            <label for="concentration" class="block text-sm font-semibold text-gray-700 mb-1">Konzentration (mg/ml)</label>
+                            <input type="number" id="concentration" min="0.01" step="0.01" placeholder="z.B. 50"
+                                   class="w-full border-2 border-gray-200 rounded-lg px-3 py-2 focus:border-vet-primary focus:ring-2 focus:ring-vet-primary/20 outline-none transition-colors">
+                        </div>
+                    </div>
+
+                    <div id="doseResult" class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <p class="text-gray-500 text-sm">Spezies, Gewicht und Medikament auswählen, um die Dosierung zu berechnen.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="addToReceipt()" class="bg-vet-secondary hover:bg-vet-accent text-white font-semibold px-5 py-2 rounded-lg transition-colors min-h-[44px] flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Zum Rezept hinzufügen
+                        </button>
+                        <button onclick="clearCalculator()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-5 py-2 rounded-lg transition-colors min-h-[44px]">
+                            Zurücksetzen
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Interaction Checker -->
+                <section id="interactionSection" class="bg-white rounded-xl shadow-md p-6 hidden fade-in no-print">
+                    <h2 class="text-lg font-bold text-red-700 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        Wechselwirkungen &amp; Kontraindikationen
+                    </h2>
+                    <div id="interactionResults"></div>
+                </section>
+            </div>
+
+            <!-- Right: Receipt -->
+            <div class="space-y-6">
+                <section class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-lg font-bold text-vet-primary mb-4 flex items-center gap-2 no-print">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Rezept-Zusammenfassung
+                    </h2>
+
+                    <div id="receiptContent" class="receipt-container rounded-lg p-4 min-h-[200px]">
+                        <div class="print-only text-center mb-4 border-b-2 border-vet-primary pb-3">
+                            <h2 class="text-xl font-bold text-vet-primary">VetScan Pro -- Dosierungsplan</h2>
+                            <p class="text-sm text-gray-600 mt-1">Veterinärmedizinische Dosierungsberechnung</p>
+                        </div>
+                        <div id="receiptPatient" class="text-sm mb-3 pb-3 border-b border-gray-200 hidden">
+                        </div>
+                        <div id="receiptItems" class="space-y-3">
+                            <p class="text-gray-400 text-sm text-center py-8">Noch keine Medikamente hinzugefügt.</p>
+                        </div>
+                        <div id="receiptWarnings" class="mt-4 hidden"></div>
+                        <div class="print-only text-xs text-gray-400 mt-6 pt-3 border-t border-gray-200 text-center">
+                            Erstellt am <span id="printDate"></span> -- Nur zu Lernzwecken
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mt-4 no-print">
+                        <button onclick="printReceipt()" class="flex-1 bg-vet-primary hover:bg-vet-dark text-white font-semibold px-4 py-2 rounded-lg transition-colors min-h-[44px] flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                            Drucken
+                        </button>
+                        <button onclick="clearReceipt()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-4 py-2 rounded-lg transition-colors min-h-[44px]">
+                            Leeren
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Quick Reference -->
+                <section class="bg-white rounded-xl shadow-md p-6 no-print">
+                    <h2 class="text-lg font-bold text-vet-primary mb-3">Abkürzungen</h2>
+                    <div class="text-sm space-y-1 text-gray-600">
+                        <div class="grid grid-cols-2 gap-x-4">
+                            <span><strong>PO</strong> = per os (oral)</span>
+                            <span><strong>IV</strong> = intravenös</span>
+                            <span><strong>IM</strong> = intramuskulär</span>
+                            <span><strong>SC</strong> = subkutan</span>
+                            <span><strong>SID</strong> = 1x täglich</span>
+                            <span><strong>BID</strong> = 2x täglich</span>
+                            <span><strong>TID</strong> = 3x täglich</span>
+                            <span><strong>QID</strong> = 4x täglich</span>
+                            <span><strong>q4h</strong> = alle 4 Std.</span>
+                            <span><strong>q6h</strong> = alle 6 Std.</span>
+                            <span><strong>q8h</strong> = alle 8 Std.</span>
+                            <span><strong>q12h</strong> = alle 12 Std.</span>
+                        </div>
+                    </div>
+
+                    <h2 class="text-lg font-bold text-vet-primary mt-5 mb-3">Farbcodierung</h2>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-green-500 inline-block"></span>
+                            <span>Sicher -- Standarddosierung</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-yellow-500 inline-block"></span>
+                            <span>Vorsicht -- CAVE-Hinweis beachten</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-4 h-4 rounded bg-red-600 inline-block"></span>
+                            <span>Kontraindiziert / Toxisch</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-vet-dark text-gray-400 text-center py-4 mt-8 text-sm no-print">
+        <p>VetScan Pro Pharmakologie-Dosierungsrechner -- Nur zu Lernzwecken</p>
+        <p class="text-xs mt-1">Keine Haftung für klinische Entscheidungen. Immer Fachinformation konsultieren.</p>
+    </footer>
+
+<script>
+// ============================================================
+// DRUG DATABASE
+// ============================================================
+const DRUGS = [
+    // --- Antibiotika ---
+    {
+        id: 1, name: 'Amoxicillin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 10, doseMax: 20, routes: ['PO'], interval: 'BID' },
+            katze: { doseMin: 10, doseMax: 20, routes: ['PO'], interval: 'BID' },
+            pferd: { doseMin: 10, doseMax: 20, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [], contraSpecies: [], interactions: ['antibiotika_bakteriostatisch']
+    },
+    {
+        id: 2, name: 'Amoxicillin-Clavulansäure', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 12.5, doseMax: 25, routes: ['PO'], interval: 'BID' },
+            katze: { doseMin: 12.5, doseMax: 25, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [], contraSpecies: [], interactions: ['antibiotika_bakteriostatisch']
+    },
+    {
+        id: 3, name: 'Enrofloxacin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 5, doseMax: 20, routes: ['PO'], interval: 'SID' },
+            katze: { doseMin: 5, doseMax: 5, routes: ['PO'], interval: 'SID' },
+        },
+        caves: [
+            { species: 'katze', text: 'CAVE: Retinopathie bei Katze bei Überdosierung (>5 mg/kg)! Strikt 5 mg/kg einhalten.', level: 'warning' }
+        ],
+        contraSpecies: [], interactions: []
+    },
+    {
+        id: 4, name: 'Metronidazol', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 10, doseMax: 15, routes: ['PO'], interval: 'BID' },
+            katze: { doseMin: 10, doseMax: 15, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [
+            { species: 'all', text: 'CAVE: Neurotoxizität bei Überdosierung oder Langzeitanwendung. ZNS-Symptome beachten.', level: 'warning' }
+        ],
+        contraSpecies: [], interactions: []
+    },
+    {
+        id: 5, name: 'Doxycyclin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 5, doseMax: 10, routes: ['PO'], interval: 'SID/BID' },
+            katze: { doseMin: 5, doseMax: 10, routes: ['PO'], interval: 'SID/BID' },
+        },
+        caves: [
+            { species: 'all', text: 'Mit Futter verabreichen, um Ösophagusstrikturen (v.a. Katze) zu vermeiden.', level: 'info' }
+        ],
+        contraSpecies: [], interactions: ['antibiotika_bakteriostatisch']
+    },
+    {
+        id: 6, name: 'Cephalexin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 15, doseMax: 30, routes: ['PO'], interval: 'BID' },
+            katze: { doseMin: 15, doseMax: 30, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [], contraSpecies: [], interactions: []
+    },
+    {
+        id: 7, name: 'Marbofloxacin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 2, doseMax: 5, routes: ['PO'], interval: 'SID' },
+            katze: { doseMin: 2, doseMax: 5, routes: ['PO'], interval: 'SID' },
+        },
+        caves: [], contraSpecies: [], interactions: []
+    },
+    {
+        id: 8, name: 'Clindamycin', category: 'antibiotika', categoryLabel: 'Antibiotika',
+        species: {
+            hund: { doseMin: 5.5, doseMax: 11, routes: ['PO'], interval: 'BID' },
+            katze: { doseMin: 5.5, doseMax: 11, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [], contraSpecies: [], interactions: []
+    },
+    // --- Analgetika/NSAID ---
+    {
+        id: 9, name: 'Meloxicam', category: 'nsaid', categoryLabel: 'Analgetika/NSAID',
+        species: {
+            hund: { doseMin: 0.1, doseMax: 0.2, routes: ['PO'], interval: 'SID', note: 'Loading-Dose 0.2 mg/kg, dann 0.1 mg/kg' },
+            katze: { doseMin: 0.05, doseMax: 0.05, routes: ['PO'], interval: 'SID' },
+            pferd: { doseMin: 0.6, doseMax: 0.6, routes: ['IV', 'PO'], interval: 'SID' },
+        },
+        caves: [
+            { species: 'katze', text: 'CAVE: NUR kurzfristig bei Katzen! Nierenfunktion engmaschig kontrollieren.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['nsaid', 'kortikosteroid'],
+        isNsaid: true
+    },
+    {
+        id: 10, name: 'Carprofen', category: 'nsaid', categoryLabel: 'Analgetika/NSAID',
+        species: {
+            hund: { doseMin: 4, doseMax: 4, routes: ['PO'], interval: 'SID', note: 'Alternativ 2 mg/kg BID' },
+        },
+        caves: [
+            { species: 'katze', text: 'KONTRAINDIZIERT für Langzeittherapie bei Katzen!', level: 'danger' }
+        ],
+        contraSpecies: ['katze_langzeit'],
+        interactions: ['nsaid', 'kortikosteroid'],
+        isNsaid: true
+    },
+    {
+        id: 11, name: 'Firocoxib', category: 'nsaid', categoryLabel: 'Analgetika/NSAID',
+        species: {
+            hund: { doseMin: 5, doseMax: 5, routes: ['PO'], interval: 'SID' },
+            pferd: { doseMin: 0.1, doseMax: 0.1, routes: ['PO'], interval: 'SID' },
+        },
+        caves: [],
+        contraSpecies: [],
+        interactions: ['nsaid', 'kortikosteroid'],
+        isNsaid: true
+    },
+    {
+        id: 12, name: 'Metamizol', category: 'nsaid', categoryLabel: 'Analgetika/NSAID',
+        species: {
+            hund: { doseMin: 20, doseMax: 50, routes: ['IV', 'PO'], interval: 'BID/TID' },
+            katze: { doseMin: 20, doseMax: 25, routes: ['IV', 'PO'], interval: 'BID' },
+            pferd: { doseMin: 20, doseMax: 40, routes: ['IV'], interval: 'SID/BID' },
+        },
+        caves: [
+            { species: 'all', text: 'IV-Gabe langsam! Schnelle IV-Injektion kann Kreislaufkollaps verursachen.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['nsaid'],
+        isNsaid: true
+    },
+    // --- Opioide ---
+    {
+        id: 13, name: 'Butorphanol', category: 'opioide', categoryLabel: 'Opioide',
+        species: {
+            hund: { doseMin: 0.2, doseMax: 0.4, routes: ['IV', 'IM'], interval: 'q4h' },
+            katze: { doseMin: 0.2, doseMax: 0.4, routes: ['IV', 'IM'], interval: 'q4h' },
+            pferd: { doseMin: 0.02, doseMax: 0.1, routes: ['IV'], interval: 'q4-6h' },
+        },
+        caves: [], contraSpecies: [],
+        interactions: ['opioid_sedation'],
+        isOpioid: true
+    },
+    {
+        id: 14, name: 'Buprenorphin', category: 'opioide', categoryLabel: 'Opioide',
+        species: {
+            hund: { doseMin: 0.01, doseMax: 0.02, routes: ['IV', 'IM'], interval: 'q6-8h' },
+            katze: { doseMin: 0.01, doseMax: 0.02, routes: ['IV', 'IM', 'buccal'], interval: 'q6-8h' },
+        },
+        caves: [
+            { species: 'katze', text: 'Buccale Gabe bei Katzen effektiv und praktisch (gute Schleimhautresorption).', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: ['opioid_sedation'],
+        isOpioid: true
+    },
+    {
+        id: 15, name: 'Methadon', category: 'opioide', categoryLabel: 'Opioide',
+        species: {
+            hund: { doseMin: 0.1, doseMax: 0.5, routes: ['IV', 'IM'], interval: 'q4-6h' },
+            katze: { doseMin: 0.1, doseMax: 0.3, routes: ['IV', 'IM'], interval: 'q4-6h' },
+        },
+        caves: [
+            { species: 'all', text: 'Vollagonist -- stärkere Atemdepression als Partialagonisten. Monitoring erforderlich.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['opioid_sedation'],
+        isOpioid: true
+    },
+    // --- Kortikosteroide ---
+    {
+        id: 16, name: 'Dexamethason', category: 'kortikosteroide', categoryLabel: 'Kortikosteroide',
+        species: {
+            hund: { doseMin: 0.1, doseMax: 0.2, routes: ['IV'], interval: 'SID', note: 'Antiinflammatorisch: 0.1-0.2 mg/kg; Schock: 1-2 mg/kg IV' },
+            katze: { doseMin: 0.1, doseMax: 0.2, routes: ['IV'], interval: 'SID', note: 'Antiinflammatorisch: 0.1-0.2 mg/kg; Schock: 1-2 mg/kg IV' },
+            pferd: { doseMin: 0.04, doseMax: 0.2, routes: ['IV'], interval: 'SID' },
+        },
+        caves: [
+            { species: 'all', text: 'Langzeitanwendung vermeiden: Cushing-Risiko, Immunsuppression, GI-Ulzera.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['kortikosteroid', 'nsaid_kombi'],
+        isKortikosteroid: true
+    },
+    {
+        id: 17, name: 'Prednisolon', category: 'kortikosteroide', categoryLabel: 'Kortikosteroide',
+        species: {
+            hund: { doseMin: 0.5, doseMax: 2, routes: ['PO'], interval: 'SID' },
+            katze: { doseMin: 1, doseMax: 2, routes: ['PO'], interval: 'SID' },
+        },
+        caves: [
+            { species: 'all', text: 'Ausschleichend dosieren bei Langzeittherapie! Nie abrupt absetzen.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['kortikosteroid', 'nsaid_kombi'],
+        isKortikosteroid: true
+    },
+    // --- Sedativa/Anästhetika ---
+    {
+        id: 18, name: 'Acepromazin', category: 'sedativa', categoryLabel: 'Sedativa/Anästhetika',
+        species: {
+            hund: { doseMin: 0.01, doseMax: 0.05, routes: ['IV', 'IM'], interval: 'Einmalgabe' },
+            katze: { doseMin: 0.01, doseMax: 0.05, routes: ['IV', 'IM'], interval: 'Einmalgabe' },
+        },
+        caves: [
+            { species: 'hund', text: 'CAVE BOXER: Acepromazin kann bei Boxern schwere Hypotension und Kollaps verursachen! Kontraindiziert bei Boxer.', level: 'danger' },
+            { species: 'all', text: 'Keine analgetische Wirkung! Nur Sedation. Nicht bei Epileptikern.', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung'],
+        isSedativum: true
+    },
+    {
+        id: 19, name: 'Medetomidin', category: 'sedativa', categoryLabel: 'Sedativa/Anästhetika',
+        species: {
+            hund: { doseMin: 0.01, doseMax: 0.04, routes: ['IV', 'IM'], interval: 'Einmalgabe' },
+            katze: { doseMin: 0.01, doseMax: 0.04, routes: ['IV', 'IM'], interval: 'Einmalgabe' },
+        },
+        caves: [
+            { species: 'all', text: 'Antagonisierbar mit Atipamezol. Bradykardie und Emesis möglich.', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung'],
+        isSedativum: true
+    },
+    {
+        id: 20, name: 'Propofol', category: 'sedativa', categoryLabel: 'Sedativa/Anästhetika',
+        species: {
+            hund: { doseMin: 4, doseMax: 6, routes: ['IV'], interval: 'Einmalgabe', note: 'Langsam nach Wirkung titrieren' },
+            katze: { doseMin: 4, doseMax: 6, routes: ['IV'], interval: 'Einmalgabe', note: 'Langsam nach Wirkung titrieren' },
+        },
+        caves: [
+            { species: 'katze', text: 'Wiederholte Propofol-Gaben bei Katzen: Heinz-Körper-Anämie möglich. Vorsicht bei Mehrfachgabe.', level: 'warning' },
+            { species: 'all', text: 'NUR IV! Strikt langsam injizieren (über 30-60 Sek.). Apnoe möglich -- Intubationsbereitschaft!', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung'],
+        isSedativum: true
+    },
+    {
+        id: 21, name: 'Ketamin', category: 'sedativa', categoryLabel: 'Sedativa/Anästhetika',
+        species: {
+            hund: { doseMin: 5, doseMax: 10, routes: ['IV', 'IM'], interval: 'Einmalgabe', note: 'Immer in Kombination mit Sedativum verwenden' },
+            katze: { doseMin: 5, doseMax: 10, routes: ['IM'], interval: 'Einmalgabe' },
+        },
+        caves: [
+            { species: 'all', text: 'NIEMALS als Monoanästhetikum beim Hund! Immer mit Sedativum/Benzodiazepin kombinieren.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung'],
+        isSedativum: true
+    },
+    {
+        id: 22, name: 'Diazepam', category: 'sedativa', categoryLabel: 'Sedativa/Anästhetika',
+        species: {
+            hund: { doseMin: 0.5, doseMax: 1, routes: ['IV'], interval: 'Krampfanfall: kann wiederholt werden', note: 'Antikonvulsivum: 0.5-1 mg/kg IV' },
+            katze: { doseMin: 0.5, doseMax: 1, routes: ['IV'], interval: 'Krampfanfall: kann wiederholt werden', note: 'Antikonvulsivum: 0.5-1 mg/kg IV' },
+        },
+        caves: [
+            { species: 'katze', text: 'CAVE: Orale Diazepam-Gabe bei Katzen kann fulminante Hepatopathie verursachen! Nur IV.', level: 'danger' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung'],
+        isSedativum: true
+    },
+    // --- Herz-Kreislauf ---
+    {
+        id: 23, name: 'Furosemid', category: 'herz', categoryLabel: 'Herz-Kreislauf',
+        species: {
+            hund: { doseMin: 1, doseMax: 4, routes: ['IV', 'PO'], interval: 'BID/TID', note: 'Akut: IV; Dauertherapie: PO' },
+            katze: { doseMin: 1, doseMax: 2, routes: ['IV', 'PO'], interval: 'BID/TID' },
+        },
+        caves: [
+            { species: 'all', text: 'Elektrolyte (K+) regelmäßig kontrollieren! Dehydratation vermeiden.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: ['nephrotoxisch']
+    },
+    {
+        id: 24, name: 'Pimobendan', category: 'herz', categoryLabel: 'Herz-Kreislauf',
+        species: {
+            hund: { doseMin: 0.25, doseMax: 0.25, routes: ['PO'], interval: 'BID', note: 'Nüchtern geben (1h vor Futter)' },
+        },
+        caves: [
+            { species: 'hund', text: 'Kontraindiziert bei hypertropher Kardiomyopathie (HCM) und Aortenstenose.', level: 'warning' }
+        ],
+        contraSpecies: [],
+        interactions: []
+    },
+    {
+        id: 25, name: 'Enalapril', category: 'herz', categoryLabel: 'Herz-Kreislauf',
+        species: {
+            hund: { doseMin: 0.5, doseMax: 0.5, routes: ['PO'], interval: 'SID/BID' },
+        },
+        caves: [
+            { species: 'all', text: 'Nierenwerte 5-7 Tage nach Therapiebeginn kontrollieren.', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: ['nephrotoxisch']
+    },
+    {
+        id: 26, name: 'Atropin', category: 'herz', categoryLabel: 'Herz-Kreislauf',
+        species: {
+            hund: { doseMin: 0.02, doseMax: 0.04, routes: ['IV'], interval: 'Einmalgabe (Bradykardie)' },
+            katze: { doseMin: 0.02, doseMax: 0.04, routes: ['IV'], interval: 'Einmalgabe (Bradykardie)' },
+        },
+        caves: [
+            { species: 'all', text: 'Notfallmedikament. Tachykardie als Nebenwirkung möglich.', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: []
+    },
+    // --- Sonstige ---
+    {
+        id: 27, name: 'Omeprazol', category: 'sonstige', categoryLabel: 'Sonstige',
+        species: {
+            hund: { doseMin: 1, doseMax: 1, routes: ['PO'], interval: 'SID' },
+            katze: { doseMin: 1, doseMax: 1, routes: ['PO'], interval: 'SID' },
+            pferd: { doseMin: 4, doseMax: 4, routes: ['PO'], interval: 'SID' },
+        },
+        caves: [], contraSpecies: [],
+        interactions: []
+    },
+    {
+        id: 28, name: 'Maropitant (Cerenia)', category: 'sonstige', categoryLabel: 'Sonstige',
+        species: {
+            hund: { doseMin: 1, doseMax: 1, routes: ['PO', 'SC'], interval: 'SID' },
+            katze: { doseMin: 1, doseMax: 1, routes: ['SC'], interval: 'SID' },
+        },
+        caves: [
+            { species: 'all', text: 'SC-Injektion kann schmerzhaft sein. Gekühlt injizieren reduziert Schmerzreaktion.', level: 'info' }
+        ],
+        contraSpecies: [],
+        interactions: []
+    },
+    {
+        id: 29, name: 'Adrenalin (Epinephrin)', category: 'sonstige', categoryLabel: 'Sonstige',
+        species: {
+            hund: { doseMin: 0.01, doseMax: 0.02, routes: ['IV'], interval: 'Notfall -- wiederholbar alle 3-5 Min.' },
+            katze: { doseMin: 0.01, doseMax: 0.02, routes: ['IV'], interval: 'Notfall -- wiederholbar alle 3-5 Min.' },
+            pferd: { doseMin: 0.01, doseMax: 0.02, routes: ['IV'], interval: 'Notfall -- wiederholbar alle 3-5 Min.' },
+        },
+        caves: [
+            { species: 'all', text: 'NUR im Notfall (Anaphylaxie, Reanimation)! Immer verdünnt und langsam IV.', level: 'danger' }
+        ],
+        contraSpecies: [],
+        interactions: []
+    },
+    {
+        id: 30, name: 'Gabapentin', category: 'sonstige', categoryLabel: 'Sonstige',
+        species: {
+            hund: { doseMin: 5, doseMax: 10, routes: ['PO'], interval: 'BID/TID' },
+            katze: { doseMin: 5, doseMax: 10, routes: ['PO'], interval: 'BID' },
+        },
+        caves: [
+            { species: 'katze', text: 'CAVE: Nur Xylitol-freie Formulierung verwenden! Xylitol ist für Hunde und Katzen toxisch.', level: 'danger' },
+            { species: 'hund', text: 'CAVE: Nur Xylitol-freie Formulierung verwenden! Xylitol ist hepatotoxisch beim Hund.', level: 'danger' }
+        ],
+        contraSpecies: [],
+        interactions: ['sedation_potenzierung']
+    }
+];
+
+// ============================================================
+// INTERACTION RULES
+// ============================================================
+const INTERACTION_RULES = [
+    {
+        id: 'nsaid_nsaid',
+        check: (drugs) => {
+            const nsaids = drugs.filter(d => d.isNsaid);
+            return nsaids.length >= 2;
+        },
+        level: 'danger',
+        title: 'NSAID + NSAID -- KONTRAINDIZIERT',
+        text: 'Niemals zwei NSAID gleichzeitig verabreichen! Massiv erhöhtes Risiko für gastrointestinale Ulzera, Nierenversagen und Blutungen.',
+        getDrugs: (drugs) => drugs.filter(d => d.isNsaid).map(d => d.name)
+    },
+    {
+        id: 'nsaid_kortiko',
+        check: (drugs) => {
+            const hasNsaid = drugs.some(d => d.isNsaid);
+            const hasKortiko = drugs.some(d => d.isKortikosteroid);
+            return hasNsaid && hasKortiko;
+        },
+        level: 'danger',
+        title: 'NSAID + Kortikosteroid -- KONTRAINDIZIERT',
+        text: 'Kombination von NSAID und Kortikosteroiden massiv erhöht das Risiko für gastrointestinale Ulzera und Perforationen!',
+        getDrugs: (drugs) => drugs.filter(d => d.isNsaid || d.isKortikosteroid).map(d => d.name)
+    },
+    {
+        id: 'multi_sedation',
+        check: (drugs) => {
+            const sedativa = drugs.filter(d => d.isSedativum || d.isOpioid);
+            return sedativa.length >= 2;
+        },
+        level: 'warning',
+        title: 'Mehrfache Sedation/Opioid-Kombination',
+        text: 'Kombination von Sedativa und/oder Opioiden: Dosisreduktion der Einzelkomponenten erforderlich (in der Regel 30-50% Reduktion). Atemdepression und Kreislaufkollaps möglich.',
+        getDrugs: (drugs) => drugs.filter(d => d.isSedativum || d.isOpioid).map(d => d.name)
+    },
+    {
+        id: 'nephrotox',
+        check: (drugs) => {
+            const hasNsaid = drugs.some(d => d.isNsaid);
+            const hasNephro = drugs.some(d => d.interactions && d.interactions.includes('nephrotoxisch'));
+            return hasNsaid && hasNephro;
+        },
+        level: 'warning',
+        title: 'Nephrotoxisches Risiko',
+        text: 'NSAID in Kombination mit nephrotoxischen Substanzen (Furosemid, ACE-Hemmer) erhöht das Risiko für akutes Nierenversagen. Nierenwerte engmaschig kontrollieren!',
+        getDrugs: (drugs) => drugs.filter(d => d.isNsaid || (d.interactions && d.interactions.includes('nephrotoxisch'))).map(d => d.name)
+    }
+];
+
+// Toxic substances -- always warn
+const TOXIC_SUBSTANCES = [
+    { name: 'Ibuprofen', species: 'katze', text: 'Ibuprofen ist TOXISCH für Katzen! Auch bei Hunden ist es mit hohem GI-Ulzera-Risiko verbunden. Veterinärmedizinische NSAID verwenden.' },
+    { name: 'Paracetamol', species: 'katze', text: 'Paracetamol (Acetaminophen) ist LETAL TOXISCH für Katzen! Methämoglobinämie und Hepatotoxizität. NIEMALS bei Katzen anwenden!' },
+    { name: 'Permethrin', species: 'katze', text: 'Permethrin ist LETAL TOXISCH für Katzen! Auch Kontakt mit behandelten Hunden kann bei Katzen zu tödlichen Vergiftungen führen.' }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let selectedDrug = null;
+let receiptItems = [];
+let currentSpecies = '';
+let currentWeight = 0;
+
+// ============================================================
+// CATEGORY COLORS
+// ============================================================
+const CATEGORY_COLORS = {
+    antibiotika: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-800', hover: 'hover:border-blue-400' },
+    nsaid: { bg: 'bg-orange-50', border: 'border-orange-200', badge: 'bg-orange-100 text-orange-800', hover: 'hover:border-orange-400' },
+    opioide: { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-800', hover: 'hover:border-purple-400' },
+    kortikosteroide: { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-100 text-yellow-800', hover: 'hover:border-yellow-400' },
+    sedativa: { bg: 'bg-indigo-50', border: 'border-indigo-200', badge: 'bg-indigo-100 text-indigo-800', hover: 'hover:border-indigo-400' },
+    herz: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-800', hover: 'hover:border-red-400' },
+    sonstige: { bg: 'bg-teal-50', border: 'border-teal-200', badge: 'bg-teal-100 text-teal-800', hover: 'hover:border-teal-400' }
+};
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    renderDrugList();
+
+    document.getElementById('drugSearch').addEventListener('input', renderDrugList);
+    document.getElementById('categoryFilter').addEventListener('change', renderDrugList);
+    document.getElementById('species').addEventListener('change', onPatientChange);
+    document.getElementById('weight').addEventListener('input', onPatientChange);
+    document.getElementById('routeSelect').addEventListener('change', calculateDose);
+    document.getElementById('concentration').addEventListener('input', calculateDose);
+});
+
+// ============================================================
+// PATIENT CHANGE
+// ============================================================
+function onPatientChange() {
+    currentSpecies = document.getElementById('species').value;
+    currentWeight = parseFloat(document.getElementById('weight').value) || 0;
+
+    renderDrugList();
+    showSpeciesWarnings();
+
+    if (selectedDrug) {
+        selectDrug(selectedDrug.id);
+    }
+
+    updateReceipt();
+}
+
+function showSpeciesWarnings() {
+    const container = document.getElementById('speciesWarnings');
+    if (currentSpecies !== 'katze') {
+        container.innerHTML = '';
+        return;
+    }
+
+    const toxicWarnings = TOXIC_SUBSTANCES.filter(t => t.species === 'katze');
+    container.innerHTML = toxicWarnings.map(t => `
+        <div class="bg-red-50 border-2 border-red-300 rounded-lg p-3 mt-2 flex items-start gap-2 pulse-warning">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+            <div>
+                <p class="font-bold text-red-800 text-sm">${t.name} -- TOXISCH für Katzen!</p>
+                <p class="text-red-700 text-xs mt-0.5">${t.text}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// DRUG LIST RENDER
+// ============================================================
+function renderDrugList() {
+    const search = document.getElementById('drugSearch').value.toLowerCase().trim();
+    const category = document.getElementById('categoryFilter').value;
+    const container = document.getElementById('drugList');
+
+    let filtered = DRUGS.filter(d => {
+        if (category !== 'all' && d.category !== category) return false;
+        if (search && !d.name.toLowerCase().includes(search)) return false;
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-sm col-span-2 text-center py-8">Keine Medikamente gefunden.</p>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(drug => {
+        const colors = CATEGORY_COLORS[drug.category];
+        const isAvailable = !currentSpecies || drug.species[currentSpecies];
+        const isSelected = selectedDrug && selectedDrug.id === drug.id;
+        const hasCave = drug.caves.some(c => c.species === currentSpecies || c.species === 'all');
+        const isContra = currentSpecies === 'katze' && drug.caves.some(c => c.species === 'katze' && c.level === 'danger');
+
+        let statusIcon = '';
+        let borderClass = colors.border;
+        if (currentSpecies) {
+            if (isContra) {
+                statusIcon = '<span class="text-red-600 text-xs font-bold">KONTRA</span>';
+                borderClass = 'border-red-400';
+            } else if (!isAvailable) {
+                statusIcon = '<span class="text-gray-400 text-xs">Nicht verfügbar</span>';
+                borderClass = 'border-gray-200';
+            } else if (hasCave) {
+                statusIcon = '<span class="text-yellow-600 text-xs font-bold">CAVE</span>';
+                borderClass = 'border-yellow-400';
+            } else {
+                statusIcon = '<span class="text-green-600 text-xs font-bold">OK</span>';
+            }
+        }
+
+        const speciesInfo = currentSpecies && drug.species[currentSpecies]
+            ? `<p class="text-xs text-gray-500 mt-1">${drug.species[currentSpecies].doseMin}${drug.species[currentSpecies].doseMax !== drug.species[currentSpecies].doseMin ? '-' + drug.species[currentSpecies].doseMax : ''} mg/kg ${drug.species[currentSpecies].routes.join('/')} ${drug.species[currentSpecies].interval}</p>`
+            : '';
+
+        return `
+            <button onclick="selectDrug(${drug.id})"
+                    class="drug-card ${colors.bg} border-2 ${borderClass} ${colors.hover} rounded-lg p-3 text-left w-full ${isSelected ? 'ring-2 ring-vet-primary ring-offset-1' : ''} ${!isAvailable && currentSpecies ? 'opacity-40 cursor-not-allowed' : ''}"
+                    ${!isAvailable && currentSpecies ? 'disabled' : ''}>
+                <div class="flex items-start justify-between gap-2">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-gray-800 text-sm truncate">${highlightSearch(drug.name, search)}</p>
+                        <span class="category-badge inline-block ${colors.badge} px-2 py-0.5 rounded-full mt-1 uppercase font-semibold">${drug.categoryLabel}</span>
+                        ${speciesInfo}
+                    </div>
+                    <div class="flex-shrink-0">${statusIcon}</div>
+                </div>
+            </button>
+        `;
+    }).join('');
+}
+
+function highlightSearch(text, search) {
+    if (!search) return text;
+    const idx = text.toLowerCase().indexOf(search);
+    if (idx === -1) return text;
+    return text.substring(0, idx) + '<span class="search-highlight">' + text.substring(idx, idx + search.length) + '</span>' + text.substring(idx + search.length);
+}
+
+// ============================================================
+// DRUG SELECTION
+// ============================================================
+function selectDrug(id) {
+    const drug = DRUGS.find(d => d.id === id);
+    if (!drug) return;
+
+    if (currentSpecies && !drug.species[currentSpecies]) {
+        return;
+    }
+
+    selectedDrug = drug;
+    renderDrugList();
+
+    const section = document.getElementById('calculatorSection');
+    section.classList.remove('hidden');
+    document.getElementById('selectedDrugName').textContent = drug.name;
+
+    // Populate routes
+    const routeSelect = document.getElementById('routeSelect');
+    const speciesData = currentSpecies ? drug.species[currentSpecies] : null;
+    const routes = speciesData
+        ? speciesData.routes
+        : [...new Set(Object.values(drug.species).flatMap(s => s.routes))];
+
+    routeSelect.innerHTML = routes.map(r => `<option value="${r}">${r} (${getRouteName(r)})</option>`).join('');
+
+    // Show CAVE warnings
+    showDrugCaves(drug);
+
+    // Calculate
+    calculateDose();
+
+    // Scroll to calculator
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function getRouteName(route) {
+    const names = {
+        'PO': 'oral',
+        'IV': 'intravenös',
+        'IM': 'intramuskulär',
+        'SC': 'subkutan',
+        'topisch': 'topisch',
+        'buccal': 'buccal',
+        'rektal': 'rektal'
+    };
+    return names[route] || route;
+}
+
+function showDrugCaves(drug) {
+    const container = document.getElementById('drugCaveWarnings');
+    const relevantCaves = drug.caves.filter(c =>
+        c.species === 'all' || c.species === currentSpecies || !currentSpecies
+    );
+
+    if (relevantCaves.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = relevantCaves.map(cave => {
+        const colors = {
+            danger: 'bg-red-50 border-red-300 text-red-800',
+            warning: 'bg-yellow-50 border-yellow-300 text-yellow-800',
+            info: 'bg-blue-50 border-blue-300 text-blue-800'
+        };
+        const icons = {
+            danger: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z',
+            warning: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z',
+            info: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+        };
+        const iconColor = { danger: 'text-red-600', warning: 'text-yellow-600', info: 'text-blue-600' };
+
+        return `
+            <div class="${colors[cave.level]} border-2 rounded-lg p-3 flex items-start gap-2 ${cave.level === 'danger' ? 'pulse-warning' : ''}">
+                <svg class="w-5 h-5 ${iconColor[cave.level]} flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icons[cave.level]}"/></svg>
+                <p class="text-sm font-medium">${cave.text}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================================
+// DOSE CALCULATION
+// ============================================================
+function calculateDose() {
+    const container = document.getElementById('doseResult');
+
+    if (!selectedDrug) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">Bitte ein Medikament auswählen.</p>';
+        return;
+    }
+
+    if (!currentSpecies) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">Bitte eine Spezies auswählen.</p>';
+        return;
+    }
+
+    if (!currentWeight || currentWeight <= 0) {
+        container.innerHTML = '<p class="text-gray-500 text-sm">Bitte das Körpergewicht eingeben.</p>';
+        return;
+    }
+
+    const speciesData = selectedDrug.species[currentSpecies];
+    if (!speciesData) {
+        container.innerHTML = '<p class="text-red-600 text-sm font-semibold">Dieses Medikament ist für die gewählte Spezies nicht verfügbar.</p>';
+        return;
+    }
+
+    const route = document.getElementById('routeSelect').value;
+    const conc = parseFloat(document.getElementById('concentration').value) || 0;
+
+    const doseMin = speciesData.doseMin * currentWeight;
+    const doseMax = speciesData.doseMax * currentWeight;
+
+    const speciesLabel = { hund: 'Hund', katze: 'Katze', pferd: 'Pferd' }[currentSpecies];
+
+    let statusColor = 'border-green-400 bg-green-50';
+    let statusText = 'Standarddosierung';
+    let statusDot = 'bg-green-500';
+
+    const hasDangerCave = selectedDrug.caves.some(c => (c.species === currentSpecies || c.species === 'all') && c.level === 'danger');
+    const hasWarningCave = selectedDrug.caves.some(c => (c.species === currentSpecies || c.species === 'all') && c.level === 'warning');
+
+    if (hasDangerCave) {
+        statusColor = 'border-red-400 bg-red-50';
+        statusText = 'CAVE -- Besondere Vorsicht!';
+        statusDot = 'bg-red-500';
+    } else if (hasWarningCave) {
+        statusColor = 'border-yellow-400 bg-yellow-50';
+        statusText = 'Vorsicht -- CAVE-Hinweise beachten';
+        statusDot = 'bg-yellow-500';
+    }
+
+    let volumeHtml = '';
+    if (conc > 0) {
+        const volMin = (doseMin / conc).toFixed(2);
+        const volMax = (doseMax / conc).toFixed(2);
+        volumeHtml = `
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-sm font-semibold text-gray-700">Volumen (bei ${conc} mg/ml):</p>
+                <p class="text-xl font-bold text-vet-primary">
+                    ${volMin === volMax ? volMin : volMin + ' - ' + volMax} ml
+                </p>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="border-2 ${statusColor} rounded-lg p-4">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-3 h-3 rounded-full ${statusDot} inline-block"></span>
+                <span class="text-sm font-bold">${statusText}</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <p class="text-gray-500">Medikament</p>
+                    <p class="font-bold text-gray-800">${selectedDrug.name}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Spezies / Gewicht</p>
+                    <p class="font-bold text-gray-800">${speciesLabel} / ${currentWeight} kg</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Dosierung (mg/kg)</p>
+                    <p class="font-bold text-gray-800">${speciesData.doseMin}${speciesData.doseMax !== speciesData.doseMin ? ' - ' + speciesData.doseMax : ''} mg/kg</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Applikation</p>
+                    <p class="font-bold text-gray-800">${route} (${getRouteName(route)})</p>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-sm font-semibold text-gray-700">Einzeldosis:</p>
+                <p class="text-2xl font-bold text-vet-primary">
+                    ${doseMin.toFixed(2) === doseMax.toFixed(2) ? doseMin.toFixed(2) : doseMin.toFixed(2) + ' - ' + doseMax.toFixed(2)} mg
+                </p>
+            </div>
+            ${volumeHtml}
+            <div class="mt-3 pt-3 border-t border-gray-200">
+                <p class="text-sm font-semibold text-gray-700">Intervall:</p>
+                <p class="font-bold text-gray-800">${speciesData.interval}</p>
+            </div>
+            ${speciesData.note ? `
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-sm text-gray-600 italic">${speciesData.note}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// ============================================================
+// RECEIPT MANAGEMENT
+// ============================================================
+function addToReceipt() {
+    if (!selectedDrug || !currentSpecies || !currentWeight) {
+        alert('Bitte Spezies, Gewicht und Medikament auswählen.');
+        return;
+    }
+
+    const speciesData = selectedDrug.species[currentSpecies];
+    if (!speciesData) {
+        alert('Dieses Medikament ist für die gewählte Spezies nicht verfügbar.');
+        return;
+    }
+
+    const route = document.getElementById('routeSelect').value;
+    const conc = parseFloat(document.getElementById('concentration').value) || 0;
+    const doseMin = speciesData.doseMin * currentWeight;
+    const doseMax = speciesData.doseMax * currentWeight;
+
+    // Check if already on receipt
+    const existingIdx = receiptItems.findIndex(item => item.drugId === selectedDrug.id);
+    if (existingIdx !== -1) {
+        if (!confirm(`${selectedDrug.name} ist bereits auf dem Rezept. Ersetzen?`)) return;
+        receiptItems.splice(existingIdx, 1);
+    }
+
+    receiptItems.push({
+        drugId: selectedDrug.id,
+        name: selectedDrug.name,
+        category: selectedDrug.category,
+        doseMin: doseMin,
+        doseMax: doseMax,
+        dosePerKgMin: speciesData.doseMin,
+        dosePerKgMax: speciesData.doseMax,
+        route: route,
+        interval: speciesData.interval,
+        concentration: conc,
+        note: speciesData.note || '',
+        drugRef: selectedDrug
+    });
+
+    updateReceipt();
+    checkInteractions();
+}
+
+function removeFromReceipt(index) {
+    receiptItems.splice(index, 1);
+    updateReceipt();
+    checkInteractions();
+}
+
+function clearReceipt() {
+    receiptItems = [];
+    updateReceipt();
+    document.getElementById('interactionSection').classList.add('hidden');
+}
+
+function updateReceipt() {
+    const itemsContainer = document.getElementById('receiptItems');
+    const patientContainer = document.getElementById('receiptPatient');
+    const warningsContainer = document.getElementById('receiptWarnings');
+    const speciesLabel = { hund: 'Hund', katze: 'Katze', pferd: 'Pferd' }[currentSpecies] || '';
+    const patientName = document.getElementById('patientName').value;
+
+    // Patient info
+    if (currentSpecies && currentWeight) {
+        patientContainer.classList.remove('hidden');
+        patientContainer.innerHTML = `
+            <p class="font-bold text-gray-800">${patientName ? patientName + ' -- ' : ''}${speciesLabel}, ${currentWeight} kg</p>
+            <p class="text-xs text-gray-500">Datum: ${new Date().toLocaleDateString('de-DE')}</p>
+        `;
+    } else {
+        patientContainer.classList.add('hidden');
+    }
+
+    if (receiptItems.length === 0) {
+        itemsContainer.innerHTML = '<p class="text-gray-400 text-sm text-center py-8">Noch keine Medikamente hinzugefügt.</p>';
+        warningsContainer.classList.add('hidden');
+        return;
+    }
+
+    itemsContainer.innerHTML = receiptItems.map((item, idx) => {
+        const volInfo = item.concentration > 0
+            ? `<br><span class="text-gray-500">Vol.: ${(item.doseMin / item.concentration).toFixed(2)}${item.doseMax !== item.doseMin ? ' - ' + (item.doseMax / item.concentration).toFixed(2) : ''} ml (${item.concentration} mg/ml)</span>`
+            : '';
+
+        return `
+            <div class="print-section border-b border-gray-100 pb-2 text-xs">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-bold text-gray-800">${idx + 1}. ${item.name}</p>
+                        <p class="text-gray-600">
+                            ${item.doseMin.toFixed(2)}${item.doseMax !== item.doseMin ? '-' + item.doseMax.toFixed(2) : ''} mg
+                            (${item.dosePerKgMin}${item.dosePerKgMax !== item.dosePerKgMin ? '-' + item.dosePerKgMax : ''} mg/kg)
+                            ${volInfo}
+                        </p>
+                        <p class="text-gray-600">${item.route} -- ${item.interval}</p>
+                        ${item.note ? `<p class="text-gray-400 italic">${item.note}</p>` : ''}
+                    </div>
+                    <button onclick="removeFromReceipt(${idx})" class="text-red-400 hover:text-red-600 no-print p-1 min-w-[44px] min-h-[44px] flex items-center justify-center" title="Entfernen">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Set print date
+    document.getElementById('printDate').textContent = new Date().toLocaleString('de-DE');
+}
+
+// ============================================================
+// INTERACTION CHECKER
+// ============================================================
+function checkInteractions() {
+    const section = document.getElementById('interactionSection');
+    const container = document.getElementById('interactionResults');
+
+    if (receiptItems.length < 2) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    const drugsOnReceipt = receiptItems.map(item => item.drugRef);
+    const triggers = INTERACTION_RULES.filter(rule => rule.check(drugsOnReceipt));
+
+    if (triggers.length === 0) {
+        section.classList.remove('hidden');
+        container.innerHTML = `
+            <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 flex items-center gap-3">
+                <svg class="w-6 h-6 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <div>
+                    <p class="font-bold text-green-800">Keine bekannten Wechselwirkungen</p>
+                    <p class="text-green-700 text-sm">Die aktuelle Kombination zeigt keine kritischen Interaktionen.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    section.classList.remove('hidden');
+    container.innerHTML = triggers.map(rule => {
+        const levelColors = {
+            danger: { bg: 'bg-red-50', border: 'border-red-400', title: 'text-red-800', text: 'text-red-700' },
+            warning: { bg: 'bg-yellow-50', border: 'border-yellow-400', title: 'text-yellow-800', text: 'text-yellow-700' },
+            info: { bg: 'bg-blue-50', border: 'border-blue-400', title: 'text-blue-800', text: 'text-blue-700' }
+        };
+        const c = levelColors[rule.level];
+        const involvedDrugs = rule.getDrugs(drugsOnReceipt);
+
+        return `
+            <div class="interaction-line ${rule.level} ${c.bg} border-l-4 ${c.border} rounded-r-lg p-4 mb-3 ${rule.level === 'danger' ? 'pulse-warning' : ''}">
+                <p class="font-bold ${c.title} text-sm">${rule.title}</p>
+                <p class="${c.text} text-sm mt-1">${rule.text}</p>
+                <p class="text-xs mt-2 text-gray-500">Betroffen: ${involvedDrugs.join(', ')}</p>
+            </div>
+        `;
+    }).join('');
+
+    // Also show receipt warnings
+    const warningsContainer = document.getElementById('receiptWarnings');
+    const dangerTriggers = triggers.filter(t => t.level === 'danger');
+    if (dangerTriggers.length > 0) {
+        warningsContainer.classList.remove('hidden');
+        warningsContainer.innerHTML = `
+            <div class="bg-red-50 border border-red-300 rounded p-2 text-xs text-red-700">
+                <p class="font-bold">Wechselwirkungen:</p>
+                ${dangerTriggers.map(t => `<p>- ${t.title}</p>`).join('')}
+            </div>
+        `;
+    } else {
+        warningsContainer.classList.add('hidden');
+    }
+}
+
+// ============================================================
+// CLEAR CALCULATOR
+// ============================================================
+function clearCalculator() {
+    selectedDrug = null;
+    document.getElementById('calculatorSection').classList.add('hidden');
+    document.getElementById('concentration').value = '';
+    document.getElementById('drugCaveWarnings').innerHTML = '';
+    renderDrugList();
+}
+
+// ============================================================
+// PRINT
+// ============================================================
+function printReceipt() {
+    if (receiptItems.length === 0) {
+        alert('Keine Medikamente auf dem Rezept.');
+        return;
+    }
+    document.getElementById('printDate').textContent = new Date().toLocaleString('de-DE');
+    window.print();
+}
+</script>
+
+</body>
+</html>
