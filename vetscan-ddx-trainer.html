@@ -1295,6 +1295,11 @@
         document.getElementById('resultsScreen').classList.remove('hidden');
 
         const totalPossibleScore = gameState.results.reduce((s, r) => s + r.maxScore, 0);
+
+        // Fortschritt im Dashboard speichern
+        if (typeof VetScan !== 'undefined' && VetScan.saveScore) {
+            VetScan.saveScore('ddx-trainer', gameState.score, totalPossibleScore);
+        }
         const pct = totalPossibleScore > 0 ? Math.round(gameState.score / totalPossibleScore * 100) : 0;
 
         document.getElementById('finalScore').textContent = gameState.score;

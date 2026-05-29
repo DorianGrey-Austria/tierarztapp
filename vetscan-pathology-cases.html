@@ -2144,6 +2144,11 @@ function renderTherapie(c) {
 function renderSummary() {
     const c = state.currentCase;
     const pct = state.maxScore > 0 ? Math.round((state.score / state.maxScore) * 100) : 0;
+
+    // Fortschritt im Dashboard speichern
+    if (typeof VetScan !== 'undefined' && VetScan.saveScore) {
+        VetScan.saveScore('pathology-cases', state.score, state.maxScore);
+    }
     const circumference = 2 * Math.PI * 52;
     const dashOffset = circumference - (pct / 100) * circumference;
 

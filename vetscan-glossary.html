@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Glossar - Veterinaermedizinisches Woerterbuch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vet: {
+                            primary: '#667eea',
+                            secondary: '#764ba2',
+                            accent: '#00d4aa',
+                            dark: '#1a1a2e',
+                            surface: '#16213e',
+                            card: '#0f3460',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f172a;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        /* A-Z Navigation */
+        .az-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+        }
+        .az-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.6);
+            min-height: 36px;
+        }
+        .az-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #818cf8;
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+        .az-btn.active {
+            background: rgba(102, 126, 234, 0.3);
+            color: #a5b4fc;
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+        .az-btn.disabled {
+            opacity: 0.3;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* Category Tabs */
+        .cat-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.6);
+            white-space: nowrap;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        .cat-tab:hover {
+            background: rgba(102, 126, 234, 0.15);
+            color: #a5b4fc;
+        }
+        .cat-tab.active {
+            background: rgba(102, 126, 234, 0.25);
+            color: #a5b4fc;
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+
+        /* Entry Card */
+        .entry-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .entry-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+        .entry-card.expanded {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.4);
+        }
+        .entry-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease, opacity 0.25s ease;
+            opacity: 0;
+        }
+        .entry-card.expanded .entry-details {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        /* Favorite Star */
+        .fav-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: rgba(255,255,255,0.2);
+            transition: all 0.2s;
+            border-radius: 8px;
+            min-height: 36px;
+            flex-shrink: 0;
+        }
+        .fav-btn:hover {
+            color: #fbbf24;
+            background: rgba(251,191,36,0.1);
+        }
+        .fav-btn.favorited {
+            color: #fbbf24;
+        }
+
+        /* Category Badge */
+        .cat-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        /* Letter heading */
+        .letter-heading {
+            font-size: 28px;
+            font-weight: 800;
+            color: #818cf8;
+            padding: 16px 0 8px 4px;
+            border-bottom: 2px solid rgba(129, 140, 248, 0.2);
+            margin-bottom: 12px;
+            scroll-margin-top: 200px;
+        }
+
+        /* Search highlight */
+        mark {
+            background: rgba(251, 191, 36, 0.3);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+
+        /* Stats counter animation */
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-num { animation: countUp 0.4s ease-out; }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .glass, .glass-strong { background: #fff !important; border-color: #ccc !important; backdrop-filter: none !important; }
+            .entry-card { background: #fff !important; border-color: #ddd !important; page-break-inside: avoid; }
+            .entry-details { max-height: none !important; opacity: 1 !important; }
+            .az-bar, .cat-tab, .fav-btn, #searchInput, #randomBtn, #favFilterBtn { display: none !important; }
+            .letter-heading { color: #333 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="glass-strong sticky top-0 z-50" style="padding-top: 48px;">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+        <div class="flex flex-col gap-4">
+            <!-- Title Row -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white">Veterinaermedizinisches Glossar</h1>
+                    <p class="text-sm text-gray-400 mt-1" id="statsLine">Lade Eintraege...</p>
+                </div>
+                <div class="flex gap-2">
+                    <button id="favFilterBtn" class="cat-tab text-sm" onclick="toggleFavFilter()" title="Nur Favoriten anzeigen">
+                        Favoriten
+                    </button>
+                    <button id="randomBtn" class="cat-tab text-sm" onclick="showRandomEntry()" title="Zufaelliger Begriff">
+                        Zufall
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="relative">
+                <input id="searchInput" type="text" placeholder="Suchbegriff eingeben..."
+                    class="w-full px-4 py-3 pl-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-400/20 text-base"
+                    autocomplete="off" spellcheck="false">
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span id="searchCount" class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-gray-500 hidden"></span>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide" id="categoryBar" style="scrollbar-width:none;">
+                <!-- Tabs werden dynamisch eingefuegt -->
+            </div>
+
+            <!-- A-Z Bar -->
+            <div class="az-bar" id="azBar">
+                <!-- Buttons werden dynamisch eingefuegt -->
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content -->
+<main class="max-w-6xl mx-auto px-4 py-6" id="glossaryContent">
+    <!-- Eintraege werden dynamisch eingefuegt -->
+</main>
+
+<!-- Scroll-to-top -->
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+    class="fixed bottom-6 right-6 w-12 h-12 rounded-full glass-strong text-white flex items-center justify-center text-xl cursor-pointer transition-all hover:scale-110 z-40 opacity-0 pointer-events-none"
+    aria-label="Nach oben scrollen" style="transition: opacity 0.3s;">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+</button>
+
+<script>
+// =====================================================
+// GLOSSAR-DATENBANK (120+ Eintraege)
+// =====================================================
+const GLOSSARY = [
+
+// =====================================================
+// ANATOMIE (20)
+// =====================================================
+{
+    term: "Abdomen",
+    pronunciation: "Ab-do-men",
+    category: "Anatomie",
+    definition: "Bauchhoehle; der Koerperabschnitt zwischen Thorax (Brustkorb) und Becken, der die Organe des Verdauungs-, Harn- und Genitaltrakts enthaelt.",
+    synonyms: ["Bauchhoehle", "Cavum abdominis"],
+    relevance: "Zentrale Region bei der klinischen Untersuchung. Palpation des Abdomens ist essenziell zur Beurteilung von Organgroessen, Schmerzhaftigkeit und Umfangsvermehrungen."
+},
+{
+    term: "Thorax",
+    pronunciation: "Tho-rax",
+    category: "Anatomie",
+    definition: "Brustkorb; der von Rippen, Brustwirbelsaeule und Sternum begrenzte Koerperabschnitt, der Herz und Lungen beherbergt.",
+    synonyms: ["Brustkorb", "Cavum thoracis"],
+    relevance: "Auskultation und Perkussion des Thorax sind Grundpfeiler der kardiopulmonalen Diagnostik."
+},
+{
+    term: "Cranial",
+    pronunciation: "Kra-ni-al",
+    category: "Anatomie",
+    definition: "Kopfwaerts gerichtet; in Richtung des Schaedels (Cranium). Gegenteil: caudal.",
+    synonyms: ["Rostral (am Kopf selbst)"],
+    relevance: "Standardisierte Lagebezeichnung in der veterinaermedizinischen Dokumentation und Bildgebung."
+},
+{
+    term: "Caudal",
+    pronunciation: "Kau-dal",
+    category: "Anatomie",
+    definition: "Schwanzwaerts gerichtet; in Richtung des Schwanzes (Cauda). Gegenteil: cranial.",
+    synonyms: [],
+    relevance: "Wird in Befundberichten und chirurgischen Protokollen zur exakten Lagebeschreibung verwendet."
+},
+{
+    term: "Dorsal",
+    pronunciation: "Dor-sal",
+    category: "Anatomie",
+    definition: "Rueckenwaerts gerichtet; zur Rueckenseite (Dorsum) hin gelegen. Gegenteil: ventral.",
+    synonyms: [],
+    relevance: "Wichtig fuer die Orientierung bei Roentgenaufnahmen (z.B. dorsoventral = DV-Aufnahme)."
+},
+{
+    term: "Ventral",
+    pronunciation: "Ven-tral",
+    category: "Anatomie",
+    definition: "Bauchwaerts gerichtet; zur Bauchseite (Venter) hin gelegen. Gegenteil: dorsal.",
+    synonyms: [],
+    relevance: "Haeufig in Kombination mit anderen Richtungsbezeichnungen (z.B. ventrolateral)."
+},
+{
+    term: "Lateral",
+    pronunciation: "La-te-ral",
+    category: "Anatomie",
+    definition: "Seitlich gelegen; von der Medianebene weg gerichtet. Gegenteil: medial.",
+    synonyms: [],
+    relevance: "Zentrale Orientierungshilfe bei Roentgen (z.B. laterolaterale Aufnahme) und Chirurgie."
+},
+{
+    term: "Medial",
+    pronunciation: "Me-di-al",
+    category: "Anatomie",
+    definition: "Zur Koerpermitte hin gelegen; in Richtung der Medianebene. Gegenteil: lateral.",
+    synonyms: [],
+    relevance: "Entscheidend fuer die Beschreibung von Gelenkstrukturen und Gefaessverlaeufen."
+},
+{
+    term: "Proximal",
+    pronunciation: "Pro-xi-mal",
+    category: "Anatomie",
+    definition: "Koerpernahe; naeher zum Rumpf gelegen (bei Extremitaeten). Gegenteil: distal.",
+    synonyms: [],
+    relevance: "Wird bei der Beschreibung von Frakturen und Gelenkpathologien verwendet."
+},
+{
+    term: "Distal",
+    pronunciation: "Dis-tal",
+    category: "Anatomie",
+    definition: "Koerperfern; weiter vom Rumpf entfernt gelegen (bei Extremitaeten). Gegenteil: proximal.",
+    synonyms: [],
+    relevance: "Wichtig in der orthopedischen und radiologischen Befundung."
+},
+{
+    term: "Interkostalraum (ICR)",
+    pronunciation: "In-ter-kos-tal-raum",
+    category: "Anatomie",
+    definition: "Zwischenrippenraum; der Raum zwischen zwei benachbarten Rippen, durchzogen von Interkostalmuskulatur, -nerven und -gefaessen.",
+    synonyms: ["Spatium intercostale", "ICR"],
+    relevance: "Referenzpunkt fuer Auskultation (z.B. optimaler Punkt fuer Herzauskultation bei Hund: 4.--5. ICR links), Thorakozentese und Thoraxdrainagen."
+},
+{
+    term: "Peritoneum",
+    pronunciation: "Pe-ri-to-ne-um",
+    category: "Anatomie",
+    definition: "Bauchfell; seroese Haut, die die Bauchhoehle auskleidet (parietales Blatt) und die Bauchorgane ueberzieht (viszerales Blatt).",
+    synonyms: ["Bauchfell"],
+    relevance: "Peritonitis (Entzuendung des Peritoneums) ist ein lebensbedrohlicher Notfall, haeufig nach Darmperforation oder Fremdkoerper."
+},
+{
+    term: "Retroperitoneal",
+    pronunciation: "Re-tro-pe-ri-to-ne-al",
+    category: "Anatomie",
+    definition: "Hinter dem Bauchfell gelegen. Organe in dieser Lage: Nieren, Nebennieren, Ureteren, Teile des Pankreas.",
+    synonyms: [],
+    relevance: "Retroperitoneale Blutungen oder Abszesse koennen klinisch schwer zu diagnostizieren sein und erfordern bildgebende Verfahren."
+},
+{
+    term: "Mediastinum",
+    pronunciation: "Me-di-as-ti-num",
+    category: "Anatomie",
+    definition: "Mittelfellraum; der zentrale Bereich im Thorax zwischen den beiden Pleurahoehlenseiten, der Herz, grosse Gefaesse, Oesophagus und Trachea enthaelt.",
+    synonyms: ["Mittelfell"],
+    relevance: "Mediastinale Massen (z.B. Lymphom bei der Katze) sind radiologisch als Verbreiterung des Mediastinums sichtbar."
+},
+{
+    term: "Diaphragma",
+    pronunciation: "Di-a-phrag-ma",
+    category: "Anatomie",
+    definition: "Zwerchfell; der kuppelfoermige Muskel, der Thorax- und Bauchhoehle trennt und als Hauptatemmuskel fungiert.",
+    synonyms: ["Zwerchfell"],
+    relevance: "Zwerchfellrupturen (traumatisch) fuehren zur Verlagerung von Bauchorganen in den Thorax -- eine haeufige Diagnose nach Autounfaellen."
+},
+{
+    term: "Faszie",
+    pronunciation: "Fas-zi-e",
+    category: "Anatomie",
+    definition: "Bindegewebshuelle, die Muskeln, Organe und Gefaesse umgibt und in Kompartimente unterteilt.",
+    synonyms: ["Fascia"],
+    relevance: "Kenntnis der Faszienebenen ist essenziell in der Chirurgie fuer korrekte Zugaenge und Wundverschluss."
+},
+{
+    term: "Periost",
+    pronunciation: "Pe-ri-ost",
+    category: "Anatomie",
+    definition: "Knochenhaut; die den Knochen umgebende bindegewebige Huelle mit osteogener Potenz und Schmerzrezeptoren.",
+    synonyms: ["Knochenhaut", "Periosteum"],
+    relevance: "Periostale Reaktionen im Roentgenbild weisen auf Frakturen, Infektionen oder Tumoren hin."
+},
+{
+    term: "Epiphyse / Diaphyse / Metaphyse",
+    pronunciation: "E-pi-phy-se / Di-a-phy-se / Me-ta-phy-se",
+    category: "Anatomie",
+    definition: "Knochenabschnitte: Epiphyse = Gelenkende, Diaphyse = Knochenschaft, Metaphyse = Uebergangszone zwischen beiden. Bei Jungtieren liegt hier die Wachstumsfuge (Epiphysenfuge).",
+    synonyms: [],
+    relevance: "Frakturen bei Jungtieren betreffen haeufig die Wachstumsfuge (Salter-Harris-Klassifikation). Tumoren wie das Osteosarkom entstehen bevorzugt in der Metaphyse."
+},
+{
+    term: "Mesenterium",
+    pronunciation: "Me-sen-te-ri-um",
+    category: "Anatomie",
+    definition: "Gekroese; doppelte Peritonealfalte, die den Darm an der Bauchwand befestigt und Gefaesse, Nerven und Lymphknoten fuehrt.",
+    synonyms: ["Gekroese"],
+    relevance: "Mesenteriale Lymphknoten koennen bei Lymphom oder Entzuendung vergroessert sein und sind palpatorisch oder sonographisch auffindbar."
+},
+{
+    term: "Omentum",
+    pronunciation: "O-men-tum",
+    category: "Anatomie",
+    definition: "Bauchnetz; fetthaltige Peritonealfalte (Omentum majus und minus), die als 'Bauchraumpolizist' Entzuendungsherde abschirmt.",
+    synonyms: ["Bauchnetz", "Netz"],
+    relevance: "Das grosse Netz wickelt sich haeufig um Fremdkoerper und Darmpathologien und wird chirurgisch als Pedikel-Flap genutzt."
+},
+{
+    term: "Ligamentum",
+    pronunciation: "Li-ga-men-tum",
+    category: "Anatomie",
+    definition: "Band; bindegewebige Struktur, die Knochen miteinander verbindet (Gelenkband) oder Organe fixiert.",
+    synonyms: ["Band", "Ligament"],
+    relevance: "Kreuzbandriss (Ruptur des Lig. cruciatum craniale) ist eine der haeufigsten orthopaedischen Erkrankungen beim Hund."
+},
+{
+    term: "Processus",
+    pronunciation: "Pro-zes-sus",
+    category: "Anatomie",
+    definition: "Knochenfortsatz; vorspringende knoeche Struktur, die als Muskelansatz oder Gelenkpartner dient (z.B. Processus spinosus, Processus coronoideus).",
+    synonyms: ["Fortsatz"],
+    relevance: "Fragmentierter Processus coronoideus (FPC) ist ein haeufiger Befund bei Ellbogendysplasie des Hundes."
+},
+{
+    term: "Foramen",
+    pronunciation: "Fo-ra-men",
+    category: "Anatomie",
+    definition: "Oeffnung in einem Knochen, durch die Gefaesse und Nerven verlaufen (z.B. Foramen magnum, Foramen obturatum).",
+    synonyms: ["Knochenloch"],
+    relevance: "Foramen-magnum-Fehlbildungen koennen bei Zwergrassen neurologische Symptome verursachen (Chiari-Malformation)."
+},
+{
+    term: "Synovia",
+    pronunciation: "Sy-no-vi-a",
+    category: "Anatomie",
+    definition: "Gelenkfluessigkeit (Gelenkschmiere); viskoese, hyaluronsaeurereiche Fluessigkeit, die den Gelenkknorpel ernaehrt und die Reibung minimiert.",
+    synonyms: ["Gelenkfluessigkeit", "Synovialfluessigkeit"],
+    relevance: "Synoviaanalyse (Zellzahl, Protein, Viskositaet) ist diagnostisch bei Arthritis, septischer Arthritis und immunmediierten Gelenkerkrankungen."
+},
+
+// =====================================================
+// KLINISCHE UNTERSUCHUNG (16)
+// =====================================================
+{
+    term: "Adspektion",
+    pronunciation: "Ad-spek-ti-on",
+    category: "Klinische Untersuchung",
+    definition: "Untersuchung durch Betrachtung (Sehen). Erster Schritt der klinischen Untersuchung zur Erfassung von Haltung, Gangbild, Ernaehrungszustand und aeusseren Veraenderungen.",
+    synonyms: ["Inspektion"],
+    relevance: "Grundlage jeder klinischen Untersuchung. Bereits die Adspektion liefert wertvolle Hinweise auf Lahmheit, Dyspnoe oder Bewusstseinsveraenderungen."
+},
+{
+    term: "Palpation",
+    pronunciation: "Pal-pa-ti-on",
+    category: "Klinische Untersuchung",
+    definition: "Untersuchung durch Betasten. Beurteilung von Konsistenz, Groesse, Schmerzhaftigkeit und Temperatur von Geweben und Organen durch die Haende des Untersuchers.",
+    synonyms: ["Betasten", "Abtasten"],
+    relevance: "Erlaubt die Beurteilung von Lymphknoten, Abdomen, Gelenken und Weichteilschwellungen. Rektale Palpation ist beim Grosstier essenziell."
+},
+{
+    term: "Perkussion",
+    pronunciation: "Per-kus-si-on",
+    category: "Klinische Untersuchung",
+    definition: "Untersuchung durch Beklopfen. Beurteilung der darunterliegenden Strukturen anhand des erzeugten Schalls (sonor, gedaempft, tympanitisch, hypersonor).",
+    synonyms: ["Abklopfen"],
+    relevance: "Dient der Erkennung von Pleuraerguss (gedaempft), Pneumothorax (hypersonor) oder Tympanie (z.B. Labmagenverlagerung beim Rind)."
+},
+{
+    term: "Auskultation",
+    pronunciation: "Aus-kul-ta-ti-on",
+    category: "Klinische Untersuchung",
+    definition: "Untersuchung durch Abhoeren mit dem Stethoskop. Beurteilung von Herz-, Lungen- und Darmgeraueschen.",
+    synonyms: ["Abhoeren"],
+    relevance: "Identifikation von Herzgeraueschen (Murmurs), pathologischen Lungengeraueschen (Rasseln, Giemen) und Darmhyperakusis oder -stille."
+},
+{
+    term: "KFZ (Kapillaere Fuellungszeit)",
+    pronunciation: "Ka-pil-lae-re Fuel-lungs-zeit",
+    category: "Klinische Untersuchung",
+    definition: "Zeit, die eine durch Fingerdruck entfaerbte Schleimhautstelle (typischerweise Gingiva) benoetigt, um ihre Farbe zurueckzuerlangen. Normal: < 2 Sekunden.",
+    synonyms: ["CRT (Capillary Refill Time)"],
+    relevance: "Verlaengerte KFZ (> 2 s) deutet auf Dehydratation, Schock oder Kreislaufversagen hin. Einer der schnellsten Indikatoren fuer haemodyn. Instabilitaet."
+},
+{
+    term: "BCS (Body Condition Score)",
+    pronunciation: "Bo-di Kon-di-schen Skor",
+    category: "Klinische Untersuchung",
+    definition: "Standardisierte Bewertung des Ernaehrungszustandes anhand von Palpation und Adspektion. Skala: 1--5 oder 1--9 (speziesabhaengig), wobei 1 = kachektisch und 5/9 = adipoes.",
+    synonyms: ["Koerperkonditonsbewertung"],
+    relevance: "Wichtiges Monitoring-Tool in der Ernaehrungsberatung, bei chronischen Erkrankungen und zur Narkoseeinschaetzung."
+},
+{
+    term: "Turgor (Hautturgor)",
+    pronunciation: "Tur-gor",
+    category: "Klinische Untersuchung",
+    definition: "Hautelastizitaet; wird getestet durch Anheben einer Hautfalte (meist Nacken- oder Schulterbereich). Die Rueckbildungszeit gibt Aufschluss ueber den Hydratationsstatus.",
+    synonyms: ["Hautfaltenstehzeit"],
+    relevance: "Verlaengerter Hautturgor (> 2 s) weist auf Dehydratation hin. Ab ca. 5 % Dehydratation klinisch messbar."
+},
+{
+    term: "Tachykardie",
+    pronunciation: "Ta-chy-kar-die",
+    category: "Klinische Untersuchung",
+    definition: "Erhoehte Herzfrequenz ueber die speziesspezifische Norm hinaus. Hund: > 160/min (grosse Rassen > 120/min), Katze: > 240/min.",
+    synonyms: [],
+    relevance: "Kann physiologisch (Stress, Aufregung) oder pathologisch sein (Schmerz, Fieber, Schock, Herzerkrankung, Hyperthyreose)."
+},
+{
+    term: "Bradykardie",
+    pronunciation: "Bra-dy-kar-die",
+    category: "Klinische Untersuchung",
+    definition: "Erniedrigte Herzfrequenz unter die speziesspezifische Norm. Kann auf AV-Block, Hypothyreose, Hypothermie oder Vagusreizung hinweisen.",
+    synonyms: [],
+    relevance: "Schwere Bradykardien koennen haemodynamisch relevant sein und eine Atropin-Antwort oder Schrittmacherimplantation erfordern."
+},
+{
+    term: "Tachypnoe",
+    pronunciation: "Tach-yp-noe",
+    category: "Klinische Untersuchung",
+    definition: "Erhoehte Atemfrequenz. Hund: > 40/min in Ruhe, Katze: > 40/min. Zu unterscheiden von Dyspnoe (erschwertes Atmen).",
+    synonyms: ["Schnellatmung"],
+    relevance: "Kann auf Schmerz, Fieber, Angst, Lungenerkrankung oder Herzinsuffizienz hindeuten."
+},
+{
+    term: "Bradypnoe",
+    pronunciation: "Bra-dyp-noe",
+    category: "Klinische Untersuchung",
+    definition: "Erniedrigte Atemfrequenz. Kann im Schlaf physiologisch sein oder auf ZNS-Depression, Hypothermie oder Narkoseeinfluss hinweisen.",
+    synonyms: [],
+    relevance: "Waehrend der Narkoseueberwachung ist Bradypnoe ein Warnsignal fuer zu tiefe Anaesthesie."
+},
+{
+    term: "Dyspnoe",
+    pronunciation: "Dysp-noe",
+    category: "Klinische Untersuchung",
+    definition: "Erschwertes, angestrengtes Atmen. Kann inspiratorisch (Obstruktion der oberen Atemwege), exspiratorisch (Bronchien/Lunge) oder gemischt auftreten.",
+    synonyms: ["Atemnot"],
+    relevance: "Dyspnoe ist immer ein Notfall. Inspiratorischer Stridor deutet auf Larynxparalyse oder Trachealkollaps, exspiratorische Dyspnoe auf Asthma (Katze) oder COPD."
+},
+{
+    term: "Apnoe",
+    pronunciation: "Ap-noe",
+    category: "Klinische Untersuchung",
+    definition: "Atemstillstand; vollstaendiges Fehlen der Atembewegungen. Erfordert sofortige Intervention.",
+    synonyms: ["Atemstillstand"],
+    relevance: "Tritt bei Narkosezwischenfaellen, schweren Intoxikationen oder terminalen Stadien auf. Sofortige Beatmung erforderlich."
+},
+{
+    term: "Zyanose",
+    pronunciation: "Zy-a-no-se",
+    category: "Klinische Untersuchung",
+    definition: "Blaufaerbung der Schleimhaeute und Haut durch erhoehtes desoxygeniertes Haemoglobin (> 5 g/dl). Zeichen einer schweren Hypoxaemie.",
+    synonyms: ["Blausucht"],
+    relevance: "Zentrale Zyanose (Zunge, Gingiva) weist auf schwere Lungen- oder Herzerkrankung hin und ist ein absoluter Notfall."
+},
+{
+    term: "Ikterus",
+    pronunciation: "Ik-te-rus",
+    category: "Klinische Untersuchung",
+    definition: "Gelbfaerbung der Schleimhaeute, Skleren und Haut durch erhoehtes Bilirubin im Blut. Unterteilt in praehepatisch (Haemolyse), hepatisch (Leberschaden) und posthepatisch (Gallenstau).",
+    synonyms: ["Gelbsucht"],
+    relevance: "Differenzierung der Ikterusform ist entscheidend fuer die Therapie: Haemolyse (Immunsuppression), Leber (Supportivtherapie) oder Gallenstau (Chirurgie)."
+},
+{
+    term: "Oedem",
+    pronunciation: "Oe-dem",
+    category: "Klinische Untersuchung",
+    definition: "Fluessigkeitsansammlung im Interstitium (Gewebe). Kann lokal (Entzuendung, Allergie) oder generalisiert (Hypoproteinaemie, Herzinsuffizienz) auftreten.",
+    synonyms: ["Wassereinlagerung"],
+    relevance: "Lungenoedem bei Herzinsuffizienz oder subkutane Oedeme bei schwerer Hypoalbuminaemie sind klinisch bedeutsame Manifestationen."
+},
+{
+    term: "Alopezie",
+    pronunciation: "A-lo-pe-zie",
+    category: "Klinische Untersuchung",
+    definition: "Haarausfall; vollstaendiger oder teilweiser Verlust des Haarkleides. Kann endokrin, entzuendlich, parasitaer, immunmediiert oder psychogen bedingt sein.",
+    synonyms: ["Haarlosigkeit", "Haarverlust"],
+    relevance: "Symmetrische Alopezie deutet auf endokrine Stoerungen (Hypothyreose, Cushing), asymmetrische auf Dermatophytose oder Demodikose."
+},
+{
+    term: "Pruritus",
+    pronunciation: "Pru-ri-tus",
+    category: "Klinische Untersuchung",
+    definition: "Juckreiz; subjektives Empfinden, das zu Kratzen, Lecken, Beissen oder Reiben fuehrt. Haeufigster Vorstellungsgrund in der Dermatologie.",
+    synonyms: ["Juckreiz"],
+    relevance: "Flohallergie (FAD), atopische Dermatitis und Futtermittelallergie sind die 3 haeufigsten Ursachen beim Hund."
+},
+{
+    term: "Exsudat / Transsudat",
+    pronunciation: "Ex-su-dat / Trans-su-dat",
+    category: "Klinische Untersuchung",
+    definition: "Exsudat: eiweiss- und zellreiche Fluessigkeit bei Entzuendung. Transsudat: eiweiss- und zellarme Fluessigkeit durch veraenderten hydrostatischen/onkotischen Druck.",
+    synonyms: [],
+    relevance: "Die Differenzierung ist diagnostisch entscheidend: Exsudat spricht fuer FIP, Pyothorax oder septische Peritonitis; modifiziertes Transsudat fuer Herzinsuffizienz oder Leberzirrhose."
+},
+
+// =====================================================
+// PATHOLOGIE (22)
+// =====================================================
+{
+    term: "Nekrose",
+    pronunciation: "Ne-kro-se",
+    category: "Pathologie",
+    definition: "Ungeordneter Zelltod durch aeussere Schaedigung (Ischaemie, Toxine, Trauma). Die Zelle schwillt an, die Membran bricht, Entzuendungsreaktion folgt.",
+    synonyms: ["Gewebetod"],
+    relevance: "Nekrotisches Gewebe muss chirurgisch debridiert werden. Haeufig bei Verbrennungen, Erfrierungen und Ischaemie."
+},
+{
+    term: "Apoptose",
+    pronunciation: "A-pop-to-se",
+    category: "Pathologie",
+    definition: "Programmierter, geordneter Zelltod. Die Zelle schrumpft, fragmentiert kontrolliert und wird phagozytiert -- ohne Entzuendungsreaktion.",
+    synonyms: ["Programmierter Zelltod"],
+    relevance: "Stoerungen der Apoptose spielen bei Tumorentwicklung (zu wenig Apoptose) und Autoimmunerkrankungen (zu viel Apoptose) eine zentrale Rolle."
+},
+{
+    term: "Inflammation",
+    pronunciation: "In-flam-ma-ti-on",
+    category: "Pathologie",
+    definition: "Entzuendung; komplexe Gewebereaktion auf Schaedigung, gekennzeichnet durch die 5 Kardinalzeichen: Rubor (Roete), Calor (Waerme), Tumor (Schwellung), Dolor (Schmerz), Functio laesa (Funktionsverlust).",
+    synonyms: ["Entzuendung"],
+    relevance: "Grundprozess bei unzaehligen Erkrankungen. Therapeutisch Ziel von NSAIDs, Glukokortikoiden und Immunsuppressiva."
+},
+{
+    term: "Hyperplasie",
+    pronunciation: "Hy-per-pla-sie",
+    category: "Pathologie",
+    definition: "Zunahme der Zellzahl in einem Gewebe, fuehrt zur Organvergroesserung. Kann physiologisch (z.B. Laktation) oder pathologisch sein.",
+    synonyms: [],
+    relevance: "Benigne Prostatahyperplasie (BPH) ist beim unkastrierten Rueden haeufig und kann zu Harn- und Kotabsatzstoerungen fuehren."
+},
+{
+    term: "Hypertrophie",
+    pronunciation: "Hy-per-tro-phie",
+    category: "Pathologie",
+    definition: "Zunahme der Zellgroesse (nicht der Zellzahl), fuehrt zu Organvergroesserung. Typisch bei Muskel- und Herzgewebe.",
+    synonyms: [],
+    relevance: "Konzentrische Myokardhypertrophie bei der HCM der Katze oder Skelettmuskelhypertrophie bei Training."
+},
+{
+    term: "Atrophie",
+    pronunciation: "A-tro-phie",
+    category: "Pathologie",
+    definition: "Verkleinerung eines Organs oder Gewebes durch Abnahme von Zellgroesse und/oder Zellzahl. Kann physiologisch (Alter) oder pathologisch (Inaktivitaet, Denervation) sein.",
+    synonyms: ["Gewebeschwund"],
+    relevance: "Muskelatrophie nach Ruhigstellung oder Denervation. Thymusinvolution als Beispiel physiologischer Atrophie."
+},
+{
+    term: "Metaplasie",
+    pronunciation: "Me-ta-pla-sie",
+    category: "Pathologie",
+    definition: "Umwandlung eines differenzierten Gewebetyps in einen anderen als Reaktion auf chronische Reizung. Reversibel bei Beseitigung des Reizes.",
+    synonyms: [],
+    relevance: "Plattenepithelmetaplasie in der Harnblase bei Vitamin-A-Mangel oder im Respirationstrakt bei chronischer Reizung."
+},
+{
+    term: "Dysplasie",
+    pronunciation: "Dys-pla-sie",
+    category: "Pathologie",
+    definition: "Fehlbildung oder abnormale Gewebedifferenzierung. In der Pathologie: praekanzeroes veraenderte Zellen. In der Orthopedie: Fehlentwicklung von Gelenken.",
+    synonyms: [],
+    relevance: "Hueftgelenkdysplasie (HD) und Ellbogendysplasie (ED) sind die haeufigsten erblichen Gelenkerkrankungen beim Hund."
+},
+{
+    term: "Neoplasie",
+    pronunciation: "Neo-pla-sie",
+    category: "Pathologie",
+    definition: "Neubildung von Gewebe (Tumor). Unterteilt in benigne (gutartig, langsam wachsend, nicht metastasierend) und maligne (boesartig, invasiv, metastasierend).",
+    synonyms: ["Tumor", "Neubildung"],
+    relevance: "Haeufigste Todesursache bei aelteren Hunden. Wichtigste Tumore: Lymphom, Haemangiosarkom, Mastzelltumor, Osteosarkom."
+},
+{
+    term: "Metastase",
+    pronunciation: "Me-ta-sta-se",
+    category: "Pathologie",
+    definition: "Absiedlung (Tochtergeschwulst) eines malignen Tumors in entferntem Gewebe. Ausbreitung ueber Blut (haematogen), Lymphe (lymphogen) oder Koerperhoehlen.",
+    synonyms: ["Tochtergeschwulst", "Filiae"],
+    relevance: "Thoraxroentgen zum Metastasen-Screening gehoert zum Standard-Staging bei jedem malignen Tumor."
+},
+{
+    term: "Fibrose",
+    pronunciation: "Fi-bro-se",
+    category: "Pathologie",
+    definition: "Vermehrte Bildung von Bindegewebe als Endzustand chronischer Entzuendung oder Gewebeschaedigung. Fuehrt zu Funktionsverlust des betroffenen Organs.",
+    synonyms: ["Vernarbung", "Sklerose"],
+    relevance: "Leberfibrose/-zirrhose, Lungenfibrose und Myokardfibrose sind irreversible Endstadien chronischer Erkrankungen."
+},
+{
+    term: "Granulom",
+    pronunciation: "Gra-nu-lom",
+    category: "Pathologie",
+    definition: "Knotenartige Ansammlung von Makrophagen (Epitheloidzellen), oft mit Riesenzellen, als Reaktion auf schwer abbaubare Substanzen oder Erreger.",
+    synonyms: [],
+    relevance: "Haeufig bei Mykobakteriosen, Fremdkoerpern, Pilzinfektionen und FIP (granulomatomse Form)."
+},
+{
+    term: "Abszess",
+    pronunciation: "Abs-zess",
+    category: "Pathologie",
+    definition: "Abgekapselte Eiteransammlung in einem Gewebehohlraum, umgeben von einer Abszessmembran (Pyogenmembran).",
+    synonyms: ["Eiterbeule"],
+    relevance: "Haeufig nach Bissverletzungen (besonders bei Katzen). Therapie: Drainage, Spuelung und systemische Antibiose."
+},
+{
+    term: "Haematom",
+    pronunciation: "Hae-ma-tom",
+    category: "Pathologie",
+    definition: "Umschriebene Blutansammlung im Gewebe nach Gefaessverletzung. Kann subkutan, intramuskulaer oder in Koerperhoehlen auftreten.",
+    synonyms: ["Bluterguss"],
+    relevance: "Ohrhaematom (Othaematom) ist beim Hund haeufig und erfordert oft chirurgische Versorgung zur Vermeidung von Blumenkohlohren."
+},
+{
+    term: "Thrombose",
+    pronunciation: "Throm-bo-se",
+    category: "Pathologie",
+    definition: "Intravitale Blutgerinnung in einem Gefaess. Zusammensetzung aus Thrombozyten, Fibrin und Erythrozyten. Kann arteriell oder venoes auftreten.",
+    synonyms: [],
+    relevance: "Aortenthrombose (Sattelthrombus) bei der Katze mit HCM fuehrt zu akuter Hinterhandsparalyse -- ein haemodynamischer Notfall."
+},
+{
+    term: "Embolie",
+    pronunciation: "Em-bo-lie",
+    category: "Pathologie",
+    definition: "Verschluss eines Gefaesses durch verschlepptes Material (Thrombus, Fett, Luft, Tumorgewebe). Der Embolus stammt typischerweise von einem anderen Ort.",
+    synonyms: [],
+    relevance: "Lungenembolie bei Hyperadrenokortizismus, fibrokartilaginae Embolie bei Bandscheibenerkrankungen des Hundes."
+},
+{
+    term: "Infarkt",
+    pronunciation: "In-farkt",
+    category: "Pathologie",
+    definition: "Gewebsnekrose infolge einer Durchblutungsstoerung (Ischaemie), meist durch Thrombose oder Embolie verursacht.",
+    synonyms: ["Gewebsinfarkt"],
+    relevance: "Milzinfarkte bei Haemangiosarkom, Niereninfarkte bei Endokarditis oder Thromboembolie."
+},
+{
+    term: "Ischaemie",
+    pronunciation: "Is-chae-mie",
+    category: "Pathologie",
+    definition: "Unzureichende Blutversorgung eines Gewebes oder Organs, fuehrt bei laengerer Dauer zu Nekrose (Infarkt).",
+    synonyms: ["Minderdurchblutung"],
+    relevance: "Gastric Dilatation-Volvulus (GDV) fuehrt zu Ischaemie der Magenwand -- chirurgischer Notfall mit hoher Mortalitaet."
+},
+{
+    term: "Haemorrhagie",
+    pronunciation: "Hae-mor-rha-gie",
+    category: "Pathologie",
+    definition: "Blutung; Austritt von Blut aus dem Gefaesssystem. Kann extern (sichtbar) oder intern (in Koerperhoehlen) auftreten.",
+    synonyms: ["Blutung"],
+    relevance: "Interne Haemorrhagien (z.B. Haemoperitoneum bei Milzruptur) koennen lebensbedrohlich verlaufen und erfordern sofortige Diagnostik und ggf. OP."
+},
+{
+    term: "Sepsis",
+    pronunciation: "Sep-sis",
+    category: "Pathologie",
+    definition: "Lebensbedrohliche Organdysfunktion, verursacht durch eine fehlregulierte Immunantwort auf eine Infektion. Gekennzeichnet durch systemische Entzuendungszeichen.",
+    synonyms: ["Blutvergiftung"],
+    relevance: "Septischer Schock erfordert aggressive Fluessigkeitstherapie, Breitbandantibiose und intensivmedizinische Ueberwachung."
+},
+{
+    term: "Endotoxaemie",
+    pronunciation: "En-do-tox-ae-mie",
+    category: "Pathologie",
+    definition: "Vorhandensein von Endotoxinen (Lipopolysaccharide gramnegativer Bakterien) im Blut. Kann auch ohne Bakteriaemie auftreten (z.B. bei Darmbarrierestoerung).",
+    synonyms: [],
+    relevance: "Beim Pferd besonders gefuerchtet: Endotoxaemie bei Kolik kann zu Hufrehe (Laminitis) fuehren."
+},
+
+// =====================================================
+// LABORMEDIZIN (16)
+// =====================================================
+{
+    term: "Azotaemie",
+    pronunciation: "A-zo-tae-mie",
+    category: "Labormedizin",
+    definition: "Erhoehung stickstoffhaltiger Substanzen (Harnstoff, Kreatinin) im Blut. Unterteilt in praerenal (Dehydratation), renal (Nierenschaden) und postrenal (Harnabflussstoerung).",
+    synonyms: [],
+    relevance: "Differenzierung der Azotaemieform ist entscheidend: Praerenale Azotaemie ist mit Fluessigkeitstherapie korrigierbar, renale erfordert spezifische Nephrologie-Diagnostik."
+},
+{
+    term: "Uraemie",
+    pronunciation: "U-rae-mie",
+    category: "Labormedizin",
+    definition: "Klinisches Syndrom bei schwerer Niereninsuffizienz: Azotaemie plus klinische Symptome (Erbrechen, Ulzera, Lethargie, uraemischer Mundgeruch).",
+    synonyms: ["Harnvergiftung"],
+    relevance: "Uraemie erfordert aggressive Infusionstherapie. Uraemische Stomatitis und Gastritis verschlechtern den Allgemeinzustand massiv."
+},
+{
+    term: "Leukozytose",
+    pronunciation: "Leu-ko-zy-to-se",
+    category: "Labormedizin",
+    definition: "Erhoehung der Gesamtleukozytenzahl im Blut ueber den speziesspezifischen Referenzbereich. Haeufig bei bakteriellen Infektionen, Stress oder Entzuendungen.",
+    synonyms: [],
+    relevance: "Stressleukogramm (Glukokortikoide) vs. Entzuendungsleukogramm (Infektionen) zu unterscheiden ist diagnostisch essenziell."
+},
+{
+    term: "Leukopenie",
+    pronunciation: "Leu-ko-pe-nie",
+    category: "Labormedizin",
+    definition: "Erniedrigung der Gesamtleukozytenzahl unter den Referenzbereich. Haeufig bei Virusinfektionen, Knochenmarksuppression oder ueberwaetigender Sepsis.",
+    synonyms: [],
+    relevance: "Panleukopenie (Katze) und Parvovirose (Hund) sind klassische Ursachen. Leukopenie mit Linksverschiebung = alarmierendes Zeichen."
+},
+{
+    term: "Neutrophilie",
+    pronunciation: "Neu-tro-phi-lie",
+    category: "Labormedizin",
+    definition: "Erhoehung der neutrophilen Granulozyten im Blut. Haeufigste Ursache einer Leukozytose. Kann reif (Infektionsantwort) oder unreif (Linksverschiebung) sein.",
+    synonyms: [],
+    relevance: "Mature Neutrophilie: chronische Entzuendung oder Stress. Unreife Neutrophilie: akute, schwere Infektion."
+},
+{
+    term: "Linksverschiebung",
+    pronunciation: "Links-ver-schie-bung",
+    category: "Labormedizin",
+    definition: "Auftreten unreifer neutrophiler Granulozyten (Stabkernige, Metamyelozyten) im peripheren Blut als Zeichen einer ueberschiessenden Knochenmarksreaktion.",
+    synonyms: ["Left shift"],
+    relevance: "Regenerative Linksverschiebung (Neutrophilie + Stabkernige): gutes Zeichen. Degenerative (Neutropenie + Stabkernige): ueberwaetigende Infektion, schlechte Prognose."
+},
+{
+    term: "Lymphopenie",
+    pronunciation: "Lym-pho-pe-nie",
+    category: "Labormedizin",
+    definition: "Erniedrigung der Lymphozytenzahl im Blut. Haeufig bei Stressreaktion (endogene Glukokortikoide), Virusinfektionen oder immunsuppressiver Therapie.",
+    synonyms: [],
+    relevance: "Teil des Stressleukogramms (Lymphopenie + Neutrophilie + Eosinopenie + Monozytose). DDx: virale Immunsuppression."
+},
+{
+    term: "Thrombozytopenie",
+    pronunciation: "Throm-bo-zy-to-pe-nie",
+    category: "Labormedizin",
+    definition: "Erniedrigung der Thrombozytenzahl unter den Referenzbereich. Kann durch verminderte Produktion, erhoehten Verbrauch oder Sequestration bedingt sein.",
+    synonyms: ["Plattchenmangel"],
+    relevance: "Immunmediierte Thrombozytopenie (ITP) ist eine haeufige Diagnose beim Hund. Spontane Blutungen treten meist erst bei < 30.000/Mikroliter auf."
+},
+{
+    term: "Anaemie",
+    pronunciation: "A-nae-mie",
+    category: "Labormedizin",
+    definition: "Verminderung der Erythrozytenzahl, des Haemoglobins oder des Haematokrits. Unterteilt in regenerativ (Retikulozytose) und nicht-regenerativ (Knochenmarkversagen).",
+    synonyms: ["Blutarmut"],
+    relevance: "Regenerative Anaemie: Blutverlust oder Haemolyse (IMHA). Nicht-regenerative: chronische Erkrankung, Niereninsuffizienz, Knochenmarkerkrankung."
+},
+{
+    term: "Polyzythaemie",
+    pronunciation: "Po-ly-zy-thae-mie",
+    category: "Labormedizin",
+    definition: "Erhoehung der Erythrozytenzahl/Haematokrit. Relativ (Dehydratation) oder absolut (primaer = Polycythaemia vera, sekundaer = erhoehtes EPO).",
+    synonyms: ["Erythrozytose"],
+    relevance: "Relative Polyzythaemie ist bei dehydrierten Tieren haeufig. Absolute Polyzythaemie erfordert Ursachensuche (Nierentumor? Herzfehler?)."
+},
+{
+    term: "Hyperbilirubinaemie",
+    pronunciation: "Hy-per-bi-li-ru-bi-nae-mie",
+    category: "Labormedizin",
+    definition: "Erhoehung des Bilirubinspiegels im Blut. Fuehrt klinisch zu Ikterus. Unkonjugiertes Bilirubin: praehepatisch. Konjugiertes: hepatisch/posthepatisch.",
+    synonyms: [],
+    relevance: "Bei der Katze ist bereits leichter Ikterus klinisch signifikant (keine physiologische Haemolyse wie beim Hund). DDx: hepatische Lipidose, Cholangitis, FIP."
+},
+{
+    term: "Hyperglykamie",
+    pronunciation: "Hy-per-gly-kae-mie",
+    category: "Labormedizin",
+    definition: "Erhoehter Blutzuckerspiegel. Haeufigste Ursache: Diabetes mellitus. Bei Katzen auch stressbedingt moeglich (bis 300 mg/dl).",
+    synonyms: ["erhoehter Blutzucker"],
+    relevance: "Persistierende Hyperglykamie + Glukosurie = Diabetes mellitus. Fruktosamin zur Bestaetigung bei stressbedingter Hyperglykamie der Katze."
+},
+{
+    term: "Hypoglykamie",
+    pronunciation: "Hy-po-gly-kae-mie",
+    category: "Labormedizin",
+    definition: "Erniedrigter Blutzuckerspiegel (< 60 mg/dl). Kann zu Schwaeche, Krampfanfaellen und Koma fuehren.",
+    synonyms: ["Unterzucker"],
+    relevance: "Haeufig bei neonatalen Welpen, Insulinom, Sepsis, Lebershunt und Jagdhund-Hypoglykamie. Notfalltherapie: Glukoseloesung IV."
+},
+{
+    term: "Hyperkaliamie",
+    pronunciation: "Hy-per-ka-li-ae-mie",
+    category: "Labormedizin",
+    definition: "Erhoehter Kaliumspiegel im Blut (> 5.5 mmol/l). Kann lebensgefaehrliche Herzrhythmusstoerungen verursachen.",
+    synonyms: [],
+    relevance: "Klassisch bei Harnroehrenobstruktion (Kater), Morbus Addison und akutem Nierenversagen. EKG-Veraenderungen ab ca. 6.5 mmol/l."
+},
+{
+    term: "Hypokaliamie",
+    pronunciation: "Hy-po-ka-li-ae-mie",
+    category: "Labormedizin",
+    definition: "Erniedrigter Kaliumspiegel im Blut (< 3.5 mmol/l). Fuehrt zu Muskelschwaeche, Ileus und Herzrhythmusstoerungen.",
+    synonyms: [],
+    relevance: "Haeufig bei chronischem Erbrechen/Durchfall, Diuretikatherapie und chronischer Niereninsuffizienz der Katze (ventrale Halsbeugung!)."
+},
+{
+    term: "Proteinurie",
+    pronunciation: "Pro-te-in-u-rie",
+    category: "Labormedizin",
+    definition: "Erhoehte Proteinausscheidung im Urin. Quantifiziert ueber das Urin-Protein-Kreatinin-Verhaeltnis (UPC). Pathologisch bei UPC > 0.5 (Hund) bzw. > 0.4 (Katze).",
+    synonyms: [],
+    relevance: "Hinweis auf glomerulaere Erkrankung, Amyloidose oder fruehe Nierenschaedigung. Therapie mit ACE-Hemmern zur Reduktion des intraglomerulaeren Drucks."
+},
+{
+    term: "Harnspezifisches Gewicht (USG)",
+    pronunciation: "Harn-spe-zi-fi-sches Ge-wicht",
+    category: "Labormedizin",
+    definition: "Mass fuer die Konzentrationsfaehigkeit der Niere, gemessen mit dem Refraktometer. Hund: 1.015--1.045, Katze: 1.035--1.060 (jeweils konzentriert).",
+    synonyms: ["USG", "Urine Specific Gravity"],
+    relevance: "Isosthenurie (USG 1.008--1.012) bei Azotaemie = renale Ursache. Gut konzentrierter Urin bei Azotaemie = praerenale Ursache."
+},
+
+// =====================================================
+// PHARMAKOLOGIE (16)
+// =====================================================
+{
+    term: "SID / BID / TID / QID",
+    pronunciation: "S-I-D / B-I-D / T-I-D / Q-I-D",
+    category: "Pharmakologie",
+    definition: "Dosierungsintervalle: SID (semel in die) = 1x taeglich, BID (bis in die) = 2x taeglich, TID (ter in die) = 3x taeglich, QID (quater in die) = 4x taeglich.",
+    synonyms: ["q24h / q12h / q8h / q6h"],
+    relevance: "Korrekte Anwendung der Abkuerzungen in Rezepturen und Therapieplaenen ist essenziell zur Vermeidung von Dosierungsfehlern."
+},
+{
+    term: "PO / IV / IM / SC",
+    pronunciation: "P-O / I-V / I-M / S-C",
+    category: "Pharmakologie",
+    definition: "Applikationswege: PO (per os) = oral, IV (intravenoes) = in die Vene, IM (intramuskulaer) = in den Muskel, SC (subkutan) = unter die Haut.",
+    synonyms: [],
+    relevance: "Die Wahl des Applikationsweges beeinflusst Bioverfuegbarkeit, Wirkungseintritt und Nebenwirkungsprofil eines Arzneimittels."
+},
+{
+    term: "Loading Dose",
+    pronunciation: "Loh-ding Dohs",
+    category: "Pharmakologie",
+    definition: "Anfangsdosis; erhoehte Erstdosis, die verabreicht wird, um schnell einen therapeutischen Plasmaspiegel zu erreichen, bevor mit der Erhaltungsdosis fortgefahren wird.",
+    synonyms: ["Aufsaettigungsdosis", "Initialdosis"],
+    relevance: "Typisch bei Antikonvulsiva (Phenobarbital Loading: 16--20 mg/kg IV ueber 24h) und bestimmten Antibiotika."
+},
+{
+    term: "Halbwertszeit",
+    pronunciation: "Halb-werts-zeit",
+    category: "Pharmakologie",
+    definition: "Zeit, in der die Plasmakonzentration eines Arzneimittels auf die Haelfte sinkt. Bestimmt das Dosierungsintervall und die Zeit bis zum Steady State (4--5 HWZ).",
+    synonyms: ["t1/2", "HWZ", "Eliminationshalbwertszeit"],
+    relevance: "Kurze HWZ erfordert haeufigere Gabe. Steady State wird nach ca. 5 HWZ erreicht -- wichtig fuer Serumspiegelmessungen."
+},
+{
+    term: "Clearance",
+    pronunciation: "Klih-rens",
+    category: "Pharmakologie",
+    definition: "Volumen Plasma, das pro Zeiteinheit vollstaendig von einem Arzneimittel befreit wird. Massgeblich fuer die Erhaltungsdosis.",
+    synonyms: ["Plasmaclearance"],
+    relevance: "Bei Nieren- oder Leberinsuffizienz ist die Clearance reduziert -- Dosisanpassung erforderlich, um Akkumulation und Toxizitaet zu vermeiden."
+},
+{
+    term: "Agonist / Antagonist",
+    pronunciation: "A-go-nist / An-ta-go-nist",
+    category: "Pharmakologie",
+    definition: "Agonist: Substanz, die an einen Rezeptor bindet und eine biologische Wirkung ausloest. Antagonist: bindet ohne eigene Wirkung und blockiert den Rezeptor.",
+    synonyms: [],
+    relevance: "Beispiel: Atipamezol ist ein Alpha-2-Antagonist, der die Sedierung durch den Agonisten Medetomidin aufhebt."
+},
+{
+    term: "NSAID",
+    pronunciation: "En-es-ey-ai-di",
+    category: "Pharmakologie",
+    definition: "Nicht-steroidale Antiphlogistika / Antirheumatika. Hemmen Cyclooxygenase (COX-1/COX-2) und reduzieren so Prostaglandinsynthese, Entzuendung, Schmerz und Fieber.",
+    synonyms: ["Nicht-steroidale Entzuendungshemmer", "NSAP"],
+    relevance: "Meloxicam, Carprofen, Robenacoxib sind gaengige veterinaermedizinische NSAIDs. Cave: GI-Ulzera, Nephrotoxizitaet. Bei Katzen nur selektive COX-2-Hemmer."
+},
+{
+    term: "Analgesie",
+    pronunciation: "An-al-ge-sie",
+    category: "Pharmakologie",
+    definition: "Schmerzfreiheit oder Schmerzlinderung durch pharmakologische oder physikalische Massnahmen, ohne das Bewusstsein aufzuheben.",
+    synonyms: ["Schmerzausschaltung"],
+    relevance: "Multimodale Analgesie (NSAID + Opioid + Lokal-/Regionalanaesthesie) gilt als Goldstandard in der perioperativen Schmerztherapie."
+},
+{
+    term: "Antibiose",
+    pronunciation: "An-ti-bi-o-se",
+    category: "Pharmakologie",
+    definition: "Behandlung bakterieller Infektionen mit Antibiotika. Unterscheidung: bakteriostatisch (hemmt Wachstum) vs. bakterizid (toetet Bakterien).",
+    synonyms: ["Antibiotikatherapie"],
+    relevance: "Rationale Antibiose erfordert Erregernachweis und Antibiogramm. Reserve-Antibiotika (z.B. Fluorchinolone) nur nach Antibiogramm einsetzen."
+},
+{
+    term: "Antiemese",
+    pronunciation: "An-ti-e-me-se",
+    category: "Pharmakologie",
+    definition: "Unterdrueckung von Uebelkeit und Erbrechen durch Antiemetika (z.B. Maropitant/Cerenia, Ondansetron, Metoclopramid).",
+    synonyms: ["Antiemetische Therapie"],
+    relevance: "Maropitant (NK1-Rezeptor-Antagonist) ist das am haeufigsten verwendete Antiemetikum in der Veterinaermedizin. Auch analgetische Eigenschaften."
+},
+{
+    term: "Antipyrese",
+    pronunciation: "An-ti-py-re-se",
+    category: "Pharmakologie",
+    definition: "Fiebersenkung durch antipyretische Medikamente (z.B. Metamizol, NSAIDs). Das Fieber selbst ist ein Symptom, nicht die Ursache.",
+    synonyms: ["Fiebersenkung"],
+    relevance: "Metamizol wird in der Veterinaermedizin haeufig eingesetzt. Paracetamol ist bei Katzen kontraindiziert (Methhaemoglobinaemie)."
+},
+{
+    term: "Kontraindikation",
+    pronunciation: "Kon-tra-in-di-ka-ti-on",
+    category: "Pharmakologie",
+    definition: "Umstand, der die Anwendung eines bestimmten Arzneimittels oder einer Massnahme verbietet. Absolut (nie anwenden) oder relativ (Nutzen-Risiko-Abwaegung).",
+    synonyms: ["Gegenanzeige"],
+    relevance: "Beispiel: Glukokortikoide bei Verdacht auf Sepsis, NSAIDs bei Niereninsuffizienz, Dexmedetomidin bei schwerer Herzinsuffizienz."
+},
+{
+    term: "Nebenwirkung",
+    pronunciation: "Ne-ben-wir-kung",
+    category: "Pharmakologie",
+    definition: "Unerwuenschte Arzneimittelwirkung (UAW), die neben der beabsichtigten therapeutischen Wirkung auftritt. Kann dosisabhaengig oder idiosynkratisch sein.",
+    synonyms: ["UAW", "Adverse Drug Reaction"],
+    relevance: "GI-Stoerungen durch NSAIDs, Polyurie/Polydipsie durch Glukokortikoide und hepatotoxische Reaktionen sind haeufige veterinaermedizinische UAWs."
+},
+{
+    term: "Therapeutische Breite",
+    pronunciation: "The-ra-peu-ti-sche Brei-te",
+    category: "Pharmakologie",
+    definition: "Verhaeltnis zwischen toxischer und therapeutischer Dosis. Medikamente mit geringer therapeutischer Breite erfordern engmaschiges Drug Monitoring.",
+    synonyms: ["Therapeutischer Index"],
+    relevance: "Phenobarbital und Digoxin haben eine enge therapeutische Breite; regelmaessige Serumspiegelmessungen sind Pflicht."
+},
+{
+    term: "MHK (Minimale Hemmkonzentration)",
+    pronunciation: "Mi-ni-ma-le Hemm-kon-zen-tra-ti-on",
+    category: "Pharmakologie",
+    definition: "Niedrigste Konzentration eines Antibiotikums, die das Wachstum eines Erregers in vitro hemmt. Grundlage fuer die Beurteilung der Empfindlichkeit im Antibiogramm.",
+    synonyms: ["MIC (Minimum Inhibitory Concentration)"],
+    relevance: "Entscheidet, ob ein Erreger sensibel, intermediaer oder resistent gegenueber einem Antibiotikum ist. Basis fuer rationale Antibiotikawahl."
+},
+{
+    term: "Praeaneasthetische Medikation",
+    pronunciation: "Prae-an-aes-the-ti-sche Me-di-ka-ti-on",
+    category: "Pharmakologie",
+    definition: "Medikamente, die vor der Narkoseeinleitung verabreicht werden: Sedativa, Analgetika und Anticholinergika zur Reduktion von Stress, Schmerz und Vagusreflexen.",
+    synonyms: ["Praemedikation"],
+    relevance: "Standard-Praemedikation beim Hund: z.B. Medetomidin + Methadon. Senkt den Bedarf an Einleitungs- und Erhaltungsanaesthetika."
+},
+
+// =====================================================
+// CHIRURGIE (17)
+// =====================================================
+{
+    term: "Laparotomie",
+    pronunciation: "La-pa-ro-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Eroeffnung der Bauchhoehle ueber einen Bauchschnitt. Mediane Laparotomie (Linea alba) ist der haeufigste Zugang.",
+    synonyms: ["Bauchschnitt", "Zoeliootomie"],
+    relevance: "Standardzugang fuer Fremdkoerperchirurgie, Ovariektomie, Zystotomie und explorative Chirurgie."
+},
+{
+    term: "Thorakotomie",
+    pronunciation: "Tho-ra-ko-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Eroeffnung des Brustkorbs. Laterale Thorakotomie (Interkostalzugang) oder mediane Sternotomie.",
+    synonyms: ["Brustkorberoeffnung"],
+    relevance: "Indiziert bei Lungenlappentorsion, Perikardiektomie, Oesophagus-Fremdkoerpern und thorakalen Tumoren."
+},
+{
+    term: "Inzision",
+    pronunciation: "In-zi-si-on",
+    category: "Chirurgie",
+    definition: "Chirurgischer Schnitt durch Gewebe, typischerweise mit Skalpell. Der gezielte, kontrollierte Zugang zum OP-Gebiet.",
+    synonyms: ["Schnitt"],
+    relevance: "Saubere, atraumatische Inzision entlang anatomischer Linien minimiert Blutung und verbessert die Wundheilung."
+},
+{
+    term: "Exzision",
+    pronunciation: "Ex-zi-si-on",
+    category: "Chirurgie",
+    definition: "Vollstaendiges Herausschneiden einer Struktur oder Laesion (z.B. Tumor, Zyste) mit oder ohne Sicherheitsrand.",
+    synonyms: ["Herausschneiden"],
+    relevance: "Bei Tumoren wird die Exzision mit definierten Sicherheitsraendern (z.B. 2--3 cm lateral + eine Faszienebene tief bei Mastzelltumoren) durchgefuehrt."
+},
+{
+    term: "Resektion",
+    pronunciation: "Re-sek-ti-on",
+    category: "Chirurgie",
+    definition: "Operative Entfernung eines Organteils oder Gewebeabschnitts. Teilresektion: nur ein Teil wird entfernt.",
+    synonyms: ["Teilentfernung"],
+    relevance: "Darmresektion bei Ileus oder Tumoren, Lungenlappenresektion bei Torsion oder Neoplasie."
+},
+{
+    term: "Anastomose",
+    pronunciation: "A-na-sto-mo-se",
+    category: "Chirurgie",
+    definition: "Operative Verbindung zweier Hohlorgane (z.B. Darmenden nach Resektion). End-zu-End, Seit-zu-Seit oder End-zu-Seit.",
+    synonyms: ["Verbindungsnaht"],
+    relevance: "Darmanastomosen erfordern spannungsfreie Naht mit guter Durchblutung. Dehiszenz ist die gefuerchtetste Komplikation (Peritonitis)."
+},
+{
+    term: "Ligatur",
+    pronunciation: "Li-ga-tur",
+    category: "Chirurgie",
+    definition: "Umschlingung und Abbindung eines Gefaesses oder Gewebestiels mit Nahtmaterial zur Blutstillung.",
+    synonyms: ["Abbindung", "Unterbindung"],
+    relevance: "Technik der Wahl zur Haemostase bei Ovariektomie, Splenektomie und anderen Eingriffen mit grossen Gefaessen."
+},
+{
+    term: "Naht (Einzelknopf / Fortlaufend)",
+    pronunciation: "Naht",
+    category: "Chirurgie",
+    definition: "Chirurgischer Wundverschluss. Einzelknopfnaht: jeder Stich wird separat geknotet (sicherer bei Infektionsgefahr). Fortlaufende Naht: durchgehendes Nahtmuster (schneller, gleichmaessiger Zug).",
+    synonyms: ["Sutur"],
+    relevance: "Intrakutannaht fuer kosmetischen Verschluss. Bauchdecke typischerweise mit resorbierbarem Faden (z.B. PDS, Monocryl) fortlaufend."
+},
+{
+    term: "Debridement",
+    pronunciation: "De-bride-ment",
+    category: "Chirurgie",
+    definition: "Chirurgische Entfernung von avitalem, kontaminiertem oder nekrotischem Gewebe aus einer Wunde zur Foerderung der Heilung.",
+    synonyms: ["Wundtoilette"],
+    relevance: "Essenzieller erster Schritt bei kontaminierten Wunden, offenen Frakturen und Bissverletzungen vor dem (verzoegerten) Wundverschluss."
+},
+{
+    term: "Drainage",
+    pronunciation: "Drai-na-ge",
+    category: "Chirurgie",
+    definition: "System zur Ableitung von Fluessigkeit (Blut, Eiter, Serom) aus Koerperhoehlen oder Wunden. Aktiv (Saugdrainage) oder passiv (Penrose-Drain).",
+    synonyms: [],
+    relevance: "Penrose-Drains bei Abszessen, Jackson-Pratt-Drainagen bei grossen Totraumen nach Tumorexzisionen."
+},
+{
+    term: "Gastropexie",
+    pronunciation: "Gas-tro-pe-xie",
+    category: "Chirurgie",
+    definition: "Chirurgische Fixation des Magens an der Bauchwand zur Verhinderung einer Magendrehung. Kann inzisionell, zirkumkostal oder laparoskopisch erfolgen.",
+    synonyms: ["Magenanheftung"],
+    relevance: "Prophylaktische Gastropexie bei grossen Rassen mit tiefem Brustkorb (Deutsche Dogge, Irish Setter) zur GDV-Praevention. Auch therapeutisch bei GDV."
+},
+{
+    term: "Enterotomie",
+    pronunciation: "En-te-ro-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Eroeffnung des Darms zur Entfernung von Fremdkoerpern oder Gewinnung von Biopsien, ohne Darmsegment zu entfernen.",
+    synonyms: ["Darmeroeffnung"],
+    relevance: "Standardverfahren bei linearen und nicht-linearen intestinalen Fremdkoerpern, die nicht endoskopisch entfernt werden koennen."
+},
+{
+    term: "Enterektomie",
+    pronunciation: "En-ter-ek-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Entfernung (Resektion) eines Darmabschnitts, gefolgt von einer End-zu-End-Anastomose.",
+    synonyms: ["Darmresektion"],
+    relevance: "Indiziert bei Darmnekrose (z.B. nach Invagination oder Strangulation), Darmtumoren oder nicht-reponiblen Hernien."
+},
+{
+    term: "Splenektomie",
+    pronunciation: "Sple-nek-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Entfernung der Milz. Kann total (gesamte Milz) oder partiell (Teilresektion) erfolgen.",
+    synonyms: ["Milzentfernung"],
+    relevance: "Haeufig bei Milztumoren (Haemangiosarkom, Haematom), Milztorsion oder traumatischer Milzruptur mit Haemoperitoneum."
+},
+{
+    term: "Nephrektomie",
+    pronunciation: "Ne-phrek-to-mie",
+    category: "Chirurgie",
+    definition: "Chirurgische Entfernung einer Niere. Setzt voraus, dass die kontralaterale Niere ausreichend funktioniert.",
+    synonyms: ["Nierenentfernung"],
+    relevance: "Indiziert bei Nierentumoren, schwerer Hydronephrose, Nierensteinerkrankung ohne Organerhalt oder traumatischer Nierenruptur."
+},
+{
+    term: "TPLO (Tibial Plateau Leveling Osteotomy)",
+    pronunciation: "Ti-Pee-El-Oh",
+    category: "Chirurgie",
+    definition: "Chirurgisches Verfahren zur Behandlung des vorderen Kreuzbandrisses beim Hund. Das Tibiaplateau wird durch eine Osteotomie so veraendert, dass der Tibialschub neutralisiert wird.",
+    synonyms: ["Tibial Plateau Leveling Osteotomy"],
+    relevance: "Goldstandard der Kreuzbandchirurgie bei mittelgrossen und grossen Hunden. Fruehe Belastung und gute Langzeitergebnisse."
+},
+{
+    term: "TTA (Tibial Tuberosity Advancement)",
+    pronunciation: "Ti-Ti-Ey",
+    category: "Chirurgie",
+    definition: "Alternative chirurgische Technik zum TPLO bei Kreuzbandriss. Die Tuberositas tibiae wird nach cranial versetzt, um den Tibialschub zu eliminieren.",
+    synonyms: ["Tibial Tuberosity Advancement"],
+    relevance: "Geeignet fuer Hunde mit steilem Tibiaplateau. Weniger Gewebedissektion als TPLO, aber kleineres Indikationsfenster."
+},
+
+// =====================================================
+// INNERE MEDIZIN (22)
+// =====================================================
+{
+    term: "PU/PD (Polyurie/Polydipsie)",
+    pronunciation: "Po-ly-u-rie / Po-ly-dip-sie",
+    category: "Innere Medizin",
+    definition: "Erhoehte Urinproduktion (> 50 ml/kg/Tag) und kompensatorisch erhoehte Wasseraufnahme (> 100 ml/kg/Tag). Eines der haeufigsten Leitsymptome in der Inneren Medizin.",
+    synonyms: ["Viel trinken / viel urinieren"],
+    relevance: "DDx-Liste: Diabetes mellitus, Cushing, chronische Niereninsuffizienz, Pyometra, Hyperthyreose (Katze), Diabetes insipidus, Hyperkaliamie."
+},
+{
+    term: "Polyphagie",
+    pronunciation: "Po-ly-pha-gie",
+    category: "Innere Medizin",
+    definition: "Krankhaft gesteigerter Appetit und Futteraufnahme. Kann trotz Gewichtsverlust auftreten (z.B. Diabetes mellitus, Hyperthyreose).",
+    synonyms: ["uebersteigerter Appetit"],
+    relevance: "Polyphagie + Gewichtsverlust = klassische Triade bei Diabetes mellitus, Hyperthyreose und EPI (exokrine Pankreasinsuffizienz)."
+},
+{
+    term: "Anorexie",
+    pronunciation: "An-or-e-xie",
+    category: "Innere Medizin",
+    definition: "Vollstaendiger Appetitverlust. Hyporexie (Inappetenz) = reduzierter, aber nicht fehlender Appetit.",
+    synonyms: ["Appetitlosigkeit", "Inappetenz"],
+    relevance: "Bei Katzen kann Anorexie > 3 Tage zur hepatischen Lipidose fuehren -- eigenstaendiges, lebensbedrohliches Krankheitsbild."
+},
+{
+    term: "Emesis",
+    pronunciation: "E-me-sis",
+    category: "Innere Medizin",
+    definition: "Erbrechen; aktiver Vorgang mit Wuergbewegungen und Kontraktion der Bauchmuskulatur, bei dem Mageninhalt ausgeworfen wird.",
+    synonyms: ["Erbrechen", "Vomitus"],
+    relevance: "Abgrenzung von Regurgitation wichtig! Akutes Erbrechen: Fremdkoerper, Intoxikation. Chronisches Erbrechen: IBD, Futtermittelallergie, Pankreatitis."
+},
+{
+    term: "Regurgitation",
+    pronunciation: "Re-gur-gi-ta-ti-on",
+    category: "Innere Medizin",
+    definition: "Passives Zurueckfliessen von unverdautem Futter aus dem Oesophagus ohne Wuergreflex. Tritt typischerweise kurz nach der Futteraufnahme auf.",
+    synonyms: ["passives Erbrechen"],
+    relevance: "Weist auf Oesophaguserkrankung hin: Megaoesophagus, Oesophagitis, vaskulaerer Ringanomalien. Aspirationspneumonie als Komplikation."
+},
+{
+    term: "Diarrhoe",
+    pronunciation: "Di-ar-rhoe",
+    category: "Innere Medizin",
+    definition: "Durchfall; erhoehte Stuhlfrequenz und/oder verminderter Kotkonsistenz. Unterscheidung: Duenndarm-Diarrhoe (grossvolumig, selten) vs. Dickdarm-Diarrhoe (kleinvolumig, haeufig, Schleim/Blut).",
+    synonyms: ["Durchfall"],
+    relevance: "Akut: Infektionen, Diaetfehler. Chronisch: IBD, Lymphom, EPI. Haematochezie (frisches Blut) = Dickdarm; Melaena (verdautes Blut) = Duenndarm/Magen."
+},
+{
+    term: "Obstipation",
+    pronunciation: "Ob-sti-pa-ti-on",
+    category: "Innere Medizin",
+    definition: "Erschwerte oder ausbleibende Kotentleerung durch verhaerteten Kot. Extremform: Obstipation mit Megakolon (irreversible Erweiterung des Dickdarms, v.a. Katze).",
+    synonyms: ["Verstopfung", "Konstipation"],
+    relevance: "Bei Katzen haeufig idiopathisch. Therapie: Laxanzien, Einlauf, diaetetisch (Ballaststoffe). Megakolon kann subtotale Kolektomie erfordern."
+},
+{
+    term: "Strangurie",
+    pronunciation: "Stran-gu-rie",
+    category: "Innere Medizin",
+    definition: "Schmerzhafter, erschwerter Harnabsatz mit tropfenweisem Urinverlust. Haeufig begleitet von Pollakisurie (erhoehte Harnfrequenz).",
+    synonyms: ["schmerzhafter Harnabsatz"],
+    relevance: "Haeufig bei FLUTD (Feline Lower Urinary Tract Disease), Urolithiasis, Zystitis. Bei Katern: Obstruktion ausschliessen = Notfall!"
+},
+{
+    term: "Haematurie",
+    pronunciation: "Hae-ma-tu-rie",
+    category: "Innere Medizin",
+    definition: "Blut im Urin. Makroskopisch sichtbar (Makrohaematurie) oder nur labordiagnostisch nachweisbar (Mikrohaematurie).",
+    synonyms: ["Blut im Urin"],
+    relevance: "DDx: Harnwegsinfektion, Urolithiasis, Harnblasentumor (TCC), Gerinnungsstoerung, Nierenerkrankung, Trauma."
+},
+{
+    term: "Epistaxis",
+    pronunciation: "E-pi-sta-xis",
+    category: "Innere Medizin",
+    definition: "Nasenbluten; Blutung aus der Nasenhoehle. Kann uni- oder bilateral auftreten.",
+    synonyms: ["Nasenbluten"],
+    relevance: "Unilateral: Fremdkoerper, Aspergilllose, Nasentumor. Bilateral: Gerinnungsstoerung, Hypertonie, Ehrlichiose, Leishmaniose."
+},
+{
+    term: "Ascites",
+    pronunciation: "As-zi-tes",
+    category: "Innere Medizin",
+    definition: "Pathologische Fluessigkeitsansammlung in der Bauchhoehle (Peritonealhoehle). Kann Transsudat, modifiziertes Transsudat oder Exsudat sein.",
+    synonyms: ["Bauchwassersucht", "Peritonealerguss"],
+    relevance: "Haeufig bei Rechtsherzinsuffizienz, Leberzirrhose, Hypoalbuminaemie, Neoplasie oder FIP (Katze). Punktion und Analyse der Fluessigkeit ist diagnostisch richtungsweisend."
+},
+{
+    term: "Pleuraerguss",
+    pronunciation: "Pleu-ra-er-guss",
+    category: "Innere Medizin",
+    definition: "Pathologische Fluessigkeitsansammlung im Pleuralspalt zwischen Lunge und Brustwand. Fuehrt zu restriktiver Atemstoerung.",
+    synonyms: ["Brustfellerguss", "Hydrothorax"],
+    relevance: "Thorakozentese ist diagnostisch und therapeutisch. DDx: Chylothorax, Pyothorax, Haemothorax, FIP, kardialer Erguss, Neoplasie."
+},
+{
+    term: "Hepatomegalie",
+    pronunciation: "He-pa-to-me-ga-lie",
+    category: "Innere Medizin",
+    definition: "Vergroesserung der Leber, palpatorisch oder bildgebend feststellbar.",
+    synonyms: ["Lebervergroesserung"],
+    relevance: "DDx: Rechtsherzinsuffizienz (Stauungsleber), Hepatitis, hepatische Lipidose, Neoplasie, Glykogenspeichererkrankung."
+},
+{
+    term: "Splenomegalie",
+    pronunciation: "Sple-no-me-ga-lie",
+    category: "Innere Medizin",
+    definition: "Vergroesserung der Milz. Kann diffus (infiltrativ) oder fokal (Tumor, Haematom) sein.",
+    synonyms: ["Milzvergroesserung"],
+    relevance: "Beim alten Hund: Haemangiosarkom vs. Haematom (2/3 maligne!). Diffus: Babesiose, Lymphom, Phenobarbital-Therapie."
+},
+{
+    term: "Lymphadenopathie",
+    pronunciation: "Lym-pha-de-no-pa-thie",
+    category: "Innere Medizin",
+    definition: "Pathologische Vergroesserung eines oder mehrerer Lymphknoten. Kann reaktiv (Infektion), neoplastisch (Lymphom) oder immunmediiert sein.",
+    synonyms: ["Lymphknotenvergroesserung"],
+    relevance: "Generalisierte Lymphadenopathie bei jungem Hund: Lymphom als Top-DDx. Feinnadelaspiration und Zytologie als erster diagnostischer Schritt."
+},
+{
+    term: "Kardiomyopathie (DCM / HCM)",
+    pronunciation: "Kar-di-o-my-o-pa-thie",
+    category: "Innere Medizin",
+    definition: "Erkrankung des Herzmuskels. DCM (dilatative KMP): Erweiterung und verminderte Kontraktilitaet der Herzkammern. HCM (hypertrophe KMP): Verdickung des Myokards mit eingeschraenkter Fuellungskapazitaet.",
+    synonyms: ["Herzmuskelerkrankung"],
+    relevance: "DCM v.a. bei grossen Hunderassen (Dobermann, Dogge). HCM ist die haeufigste Herzerkrankung der Katze -- kann zu Aortenthrombose fuehren."
+},
+{
+    term: "Endokardiose",
+    pronunciation: "En-do-kar-di-o-se",
+    category: "Innere Medizin",
+    definition: "Degenerative Verdickung der Herzklappen (myxomatoese Degeneration), fuehrt zu Klappeninsuffizienz. Auch bekannt als MMVD (Myxomatous Mitral Valve Disease).",
+    synonyms: ["MMVD", "Myxomatoese Klappendegeneration"],
+    relevance: "Haeufigste Herzerkrankung kleiner Hunderassen (Cavalier King Charles, Dackel). Stadieneinteilung nach ACVIM (A-D) fuer Therapieplanung."
+},
+{
+    term: "Hypothyreose",
+    pronunciation: "Hy-po-thy-re-o-se",
+    category: "Innere Medizin",
+    definition: "Unterfunktion der Schilddruese mit verminderter T4-Produktion. Haeufigste endokrine Erkrankung des Hundes.",
+    synonyms: ["Schilddruesenunterfunktion"],
+    relevance: "Klinik: Lethargie, Gewichtszunahme, symmetrische Alopezie, Bradykardie, 'tragischer Gesichtsausdruck'. Diagnose: fT4, TSH. Therapie: L-Thyroxin lebenslang."
+},
+{
+    term: "Hyperthyreose",
+    pronunciation: "Hy-per-thy-re-o-se",
+    category: "Innere Medizin",
+    definition: "Ueberfunktion der Schilddruese mit erhoehter T4-Produktion. Haeufigste endokrine Erkrankung der alten Katze.",
+    synonyms: ["Schilddruesenueberfunktion"],
+    relevance: "Klinik: Gewichtsverlust, Polyphagie, Tachykardie, Erbrechen, palpabler Schilddruesenknoten. Therapie: Thiamazol, Radiojod-Therapie oder Thyreoidektomie."
+},
+{
+    term: "Cushing-Syndrom (Hyperadrenokortizismus)",
+    pronunciation: "Ku-sching-Syn-drom",
+    category: "Innere Medizin",
+    definition: "Chronischer Glukokortikoid-Exzess, entweder durch ACTH-produzierendes Hypophysenadenom (85 %) oder Nebennierentumor (15 %). Iatrogen durch Langzeit-Glukokortikoidtherapie.",
+    synonyms: ["Hyperadrenokortizismus", "HAK"],
+    relevance: "Klinik: PU/PD, Polyphagie, Stammfettsucht, Alopezie, Haengbauch, Calcinosis cutis. Diagnose: LDDS-Test, ACTH-Stimulationstest. Therapie: Trilostan."
+},
+{
+    term: "Addison-Krankheit (Hypoadrenokortizismus)",
+    pronunciation: "A-di-son-Krank-heit",
+    category: "Innere Medizin",
+    definition: "Nebennierenrindeninsuffizienz mit Mangel an Glukokortikoiden und/oder Mineralokortikoiden. Oft immunmediiert.",
+    synonyms: ["Hypoadrenokortizismus", "Morbus Addison"],
+    relevance: "Klinik oft unspezifisch (Lethargie, Anorexie, Erbrechen). Addisonkrise = akuter Kollaps mit Bradykardie und Hyperkaliamie. 'Great Pretender' -- imitiert viele Erkrankungen."
+},
+{
+    term: "Pankreatitis",
+    pronunciation: "Pan-kre-a-ti-tis",
+    category: "Innere Medizin",
+    definition: "Entzuendung der Bauchspeichelgruese. Akut (nekrotisierend) oder chronisch (fibrosierend). Hund: oft nach fettreicher Mahlzeit. Katze: haeufig subklinisch.",
+    synonyms: ["Bauchspeicheldruesenentzuendung"],
+    relevance: "Diagnose: Spec cPL (Hund) / fPL (Katze) + Ultraschall. Therapie: Analgesie, Antiemese, Fluessigkeit, fruehe enterale Ernaehrung. Bei Katzen oft Triaditis (Pankreatitis + IBD + Cholangitis)."
+}
+];
+
+// =====================================================
+// KATEGORIEN & FARBEN
+// =====================================================
+const CATEGORIES = [
+    { name: "Alle", color: "#818cf8" },
+    { name: "Anatomie", color: "#60a5fa" },
+    { name: "Klinische Untersuchung", color: "#34d399" },
+    { name: "Pathologie", color: "#f87171" },
+    { name: "Labormedizin", color: "#fbbf24" },
+    { name: "Pharmakologie", color: "#a78bfa" },
+    { name: "Chirurgie", color: "#fb923c" },
+    { name: "Innere Medizin", color: "#38bdf8" }
+];
+
+// =====================================================
+// STATE
+// =====================================================
+let activeCategory = "Alle";
+let activeLetter = null;
+let searchQuery = "";
+let showFavoritesOnly = false;
+let expandedEntries = new Set();
+
+const FAV_KEY = "vetscan_glossary_favorites";
+
+function getFavorites() {
+    try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); }
+    catch { return []; }
+}
+
+function setFavorites(favs) {
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); }
+    catch {}
+}
+
+function toggleFavorite(term) {
+    let favs = getFavorites();
+    if (favs.includes(term)) {
+        favs = favs.filter(f => f !== term);
+    } else {
+        favs.push(term);
+    }
+    setFavorites(favs);
+    render();
+}
+
+function isFavorite(term) {
+    return getFavorites().includes(term);
+}
+
+// =====================================================
+// FILTERING
+// =====================================================
+function getFilteredEntries() {
+    let entries = [...GLOSSARY];
+
+    // Category filter
+    if (activeCategory !== "Alle") {
+        entries = entries.filter(e => e.category === activeCategory);
+    }
+
+    // Favorites filter
+    if (showFavoritesOnly) {
+        entries = entries.filter(e => isFavorite(e.term));
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        entries = entries.filter(e =>
+            e.term.toLowerCase().includes(q) ||
+            e.definition.toLowerCase().includes(q) ||
+            (e.synonyms && e.synonyms.some(s => s.toLowerCase().includes(q))) ||
+            e.category.toLowerCase().includes(q)
+        );
+    }
+
+    // Letter filter
+    if (activeLetter) {
+        entries = entries.filter(e => {
+            const first = e.term.replace(/[^A-Za-zAeOeUeae oe ue]/g, "").charAt(0).toUpperCase();
+            return normalizeChar(first) === activeLetter;
+        });
+    }
+
+    // Sort alphabetically
+    entries.sort((a, b) => a.term.localeCompare(b.term, "de"));
+
+    return entries;
+}
+
+function normalizeChar(c) {
+    const map = { "\u00C4": "A", "\u00D6": "O", "\u00DC": "U", "\u00E4": "a", "\u00F6": "o", "\u00FC": "u" };
+    return (map[c] || c).toUpperCase();
+}
+
+function getFirstLetter(term) {
+    // Handle special chars and umlauts
+    const c = term.charAt(0).toUpperCase();
+    return normalizeChar(c);
+}
+
+// =====================================================
+// RENDERING
+// =====================================================
+function highlightText(text, query) {
+    if (!query || !query.trim()) return text;
+    const q = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return text.replace(new RegExp(`(${q})`, "gi"), "<mark>$1</mark>");
+}
+
+function getCategoryColor(catName) {
+    const cat = CATEGORIES.find(c => c.name === catName);
+    return cat ? cat.color : "#818cf8";
+}
+
+function renderCategoryBar() {
+    const bar = document.getElementById("categoryBar");
+    bar.innerHTML = CATEGORIES.map(cat => {
+        const isActive = activeCategory === cat.name;
+        const count = cat.name === "Alle"
+            ? GLOSSARY.length
+            : GLOSSARY.filter(e => e.category === cat.name).length;
+        return `<button class="cat-tab${isActive ? ' active' : ''}"
+                    style="${isActive ? `border-color: ${cat.color}; color: ${cat.color};` : ''}"
+                    onclick="setCategory('${cat.name}')">${cat.name} (${count})</button>`;
+    }).join("");
+}
+
+function renderAZBar() {
+    const bar = document.getElementById("azBar");
+    const filtered = getFilteredEntries();
+    const availableLetters = new Set();
+
+    // Check which letters have entries without the letter filter
+    let entriesWithoutLetterFilter = [...GLOSSARY];
+    if (activeCategory !== "Alle") {
+        entriesWithoutLetterFilter = entriesWithoutLetterFilter.filter(e => e.category === activeCategory);
+    }
+    if (showFavoritesOnly) {
+        entriesWithoutLetterFilter = entriesWithoutLetterFilter.filter(e => isFavorite(e.term));
+    }
+    if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        entriesWithoutLetterFilter = entriesWithoutLetterFilter.filter(e =>
+            e.term.toLowerCase().includes(q) ||
+            e.definition.toLowerCase().includes(q) ||
+            (e.synonyms && e.synonyms.some(s => s.toLowerCase().includes(q))) ||
+            e.category.toLowerCase().includes(q)
+        );
+    }
+    entriesWithoutLetterFilter.forEach(e => availableLetters.add(getFirstLetter(e.term)));
+
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    bar.innerHTML = letters.map(l => {
+        const has = availableLetters.has(l);
+        const isActive = activeLetter === l;
+        return `<button class="az-btn${isActive ? ' active' : ''}${!has ? ' disabled' : ''}"
+                    onclick="setLetter('${l}')"${!has ? ' disabled' : ''}>${l}</button>`;
+    }).join("");
+}
+
+function renderEntries() {
+    const container = document.getElementById("glossaryContent");
+    const entries = getFilteredEntries();
+    const favs = getFavorites();
+
+    // Update stats
+    document.getElementById("statsLine").innerHTML =
+        `<span class="stat-num">${entries.length}</span> von ${GLOSSARY.length} Eintr&auml;gen` +
+        (showFavoritesOnly ? ` &middot; <span style="color:#fbbf24">Nur Favoriten</span>` : "") +
+        (searchQuery ? ` &middot; Suche: &bdquo;${searchQuery}&ldquo;` : "");
+
+    // Update search count
+    const sc = document.getElementById("searchCount");
+    if (searchQuery) {
+        sc.textContent = `${entries.length} Treffer`;
+        sc.classList.remove("hidden");
+    } else {
+        sc.classList.add("hidden");
+    }
+
+    if (entries.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-20 text-gray-500">
+                <div class="text-5xl mb-4">&#128269;</div>
+                <p class="text-lg">Keine Eintr&auml;ge gefunden.</p>
+                <p class="text-sm mt-2">Versuche einen anderen Suchbegriff oder Filter.</p>
+            </div>`;
+        return;
+    }
+
+    // Group by first letter
+    const groups = {};
+    entries.forEach(e => {
+        const letter = getFirstLetter(e.term);
+        if (!groups[letter]) groups[letter] = [];
+        groups[letter].push(e);
+    });
+
+    const sortedLetters = Object.keys(groups).sort();
+
+    container.innerHTML = sortedLetters.map(letter => {
+        const items = groups[letter];
+        return `
+            <div id="letter-${letter}" class="mb-6">
+                <div class="letter-heading">${letter}</div>
+                <div class="flex flex-col gap-3">
+                    ${items.map(entry => renderEntry(entry)).join("")}
+                </div>
+            </div>`;
+    }).join("");
+}
+
+function renderEntry(entry) {
+    const isExpanded = expandedEntries.has(entry.term);
+    const isFav = isFavorite(entry.term);
+    const color = getCategoryColor(entry.category);
+    const q = searchQuery;
+
+    return `
+        <div class="entry-card${isExpanded ? ' expanded' : ''}" onclick="toggleEntry('${entry.term.replace(/'/g, "\\'")}')">
+            <div class="flex items-start gap-3">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-lg font-bold text-white">${highlightText(entry.term, q)}</span>
+                        <span class="cat-badge" style="background: ${color}22; color: ${color}; border: 1px solid ${color}44;">
+                            ${entry.category}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-400 italic mt-1">[${entry.pronunciation}]</div>
+                    <p class="text-sm text-gray-300 mt-2 leading-relaxed">${highlightText(entry.definition, q)}</p>
+                </div>
+                <button class="fav-btn${isFav ? ' favorited' : ''}"
+                        onclick="event.stopPropagation(); toggleFavorite('${entry.term.replace(/'/g, "\\'")}')"
+                        title="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufuegen'}"
+                        aria-label="${isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufuegen'}">
+                    ${isFav ? "&#9733;" : "&#9734;"}
+                </button>
+            </div>
+            <div class="entry-details">
+                <div class="mt-4 pt-4 border-t border-white/10 space-y-3">
+                    ${entry.synonyms && entry.synonyms.length > 0 ? `
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Synonyme</span>
+                            <p class="text-sm text-gray-300 mt-1">${highlightText(entry.synonyms.join(", "), q)}</p>
+                        </div>
+                    ` : ""}
+                    ${entry.relevance ? `
+                        <div>
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Klinische Relevanz</span>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">${highlightText(entry.relevance, q)}</p>
+                        </div>
+                    ` : ""}
+                </div>
+            </div>
+        </div>`;
+}
+
+function render() {
+    renderCategoryBar();
+    renderAZBar();
+    renderEntries();
+}
+
+// =====================================================
+// INTERACTIONS
+// =====================================================
+function setCategory(cat) {
+    activeCategory = cat;
+    activeLetter = null;
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function setLetter(letter) {
+    if (activeLetter === letter) {
+        activeLetter = null;
+    } else {
+        activeLetter = letter;
+    }
+    render();
+
+    // Scroll to letter section
+    if (activeLetter) {
+        const el = document.getElementById("letter-" + activeLetter);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
+}
+
+function toggleEntry(term) {
+    if (expandedEntries.has(term)) {
+        expandedEntries.delete(term);
+    } else {
+        expandedEntries.add(term);
+    }
+    render();
+}
+
+function toggleFavFilter() {
+    showFavoritesOnly = !showFavoritesOnly;
+    const btn = document.getElementById("favFilterBtn");
+    if (showFavoritesOnly) {
+        btn.classList.add("active");
+        btn.style.borderColor = "#fbbf24";
+        btn.style.color = "#fbbf24";
+    } else {
+        btn.classList.remove("active");
+        btn.style.borderColor = "";
+        btn.style.color = "";
+    }
+    render();
+}
+
+function showRandomEntry() {
+    const entries = activeCategory === "Alle" ? GLOSSARY : GLOSSARY.filter(e => e.category === activeCategory);
+    if (entries.length === 0) return;
+    const entry = entries[Math.floor(Math.random() * entries.length)];
+
+    // Reset filters to show the entry
+    searchQuery = "";
+    document.getElementById("searchInput").value = "";
+    activeLetter = null;
+    showFavoritesOnly = false;
+    const btn = document.getElementById("favFilterBtn");
+    btn.classList.remove("active");
+    btn.style.borderColor = "";
+    btn.style.color = "";
+
+    // Expand the entry
+    expandedEntries.clear();
+    expandedEntries.add(entry.term);
+
+    render();
+
+    // Scroll to it
+    requestAnimationFrame(() => {
+        const cards = document.querySelectorAll(".entry-card.expanded");
+        if (cards.length > 0) {
+            cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
+            cards[0].style.boxShadow = "0 0 30px rgba(102, 126, 234, 0.4)";
+            setTimeout(() => { cards[0].style.boxShadow = ""; }, 2000);
+        }
+    });
+}
+
+// =====================================================
+// SEARCH (debounced)
+// =====================================================
+let searchTimeout;
+document.getElementById("searchInput").addEventListener("input", function(e) {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        searchQuery = e.target.value;
+        activeLetter = null;
+        expandedEntries.clear();
+
+        // Auto-expand if few results
+        const filtered = getFilteredEntries();
+        if (filtered.length <= 5 && filtered.length > 0) {
+            filtered.forEach(entry => expandedEntries.add(entry.term));
+        }
+
+        render();
+    }, 150);
+});
+
+// Keyboard shortcut: focus search with /
+document.addEventListener("keydown", function(e) {
+    if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+        e.preventDefault();
+        document.getElementById("searchInput").focus();
+    }
+    if (e.key === "Escape") {
+        document.getElementById("searchInput").blur();
+        if (searchQuery) {
+            searchQuery = "";
+            document.getElementById("searchInput").value = "";
+            render();
+        }
+    }
+});
+
+// =====================================================
+// SCROLL-TO-TOP BUTTON
+// =====================================================
+window.addEventListener("scroll", function() {
+    const btn = document.getElementById("scrollTopBtn");
+    if (window.scrollY > 400) {
+        btn.style.opacity = "1";
+        btn.style.pointerEvents = "auto";
+    } else {
+        btn.style.opacity = "0";
+        btn.style.pointerEvents = "none";
+    }
+});
+
+// =====================================================
+// INIT
+// =====================================================
+render();
+
+// Track in VetScan progress
+if (typeof VetScan !== "undefined" && VetScan.saveProgress) {
+    VetScan.saveProgress("glossary", { totalEntries: GLOSSARY.length });
+}
+</script>
+
+<script src="js/vetscan-shared.js"></script>
+</body>
+</html>

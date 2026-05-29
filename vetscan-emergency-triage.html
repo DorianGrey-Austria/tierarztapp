@@ -1665,6 +1665,12 @@
 
         state.scenarioScore = totalScenarioScore;
         state.totalScore += totalScenarioScore;
+
+        // Fortschritt im Dashboard speichern
+        if (typeof VetScan !== 'undefined' && VetScan.saveScore) {
+            VetScan.saveScore('emergency-triage', state.totalScore, state.completedScenarios * 100);
+        }
+
         state.scenarioResults.push({
             id: s.id,
             score: totalScenarioScore,

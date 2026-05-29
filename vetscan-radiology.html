@@ -1711,6 +1711,13 @@ function evaluateFindings() {
     state.completedCases.add(c.id);
     state.resultsModalOpen = true;
 
+    // Fortschritt im Dashboard speichern
+    if (typeof VetScan !== 'undefined' && VetScan.saveScore) {
+        const avgScore = Object.values(state.scores).length > 0 ?
+            Math.round(Object.values(state.scores).reduce((a,b) => a+b, 0) / Object.values(state.scores).length) : 0;
+        VetScan.saveScore('radiology', avgScore, 100);
+    }
+
     render();
 }
 
