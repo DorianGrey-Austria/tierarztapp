@@ -168,9 +168,16 @@
             min-height: 44px;
             min-width: 44px;
         }
-    </style>
+    
+      /* Accessibility: Focus styles */
+      :focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; border-radius: 4px; }
+      button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #818cf8; outline-offset: 2px; }
+
+</style>
 </head>
 <body class="min-h-screen">
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-16 focus:left-4 focus:bg-indigo-600 focus:text-white focus:px-4 focus:py-2 focus:rounded focus:z-[10000]" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" onfocus="this.style.cssText='position:fixed;left:16px;top:56px;z-index:10000;background:#4f46e5;color:white;padding:8px 16px;border-radius:8px;text-decoration:none;font-size:14px;'">Zum Inhalt springen</a>
+
 
     <!-- App Container -->
     <div id="app" class="max-w-5xl mx-auto px-4 py-6">
@@ -1334,5 +1341,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     </script>
+<div style="margin-top:40px;padding:24px;background:rgba(129,140,248,0.08);border-radius:16px;border:1px solid rgba(129,140,248,0.15);text-align:center;font-family:system-ui,sans-serif;"><p style="color:#818cf8;font-weight:600;margin-bottom:12px;font-size:14px;">Verwandte Werkzeuge</p><div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;" id="vetscan-crosslinks"></div><script>!function(){var l={"clinical-exam":["lab-interpreter","auscultation","anatomy-layers","quick-reference"],"ddx-trainer":["lab-interpreter","pathology-cases","emergency-triage","pharma-calc"],"lab-interpreter":["clinical-exam","ddx-trainer","quick-reference","pathology-cases"],"emergency-triage":["pharma-calc","ddx-trainer","clinical-exam","quick-reference"],"pharma-calc":["emergency-triage","lab-interpreter","pathology-cases","quick-reference"],"auscultation":["clinical-exam","anatomy-layers","radiology","ddx-trainer"],"radiology":["anatomy-layers","auscultation","ddx-trainer","surgical-approaches"],"surgical-approaches":["anatomy-layers","radiology","pharma-calc","clinical-exam"],"pathology-cases":["ddx-trainer","lab-interpreter","pharma-calc","emergency-triage"],"anatomy-layers":["clinical-exam","auscultation","surgical-approaches","radiology"]},n={"clinical-exam":"Klinische Untersuchung","ddx-trainer":"DDx-Trainer","lab-interpreter":"Laborwerte","emergency-triage":"Notfall-Triage","pharma-calc":"Pharmakologie","auscultation":"Auskultation","radiology":"Radiologie","surgical-approaches":"Chirurgie","pathology-cases":"Pathologie","anatomy-layers":"Anatomie","quick-reference":"Normalwerte"},p=location.pathname.split("/").pop().replace("vetscan-","").replace(".html",""),e=document.getElementById("vetscan-crosslinks");if(e&&l[p])l[p].forEach(function(id){var a=document.createElement("a");a.href="vetscan-"+id+".html";a.textContent=n[id]||id;a.style.cssText="padding:6px 14px;background:rgba(129,140,248,0.15);color:#a5b4fc;border-radius:8px;text-decoration:none;font-size:13px;transition:background 0.2s";a.onmouseenter=function(){this.style.background="rgba(129,140,248,0.3)"};a.onmouseleave=function(){this.style.background="rgba(129,140,248,0.15)"};e.appendChild(a)})}();</script></div>
+<script src="js/vetscan-shared.js"></script>
 </body>
 </html>

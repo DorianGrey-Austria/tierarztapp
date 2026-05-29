@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan - Normalwerte Schnellreferenz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bg: '#0f172a',
+                        surface: '#1e293b',
+                        surfaceLight: '#334155',
+                        dog: '#3b82f6',
+                        dogBg: '#1e3a5f',
+                        cat: '#a855f7',
+                        catBg: '#3b1f5e',
+                        horse: '#22c55e',
+                        horseBg: '#14532d',
+                        accent: '#38bdf8',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            body {
+                background: #fff !important;
+                color: #000 !important;
+                font-size: 9pt;
+            }
+            .no-print { display: none !important; }
+            .print-break { page-break-before: always; }
+            table { font-size: 8pt; }
+            th, td { padding: 2px 4px !important; border: 1px solid #999 !important; }
+            th { background: #ddd !important; color: #000 !important; }
+            .tab-content { display: block !important; }
+            .tab-section-title { display: block !important; font-weight: bold; font-size: 12pt; margin-top: 12pt; }
+            #search-bar { display: none !important; }
+            .surface-card { background: #fff !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #1e293b;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .species-dog { border-left: 3px solid #3b82f6; }
+        .species-cat { border-left: 3px solid #a855f7; }
+        .species-horse { border-left: 3px solid #22c55e; }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        tr.highlight-match {
+            background: rgba(56, 189, 248, 0.15) !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-bg text-gray-200 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-surface/80 backdrop-blur border-b border-surfaceLight/50 sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center text-white font-bold text-sm">VR</div>
+                <div>
+                    <h1 class="text-lg font-bold text-white leading-tight">Normalwerte Schnellreferenz</h1>
+                    <p class="text-xs text-gray-400">Veterinaermedizin -- Hund | Katze | Pferd</p>
+                </div>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 text-xs bg-surfaceLight hover:bg-gray-600 rounded-lg transition flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Drucken
+            </button>
+        </div>
+    </header>
+
+    <!-- Search -->
+    <div id="search-bar" class="max-w-7xl mx-auto px-4 pt-4 no-print">
+        <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Suche (z.B. Kreatinin, Kalium, Adrenalin ...)"
+                class="w-full pl-10 pr-10 py-2.5 bg-surface border border-surfaceLight rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/50 transition"
+            />
+            <button id="clearSearch" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition hidden" title="Suche loeschen">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p id="searchStatus" class="text-xs text-gray-500 mt-1.5 hidden"></p>
+    </div>
+
+    <!-- Tabs -->
+    <nav class="max-w-7xl mx-auto px-4 pt-4 no-print">
+        <div class="flex gap-1.5 overflow-x-auto pb-1" id="tabNav">
+            <button class="tab-btn active whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium bg-surfaceLight text-gray-300 hover:text-white transition" data-tab="vital">Vitalparameter</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium bg-surfaceLight text-gray-300 hover:text-white transition" data-tab="haem">Blutbild</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium bg-surfaceLight text-gray-300 hover:text-white transition" data-tab="chem">Chemie</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium bg-surfaceLight text-gray-300 hover:text-white transition" data-tab="notfall">Notfall</button>
+            <button class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium bg-surfaceLight text-gray-300 hover:text-white transition" data-tab="scores">Scores</button>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="max-w-7xl mx-auto px-4 py-4 space-y-4">
+
+        <!-- TAB: Vitalparameter -->
+        <section class="tab-content active fade-in" id="tab-vital">
+            <h2 class="tab-section-title hidden text-white font-bold text-lg mb-2">Vitalparameter</h2>
+            <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    <h3 class="font-semibold text-white">Vitalparameter</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Parameter</th>
+                                <th class="text-center px-4 py-2.5 text-dog font-semibold">Hund</th>
+                                <th class="text-center px-4 py-2.5 text-cat font-semibold">Katze</th>
+                                <th class="text-center px-4 py-2.5 text-horse font-semibold">Pferd</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Temperatur (&deg;C)</td>
+                                <td class="px-4 py-2 text-center text-dog">38.0 -- 39.0</td>
+                                <td class="px-4 py-2 text-center text-cat">38.0 -- 39.5</td>
+                                <td class="px-4 py-2 text-center text-horse">37.5 -- 38.5</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Herzfrequenz (/min)</td>
+                                <td class="px-4 py-2 text-center text-dog">60 -- 120</td>
+                                <td class="px-4 py-2 text-center text-cat">120 -- 180</td>
+                                <td class="px-4 py-2 text-center text-horse">28 -- 44</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Atemfrequenz (/min)</td>
+                                <td class="px-4 py-2 text-center text-dog">15 -- 30</td>
+                                <td class="px-4 py-2 text-center text-cat">20 -- 40</td>
+                                <td class="px-4 py-2 text-center text-horse">8 -- 16</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">KFZ (Sek)</td>
+                                <td class="px-4 py-2 text-center text-dog">&lt;2</td>
+                                <td class="px-4 py-2 text-center text-cat">&lt;2</td>
+                                <td class="px-4 py-2 text-center text-horse">&lt;2</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Schleimhaut</td>
+                                <td class="px-4 py-2 text-center text-dog">rosarot</td>
+                                <td class="px-4 py-2 text-center text-cat">rosarot</td>
+                                <td class="px-4 py-2 text-center text-horse">rosarot</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Haematologie -->
+        <section class="tab-content fade-in" id="tab-haem">
+            <h2 class="tab-section-title hidden text-white font-bold text-lg mb-2">Haematologie</h2>
+            <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                    <h3 class="font-semibold text-white">Haematologie</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Parameter</th>
+                                <th class="text-center px-4 py-2.5 text-gray-400 font-semibold">Einheit</th>
+                                <th class="text-center px-4 py-2.5 text-dog font-semibold">Hund</th>
+                                <th class="text-center px-4 py-2.5 text-cat font-semibold">Katze</th>
+                                <th class="text-center px-4 py-2.5 text-horse font-semibold">Pferd</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Erythrozyten</td>
+                                <td class="px-4 py-2 text-center text-gray-500">T/l</td>
+                                <td class="px-4 py-2 text-center text-dog">5.5 -- 8.5</td>
+                                <td class="px-4 py-2 text-center text-cat">5.0 -- 10.0</td>
+                                <td class="px-4 py-2 text-center text-horse">6.5 -- 12.5</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Haemoglobin</td>
+                                <td class="px-4 py-2 text-center text-gray-500">g/dl</td>
+                                <td class="px-4 py-2 text-center text-dog">12 -- 18</td>
+                                <td class="px-4 py-2 text-center text-cat">8 -- 15</td>
+                                <td class="px-4 py-2 text-center text-horse">11 -- 19</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Haematokrit</td>
+                                <td class="px-4 py-2 text-center text-gray-500">%</td>
+                                <td class="px-4 py-2 text-center text-dog">37 -- 55</td>
+                                <td class="px-4 py-2 text-center text-cat">24 -- 45</td>
+                                <td class="px-4 py-2 text-center text-horse">32 -- 53</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Leukozyten</td>
+                                <td class="px-4 py-2 text-center text-gray-500">G/l</td>
+                                <td class="px-4 py-2 text-center text-dog">6.0 -- 17.0</td>
+                                <td class="px-4 py-2 text-center text-cat">5.5 -- 19.5</td>
+                                <td class="px-4 py-2 text-center text-horse">5.4 -- 14.3</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Thrombozyten</td>
+                                <td class="px-4 py-2 text-center text-gray-500">G/l</td>
+                                <td class="px-4 py-2 text-center text-dog">150 -- 500</td>
+                                <td class="px-4 py-2 text-center text-cat">175 -- 500</td>
+                                <td class="px-4 py-2 text-center text-horse">100 -- 350</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Serumchemie + Elektrolyte -->
+        <section class="tab-content fade-in" id="tab-chem">
+            <h2 class="tab-section-title hidden text-white font-bold text-lg mb-2">Serumchemie &amp; Elektrolyte</h2>
+            <div class="space-y-4">
+                <!-- Serumchemie -->
+                <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                    <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        <h3 class="font-semibold text-white">Serumchemie</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                    <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Parameter</th>
+                                    <th class="text-center px-4 py-2.5 text-gray-400 font-semibold">Einheit</th>
+                                    <th class="text-center px-4 py-2.5 text-dog font-semibold">Hund</th>
+                                    <th class="text-center px-4 py-2.5 text-cat font-semibold">Katze</th>
+                                    <th class="text-center px-4 py-2.5 text-horse font-semibold">Pferd</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Glukose</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mg/dl</td>
+                                    <td class="px-4 py-2 text-center text-dog">60 -- 120</td>
+                                    <td class="px-4 py-2 text-center text-cat">70 -- 150</td>
+                                    <td class="px-4 py-2 text-center text-horse">75 -- 115</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Harnstoff</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mg/dl</td>
+                                    <td class="px-4 py-2 text-center text-dog">10 -- 30</td>
+                                    <td class="px-4 py-2 text-center text-cat">15 -- 35</td>
+                                    <td class="px-4 py-2 text-center text-horse">10 -- 27</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Kreatinin</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mg/dl</td>
+                                    <td class="px-4 py-2 text-center text-dog">0.5 -- 1.5</td>
+                                    <td class="px-4 py-2 text-center text-cat">0.8 -- 1.8</td>
+                                    <td class="px-4 py-2 text-center text-horse">1.0 -- 2.0</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">ALT</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">U/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">10 -- 120</td>
+                                    <td class="px-4 py-2 text-center text-cat">12 -- 130</td>
+                                    <td class="px-4 py-2 text-center text-gray-600">--</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">AST</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">U/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">10 -- 50</td>
+                                    <td class="px-4 py-2 text-center text-cat">10 -- 80</td>
+                                    <td class="px-4 py-2 text-center text-horse">150 -- 400</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">AP</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">U/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">20 -- 150</td>
+                                    <td class="px-4 py-2 text-center text-cat">10 -- 80</td>
+                                    <td class="px-4 py-2 text-center text-horse">100 -- 350</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Totalprotein</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">g/dl</td>
+                                    <td class="px-4 py-2 text-center text-dog">5.5 -- 7.5</td>
+                                    <td class="px-4 py-2 text-center text-cat">5.7 -- 8.9</td>
+                                    <td class="px-4 py-2 text-center text-horse">5.7 -- 8.0</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Albumin</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">g/dl</td>
+                                    <td class="px-4 py-2 text-center text-dog">2.5 -- 4.0</td>
+                                    <td class="px-4 py-2 text-center text-cat">2.1 -- 3.9</td>
+                                    <td class="px-4 py-2 text-center text-horse">2.6 -- 3.7</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Elektrolyte -->
+                <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                    <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <h3 class="font-semibold text-white">Elektrolyte</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                    <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Parameter</th>
+                                    <th class="text-center px-4 py-2.5 text-gray-400 font-semibold">Einheit</th>
+                                    <th class="text-center px-4 py-2.5 text-dog font-semibold">Hund</th>
+                                    <th class="text-center px-4 py-2.5 text-cat font-semibold">Katze</th>
+                                    <th class="text-center px-4 py-2.5 text-horse font-semibold">Pferd</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Natrium</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mmol/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">140 -- 155</td>
+                                    <td class="px-4 py-2 text-center text-cat">147 -- 156</td>
+                                    <td class="px-4 py-2 text-center text-horse">132 -- 146</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Kalium</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mmol/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">3.5 -- 5.5</td>
+                                    <td class="px-4 py-2 text-center text-cat">3.5 -- 5.8</td>
+                                    <td class="px-4 py-2 text-center text-horse">2.6 -- 5.0</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-gray-300 font-medium">Calcium</td>
+                                    <td class="px-4 py-2 text-center text-gray-500">mmol/l</td>
+                                    <td class="px-4 py-2 text-center text-dog">2.2 -- 2.9</td>
+                                    <td class="px-4 py-2 text-center text-cat">2.0 -- 2.7</td>
+                                    <td class="px-4 py-2 text-center text-horse">2.5 -- 3.4</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Notfall -->
+        <section class="tab-content fade-in" id="tab-notfall">
+            <h2 class="tab-section-title hidden text-white font-bold text-lg mb-2">Notfalldosierungen</h2>
+            <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    <h3 class="font-semibold text-white">Wichtige Notfalldosierungen</h3>
+                    <span class="ml-auto text-xs text-red-400 font-medium bg-red-400/10 px-2 py-0.5 rounded-full">Notfall</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Medikament</th>
+                                <th class="text-center px-4 py-2.5 text-dog font-semibold">Hund</th>
+                                <th class="text-center px-4 py-2.5 text-cat font-semibold">Katze</th>
+                                <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Indikation</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Adrenalin</td>
+                                <td class="px-4 py-2 text-center text-dog">0.01 -- 0.02 mg/kg IV</td>
+                                <td class="px-4 py-2 text-center text-cat">0.01 -- 0.02 mg/kg IV</td>
+                                <td class="px-4 py-2 text-gray-400">Anaphylaxie / CPR</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Atropin</td>
+                                <td class="px-4 py-2 text-center text-dog">0.02 -- 0.04 mg/kg IV</td>
+                                <td class="px-4 py-2 text-center text-cat">0.02 -- 0.04 mg/kg IV</td>
+                                <td class="px-4 py-2 text-gray-400">Bradykardie</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Diazepam</td>
+                                <td class="px-4 py-2 text-center text-dog">0.5 -- 1 mg/kg IV</td>
+                                <td class="px-4 py-2 text-center text-cat">0.5 -- 1 mg/kg IV</td>
+                                <td class="px-4 py-2 text-gray-400">Krampfanfall</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Furosemid</td>
+                                <td class="px-4 py-2 text-center text-dog">1 -- 4 mg/kg IV</td>
+                                <td class="px-4 py-2 text-center text-cat">1 -- 2 mg/kg IV</td>
+                                <td class="px-4 py-2 text-gray-400">Lungenoedem</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Dexamethason</td>
+                                <td class="px-4 py-2 text-center text-dog">1 -- 2 mg/kg IV</td>
+                                <td class="px-4 py-2 text-center text-cat">1 -- 2 mg/kg IV</td>
+                                <td class="px-4 py-2 text-gray-400">Schock</td>
+                            </tr>
+                            <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                <td class="px-4 py-2 text-gray-300 font-medium">Kristalloide Schockrate</td>
+                                <td class="px-4 py-2 text-center text-dog">60 -- 90 ml/kg/h</td>
+                                <td class="px-4 py-2 text-center text-cat">40 -- 60 ml/kg/h</td>
+                                <td class="px-4 py-2 text-gray-400">Schock</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: Scores -->
+        <section class="tab-content fade-in" id="tab-scores">
+            <h2 class="tab-section-title hidden text-white font-bold text-lg mb-2">Scores &amp; Stadien</h2>
+            <div class="space-y-4">
+                <!-- BCS -->
+                <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                    <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                        <h3 class="font-semibold text-white">Body Condition Score (BCS 1 -- 9)</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                    <th class="text-center px-4 py-2.5 text-gray-400 font-semibold w-20">Score</th>
+                                    <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center"><span class="inline-block w-8 h-8 leading-8 rounded-full bg-red-500/20 text-red-400 font-bold text-sm">1</span></td>
+                                    <td class="px-4 py-2 text-gray-300"><span class="font-medium text-red-400">Kachektisch:</span> Rippen, Wirbel, Beckenknochen prominent</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center"><span class="inline-block w-8 h-8 leading-8 rounded-full bg-orange-500/20 text-orange-400 font-bold text-sm">3</span></td>
+                                    <td class="px-4 py-2 text-gray-300"><span class="font-medium text-orange-400">Untergewichtig:</span> Rippen leicht tast- und sichtbar</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center"><span class="inline-block w-8 h-8 leading-8 rounded-full bg-green-500/20 text-green-400 font-bold text-sm">5</span></td>
+                                    <td class="px-4 py-2 text-gray-300"><span class="font-medium text-green-400">Ideal:</span> Rippen tastbar, nicht sichtbar, Taille erkennbar</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center"><span class="inline-block w-8 h-8 leading-8 rounded-full bg-yellow-500/20 text-yellow-400 font-bold text-sm">7</span></td>
+                                    <td class="px-4 py-2 text-gray-300"><span class="font-medium text-yellow-400">Uebergewichtig:</span> Rippen schwer tastbar, keine Taille</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center"><span class="inline-block w-8 h-8 leading-8 rounded-full bg-red-600/20 text-red-500 font-bold text-sm">9</span></td>
+                                    <td class="px-4 py-2 text-gray-300"><span class="font-medium text-red-500">Adipoes:</span> Massive Fettdepots, keine Koerperstrukturen tastbar</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- IRIS -->
+                <div class="surface-card bg-surface rounded-xl border border-surfaceLight overflow-hidden">
+                    <div class="px-4 py-3 border-b border-surfaceLight flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                        <h3 class="font-semibold text-white">IRIS Stadien -- Chronische Nierenerkrankung</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="data-table">
+                            <thead>
+                                <tr class="bg-surfaceLight/60 text-xs uppercase tracking-wider">
+                                    <th class="text-center px-4 py-2.5 text-gray-400 font-semibold w-20">Stadium</th>
+                                    <th class="text-center px-4 py-2.5 text-dog font-semibold">Kreatinin Hund (mg/dl)</th>
+                                    <th class="text-center px-4 py-2.5 text-cat font-semibold">Kreatinin Katze (mg/dl)</th>
+                                    <th class="text-left px-4 py-2.5 text-gray-400 font-semibold">Beschreibung</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center font-bold text-green-400">1</td>
+                                    <td class="px-4 py-2 text-center text-dog">&lt;1.4</td>
+                                    <td class="px-4 py-2 text-center text-cat">&lt;1.6</td>
+                                    <td class="px-4 py-2 text-gray-300">Nicht-azotaemisch</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center font-bold text-yellow-400">2</td>
+                                    <td class="px-4 py-2 text-center text-dog">1.4 -- 2.0</td>
+                                    <td class="px-4 py-2 text-center text-cat">1.6 -- 2.8</td>
+                                    <td class="px-4 py-2 text-gray-300">Milde Azotaemie</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center font-bold text-orange-400">3</td>
+                                    <td class="px-4 py-2 text-center text-dog">2.1 -- 5.0</td>
+                                    <td class="px-4 py-2 text-center text-cat">2.9 -- 5.0</td>
+                                    <td class="px-4 py-2 text-gray-300">Moderate Azotaemie</td>
+                                </tr>
+                                <tr class="border-t border-surfaceLight/40 hover:bg-surfaceLight/20 transition-colors">
+                                    <td class="px-4 py-2 text-center font-bold text-red-500">4</td>
+                                    <td class="px-4 py-2 text-center text-dog">&gt;5.0</td>
+                                    <td class="px-4 py-2 text-center text-cat">&gt;5.0</td>
+                                    <td class="px-4 py-2 text-gray-300">Schwere Azotaemie</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-gray-600 no-print">
+        VetScan Normalwerte Schnellreferenz -- Nur zu Lernzwecken. Keine Gewaehr fuer Vollstaendigkeit oder Richtigkeit.
+    </footer>
+
+    <script>
+        // --- Tab Navigation ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        function switchTab(tabId) {
+            tabBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+            tabContents.forEach(tc => tc.classList.toggle('active', tc.id === 'tab-' + tabId));
+        }
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        // --- Search ---
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearSearch');
+        const searchStatus = document.getElementById('searchStatus');
+
+        function performSearch(query) {
+            const q = query.trim().toLowerCase();
+            clearBtn.classList.toggle('hidden', q.length === 0);
+
+            const allRows = document.querySelectorAll('.data-table tbody tr');
+            let matchCount = 0;
+
+            if (q.length === 0) {
+                allRows.forEach(row => row.classList.remove('highlight-match', 'hidden'));
+                searchStatus.classList.add('hidden');
+                // Reset to first tab
+                switchTab('vital');
+                return;
+            }
+
+            // Show all tabs when searching
+            tabContents.forEach(tc => tc.classList.add('active'));
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+
+            allRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const matches = text.includes(q);
+                row.classList.toggle('highlight-match', matches);
+                row.classList.toggle('hidden', !matches);
+                if (matches) matchCount++;
+            });
+
+            searchStatus.classList.remove('hidden');
+            searchStatus.textContent = matchCount === 0
+                ? 'Keine Ergebnisse fuer "' + query.trim() + '"'
+                : matchCount + ' Treffer fuer "' + query.trim() + '"';
+        }
+
+        searchInput.addEventListener('input', (e) => performSearch(e.target.value));
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            performSearch('');
+            searchInput.focus();
+        });
+
+        // Keyboard shortcut: Ctrl/Cmd+K to focus search
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+                searchInput.select();
+            }
+            if (e.key === 'Escape' && document.activeElement === searchInput) {
+                searchInput.value = '';
+                performSearch('');
+                searchInput.blur();
+            }
+        });
+    </script>
+
+    <script src="js/vetscan-shared.js"></script>
+</body>
+</html>

@@ -58,8 +58,11 @@ jobs:
         cp vetscan-surgical-approaches.html deploy/ 2>/dev/null || true
         cp vetscan-pathology-cases.html deploy/ 2>/dev/null || true
         cp vetscan-anatomy-layers.html deploy/ 2>/dev/null || true
-        
-        # Copy JS directory for Version 9
+        cp vetscan-dashboard.html deploy/ 2>/dev/null || true
+        cp vetscan-quick-reference.html deploy/ 2>/dev/null || true
+        cp vetscan-glossary.html deploy/ 2>/dev/null || true
+
+        # Copy JS directory (shared module + Version 9)
         cp -r js deploy/ 2>/dev/null || true
         
         # Copy assets for 3D models

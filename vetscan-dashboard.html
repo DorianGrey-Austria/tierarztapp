@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Lernfortschritt-Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#111827',
+                            950: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border-color: rgba(129, 140, 248, 0.2);
+        }
+
+        .glass-card.inactive {
+            opacity: 0.45;
+            filter: grayscale(0.4);
+        }
+
+        .glass-card.inactive:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .stat-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.6s ease;
+        }
+
+        .bar-chart-bar {
+            background: rgba(129, 140, 248, 0.3);
+            border-radius: 6px 6px 0 0;
+            transition: height 0.4s ease;
+            position: relative;
+        }
+
+        .bar-chart-bar .bar-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, #818cf8, #a78bfa);
+            border-radius: 6px 6px 0 0;
+            transition: height 0.6s ease;
+        }
+
+        .category-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cat-grundlagen { background: rgba(52, 211, 153, 0.15); color: #6ee7b7; }
+        .cat-diagnostik { background: rgba(96, 165, 250, 0.15); color: #93c5fd; }
+        .cat-notfall { background: rgba(248, 113, 113, 0.15); color: #fca5a5; }
+        .cat-therapie { background: rgba(251, 191, 36, 0.15); color: #fcd34d; }
+        .cat-chirurgie { background: rgba(244, 114, 182, 0.15); color: #f9a8d4; }
+        .cat-klinik { background: rgba(167, 139, 250, 0.15); color: #c4b5fd; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .recommendation-card {
+            background: rgba(129, 140, 248, 0.08);
+            border: 1px solid rgba(129, 140, 248, 0.15);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-box {
+            background: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        @media (max-width: 768px) {
+            .stat-card { padding: 16px !important; }
+        }
+
+        @media print {
+            .vetscan-nav, #reset-section { display: none !important; }
+            body { background: #fff !important; color: #000 !important; padding-top: 0 !important; }
+            .glass-card, .stat-card { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Lernfortschritt</h1>
+            <p class="text-slate-400 text-sm sm:text-base">Dein Fortschritt ueber alle VetScan Pro Lernwerkzeuge</p>
+        </div>
+
+        <!-- Uebersichts-Statistiken -->
+        <div id="stats-overview" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="stat-card p-5 text-center">
+                <div class="text-3xl font-bold text-indigo-400" id="stat-total-score">0</div>
+                <div class="text-xs text-slate-400 mt-1">Gesamtpunkte</div>
+            </div>
+            <div class="stat-card p-5 text-center">
+                <div class="text-3xl font-bold text-emerald-400" id="stat-tools-visited">0/10</div>
+                <div class="text-xs text-slate-400 mt-1">Besuchte Tools</div>
+            </div>
+            <div class="stat-card p-5 text-center">
+                <div class="text-3xl font-bold text-amber-400" id="stat-total-attempts">0</div>
+                <div class="text-xs text-slate-400 mt-1">Gesamtversuche</div>
+            </div>
+            <div class="stat-card p-5 text-center">
+                <div class="text-3xl font-bold text-rose-400" id="stat-streak">0</div>
+                <div class="text-xs text-slate-400 mt-1">Lernstreak (Tage)</div>
+            </div>
+        </div>
+
+        <!-- Tool-Karten-Grid -->
+        <h2 class="text-lg font-semibold text-white mb-4">Lernwerkzeuge</h2>
+        <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-10">
+            <!-- wird per JS befuellt -->
+        </div>
+
+        <!-- Empfehlungen -->
+        <h2 class="text-lg font-semibold text-white mb-4">Empfehlungen</h2>
+        <div id="recommendations" class="mb-10">
+            <!-- wird per JS befuellt -->
+        </div>
+
+        <!-- Fortschrittsverlauf (Balkendiagramm) -->
+        <h2 class="text-lg font-semibold text-white mb-4">Fortschritt nach Werkzeug</h2>
+        <div class="glass-card p-6 mb-10">
+            <div id="bar-chart" class="flex items-end gap-2 sm:gap-3" style="height: 200px;">
+                <!-- wird per JS befuellt -->
+            </div>
+            <div id="bar-labels" class="flex gap-2 sm:gap-3 mt-2">
+                <!-- wird per JS befuellt -->
+            </div>
+        </div>
+
+        <!-- Reset -->
+        <div id="reset-section" class="text-center mb-8">
+            <button onclick="confirmReset()" class="btn-danger">
+                Fortschritt zuruecksetzen
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Reset-Modal -->
+    <div id="reset-modal" class="modal-overlay" style="display:none;" onclick="closeModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-bold text-white mb-3">Fortschritt zuruecksetzen?</h3>
+            <p class="text-slate-400 text-sm mb-6">
+                Alle gespeicherten Punkte, Versuche und Besuche werden unwiderruflich geloescht.
+                Diese Aktion kann nicht rueckgaengig gemacht werden.
+            </p>
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white transition-colors">
+                    Abbrechen
+                </button>
+                <button onclick="resetProgress()" class="btn-danger">
+                    Ja, alles loeschen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // --- Konfiguration ---
+        const STORAGE_KEY = 'vetscan_progress';
+
+        const TOOLS = [
+            { id: 'clinical-exam', name: 'Klinische Untersuchung', category: 'Grundlagen', icon: '\u2695\uFE0F', file: 'vetscan-clinical-exam.html' },
+            { id: 'ddx-trainer', name: 'DDx-Trainer', category: 'Diagnostik', icon: '\uD83E\uDDE9', file: 'vetscan-ddx-trainer.html' },
+            { id: 'lab-interpreter', name: 'Laborwerte', category: 'Diagnostik', icon: '\uD83E\uDDEA', file: 'vetscan-lab-interpreter.html' },
+            { id: 'emergency-triage', name: 'Notfall-Triage', category: 'Notfall', icon: '\uD83D\uDEA8', file: 'vetscan-emergency-triage.html' },
+            { id: 'pharma-calc', name: 'Pharmakologie', category: 'Therapie', icon: '\uD83D\uDC8A', file: 'vetscan-pharma-calc.html' },
+            { id: 'auscultation', name: 'Auskultation', category: 'Grundlagen', icon: '\uD83E\uDE7A', file: 'vetscan-auscultation.html' },
+            { id: 'radiology', name: 'Radiologie', category: 'Diagnostik', icon: '\u2622\uFE0F', file: 'vetscan-radiology.html' },
+            { id: 'surgical-approaches', name: 'Chirurgie', category: 'Chirurgie', icon: '\u2702\uFE0F', file: 'vetscan-surgical-approaches.html' },
+            { id: 'pathology-cases', name: 'Pathologie-Faelle', category: 'Klinik', icon: '\uD83D\uDCCB', file: 'vetscan-pathology-cases.html' },
+            { id: 'anatomy-layers', name: 'Anatomie-Atlas', category: 'Grundlagen', icon: '\uD83E\uDDB4', file: 'vetscan-anatomy-layers.html' },
+        ];
+
+        // --- Hilfsfunktionen ---
+        function getProgress() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            } catch { return {}; }
+        }
+
+        function getCategoryClass(category) {
+            const map = {
+                'Grundlagen': 'cat-grundlagen',
+                'Diagnostik': 'cat-diagnostik',
+                'Notfall': 'cat-notfall',
+                'Therapie': 'cat-therapie',
+                'Chirurgie': 'cat-chirurgie',
+                'Klinik': 'cat-klinik',
+            };
+            return map[category] || 'cat-grundlagen';
+        }
+
+        function timeAgo(isoString) {
+            if (!isoString) return 'Nie';
+            const diff = Date.now() - new Date(isoString).getTime();
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'Gerade eben';
+            if (mins < 60) return 'vor ' + mins + ' Min.';
+            const hours = Math.floor(mins / 60);
+            if (hours < 24) return 'vor ' + hours + (hours === 1 ? ' Stunde' : ' Stunden');
+            const days = Math.floor(hours / 24);
+            if (days < 30) return 'vor ' + days + (days === 1 ? ' Tag' : ' Tagen');
+            const months = Math.floor(days / 30);
+            return 'vor ' + months + (months === 1 ? ' Monat' : ' Monaten');
+        }
+
+        function calculateStreak(progress) {
+            const accessDates = [];
+            for (const toolId in progress) {
+                const d = progress[toolId].lastAccess;
+                if (d) {
+                    const dateStr = new Date(d).toISOString().split('T')[0];
+                    if (!accessDates.includes(dateStr)) accessDates.push(dateStr);
+                }
+            }
+            if (accessDates.length === 0) return 0;
+
+            accessDates.sort((a, b) => b.localeCompare(a));
+
+            const today = new Date().toISOString().split('T')[0];
+            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+            if (accessDates[0] !== today && accessDates[0] !== yesterday) return 0;
+
+            let streak = 1;
+            for (let i = 0; i < accessDates.length - 1; i++) {
+                const current = new Date(accessDates[i]);
+                const next = new Date(accessDates[i + 1]);
+                const diffDays = (current - next) / 86400000;
+                if (diffDays === 1) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        // --- Rendering ---
+        function render() {
+            const progress = getProgress();
+
+            // Uebersichts-Statistiken
+            let totalScore = 0;
+            let toolsVisited = 0;
+            let totalAttempts = 0;
+
+            TOOLS.forEach(function(tool) {
+                const p = progress[tool.id];
+                if (p) {
+                    if (p.visits > 0 || p.score > 0) toolsVisited++;
+                    totalScore += (p.score || 0);
+                    totalAttempts += (p.attempts || 0);
+                }
+            });
+
+            document.getElementById('stat-total-score').textContent = totalScore.toLocaleString('de-DE');
+            document.getElementById('stat-tools-visited').textContent = toolsVisited + '/10';
+            document.getElementById('stat-total-attempts').textContent = totalAttempts.toLocaleString('de-DE');
+            document.getElementById('stat-streak').textContent = calculateStreak(progress);
+
+            // Tool-Karten
+            const grid = document.getElementById('tools-grid');
+            grid.innerHTML = '';
+
+            TOOLS.forEach(function(tool) {
+                const p = progress[tool.id] || {};
+                const visited = p.visits > 0 || p.score > 0;
+                const score = p.score || 0;
+                const maxScore = p.maxScore || 100;
+                const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+                const bestScore = p.bestScore || 0;
+                const visits = p.visits || 0;
+                const attempts = p.attempts || 0;
+                const lastAccess = p.lastAccess;
+
+                const card = document.createElement('div');
+                card.className = 'glass-card p-5 flex flex-col' + (visited ? '' : ' inactive');
+
+                let progressColor = 'bg-red-500';
+                if (percent >= 80) progressColor = 'bg-emerald-500';
+                else if (percent >= 50) progressColor = 'bg-amber-500';
+                else if (percent >= 25) progressColor = 'bg-orange-500';
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" aria-hidden="true">${tool.icon}</span>
+                            <div>
+                                <h3 class="text-sm font-semibold text-white">${tool.name}</h3>
+                                <span class="category-badge ${getCategoryClass(tool.category)}">${tool.category}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-slate-500">${visited ? timeAgo(lastAccess) : 'Noch nicht besucht'}</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">Fortschritt</span>
+                            <span class="text-slate-300 font-medium">${visited ? percent + '%' : '--'}</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill ${progressColor}" style="width: ${visited ? percent : 0}%"></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                        <div>
+                            <div class="text-sm font-semibold text-indigo-400">${visited ? bestScore : '--'}</div>
+                            <div class="text-[10px] text-slate-500">Bestpunktzahl</div>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-emerald-400">${visited ? visits : '--'}</div>
+                            <div class="text-[10px] text-slate-500">Besuche</div>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-amber-400">${visited ? attempts : '--'}</div>
+                            <div class="text-[10px] text-slate-500">Versuche</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        <a href="${tool.file}" class="btn-primary w-full justify-center text-center">
+                            ${visited ? 'Fortsetzen' : 'Starten'}
+                        </a>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            // Empfehlungen
+            renderRecommendations(progress);
+
+            // Balkendiagramm
+            renderBarChart(progress);
+        }
+
+        function renderRecommendations(progress) {
+            const container = document.getElementById('recommendations');
+            container.innerHTML = '';
+
+            const notVisited = [];
+            const visited = [];
+
+            TOOLS.forEach(function(tool) {
+                const p = progress[tool.id];
+                if (!p || (!p.visits && !p.score)) {
+                    notVisited.push(tool);
+                } else {
+                    visited.push({ tool: tool, data: p });
+                }
+            });
+
+            // Nicht besuchte Tools
+            if (notVisited.length > 0) {
+                const card = document.createElement('div');
+                card.className = 'recommendation-card mb-3';
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl" aria-hidden="true">\uD83D\uDCA1</span>
+                        <div>
+                            <h4 class="text-sm font-semibold text-indigo-300 mb-1">Noch nicht besucht</h4>
+                            <p class="text-xs text-slate-400">
+                                ${notVisited.map(function(t) {
+                                    return '<a href="' + t.file + '" class="text-indigo-400 hover:text-indigo-300 underline">' + t.name + '</a>';
+                                }).join(', ')}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+
+            // Am laengsten nicht besucht
+            if (visited.length > 0) {
+                visited.sort(function(a, b) {
+                    const da = a.data.lastAccess ? new Date(a.data.lastAccess).getTime() : 0;
+                    const db = b.data.lastAccess ? new Date(b.data.lastAccess).getTime() : 0;
+                    return da - db;
+                });
+                const oldest = visited.slice(0, 3);
+
+                const card = document.createElement('div');
+                card.className = 'recommendation-card mb-3';
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl" aria-hidden="true">\u23F0</span>
+                        <div>
+                            <h4 class="text-sm font-semibold text-amber-300 mb-1">Am laengsten nicht besucht</h4>
+                            <p class="text-xs text-slate-400">
+                                ${oldest.map(function(v) {
+                                    return '<a href="' + v.tool.file + '" class="text-amber-400 hover:text-amber-300 underline">' + v.tool.name + '</a> (' + timeAgo(v.data.lastAccess) + ')';
+                                }).join(' &middot; ')}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+
+            // Niedrigste Scores
+            const scored = visited.filter(function(v) { return v.data.maxScore > 0; });
+            if (scored.length > 0) {
+                scored.sort(function(a, b) {
+                    const pa = (a.data.score || 0) / (a.data.maxScore || 1);
+                    const pb = (b.data.score || 0) / (b.data.maxScore || 1);
+                    return pa - pb;
+                });
+                const weakest = scored.slice(0, 3);
+
+                const card = document.createElement('div');
+                card.className = 'recommendation-card';
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl" aria-hidden="true">\uD83D\uDCCA</span>
+                        <div>
+                            <h4 class="text-sm font-semibold text-rose-300 mb-1">Verbesserungspotential</h4>
+                            <p class="text-xs text-slate-400">
+                                ${weakest.map(function(v) {
+                                    const pct = Math.round((v.data.score / v.data.maxScore) * 100);
+                                    return '<a href="' + v.tool.file + '" class="text-rose-400 hover:text-rose-300 underline">' + v.tool.name + '</a> (' + pct + '%)';
+                                }).join(' &middot; ')}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+
+            if (notVisited.length === 0 && visited.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Noch keine Daten vorhanden. Starte ein Werkzeug, um deinen Fortschritt zu tracken.</p>';
+            }
+        }
+
+        function renderBarChart(progress) {
+            const chartContainer = document.getElementById('bar-chart');
+            const labelsContainer = document.getElementById('bar-labels');
+            chartContainer.innerHTML = '';
+            labelsContainer.innerHTML = '';
+
+            const maxPercent = 100;
+
+            TOOLS.forEach(function(tool) {
+                const p = progress[tool.id] || {};
+                const score = p.score || 0;
+                const maxScore = p.maxScore || 100;
+                const percent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+                const visited = p.visits > 0 || p.score > 0;
+
+                // Balken
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'flex-1 flex flex-col items-center justify-end h-full';
+                barWrapper.title = tool.name + ': ' + percent + '%';
+
+                const bar = document.createElement('div');
+                bar.className = 'bar-chart-bar w-full';
+                bar.style.height = '100%';
+                bar.style.position = 'relative';
+
+                const fill = document.createElement('div');
+                fill.className = 'bar-fill';
+                fill.style.height = visited ? Math.max(percent, 2) + '%' : '0%';
+
+                if (visited && percent > 0) {
+                    const label = document.createElement('span');
+                    label.className = 'absolute -top-5 left-0 right-0 text-center text-[10px] text-slate-400';
+                    label.textContent = percent + '%';
+                    bar.appendChild(label);
+                }
+
+                bar.appendChild(fill);
+                barWrapper.appendChild(bar);
+                chartContainer.appendChild(barWrapper);
+
+                // Label
+                const labelEl = document.createElement('div');
+                labelEl.className = 'flex-1 text-center';
+                labelEl.innerHTML = '<span class="text-xs sm:text-[10px] text-slate-500 block truncate" title="' + tool.name + '">' + tool.icon + '</span>';
+                labelsContainer.appendChild(labelEl);
+            });
+
+            // Verzoegertes Einblenden der Balken
+            requestAnimationFrame(function() {
+                const fills = chartContainer.querySelectorAll('.bar-fill');
+                fills.forEach(function(el) {
+                    el.style.transition = 'height 0.6s ease 0.2s';
+                });
+            });
+        }
+
+        // --- Reset ---
+        window.confirmReset = function() {
+            document.getElementById('reset-modal').style.display = 'flex';
+        };
+
+        window.closeModal = function(e) {
+            if (e && e.target !== e.currentTarget) return;
+            document.getElementById('reset-modal').style.display = 'none';
+        };
+
+        window.resetProgress = function() {
+            localStorage.removeItem(STORAGE_KEY);
+            document.getElementById('reset-modal').style.display = 'none';
+            render();
+        };
+
+        // ESC schliesst Modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('reset-modal').style.display = 'none';
+            }
+        });
+
+        // --- Init ---
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', render);
+        } else {
+            render();
+        }
+    })();
+    </script>
+
+    <script src="js/vetscan-shared.js"></script>
+</body>
+</html>
