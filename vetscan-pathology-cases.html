@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VetScan Pro - Pathologie-Fallstudien</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a5f;
+            --accent: #059669;
+            --accent-light: #34d399;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-hover: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --success: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        }
+
+        .card-glass {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        .step-active {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+        }
+
+        .step-completed {
+            border-color: var(--success);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #059669, #34d399);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+        .badge-green { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+        .badge-orange { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+        .badge-red { background: rgba(220, 38, 38, 0.15); color: #fca5a5; }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; }
+        .badge-teal { background: rgba(20, 184, 166, 0.15); color: #5eead4; }
+
+        .option-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary-light);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary-light);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .option-btn.correct {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .option-btn.incorrect {
+            border-color: var(--danger);
+            background: rgba(220, 38, 38, 0.1);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-card-hover);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: var(--border);
+        }
+
+        .stepper-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            cursor: default;
+            flex: 1;
+        }
+
+        .stepper-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .stepper-step.active .stepper-circle {
+            background: var(--primary);
+            border-color: var(--primary-light);
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .stepper-step.completed .stepper-circle {
+            background: var(--accent);
+            border-color: var(--accent-light);
+            color: white;
+        }
+
+        .stepper-label {
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .stepper-step.active .stepper-label {
+            color: var(--primary-light);
+        }
+
+        .stepper-step.completed .stepper-label {
+            color: var(--accent-light);
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .success-box {
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .danger-box {
+            background: rgba(220, 38, 38, 0.08);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .case-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .case-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .case-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-light);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .case-card:hover::before {
+            opacity: 1;
+        }
+
+        .case-card.completed-case {
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .case-card.completed-case::before {
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            opacity: 1;
+        }
+
+        .difficulty-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .difficulty-dot.filled {
+            background: var(--warning);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        }
+
+        .lab-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .lab-table th {
+            background: rgba(30, 64, 175, 0.2);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lab-table td {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .lab-table tr:nth-child(even) td {
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .lab-value-high {
+            color: #fca5a5;
+            font-weight: 600;
+        }
+
+        .lab-value-low {
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        .lab-value-normal {
+            color: var(--text-primary);
+        }
+
+        .lab-value-critical {
+            color: #f87171;
+            font-weight: 700;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+        }
+
+        .filter-chip:hover {
+            border-color: var(--primary-light);
+            color: var(--text-primary);
+        }
+
+        .filter-chip.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--primary-light);
+            color: var(--primary-light);
+        }
+
+        .score-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .score-ring svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .score-ring circle {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .score-ring .bg-ring {
+            stroke: var(--border);
+        }
+
+        .score-ring .score-arc {
+            stroke: var(--success);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        @media (max-width: 768px) {
+            .stepper-label { font-size: 9px; }
+            .stepper-circle { width: 30px; height: 30px; font-size: 12px; }
+        }
+
+        .scroll-y {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .scroll-y::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .scroll-y::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scroll-y::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="gradient-bg">
+
+<div id="app"></div>
+
+<script>
+// ============================================================
+// DATENBANK: 12 klinische Faelle
+// ============================================================
+const CASES = [
+    {
+        id: 1,
+        title: "Chronische Nierenerkrankung (CNE)",
+        category: "innere-hund",
+        categoryLabel: "Innere Medizin Hund",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 2,
+        emergency: false,
+        signalment: {
+            rasse: "Golden Retriever",
+            alter: "11 Jahre",
+            geschlecht: "maennlich kastriert",
+            gewicht: "28 kg"
+        },
+        anamnese: {
+            besitzer: "Die Besitzerin berichtet, dass ihr Hund seit etwa 3 Monaten vermehrt trinkt und uriniert. Er hat deutlich an Gewicht verloren und zeigt zunehmende Inappetenz. Gelegentliches Erbrechen, vor allem morgens.",
+            fragen: [
+                { q: "Ist der Hund geimpft und entwurmt?", a: "Ja, regelmaessig. Letzte Impfung vor 6 Monaten." },
+                { q: "Welches Futter bekommt er?", a: "Normales Trockenfutter fuer aeltere Hunde." },
+                { q: "Hat er Zugang zu Toxinen?", a: "Nein, kein Zugang zu Frostschutzmittel oder anderen Toxinen." },
+                { q: "Vorerkrankungen?", a: "Keine bekannten Vorerkrankungen. Wurde vor 5 Jahren kastriert." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Maessig reduziertes Allgemeinbefinden, ruhig aber ansprechbar",
+            gewicht: "28 kg (vor 3 Monaten: 32 kg)",
+            temperatur: "38.2 Grad Celsius (normal)",
+            herzfrequenz: "100/min",
+            atemfrequenz: "20/min",
+            schleimhaeute: "Blass-rosa, KFZ 2.5 Sekunden (verlaengert)",
+            hydratation: "Dehydratation ca. 5-7%, Hautturgor reduziert",
+            lymphknoten: "Oberflaechliche Lymphknoten unauffaellig",
+            abdomen: "Nieren beidseits palpabel, verkleinert und unregelmaessig. Kein Schmerz bei Palpation.",
+            sonstiges: "Maulschleimhaut mit uraemischen Ulzera, leichter Maulgeruch (uraemisch)"
+        },
+        diagnostikOptionen: [
+            { id: "blut", label: "Blutbild + Klinische Chemie", correct: true, explanation: "Essentiell zur Beurteilung der Nierenfunktion (Kreatinin, Harnstoff, SDMA, Phosphat) und Erkennung einer Anaemie." },
+            { id: "harn", label: "Harnuntersuchung (Teststreifen + Sediment + USG)", correct: true, explanation: "Harnkonzentrierfaehigkeit (USG), Proteinurie (UPC) und Sedimentbefunde sind zentral fuer die CNE-Diagnostik." },
+            { id: "sono", label: "Abdomensonographie", correct: true, explanation: "Beurteilung von Nierengroesse, -struktur, Echogenitaet und Ausschluss von Obstruktionen." },
+            { id: "roentgen", label: "Thorax-Roentgen", correct: false, explanation: "Nicht primaer indiziert bei Verdacht auf CNE, kann aber Kardiomegalie oder Lungenoedem bei Hypertonie ausschliessen." },
+            { id: "bp", label: "Blutdruckmessung", correct: true, explanation: "Systemische Hypertension ist eine haeufige Komplikation der CNE und sollte erfasst werden." },
+            { id: "ct", label: "CT Abdomen", correct: false, explanation: "Zu diesem Zeitpunkt nicht indiziert. Sonographie ist ausreichend und kosteneffizienter." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "28%", ref: "37-55%", status: "low" },
+                { param: "Erythrozyten", wert: "4.2 T/l", ref: "5.5-8.5 T/l", status: "low" },
+                { param: "Retikulozyten", wert: "12 G/l", ref: ">60 G/l bei Anaemie", status: "low" },
+                { param: "Leukozyten", wert: "9.8 G/l", ref: "6-17 G/l", status: "normal" },
+                { param: "Thrombozyten", wert: "210 G/l", ref: "175-500 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Kreatinin", wert: "4.5 mg/dl", ref: "0.5-1.5 mg/dl", status: "critical" },
+                { param: "Harnstoff (BUN)", wert: "120 mg/dl", ref: "10-30 mg/dl", status: "critical" },
+                { param: "SDMA", wert: "42 ug/dl", ref: "<18 ug/dl", status: "high" },
+                { param: "Phosphat", wert: "3.2 mmol/l", ref: "0.8-1.9 mmol/l", status: "high" },
+                { param: "Kalzium", wert: "2.1 mmol/l", ref: "2.2-2.9 mmol/l", status: "low" },
+                { param: "Kalium", wert: "5.8 mmol/l", ref: "3.5-5.5 mmol/l", status: "high" },
+                { param: "Gesamtprotein", wert: "58 g/l", ref: "55-75 g/l", status: "normal" },
+                { param: "Albumin", wert: "25 g/l", ref: "26-40 g/l", status: "low" }
+            ],
+            harn: [
+                { param: "USG", wert: "1.012", ref: ">1.030", status: "low" },
+                { param: "Protein", wert: "++", ref: "negativ", status: "high" },
+                { param: "UPC", wert: "1.8", ref: "<0.5", status: "high" },
+                { param: "Sediment", wert: "inaktiv", ref: "-", status: "normal" }
+            ],
+            bildgebung: "Sonographie: Beide Nieren verkleinert (links 5.2 cm, rechts 4.8 cm; normal >6 cm). Erhoehte Echogenitaet des Kortex. Verlust der kortikomedulllaeren Differenzierung. Kein Hinweis auf Obstruktion oder Steine."
+        },
+        diagnoseOptionen: [
+            { id: "cne3", label: "IRIS Stadium 3 CNE mit Proteinurie und Anaemie", correct: true },
+            { id: "cne2", label: "IRIS Stadium 2 CNE", correct: false },
+            { id: "akut", label: "Akute Nierenschaedigung (AKI)", correct: false },
+            { id: "glom", label: "Primaere Glomerulonephritis", correct: false }
+        ],
+        diagnoseErklaerung: "IRIS Stadium 3 basiert auf dem Kreatininwert von 4.5 mg/dl (Stadium 3: 2.1-5.0 mg/dl). Die nicht-regenerative Anaemie (niedrige Retikulozyten) spricht fuer eine chronische Erkrankung mit reduzierter Erythropoietin-Produktion. Die bilaterale Nierenverkleinerung und erhoehte Echogenitaet bestaetigen die Chronizitaet. Ein UPC von 1.8 zeigt eine signifikante Proteinurie, die als Subkategorie 'proteinurisch' klassifiziert wird.",
+        therapieOptionen: [
+            { id: "diaet", label: "Umstellung auf renale Diaet (protein- und phosphatreduziert)", correct: true, explanation: "Renale Diaeten verlangsamen die Progression nachweislich. Phosphat- und Proteinrestriktion sind Eckpfeiler der Therapie." },
+            { id: "phosphat", label: "Phosphatbinder (z.B. Aluminiumhydroxid)", correct: true, explanation: "Trotz Diaet ist der Phosphatwert erhoehte. Phosphatbinder reduzieren die intestinale Phosphatabsorption und bremsen den renaelen sekundaeren Hyperparathyreoidismus." },
+            { id: "fluessig", label: "Subkutane Fluessigkeitstherapie (z.B. 150 ml Ringer-Laktat alle 2-3 Tage)", correct: true, explanation: "Unterstuetzt die Hydratation bei Patienten mit eingeschraenkter Konzentrierfaehigkeit." },
+            { id: "epo", label: "Erythropoietin (Darbepoetin) erwaegen bei persistierender Anaemie", correct: true, explanation: "Bei Hkt <20% oder klinischen Zeichen der Anaemie. Cave: Antikoerperbildung moeglich." },
+            { id: "acei", label: "ACE-Hemmer (Benazepril) bei Proteinurie", correct: true, explanation: "Reduziert den intraglomerulaeren Druck und die Proteinurie, nephroprotektiv." },
+            { id: "antibiotika", label: "Breitspektrum-Antibiotika", correct: false, explanation: "Keine Indikation fuer Antibiotika. Es liegt keine Infektion vor." },
+            { id: "nsaid", label: "NSAID zur Schmerztherapie", correct: false, explanation: "NSAID sind bei CNE kontraindiziert, da sie die Nierenperfusion weiter verschlechtern koennen." }
+        ],
+        zusammenfassung: "Dieser Fall zeigt eine klassische chronische Nierenerkrankung Stadium 3 nach IRIS-Klassifikation bei einem aelteren Golden Retriever. Die Kardinalsymptome PU/PD, Gewichtsverlust und Inappetenz sind typisch. Wichtige Lernpunkte: (1) CNE ist irreversibel -- Therapieziel ist Verlangsamung der Progression. (2) Die nicht-regenerative Anaemie durch Erythropoietinmangel unterscheidet chronische von akuter Nierenerkrankung. (3) SDMA ist ein frueherer Marker als Kreatinin. (4) Phosphatkontrolle ist entscheidend, um sekundaeren Hyperparathyreoidismus zu verhindern. (5) Regelmaessiges Monitoring (alle 2-4 Wochen initial) ist essentiell.",
+        lernziele: [
+            "IRIS-Stadieneinteilung der CNE anwenden",
+            "Nicht-regenerative Anaemie als Chronizitaetsmarker erkennen",
+            "Multimodale Therapie der CNE planen",
+            "Bedeutung von SDMA als fruehem Nierenmarker verstehen",
+            "Kontraindikationen (NSAID) bei CNE beachten"
+        ]
+    },
+    {
+        id: 2,
+        title: "Diabetes mellitus",
+        category: "innere-hund",
+        categoryLabel: "Innere Medizin Hund",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 2,
+        emergency: false,
+        signalment: {
+            rasse: "Beagle",
+            alter: "9 Jahre",
+            geschlecht: "weiblich intakt",
+            gewicht: "18 kg"
+        },
+        anamnese: {
+            besitzer: "Die Huendin trinkt und uriniert seit 4 Wochen vermehrt. Trotz gesteigertem Appetit hat sie an Gewicht verloren. Die Besitzerin bemerkt zudem eine zunehmende Truebung beider Augen.",
+            fragen: [
+                { q: "Wann war die letzte Laeufigkeit?", a: "Vor ca. 8 Wochen." },
+                { q: "Ist die Huendin kastriert?", a: "Nein, intakt." },
+                { q: "Frisst sie mehr als frueher?", a: "Ja, deutlich mehr, bettelt staendig." },
+                { q: "Wie viel trinkt sie?", a: "Mindestens doppelt so viel wie frueher, ca. 1.5 Liter pro Tag." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Wach, aufmerksam, gutes Allgemeinbefinden trotz PU/PD",
+            gewicht: "18 kg, BCS 8/9 (adipoes)",
+            temperatur: "38.5 Grad Celsius",
+            herzfrequenz: "90/min",
+            atemfrequenz: "18/min",
+            schleimhaeute: "Rosa, feucht, KFZ < 2 Sekunden",
+            hydratation: "Adaequat hydratiert",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Adipoes, Palpation erschwert, keine Schmerzreaktion",
+            sonstiges: "Bilateral ausgepraegter Katarakt (Linsentruebung). Fell stumpf, leicht schuppig."
+        },
+        diagnostikOptionen: [
+            { id: "blut", label: "Blutbild + klinische Chemie inkl. Glukose", correct: true, explanation: "Nuchtern-Glukose ist der wichtigste initiale Test bei Verdacht auf Diabetes mellitus." },
+            { id: "fruktosamin", label: "Fruktosamin", correct: true, explanation: "Fruktosamin spiegelt den mittleren Blutzucker der letzten 2-3 Wochen wider und hilft, Stresshyperglykaemie auszuschliessen (v.a. bei Katzen relevant)." },
+            { id: "harn", label: "Harnuntersuchung", correct: true, explanation: "Glukosurie bestaetigt die Ueberschreitung der Nierenschwelle (ca. 180 mg/dl beim Hund). Ketonurie muss ausgeschlossen werden." },
+            { id: "sono", label: "Abdomensonographie", correct: true, explanation: "Beurteilung des Pankreas (Pankreatitis als Ursache?), der Nebennieren (Cushing?) und des Uterus (Pyometra bei intakter Huendin)." },
+            { id: "augen", label: "Ophthalmologische Untersuchung", correct: true, explanation: "Diabetischer Katarakt ist beim Hund sehr haeufig und fuehrt unbehandelt zur Erblindung." },
+            { id: "mrt", label: "MRT Kopf", correct: false, explanation: "Nicht indiziert bei typischer Diabetes-Praesentation." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "42%", ref: "37-55%", status: "normal" },
+                { param: "Leukozyten", wert: "12.5 G/l", ref: "6-17 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Glukose", wert: "380 mg/dl", ref: "65-120 mg/dl", status: "critical" },
+                { param: "Fruktosamin", wert: "500 umol/l", ref: "225-365 umol/l", status: "critical" },
+                { param: "Cholesterin", wert: "420 mg/dl", ref: "135-345 mg/dl", status: "high" },
+                { param: "Triglyzeride", wert: "650 mg/dl", ref: "50-300 mg/dl", status: "high" },
+                { param: "ALT", wert: "85 U/l", ref: "10-120 U/l", status: "normal" },
+                { param: "ALP", wert: "210 U/l", ref: "20-150 U/l", status: "high" },
+                { param: "Kreatinin", wert: "0.9 mg/dl", ref: "0.5-1.5 mg/dl", status: "normal" }
+            ],
+            harn: [
+                { param: "USG", wert: "1.035", ref: ">1.030", status: "normal" },
+                { param: "Glukose", wert: "+++", ref: "negativ", status: "critical" },
+                { param: "Ketone", wert: "negativ", ref: "negativ", status: "normal" },
+                { param: "Bakterien", wert: "keine", ref: "keine", status: "normal" }
+            ],
+            bildgebung: "Sonographie Abdomen: Pankreas unauffaellig. Uterus nicht vergroessert, kein Hinweis auf Pyometra. Nebennieren symmetrisch, normalgroess. Leber mild hepatomegal mit erhoehter Echogenitaet (hepatische Lipidose)."
+        },
+        diagnoseOptionen: [
+            { id: "dm", label: "Diabetes mellitus Typ 1 (insulinabhaengig) mit diabetischer Katarakt", correct: true },
+            { id: "dm2", label: "Diabetes mellitus Typ 2", correct: false },
+            { id: "cushing", label: "Hyperadrenokortizismus (Cushing)", correct: false },
+            { id: "steroid", label: "Steroiddiabetes", correct: false }
+        ],
+        diagnoseErklaerung: "Der Hund hat einen insulinabhaengigen Diabetes mellitus (Typ 1 ist die haeufigste Form beim Hund). Die massive Hyperglykaemie (380 mg/dl), die deutlich erhoehte Fruktosamin (500 umol/l) und die Glukosurie bestaetigen die Diagnose. Die bilaterale Katarakt ist eine typische Komplikation. Wichtig: Die intakte Huendin hat ein erhoehtes Risiko durch Progesteron, das insulinantagonistisch wirkt. Kein Cushinghinweis sonographisch.",
+        therapieOptionen: [
+            { id: "insulin", label: "Insulin (Caninsulin/Vetpen, 0.25 IE/kg BID initial)", correct: true, explanation: "Insulin ist die Basistherapie. Startdosis 0.25 IE/kg subkutan 2x taeglich zu den Mahlzeiten." },
+            { id: "diaet", label: "Diabetiker-Diaet (faserreich, kohlenhydratreduziert)", correct: true, explanation: "Komplexe Kohlenhydrate und Fasern verlangsamen die postprandiale Glukoseaufnahme." },
+            { id: "kastration", label: "Ovariohysterektomie (Kastration)", correct: true, explanation: "Essentiell bei intakter Huendin! Progesteron antagonisiert Insulin und kann den Diabetes verschlimmern oder therapieresistent machen." },
+            { id: "gewicht", label: "Gewichtsreduktion", correct: true, explanation: "Adipositas verstaerkt die Insulinresistenz. Kontrollierte Gewichtsreduktion verbessert die Einstellung." },
+            { id: "orale", label: "Orale Antidiabetika (Glipizid)", correct: false, explanation: "Orale Antidiabetika sind beim Hund wirkungslos, da Typ-1-Diabetes vorliegt (Betazell-Destruktion)." },
+            { id: "cortison", label: "Kortikosteroide", correct: false, explanation: "Absolut kontraindiziert! Kortikosteroide sind diabetogen und verschlechtern die Einstellung massiv." }
+        ],
+        zusammenfassung: "Klassischer insulinabhaengiger Diabetes mellitus bei einer intakten Beagle-Huendin mit Adipositas und diabetischer Katarakt. Lernpunkte: (1) Beim Hund liegt fast immer Typ-1-Diabetes vor -- Insulin ist obligat. (2) Intakte Huendinnen muessen kastriert werden (Progesteron-Antagonismus!). (3) Fruktosamin ist ein besserer Langzeitmarker als der Einzelblutzucker. (4) Diabetische Katarakt tritt beim Hund sehr schnell auf (Wochen bis Monate). (5) Lipidstoffwechselstoerungen sind haeufige Begleitbefunde.",
+        lernziele: [
+            "Diabetes mellitus beim Hund von der Katze unterscheiden",
+            "Insulintherapie: Startdosis und Monitoring planen",
+            "Bedeutung der Kastration bei intakter diabetischer Huendin",
+            "Diabetische Katarakt als Komplikation erkennen",
+            "Lipidveraenderungen bei Diabetes interpretieren"
+        ]
+    },
+    {
+        id: 3,
+        title: "Dilatative Kardiomyopathie (DCM)",
+        category: "innere-hund",
+        categoryLabel: "Innere Medizin Hund",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 3,
+        emergency: true,
+        signalment: {
+            rasse: "Dobermann",
+            alter: "7 Jahre",
+            geschlecht: "maennlich intakt",
+            gewicht: "38 kg"
+        },
+        anamnese: {
+            besitzer: "Der Dobermann zeigt seit 3 Wochen zunehmende Leistungsschwaeche. Seit 5 Tagen hustet er, besonders nachts. Gestern hatte er eine kurze Ohnmacht (Synkope) waehrend des Spaziergangs.",
+            fragen: [
+                { q: "Wie lange dauerte die Ohnmacht?", a: "Etwa 10-15 Sekunden, dann war er wieder normal." },
+                { q: "Atmet er schneller als sonst?", a: "Ja, besonders in Ruhe, ca. 40 Atemzuege pro Minute." },
+                { q: "Hat sich sein Appetit veraendert?", a: "Leicht reduziert seit einigen Tagen." },
+                { q: "Familiaere Vorgeschichte?", a: "Sein Vater ist mit 6 Jahren an einer Herzerkrankung gestorben." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Reduziertes Allgemeinbefinden, steht ruhig, will sich nicht hinlegen",
+            gewicht: "38 kg",
+            temperatur: "38.0 Grad Celsius",
+            herzfrequenz: "160/min (Tachykardie), unregelmaessig",
+            atemfrequenz: "44/min (Tachypnoe)",
+            schleimhaeute: "Blass, KFZ 3 Sekunden",
+            hydratation: "Adaequat",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Leber vergroessert palpabel, milde freie Fluessigkeit moeglich",
+            sonstiges: "Auskultation: Systolisches Herzgeraeusch Grad III/VI ueber der Mitralklappe. Feuchte Rasselgeraeusche ueber beiden Lungenlappen kaudal. Jugularvenenstauung. Schwacher, schneller Puls."
+        },
+        diagnostikOptionen: [
+            { id: "roentgen", label: "Thorax-Roentgen (2 Ebenen)", correct: true, explanation: "Zeigt Kardiomegalie (VHS), Lungenoedem und ggf. Pleuraerguss." },
+            { id: "echo", label: "Echokardiographie", correct: true, explanation: "Goldstandard zur Diagnose der DCM: Dilatation, reduzierte Kontraktilitaet (FS, EPSS), Klappeninsuffizienzen." },
+            { id: "ekg", label: "EKG", correct: true, explanation: "Detektiert Arrhythmien (VES, Vorhofflimmern), die bei DCM haeufig und fuer Synkopen verantwortlich sein koennen." },
+            { id: "blut", label: "Blutbild + Chemie + cTnI (kardiales Troponin)", correct: true, explanation: "Troponin I zeigt Myokardschaedigung an. Nieren- und Leberwerte beurteilen Organperfusion." },
+            { id: "holter", label: "24h-Holter-EKG", correct: true, explanation: "Bei Dobermann essentiell zur Erkennung ventrikulaerer Arrhythmien, die oft nur intermittierend auftreten." },
+            { id: "ct", label: "Kardio-CT", correct: false, explanation: "In der Veterinaermedizin fuer diese Indikation nicht standardmaessig verfuegbar oder notwendig." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "45%", ref: "37-55%", status: "normal" },
+                { param: "Leukozyten", wert: "10.2 G/l", ref: "6-17 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "cTnI", wert: "1.8 ng/ml", ref: "<0.10 ng/ml", status: "critical" },
+                { param: "NT-proBNP", wert: "2800 pmol/l", ref: "<900 pmol/l", status: "critical" },
+                { param: "ALT", wert: "180 U/l", ref: "10-120 U/l", status: "high" },
+                { param: "Kreatinin", wert: "1.8 mg/dl", ref: "0.5-1.5 mg/dl", status: "high" },
+                { param: "Laktat", wert: "4.2 mmol/l", ref: "<2.5 mmol/l", status: "high" },
+                { param: "Elektrolyte", wert: "Na 138, K 4.5", ref: "Na 140-155, K 3.5-5.5", status: "normal" }
+            ],
+            harn: [],
+            bildgebung: "Roentgen: VHS 12.5 (normal <10.7 Dobermann). Generalisierte Kardiomegalie. Lungenvenenstaung. Interstitielles bis alveolaeres Lungenoedem v.a. kaudodorsal. Echokardiographie: LVIDd 58 mm (erhoehte), LVIDs 50 mm (erhoehte). FS 14% (stark reduziert, normal >25%). EPSS 18 mm (erhoehte, normal <7 mm). Mitralklappeninsuffizienz Grad II-III. Keine Perikarderguss. EKG: Sinustachykardie mit ventrikulaeren Extrasystolen (VES), Couplets."
+        },
+        diagnoseOptionen: [
+            { id: "dcm", label: "Dilatative Kardiomyopathie (DCM) im kongestiven Herzversagen", correct: true },
+            { id: "mvd", label: "Mitralklappenendokardiose (MMVD)", correct: false },
+            { id: "perikard", label: "Perikarderguss", correct: false },
+            { id: "heartworm", label: "Dirofilariose (Herzwurm)", correct: false }
+        ],
+        diagnoseErklaerung: "Der Dobermann zeigt eine klassische DCM mit kongestivem Herzversagen (ACVIM Stadium C). Die Echokardiographie bestaetigt: dilatierter linker Ventrikel (LVIDd 58 mm), massiv reduzierte systolische Funktion (FS 14%), erhoehter EPSS (18 mm). Die Rassedisposition (Dobermann), famililaere Belastung, ventrikulaere Arrhythmien und der erhoehte cTnI/NT-proBNP sind pathognomonisch. Das Lungenoedem und die Hepatomegalie zeigen das kongestive Versagen an.",
+        therapieOptionen: [
+            { id: "furosemid", label: "Furosemid (2-4 mg/kg IV initial, dann 1-2 mg/kg BID-TID oral)", correct: true, explanation: "Schleifendiuretikum zur Entlastung des Lungenoedems. Akut IV, dann orale Erhaltungstherapie." },
+            { id: "pimobendan", label: "Pimobendan (0.25 mg/kg BID)", correct: true, explanation: "Inodilator -- verstaerkt die Kontraktilitaet und senkt die Nachlast. Ueberlebenszeitvorteil bei DCM nachgewiesen." },
+            { id: "acei", label: "ACE-Hemmer (Enalapril oder Benazepril)", correct: true, explanation: "Vasodilatation, Reduktion der Nachlast und des neurohormonalen Aktivierung. Standard bei CHF." },
+            { id: "antiarr", label: "Antiarrhythmikum (Sotalol oder Mexiletin+Atenolol)", correct: true, explanation: "VES und Couplets erfordern antiarrhythmische Therapie, um das Risiko eines ploetzlichen Herztodes zu senken." },
+            { id: "spiro", label: "Spironolacton (1-2 mg/kg SID)", correct: true, explanation: "Aldosteron-Antagonist, milde diuretische Wirkung, antifibrotisch, Kalium-sparend." },
+            { id: "digoxin", label: "Digoxin", correct: false, explanation: "Wird bei DCM kaum noch eingesetzt, da Pimobendan ueberlegen ist und Digoxin eine geringe therapeutische Breite hat." },
+            { id: "atenolol", label: "Atenolol als Monotherapie", correct: false, explanation: "Betablocker als Monotherapie sind im akuten CHF kontraindiziert, da sie die Kontraktilitaet weiter senken." }
+        ],
+        zusammenfassung: "Dieser Fall praesentiert eine fortgeschrittene DCM beim Dobermann mit kongestivem Herzversagen (CHF, ACVIM Stadium C). Lernpunkte: (1) Dobermann-DCM hat eine genetische Basis und einen oft fulminanten Verlauf. (2) Die Synkope deutet auf ventrikulaere Arrhythmien hin -- Holter-EKG ist essentiell. (3) Pimobendan ist das wichtigste Medikament bei DCM mit nachgewiesenem Ueberlebensvorteil. (4) Die Tripeltherapie (Furosemid + Pimobendan + ACE-Hemmer) ist Standard bei CHF. (5) cTnI und NT-proBNP sind wichtige Biomarker fuer Schweregrad und Prognose.",
+        lernziele: [
+            "Echokardiographische Parameter der DCM interpretieren (FS, EPSS, LVIDd)",
+            "ACVIM-Stadieneinteilung der Herzinsuffizienz anwenden",
+            "Akut- und Langzeittherapie des kongestiven Herzversagens planen",
+            "Bedeutung der Arrhythmie-Diagnostik beim Dobermann",
+            "VHS auf Thoraxroentgenaufnahmen auswerten"
+        ]
+    },
+    {
+        id: 4,
+        title: "Feline Hyperthyreose",
+        category: "innere-katze",
+        categoryLabel: "Innere Medizin Katze",
+        species: "Katze",
+        speciesIcon: "&#128049;",
+        difficulty: 2,
+        emergency: false,
+        signalment: {
+            rasse: "Europaeisch Kurzhaar (EKH)",
+            alter: "14 Jahre",
+            geschlecht: "maennlich kastriert",
+            gewicht: "3.2 kg"
+        },
+        anamnese: {
+            besitzer: "Der Kater frisst seit Monaten mehr als frueher, verliert aber trotzdem an Gewicht. Er ist ungewoehnlich unruhig und vokalisiert nachts. Gelegentliches Erbrechen nach dem Fressen.",
+            fragen: [
+                { q: "Wie ist das Trinkverhalten?", a: "Trinkt etwas mehr als frueher." },
+                { q: "Wie ist der Kotabsatz?", a: "Eher breiig, oefter als frueher." },
+                { q: "Gab es Verhaltensaenderungen?", a: "Ja, er ist viel rastloser und manchmal aggressiv." },
+                { q: "Vorerkrankungen?", a: "Keine. War immer gesund." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Wach, rastlos, abgemagert, stumpfes Fell",
+            gewicht: "3.2 kg (vor 1 Jahr: 5.0 kg)",
+            temperatur: "39.2 Grad Celsius (leicht erhoehte)",
+            herzfrequenz: "220/min (deutliche Tachykardie!)",
+            atemfrequenz: "32/min",
+            schleimhaeute: "Rosa, KFZ < 2 Sekunden",
+            hydratation: "Adaequat",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Duenne Bauchdecke, keine Auffaelligkeiten",
+            sonstiges: "Palpation Halsbereich: Vergroesserte Schilddruese links palpabel (Schilddruesenknoten ca. 1 cm). Galopprhythmus bei Auskultation. Tachykardie. Muskelschwund generalisiert."
+        },
+        diagnostikOptionen: [
+            { id: "t4", label: "Gesamt-T4 im Serum", correct: true, explanation: "Der wichtigste Screening-Test fuer Hyperthyreose. Bei >4 ug/dl diagnostisch." },
+            { id: "blut", label: "Blutbild + klinische Chemie", correct: true, explanation: "ALT/AST oft erhoehte (hepatopathisch), Nierenwerte VOR Therapiebeginn wichtig (maskierte CNE)." },
+            { id: "bp", label: "Blutdruckmessung", correct: true, explanation: "Systemische Hypertension ist eine haeufige Komplikation der Hyperthyreose." },
+            { id: "harn", label: "Harnuntersuchung", correct: true, explanation: "Beurteilung der Nierenfunktion (USG, Proteinurie) vor Therapie." },
+            { id: "echo", label: "Echokardiographie", correct: true, explanation: "Beurteilung einer thyreotoxischen Kardiomyopathie (linksventrikulaere Hypertrophie)." },
+            { id: "szinti", label: "Schilddruesenszintigraphie", correct: false, explanation: "Goldstandard, aber erst bei geplanter Radiojodtherapie oder bei unklaren T4-Werten noetig, nicht initial." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "48%", ref: "30-45%", status: "high" },
+                { param: "Leukozyten", wert: "11.0 G/l", ref: "5.5-19.5 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Gesamt-T4", wert: "12.5 ug/dl", ref: "1.0-4.0 ug/dl", status: "critical" },
+                { param: "ALT", wert: "180 U/l", ref: "12-130 U/l", status: "high" },
+                { param: "AST", wert: "95 U/l", ref: "10-80 U/l", status: "high" },
+                { param: "Kreatinin", wert: "1.0 mg/dl", ref: "0.8-2.4 mg/dl", status: "normal" },
+                { param: "Harnstoff", wert: "22 mg/dl", ref: "16-36 mg/dl", status: "normal" },
+                { param: "Phosphat", wert: "1.5 mmol/l", ref: "1.0-2.4 mmol/l", status: "normal" }
+            ],
+            harn: [
+                { param: "USG", wert: "1.035", ref: ">1.035", status: "normal" },
+                { param: "Protein", wert: "Spur", ref: "negativ", status: "normal" }
+            ],
+            bildgebung: "Blutdruck: 185/110 mmHg (erhoehte, normal <160 mmHg systolisch). Echokardiographie: Milde linksventrikulaere Hypertrophie (IVSd 6.2 mm), dynamische linksventrikulaere Ausflusstrakt-Obstruktion. Keine Dilatation."
+        },
+        diagnoseOptionen: [
+            { id: "hyper", label: "Feline Hyperthyreose mit sekundaerer Hypertension und thyreotoxischer Kardiomyopathie", correct: true },
+            { id: "hcm", label: "Primaere hypertrophe Kardiomyopathie (HCM)", correct: false },
+            { id: "cne", label: "Chronische Nierenerkrankung", correct: false },
+            { id: "lymphom", label: "Gastrointestinales Lymphom", correct: false }
+        ],
+        diagnoseErklaerung: "Das Gesamt-T4 von 12.5 ug/dl (>3x obere Referenz) ist diagnostisch fuer eine Hyperthyreose. Der palpable Schilddruesenknoten, die Tachykardie (220/min), der Gewichtsverlust trotz Polyphagie und die Verhaltensaenderungen sind klassische Befunde. Die linksventrikulaere Hypertrophie ist sekundaer (thyreotoxisch) und oft reversibel unter Therapie. WICHTIG: Die normalen Nierenwerte koennten eine CNE maskieren, die sich unter Therapie demaskiert (durch Reduktion der GFR).",
+        therapieOptionen: [
+            { id: "thiamazol", label: "Thiamazol (Felimazole) 2.5 mg BID oral", correct: true, explanation: "Thyreostatikum der 1. Wahl. Startdosis 2.5 mg BID, Kontrolle nach 2-3 Wochen (T4 + Nierenwerte!)." },
+            { id: "monitoring", label: "Nierenwert-Monitoring nach 2-3 Wochen Therapie", correct: true, explanation: "Essentiell! Bei 15-40% der hyperthyreoten Katzen demaskiert die Therapie eine zugrundeliegende CNE durch Senkung der GFR." },
+            { id: "bp_therapy", label: "Amlodipin 0.625 mg SID bei persistierender Hypertension", correct: true, explanation: "Bei systolischem RR >160 mmHg trotz euthyreoter Einstellung. Amlodipin ist Mittel der Wahl bei Katzen." },
+            { id: "radiojod", label: "Radiojodtherapie (I-131) als kurative Option besprechen", correct: true, explanation: "Einzige kurative Therapie. Einmalige Behandlung, >95% Heilungsrate. Erfordert spezialisierte Einrichtung." },
+            { id: "chirurgie", label: "Chirurgische Thyreoidektomie empfehlen", correct: false, explanation: "Moeglich, aber hohes Risiko (Nebenschilddruesenschaedigung, Rekurrensparese). Radiojodtherapie ist ueberlegen und sicherer." },
+            { id: "betablocker", label: "Betablocker (Atenolol) als Monotherapie", correct: false, explanation: "Betablocker kontrollieren nur die Symptome (Tachykardie), nicht die Ursache. Keine Monotherapie!" }
+        ],
+        zusammenfassung: "Klassische feline Hyperthyreose bei einem aelteren Kater mit Gewichtsverlust, Polyphagie, Tachykardie und palpablem Schilddruesenknoten. Lernpunkte: (1) Hyperthyreose ist die haeufigste Endokrinopathie der aelteren Katze. (2) T4 >4 ug/dl ist diagnostisch; bei Werten im oberen Referenzbereich freies T4 bestimmen. (3) Die Nierenwerte muessen VOR und NACH Therapiebeginn kontrolliert werden -- maskierte CNE! (4) Thiamazol ist die medikamentoese Standardtherapie. (5) Radiojodtherapie (I-131) ist die einzige kurative Option.",
+        lernziele: [
+            "Klinische Symptome der felinen Hyperthyreose erkennen",
+            "Maskierte CNE als Fallstrick der Hyperthyreose-Therapie verstehen",
+            "Thiamazol-Therapie und Monitoring planen",
+            "Therapieoptionen vergleichen (Thiamazol, Radiojod, Chirurgie, Diaet)",
+            "Thyreotoxische Kardiomyopathie von primaerer HCM differenzieren"
+        ]
+    },
+    {
+        id: 5,
+        title: "FLUTD / Feline idiopathische Zystitis (FIC)",
+        category: "innere-katze",
+        categoryLabel: "Innere Medizin Katze",
+        species: "Katze",
+        speciesIcon: "&#128049;",
+        difficulty: 2,
+        emergency: true,
+        signalment: {
+            rasse: "Britisch Kurzhaar (BKH)",
+            alter: "5 Jahre",
+            geschlecht: "maennlich kastriert",
+            gewicht: "6.5 kg"
+        },
+        anamnese: {
+            besitzer: "Der Kater sitzt seit gestern staendig auf dem Katzenklo und presst. Es kommt nur tröpfchenweise blutiger Urin. Er schreit dabei. Seit heute morgen kommt gar nichts mehr. Er hat sich ins Bettchen zurueckgezogen.",
+            fragen: [
+                { q: "Wann hat er zuletzt normal uriniert?", a: "Vorgestern Abend war noch alles normal." },
+                { q: "Hat er gefressen heute?", a: "Nein, er will nichts fressen und hat auch erbrochen." },
+                { q: "Gibt es Stressfaktoren?", a: "Wir sind letzte Woche umgezogen." },
+                { q: "Ist er Freigaenger?", a: "Nein, reine Wohnungskatze." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Reduziertes Allgemeinbefinden, apathisch, schmerzgekruemmte Haltung",
+            gewicht: "6.5 kg (BCS 7/9, uebergewichtig)",
+            temperatur: "37.8 Grad Celsius (subnormal!)",
+            herzfrequenz: "140/min (eher niedrig fuer gestresste Katze)",
+            atemfrequenz: "28/min",
+            schleimhaeute: "Blass-rosa, KFZ 2.5 Sekunden",
+            hydratation: "5% dehydriert",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Blase prall gefuellt, steinhart, extrem schmerzhaft bei Palpation. Katze wehrt sich massiv.",
+            sonstiges: "Penis: Spitze leicht livide verfaerbt, kein Urin exprimierbar. Bradykardie (140/min, erwartet >180 bei Stress) -- Verdacht auf Hyperkalilaemie!"
+        },
+        diagnostikOptionen: [
+            { id: "blut", label: "Notfall-Blutbild + Elektrolyte + Nierenwerte", correct: true, explanation: "Kalium ist der kritischste Parameter! Hyperkalilaemie kann zu lebensbedrohlichen Arrhythmien fuehren." },
+            { id: "harn", label: "Harnanalyse (nach Katheterisierung)", correct: true, explanation: "Kristallurie (Struvit, CaOx?), Haematurie-Bestaetigung, Bakteriologie, pH-Wert." },
+            { id: "sono", label: "Abdomensonographie", correct: true, explanation: "Beurteilung der Blasenwanddicke, Sediment, Steine, Harnroehre." },
+            { id: "ekg", label: "EKG (Notfall!)", correct: true, explanation: "Bei Verdacht auf Hyperkalilaemie (Bradykardie!): EKG-Monitoring auf hohe T-Wellen, breite QRS, Bradykardie." },
+            { id: "roentgen", label: "Abdomen-Roentgen", correct: false, explanation: "Kann Steine zeigen, hat aber nicht hoechste Prioritaet bei akuter Obstruktion -- Sono und Labor gehen vor." },
+            { id: "kultur", label: "Urinkultur sofort anlegen", correct: false, explanation: "Wichtig, aber nicht akut priorisiert. Kann nach Stabilisierung erfolgen." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "42%", ref: "30-45%", status: "normal" },
+                { param: "Leukozyten", wert: "15.5 G/l", ref: "5.5-19.5 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Kalium", wert: "7.8 mmol/l", ref: "3.5-5.5 mmol/l", status: "critical" },
+                { param: "Kreatinin", wert: "8.2 mg/dl", ref: "0.8-2.4 mg/dl", status: "critical" },
+                { param: "Harnstoff", wert: "180 mg/dl", ref: "16-36 mg/dl", status: "critical" },
+                { param: "Phosphat", wert: "4.5 mmol/l", ref: "1.0-2.4 mmol/l", status: "critical" },
+                { param: "Glukose", wert: "220 mg/dl", ref: "70-150 mg/dl", status: "high" },
+                { param: "Ionisiertes Ca", wert: "0.9 mmol/l", ref: "1.1-1.4 mmol/l", status: "low" }
+            ],
+            harn: [
+                { param: "Farbe", wert: "dunkel, haemorrhagisch", ref: "gelb, klar", status: "high" },
+                { param: "pH", wert: "7.5", ref: "6.0-7.0", status: "high" },
+                { param: "Kristalle", wert: "Struvit +++", ref: "keine-wenig", status: "high" },
+                { param: "Erythrozyten", wert: "zahlreich", ref: "0-5/HPF", status: "high" },
+                { param: "Bakterien", wert: "keine", ref: "keine", status: "normal" }
+            ],
+            bildgebung: "EKG: Bradykardie (140/min), hohe spitze T-Wellen, verbreiterte QRS-Komplexe -- konsistent mit Hyperkalilaemie! Sonographie: Blase massiv gefuellt (ca. 120 ml), verdickte Blasenwand (5 mm), echogenes Sediment, kein Blasenstein sichtbar. Harnroehre distal nicht beurteilbar."
+        },
+        diagnoseOptionen: [
+            { id: "flutd", label: "FLUTD mit Urethraobstruktion und postrenaler Azotaemie, lebensbedrohliche Hyperkalilaemie", correct: true },
+            { id: "fic", label: "Feline idiopathische Zystitis ohne Obstruktion", correct: false },
+            { id: "steine", label: "Urolithiasis mit Ureterstein", correct: false },
+            { id: "tumor", label: "Blasentumor", correct: false }
+        ],
+        diagnoseErklaerung: "Der Kater zeigt eine klassische Urethraobstruktion mit lebensbedrohlicher Hyperkalilaemie (K+ 7.8 mmol/l). Die prall gefuellte, nicht exprimierbare Blase, die postrenale Azotaemie (Kreatinin 8.2 mg/dl) und die EKG-Veraenderungen bestaetigen den Notfall. Struvitkristalle im Sediment sind wahrscheinlich der Obstruktionsgrund. Stress (Umzug!) ist ein typischer Trigger fuer FIC/FLUTD bei jungen, maennlichen, kastrierten Wohnungskatzen.",
+        therapieOptionen: [
+            { id: "kalium", label: "Sofortige Hyperkalilaemie-Therapie: Kalziumglukonat 10% IV (kardioprotektiv)", correct: true, explanation: "Kalziumglukonat schuetzt das Myokard sofort vor den toxischen Effekten des Kaliums. Senkt K+ nicht, aber stabilisiert das Herz." },
+            { id: "insulin", label: "Glukose-Insulin-Infusion oder NaBikarbonat zur K+-Senkung", correct: true, explanation: "Insulin + Glukose verschiebt Kalium intrazellular. NaBikarbonat korrigiert Azidose und senkt ebenfalls K+." },
+            { id: "katheter", label: "Harnroehrenkatheterisierung unter Sedation/Anaesthesie", correct: true, explanation: "Kerntherapie! Entlastung der Obstruktion. Unter Sedation (KEIN Acepromazin bei Schock!) mit sterilem Katheter." },
+            { id: "infusion", label: "Aggressive IV-Fluessigkeitstherapie (NaCl 0.9%)", correct: true, explanation: "NaCl 0.9% ist die Infusionsloesung der Wahl (kaliumfrei!). Korrigiert Dehydratation und foerdert Diurese." },
+            { id: "analgesie", label: "Analgesie (Buprenorphin 0.02 mg/kg)", correct: true, explanation: "Schmerzmanagement ist essentiell. Buprenorphin ist gut vertraeglich bei Katzen." },
+            { id: "furosemid", label: "Furosemid sofort", correct: false, explanation: "Kontraindiziert bei Obstruktion! Erst nach Entlastung der Blase. Furosemid bei gefuellter, obstruierter Blase kann zur Ruptur fuehren." },
+            { id: "antibiotika", label: "Sofort Antibiotika", correct: false, explanation: "Keine Bakterien im Sediment. FIC ist steril. Antibiotika nur bei nachgewiesener Infektion." }
+        ],
+        zusammenfassung: "Lebensbedrohlicher Notfall: Urethraobstruktion bei einem jungen, uebergewichtigen, kastrierten Kater nach Stressereignis (Umzug). Lernpunkte: (1) Bradykardie bei einer gestressten Katze = Verdacht auf Hyperkalilaemie bis zum Beweis des Gegenteils! (2) Kalziumglukonat ist die erste Massnahme (kardioprotektiv), BEVOR der Katheter gelegt wird. (3) NaCl 0.9% verwenden (kein Ringer-Laktat wegen Kaliumgehalt). (4) Postobstruktive Diurese ueberwachen (Harnproduktion 2-4 ml/kg/h initial). (5) Langfristig: Stressreduktion, Nassnahrung, Umwelt-Enrichment, Gewichtsreduktion.",
+        lernziele: [
+            "Urethraobstruktion als Notfall erkennen und priorisieren",
+            "Hyperkalilaemie-Management beherrschen",
+            "Richtige Infusionsloesung waehlen (NaCl vs. Ringer)",
+            "Risikofaktoren fuer FLUTD/FIC kennen",
+            "Langfristiges Management planen (Stress, Ernaehrung, Gewicht)"
+        ]
+    },
+    {
+        id: 6,
+        title: "Magendilatation-Volvulus (GDV)",
+        category: "chirurgie",
+        categoryLabel: "Chirurgie",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 3,
+        emergency: true,
+        signalment: {
+            rasse: "Deutsche Dogge",
+            alter: "5 Jahre",
+            geschlecht: "maennlich intakt",
+            gewicht: "65 kg"
+        },
+        anamnese: {
+            besitzer: "Die Dogge hat vor ca. 2 Stunden eine grosse Mahlzeit gefressen und danach gespielt. Seit einer Stunde unproduktives Wuergen, Unruhe, aufgeblaehter Bauch. Der Hund will sich hinlegen, steht aber sofort wieder auf.",
+            fragen: [
+                { q: "Konnte er erbrechen?", a: "Nein, nur unproduktives Wuergen, es kommt nichts." },
+                { q: "Hat er Speichel?", a: "Ja, massiver Speichelfluss." },
+                { q: "Hat sich der Bauchumfang veraendert?", a: "Ja, der Bauch ist riesig aufgeblaeht, ganz hart." },
+                { q: "Ist das schon einmal vorgekommen?", a: "Nein, nie." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Hochgradig gestresst, Schmerzanzeichen, staendiges Positionswechseln",
+            gewicht: "65 kg",
+            temperatur: "39.8 Grad Celsius",
+            herzfrequenz: "180/min (massive Tachykardie!)",
+            atemfrequenz: "48/min, angestrengt",
+            schleimhaeute: "Dunkelrot bis zyanotisch, KFZ >3 Sekunden",
+            hydratation: "Nicht sicher beurteilbar, Hautturgor scheint reduziert",
+            lymphknoten: "Nicht beurteilbar (Patient zu unruhig)",
+            abdomen: "Massiv aufgeblaeht, trommelartiger Klopfschall (Tympanie!), extrem gespannt. Keine Palpation der Organe moeglich.",
+            sonstiges: "Schwacher, schneller Puls femoral. Speichelfluss. Unproduktives Wuergen. Splenomegalie nicht auszuschliessen."
+        },
+        diagnostikOptionen: [
+            { id: "roentgen", label: "Abdomen-Roentgen (rechts anliegende Seitenlage!)", correct: true, explanation: "Zeigt das pathognomonische Double-Bubble-Sign (Compartmentalisierung des Magens) und Shelf-Sign bei Volvulus." },
+            { id: "blut", label: "Notfall-Blutbild + Laktat + Elektrolyte + Gerinnung", correct: true, explanation: "Laktat ist prognostisch: >6 mmol/l = schlechtere Prognose. Gerinnung wegen DIC-Risiko." },
+            { id: "iv", label: "Sofort 2 grosslumige IV-Zugaenge (bds. V. cephalica)", correct: true, explanation: "Lebensrettende Schocktherapie muss sofort beginnen! Die V. cava wird durch den dilatierten Magen komprimiert -- daher VORDERE Zugaenge!" },
+            { id: "trokar", label: "Magendekompression (Trokarisierung oder Magensonde)", correct: true, explanation: "Druckentlastung reduziert die Kompression auf V. cava und verbessert sofort die Haemodynamik." },
+            { id: "sono", label: "Abdomensonographie", correct: false, explanation: "Bei GDV ist Sonographie schwierig und verzoegert die lebensrettende Therapie. Roentgen ist schneller und diagnostischer." },
+            { id: "ct", label: "CT-Angiographie", correct: false, explanation: "Zeitverlust! Der Patient braucht sofortige Stabilisierung und OP, kein CT." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "55%", ref: "37-55%", status: "high" },
+                { param: "Leukozyten", wert: "18.5 G/l", ref: "6-17 G/l", status: "high" }
+            ],
+            chemie: [
+                { param: "Laktat", wert: "7.2 mmol/l", ref: "<2.5 mmol/l", status: "critical" },
+                { param: "Kalium", wert: "3.2 mmol/l", ref: "3.5-5.5 mmol/l", status: "low" },
+                { param: "Glukose", wert: "55 mg/dl", ref: "65-120 mg/dl", status: "low" },
+                { param: "Gesamtprotein", wert: "48 g/l", ref: "55-75 g/l", status: "low" },
+                { param: "Kreatinin", wert: "2.5 mg/dl", ref: "0.5-1.5 mg/dl", status: "high" },
+                { param: "PT / aPTT", wert: "leicht verlaengert", ref: "normal", status: "high" }
+            ],
+            harn: [],
+            bildgebung: "Roentgen (rechts anliegend): Massiv dilatierter, gasgefuellter Magen. Deutliches 'Double-Bubble-Sign' -- Kompartimentalisierung durch Pylorus, der nach kraniodorsal verlagert ist. 'Shelf-Sign' sichtbar (weichteiliges Band quer durch den Magen). Befund: Magendilatation MIT Volvulus (GDV). Milz nicht sicher abgrenzbar, moeglicherweise disloziert."
+        },
+        diagnoseOptionen: [
+            { id: "gdv", label: "Magendilatation-Volvulus (GDV) mit distributivem Schock", correct: true },
+            { id: "dilatation", label: "Einfache Magendilatation ohne Volvulus", correct: false },
+            { id: "milztorsion", label: "Isolierte Milztorsion", correct: false },
+            { id: "ileus", label: "Mechanischer Ileus", correct: false }
+        ],
+        diagnoseErklaerung: "Die Kombination aus grosser Rasse, unproduktivem Wuergen, Tympanie und den radiologischen Befunden (Double-Bubble-Sign, Shelf-Sign) ist diagnostisch fuer einen GDV. Das erhoehte Laktat (7.2 mmol/l) zeigt die Gewebehypoperfusion an und hat prognostische Bedeutung. Der distributive Schock entsteht durch Kompression der V. cava posterior und reduziertem venoesen Rueckfluss.",
+        therapieOptionen: [
+            { id: "schock", label: "Schocktherapie: Kristalloide + Kolloide IV (90 ml/kg/h Kristalloide, in Bolus)", correct: true, explanation: "Sofortige aggressive Volumensubstitution ueber die VORDEREN Gliedmassen (V. cava-Kompression!)." },
+            { id: "dekompression", label: "Magendekompression: Trokarisierung (14G Nadel rechts) und/oder Magensonde", correct: true, explanation: "Reduziert den intragastrischen Druck und verbessert die Haemodynamik sofort." },
+            { id: "op", label: "Notfall-Laparotomie mit Derotation und Gastropexie", correct: true, explanation: "Chirurgische Korrektur ist die definitive Therapie. Gastropexie verhindert Rezidive (ohne: 80% Rezidivrate!)." },
+            { id: "analgesie", label: "Opioid-Analgesie (Fentanyl CRI oder Methadon)", correct: true, explanation: "Schmerzmanagement ist essentiell und verbessert die Haemodynamik." },
+            { id: "antibiotika", label: "Breitspektrum-Antibiotika IV (Mukosambarriere-Schaedigung)", correct: true, explanation: "Bakterielle Translokation durch Magenwandischaemie. Cefazolin oder Ampicillin + Enrofloxacin." },
+            { id: "kortison", label: "Kortikosteroide als Schocktherapie", correct: false, explanation: "Kein nachgewiesener Nutzen bei GDV. Kann Magenschleimhaut-Schaedigung verschlimmern." },
+            { id: "abwarten", label: "Konservative Therapie und Beobachtung", correct: false, explanation: "Fatal! GDV ohne chirurgische Korrektur fuehrt unweigerlich zum Tod. Jede Minute zaehlt." }
+        ],
+        zusammenfassung: "Klassischer chirurgischer Notfall: GDV bei einer Deutschen Dogge. Lernpunkte: (1) GDV ist ein absoluter Notfall -- 'Time kills'. (2) IV-Zugaenge an den VORDEREN Gliedmassen (V. cava-Kompression!). (3) Double-Bubble und Shelf-Sign sind pathognomonisch im Roentgen. (4) Laktat >6 mmol/l = schlechtere Prognose, aber keine Kontraindikation fuer OP. (5) Gastropexie ist obligat, sonst 80% Rezidivrate. (6) Magenwandnekrose intraoperativ beurteilen -- ggf. partielle Gastrektomie. (7) Postoperativ: Arrhythmie-Monitoring (ventrikulaere Arrhythmien 24-72h post-OP).",
+        lernziele: [
+            "GDV als Notfall erkennen und Sofortmassnahmen einleiten",
+            "Radiologische Zeichen (Double-Bubble, Shelf-Sign) interpretieren",
+            "Schocktherapie bei GDV durchfuehren",
+            "Bedeutung der Gastropexie verstehen",
+            "Postoperative Komplikationen antizipieren"
+        ]
+    },
+    {
+        id: 7,
+        title: "Pyometra",
+        category: "chirurgie",
+        categoryLabel: "Chirurgie",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 2,
+        emergency: true,
+        signalment: {
+            rasse: "Mischling",
+            alter: "8 Jahre",
+            geschlecht: "weiblich intakt",
+            gewicht: "22 kg"
+        },
+        anamnese: {
+            besitzer: "Die Huendin ist seit 3 Tagen schlapp, frisst kaum und trinkt sehr viel. Seit gestern eitriger Ausfluss aus der Vulva. Die letzte Laeufigkeit war vor ca. 6 Wochen.",
+            fragen: [
+                { q: "Farbe und Menge des Ausflusses?", a: "Gelblich-eitrig, uebel riechend, Menge hat zugenommen." },
+                { q: "Hat sie Fieber?", a: "Fuehlt sich sehr warm an." },
+                { q: "War sie schon einmal laefig ohne eitrigen Ausfluss?", a: "Nein, das ist neu." },
+                { q: "Wurde sie jemals hormonell behandelt?", a: "Nein, aber wir wollten sie eigentlich kastrieren lassen, sind nicht dazu gekommen." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Deutlich reduziertes Allgemeinbefinden, apathisch",
+            gewicht: "22 kg",
+            temperatur: "40.1 Grad Celsius (Fieber!)",
+            herzfrequenz: "130/min (Tachykardie)",
+            atemfrequenz: "32/min",
+            schleimhaeute: "Injiziert (gerotete), KFZ 2.5 Sekunden, klebrig",
+            hydratation: "Dehydratation ca. 7%, stehende Hautfalte",
+            lymphknoten: "Inguinale Lymphknoten leicht vergroessert",
+            abdomen: "Gespanntes Abdomen, fluessigkeitsgefuellter schlauchfoermiger Uterus tastbar, dolent bei tiefer Palpation",
+            sonstiges: "Eitriger, uebel riechender Vaginalausfluss. Vulva noch leicht geschwollen (Post-Oestrus)."
+        },
+        diagnostikOptionen: [
+            { id: "blut", label: "Blutbild + klinische Chemie", correct: true, explanation: "Leukozytose mit Linksverschiebung ist typisch. Nierenwerte zur Beurteilung einer renalen Beteiligung. Leber- und Gerinnungswerte wegen Sepsis/SIRS." },
+            { id: "sono", label: "Abdomensonographie", correct: true, explanation: "Goldstandard: Zeigt den fluessigkeitsgefuellten Uterus, erlaubt Beurteilung der Wanddicke und des Inhalts (echoreich = Eiter)." },
+            { id: "roentgen", label: "Abdomen-Roentgen", correct: true, explanation: "Schlauchfoermige, weichteilige Struktur im kaudalen Abdomen. Kann Uterusruptur (freie Fluessigkeit) andeuten." },
+            { id: "harn", label: "Harnuntersuchung", correct: true, explanation: "USG bei PU/PD oft isosthenurisch (Endotoxin-Effekt auf ADH-Rezeptoren). Proteinurie durch Immunkomplex-Glomerulonephritis moeglich." },
+            { id: "vaginalzytologie", label: "Vaginalzytologie", correct: false, explanation: "Nicht hilfreich und potentiell kontaminiert. Die klinische und sonographische Diagnose ist eindeutig." },
+            { id: "ct", label: "CT Abdomen", correct: false, explanation: "Nicht notwendig. Ultraschall ist ausreichend und kosteneffizienter." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Leukozyten", wert: "35 G/l", ref: "6-17 G/l", status: "critical" },
+                { param: "Stabkernige", wert: "15%", ref: "<3%", status: "critical" },
+                { param: "Haematokrit", wert: "32%", ref: "37-55%", status: "low" },
+                { param: "Thrombozyten", wert: "120 G/l", ref: "175-500 G/l", status: "low" }
+            ],
+            chemie: [
+                { param: "Kreatinin", wert: "2.1 mg/dl", ref: "0.5-1.5 mg/dl", status: "high" },
+                { param: "Harnstoff", wert: "55 mg/dl", ref: "10-30 mg/dl", status: "high" },
+                { param: "Gesamtprotein", wert: "85 g/l", ref: "55-75 g/l", status: "high" },
+                { param: "Globuline", wert: "52 g/l", ref: "20-35 g/l", status: "high" },
+                { param: "ALT", wert: "95 U/l", ref: "10-120 U/l", status: "normal" },
+                { param: "CRP", wert: ">200 mg/l", ref: "<10 mg/l", status: "critical" }
+            ],
+            harn: [
+                { param: "USG", wert: "1.015", ref: ">1.030", status: "low" },
+                { param: "Protein", wert: "+", ref: "negativ", status: "high" }
+            ],
+            bildgebung: "Sonographie: Uterus beidseits massiv vergroessert (Durchmesser bis 5 cm), fluessigkeitsgefuellt mit echoreichem Inhalt (Eiter). Uteruswand verdickt (4 mm), regelmaessig. Kein Hinweis auf Uterusruptur. Nieren: beidseitig vergroessert (6.5 cm), milde Pyelectasie rechts."
+        },
+        diagnoseOptionen: [
+            { id: "pyometra", label: "Offene Pyometra mit Sepsis/SIRS und sekundaerer Nephropathie", correct: true },
+            { id: "mukometra", label: "Mukometra", correct: false },
+            { id: "traechtigkeit", label: "Traechtigkeit mit Komplikationen", correct: false },
+            { id: "ovartumor", label: "Ovarialtumor mit Uterusveraenderungen", correct: false }
+        ],
+        diagnoseErklaerung: "Offene Pyometra: Der eitrige Vaginalausfluss 6 Wochen nach der Laeufigkeit (Dioestrus), der fluessigkeitsgefuellte Uterus und die massive Leukozytose mit Linksverschiebung sind pathognomonisch. Die SIRS-Zeichen (Tachykardie, Fieber, Leukozytose) und die erhoehte Nierenwerte zeigen die systemische Beteiligung. Die Thrombozytopenie deutet auf eine beginnende DIC hin. CRP >200 mg/l bestaetigt die schwere Entzuendungsreaktion.",
+        therapieOptionen: [
+            { id: "stabilisierung", label: "Sofortige Stabilisierung: IV-Fluessigkeit, Monitoring", correct: true, explanation: "Kristalloide zur Rehydratation (Schockrate initial, dann Erhaltung). Urinproduktion ueberwachen." },
+            { id: "antibiotika", label: "Breitspektrum-Antibiotika IV (Amoxicillin-Clavulansaeure)", correct: true, explanation: "E. coli ist der haeufigste Erreger. Breitspektrum-AB sofort beginnen, ggf. nach Kultur anpassen." },
+            { id: "ovh", label: "Ovariohysterektomie (OVH) so schnell wie moeglich", correct: true, explanation: "Definitive Therapie! Quelle der Infektion muss entfernt werden. OP nach kurzfristiger Stabilisierung (4-24h)." },
+            { id: "analgesie", label: "Analgesie (Methadon oder Buprenorphin)", correct: true, explanation: "Schmerzmanagement perioperativ essentiell." },
+            { id: "konservativ", label: "Konservative Therapie mit Aglepristone (Alizin)", correct: false, explanation: "Aglepristone (Antigestagen) kann bei offener Pyometra erwaegt werden, ABER nur bei Zuchthuendinnen. Bei dieser Patientin (8J, keine Zucht) ist OVH klar indiziert -- Uterusrupturrisiko bei konservativer Therapie." },
+            { id: "nsaid", label: "NSAID als Antipyretikum", correct: false, explanation: "NSAID sind bei dehydrierten Patienten mit erhoehten Nierenwerten kontraindiziert (nephrotoxisch)." }
+        ],
+        zusammenfassung: "Offene Pyometra mit systemischer Beteiligung (Sepsis/SIRS) bei einer intakten Mischlings-Huendin. Lernpunkte: (1) Pyometra tritt typischerweise 4-8 Wochen nach der Laeufigkeit auf (Progesteroneinfluss). (2) Offene vs. geschlossene Pyometra: geschlossen = hoehereres Ruptorrisiko, oft spaeter erkannt. (3) OVH ist die Therapie der Wahl -- rasch nach Stabilisierung. (4) E. coli-Endotoxine schaedigen ADH-Rezeptoren -> PU/PD. (5) Praeoperative Stabilisierung (Fluessigkeit, AB) verbessert das OP-Risiko. (6) Elektive Kastration ist die beste Praevention.",
+        lernziele: [
+            "Pyometra im Dioestrus erkennen und als Notfall einstufen",
+            "SIRS-Kriterien beim Hund anwenden",
+            "Praeoperative Stabilisierung vor Notfall-OVH planen",
+            "Offene vs. geschlossene Pyometra unterscheiden",
+            "Praevention durch elektive Kastration kommunizieren"
+        ]
+    },
+    {
+        id: 8,
+        title: "Kolik -- Obstipation grosses Kolon",
+        category: "pferd",
+        categoryLabel: "Pferd",
+        species: "Pferd",
+        speciesIcon: "&#127943;",
+        difficulty: 2,
+        emergency: true,
+        signalment: {
+            rasse: "Deutsches Warmblut",
+            alter: "15 Jahre",
+            geschlecht: "Wallach",
+            gewicht: "ca. 550 kg"
+        },
+        anamnese: {
+            besitzer: "Der Wallach zeigt seit ca. 6 Stunden Kolikerscheinungen: Scharren, zum Bauch schauen, Wälzen. Er hat seit gestern keinen Kot mehr abgesetzt. Die Futteraufnahme war schon 2 Tage reduziert.",
+            fragen: [
+                { q: "Was bekommt er zu fressen?", a: "Hauptsaechlich Heu, morgens und abends je 1 kg Kraftfutter." },
+                { q: "Hat sich etwas an der Haltung geaendert?", a: "Ja, seit einer Woche Boxenruhe wegen einer Hufverletzung." },
+                { q: "Trinkt er normal?", a: "Weniger als sonst, der Trog ist noch halbvoll." },
+                { q: "Wurde er entwurmt?", a: "Letzte Entwurmung vor 8 Monaten." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Milde bis moderate Kolik, schaut zum Flanke, Scharren, legt sich hin und steht wieder auf",
+            gewicht: "ca. 550 kg",
+            temperatur: "38.2 Grad Celsius (normal)",
+            herzfrequenz: "48/min (leicht erhoehte, normal 28-40)",
+            atemfrequenz: "20/min",
+            schleimhaeute: "Rosa, KFZ 2.5 Sekunden, leicht trocken",
+            hydratation: "Leicht dehydriert (~5%), Hautturgor verlaengert",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Auskultation: Reduzierte Darmgeraeusche in allen 4 Quadranten. Perkussion: Kein tympanischer Schall.",
+            sonstiges: "Rektale Untersuchung: Harter, trockener Kot im ventralen grossen Kolon palpabel. Beckenflex gefuellt, aber kein Duenndarm tastbar. Keine Verlagerungen tastbar. Nasenschlundsonde: Kein Reflux."
+        },
+        diagnostikOptionen: [
+            { id: "rektal", label: "Rektale Untersuchung (bereits durchgefuehrt)", correct: true, explanation: "Goldstandard der Kolikdiagnostik beim Pferd. Harter Kot im ventralen Kolon bestaetigt Obstipation." },
+            { id: "sonde", label: "Nasenschlundsonde", correct: true, explanation: "Ausschluss eines Magenueberladung/Duenndarmileus. Kein Reflux = gutes Zeichen." },
+            { id: "blut", label: "Blutbild + klinische Chemie", correct: true, explanation: "Haematokrit (Dehydratation), Elektrolyte, Laktat (Darmperfusion), Gesamtprotein." },
+            { id: "sono", label: "Transabdominale Sonographie", correct: true, explanation: "Beurteilung von Darmwanddicke, freier Fluessigkeit, Duenndarmdilatation." },
+            { id: "peritoneal", label: "Bauchhoehlenpunktat", correct: false, explanation: "Bei milder Kolik mit klarer rektaler Diagnose nicht primaer indiziert. Bei Verschlechterung oder V.a. Strangulation ja." },
+            { id: "roentgen", label: "Abdomen-Roentgen", correct: false, explanation: "Beim adulten Pferd nur eingeschraenkt moeglich (Groesse!). Nicht Standarddiagnostik bei Obstipation." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "42%", ref: "32-42%", status: "high" },
+                { param: "Gesamtprotein", wert: "72 g/l", ref: "55-75 g/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Laktat", wert: "1.8 mmol/l", ref: "<2.0 mmol/l", status: "normal" },
+                { param: "Elektrolyte Na/K/Cl", wert: "135/3.8/98", ref: "132-146/2.6-5.0/98-110", status: "normal" },
+                { param: "Kreatinin", wert: "1.8 mg/dl", ref: "1.0-2.0 mg/dl", status: "normal" }
+            ],
+            harn: [],
+            bildgebung: "Sonographie: Grosses Kolon mit vermehrtem Ingesta-Echo, Wand 3 mm (normal), kein Duenndarm dilatiert, keine freie Fluessigkeit. Befund: Kolonobstipation ohne Hinweis auf Strangulation."
+        },
+        diagnoseOptionen: [
+            { id: "obstipation", label: "Primarere Obstipation des grossen Kolons", correct: true },
+            { id: "verlagerung", label: "Kolonverlagerung (Torsion)", correct: false },
+            { id: "ileus", label: "Duenndarmileus", correct: false },
+            { id: "peritonitis", label: "Peritonitis", correct: false }
+        ],
+        diagnoseErklaerung: "Primaere Obstipation des grossen Kolons, beguenstigt durch: Boxenruhe (reduzierte Motilitaet), verminderte Wasseraufnahme und moeglicherweise ungenuegender Parasitenmanagement. Gute prognostische Indikatoren: normales Laktat, keine Duenndarmdilatation, kein Reflux, milde Kolikintensitaet, normales Peritonealfenster.",
+        therapieOptionen: [
+            { id: "analgesie", label: "Analgesie: Metamizol (Novalgin) 20-40 mg/kg IV langsam", correct: true, explanation: "Metamizol hat analgetische UND spasmolytische Wirkung. Mittel der Wahl bei milder-moderater Kolik." },
+            { id: "sonde_therapie", label: "Nasenschlundsonde: Paraffin (8-10 ml/kg) + lauwarmes Wasser", correct: true, explanation: "Paraffin (Gleitschicht) und Wasser erweichen den Kot und foerdern den Weitertransport." },
+            { id: "infusion", label: "Infusionstherapie: Ringer-Laktat 5-10 ml/kg/h", correct: true, explanation: "Rehydratation ist essentiell, um den Darminhalt aufzuweichen und die Motilitaet zu verbessern." },
+            { id: "boxenruhe", label: "Boxenruhe mit regelmaessigem Schritt fuehren", correct: true, explanation: "Moderat Bewegung foerdert die Darmmotilitaet. Kein Heu bis zur Aufloesung!" },
+            { id: "flunixin", label: "Flunixin-Meglumine (Banamine) 1.1 mg/kg IV", correct: false, explanation: "Kann eingesetzt werden, aber maskiert Koliksymptome und ist nephrotoxisch bei dehydrierten Pferden. Metamizol ist hier vorzuziehen." },
+            { id: "op_sofort", label: "Sofortige chirurgische Intervention (Laparotomie)", correct: false, explanation: "Nicht indiziert bei milder Obstipation mit gutem Laktat und fehlenden Strangulationszeichen. Konservative Therapie hat hier Prioritaet." }
+        ],
+        zusammenfassung: "Primaere Kolonobstipation bei einem Warmblut-Wallach nach Boxenruhe. Lernpunkte: (1) Kolikmanagement beginnt mit der rektalen Untersuchung und Nasenschlundsonde. (2) Laktat ist der wichtigste prognostische Marker bei Kolik. (3) Ursachenbehebung: Boxenruhe, Wassermangel, Entwurmung. (4) Paraffin + Wasser via Nasenschlundsonde ist die Standardtherapie bei Obstipation. (5) Engmaschige Kontrolle: Verschlechtert sich der Patient, muss die Indikation zur OP reevaluiert werden.",
+        lernziele: [
+            "Systematische Kolikuntersuchung beim Pferd durchfuehren",
+            "Prognostische Faktoren bewerten (Laktat, HF, Rektaluntersuchung)",
+            "Konservative vs. chirurgische Therapieentscheidung treffen",
+            "Risikofaktoren fuer Obstipation identifizieren",
+            "Nasenschlundsonde korrekt einsetzen"
+        ]
+    },
+    {
+        id: 9,
+        title: "Equine Hufrehe (Laminitis)",
+        category: "pferd",
+        categoryLabel: "Pferd",
+        species: "Pferd",
+        speciesIcon: "&#127943;",
+        difficulty: 3,
+        emergency: true,
+        signalment: {
+            rasse: "Haflinger",
+            alter: "12 Jahre",
+            geschlecht: "Stute",
+            gewicht: "ca. 480 kg, adipoes (BCS 8/9)"
+        },
+        anamnese: {
+            besitzer: "Die Stute lahmt seit 2 Tagen auf allen 4 Hufen, vorne schlimmer. Sie will sich nicht bewegen und steht in einer eigenartigen Haltung mit den Hinterbeinen weit untergeschoben. Am Wochenende ist sie auf eine frische Koppel gekommen.",
+            fragen: [
+                { q: "Wie war der Weidegang?", a: "Sie war das ganze Wochenende auf einer Fruehlingskoppel mit viel frischem Gras." },
+                { q: "Gab es vorher schon Lahmheiten?", a: "Vor 2 Jahren hatte sie schon einmal etwas Aehnliches, aber leichter." },
+                { q: "Bekommt sie Kraftfutter?", a: "Ja, morgens und abends je 1 kg Muesli." },
+                { q: "Wurde sie vom Hufschmied betreut?", a: "Ja, alle 8 Wochen. Zuletzt vor 6 Wochen." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Stellt sich ungern hin, verlagert staendig Gewicht, Rehe-typische Haltung (Hinterbeine untergeschoben, Vorderbeine vorgestellt)",
+            gewicht: "ca. 480 kg, massiv adipoes, Specknacken (cresty neck)",
+            temperatur: "38.5 Grad Celsius",
+            herzfrequenz: "52/min (erhoehte, Schmerzreaktion)",
+            atemfrequenz: "24/min",
+            schleimhaeute: "Rosa, KFZ 2 Sekunden",
+            hydratation: "Adaequat",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Darmgeraeusche normal",
+            sonstiges: "Hufe: Deutliche Pulsation der Aa. digitales an allen 4 Hufen, vorne staerker. Zangenprobe vorne beidseits hochgradig positiv (v.a. Zehengegend). Hufwand vorne fuehlt sich warm an. Gang: Hochgradig klamm, kurze Schritte, Wendeschmerz. Rehe-typischer 'Trachten-betonte' Fussungsweise."
+        },
+        diagnostikOptionen: [
+            { id: "roentgen", label: "Roentgen Hufe (0-Grad und 90-Grad Aufnahmen)", correct: true, explanation: "Entscheidend zur Beurteilung von Rotation und Senkung des Hufbeins (Founders-Distance, Grad der Rotation)." },
+            { id: "blut", label: "Blutbild + Glukose + Insulin (nuechtern!) + ACTH", correct: true, explanation: "Abklaerung der Ursache: EMS (Hyperinsulinaemie) und/oder PPID (Cushing). Essentiell fuer Langzeitmanagement." },
+            { id: "zangenprobe", label: "Hufzangenuntersuchung (bereits durchgefuehrt)", correct: true, explanation: "Positiv im Zehenbereich -- typisch fuer Rehe. Hilft auch die Schmerzintensitaet zu objektivieren." },
+            { id: "venogramm", label: "Digitales Venogramm", correct: false, explanation: "Spezialdiagnostik zur Beurteilung der Lamellenperfusion. Wertvoll bei chronischer Rehe, aber nicht initial standard." },
+            { id: "szinti", label: "Szintigraphie", correct: false, explanation: "Nicht erforderlich fuer die Rehe-Diagnostik. Roentgen und klinische Untersuchung sind ausreichend." },
+            { id: "hufbiopsie", label: "Hufbiopsie", correct: false, explanation: "Invasiv und nicht standardmaessig. Wird nur in Forschungssettings durchgefuehrt." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "38%", ref: "32-42%", status: "normal" },
+                { param: "Leukozyten", wert: "8.5 G/l", ref: "5.4-14.3 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Glukose (nuechtern)", wert: "95 mg/dl", ref: "65-110 mg/dl", status: "normal" },
+                { param: "Insulin (nuechtern)", wert: "85 uU/ml", ref: "<20 uU/ml", status: "critical" },
+                { param: "ACTH", wert: "32 pg/ml", ref: "<35 pg/ml (saisonabhaengig)", status: "normal" },
+                { param: "Triglyzeride", wert: "120 mg/dl", ref: "<50 mg/dl", status: "high" },
+                { param: "Leptin", wert: "erhoehte", ref: "-", status: "high" }
+            ],
+            harn: [],
+            bildgebung: "Roentgen Hufe vorne bds: Rotation des Hufbeins (Coffin bone) um ca. 5 Grad (Grad 2). Founders-Distance (Abstand dorsale Hufwand - Hufbein) 22 mm (normal <18 mm). Keine Senkung (Sinking). Sohlendicke 10 mm (Grenzbereich). Hufbeinrand unregelmaessig (Hinweis auf chronische Veraenderungen vom Vorfall vor 2 Jahren)."
+        },
+        diagnoseOptionen: [
+            { id: "rehe", label: "Akute Hufrehe Grad 2 bei Equinem Metabolischem Syndrom (EMS)", correct: true },
+            { id: "hufabszess", label: "Bilateraler Hufabszess", correct: false },
+            { id: "ppid", label: "PPID (Equines Cushing) mit Rehe", correct: false },
+            { id: "navicular", label: "Podotrochlose (Hufrollensyndrom)", correct: false }
+        ],
+        diagnoseErklaerung: "Akute Hufrehe auf dem Boden eines EMS: Die massive Adipositas (BCS 8/9, Specknacken), die Hyperinsulinaemie (85 uU/ml, >4x normal) und die erhoehten Triglyzeride bestaetigen das EMS. Der Trigger war der Weidegang auf frischer Fruehlingskoppel (fruktanreiches Gras -> Insulinspitze -> Rehe). Die Rotation von 5 Grad zeigt eine moderate Schaedigung der Lamellen. Der ACTH ist normal, PPID ist somit unwahrscheinlich.",
+        therapieOptionen: [
+            { id: "nsaid", label: "NSAID: Phenylbutazon 2.2 mg/kg BID oder Meloxicam", correct: true, explanation: "Analgesie und Entzuendungshemmung sind essentiell. Phenylbutazon ist beim Pferd am staerksten analgetisch." },
+            { id: "kryo", label: "Kryotherapie: Hufe in Eiswasser (kontinuierlich 48-72h)", correct: true, explanation: "Vasokonstriktion reduziert Entzuendungsmediatoren in der Lamina. Nur effektiv in den ersten 48-72h des akuten Schubs." },
+            { id: "huf", label: "Hufbeschlag/Hufpolster: Entlastung der Zehe, Unterstuetzung des Strahls", correct: true, explanation: "Styroporplatten, Lily-Pads oder therapeutischer Beschlag zur mechanischen Entlastung." },
+            { id: "diaet", label: "Sofortige Futterumstellung: Kein Weidegang, Heu einweichen, kein Kraftfutter", correct: true, explanation: "Fruktanreduktion (Heu einweichen 30 min), kein Zucker/Staerke, kontrollierte Gewichtsreduktion." },
+            { id: "metformin", label: "Metformin erwaegen bei persistierender Hyperinsulinaemie", correct: true, explanation: "Kann bei EMS die Insulinsensitivitaet verbessern. Off-label-Einsatz, Wirksamkeit beim Pferd umstritten." },
+            { id: "kortison", label: "Systemische Kortikosteroide", correct: false, explanation: "Kontraindiziert bei Hufrehe! Kortikosteroide koennen Rehe ausloesen oder verschlimmern." },
+            { id: "bewegung", label: "Kontrollierte Bewegung (Schritt fuehren)", correct: false, explanation: "Im akuten Stadium kontraindiziert! Strikte Boxenruhe auf weichem Boden bis zur Schmerzfreiheit." }
+        ],
+        zusammenfassung: "Akute Hufrehe bei einer adipoesen Haflinger-Stute mit zugrundeliegendem EMS, ausgeloest durch fruktanreiches Fruehjahrgras. Lernpunkte: (1) EMS ist die haeufigste Ursache fuer Hufrehe bei adipoesen Ponys/Haflingern. (2) Nuechtern-Insulin ist der Schluesselbefund fuer EMS-Diagnostik. (3) Kryotherapie ist nur in den ersten 48-72h wirksam. (4) Roentgenkontrollen beurteilen Rotation und Senkung -- entscheidend fuer Prognose. (5) Langzeitmanagement: Gewichtsreduktion, Weidemanagement (Fressbremse!), regelmaessige Hufpflege. (6) Keine Kortikosteroide, keine Bewegung im akuten Stadium!",
+        lernziele: [
+            "EMS als primaere Ursache der Hufrehe identifizieren",
+            "Nuechtern-Insulin als Schluesselbefund interpretieren",
+            "Rehe-Grade und Roentgenparameter beurteilen",
+            "Akuttherapie (Kryo, NSAID, Hufentlastung) korrekt einsetzen",
+            "Langfristiges Management bei EMS planen"
+        ]
+    },
+    {
+        id: 10,
+        title: "Generalisierte juvenile Demodikose",
+        category: "dermatologie",
+        categoryLabel: "Dermatologie",
+        species: "Hund",
+        speciesIcon: "&#128054;",
+        difficulty: 1,
+        emergency: false,
+        signalment: {
+            rasse: "Franzoesische Bulldogge",
+            alter: "8 Monate",
+            geschlecht: "maennlich intakt",
+            gewicht: "9 kg"
+        },
+        anamnese: {
+            besitzer: "Der junge Hund hat seit ca. 4 Wochen zunehmenden Haarausfall, angefangen am Kopf, jetzt auch an den Beinen und am Rumpf. Moderater Juckreiz. Er kratzt sich gelegentlich, aber nicht permanent.",
+            fragen: [
+                { q: "Gab es Kontakt zu anderen Tieren mit Hautproblemen?", a: "Nein, aber der Zuechter meinte, seine Geschwister haetten auch Hautprobleme." },
+                { q: "Wurde er schon behandelt?", a: "Ja, Tierarzt hat eine Woche Antibiotika gegeben, hat nicht geholfen." },
+                { q: "Ist er sonst gesund?", a: "Ja, frisst und spielt normal." },
+                { q: "Ektoparasitenprophylaxe?", a: "Keine. Wir wussten nicht, dass das noetig ist." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Munteres, verspieltes Allgemeinbefinden",
+            gewicht: "9 kg (altersgerecht)",
+            temperatur: "38.6 Grad Celsius",
+            herzfrequenz: "120/min",
+            atemfrequenz: "24/min",
+            schleimhaeute: "Rosa, KFZ < 2 Sekunden",
+            hydratation: "Normal",
+            lymphknoten: "Mandibulare und praesakapulare LK bds. leicht vergroessert",
+            abdomen: "Unauffaellig",
+            sonstiges: "Haut: Multifokale bis konfluierende Alopezie an Kopf (periokular, Lefzen), Vordergliedmassen (Ellbogen, Pfoten), Rumpf ventral. Erythem, Komedonen (schwarze Punkte), Follikulitis mit Pusteln. Haut verdickt, Hyperpigmentation in aelteren Laesionen. Interdigital: Erythem, Schwellung. Kein Schmerz."
+        },
+        diagnostikOptionen: [
+            { id: "geschabsel", label: "Tiefes Hautgeschabsel (mehrere Stellen)", correct: true, explanation: "Goldstandard fuer Demodex-Nachweis. Tief schaben bis kapillaere Blutung! Milben in verschiedenen Stadien (Eier, Larven, Nymphen, Adulte)." },
+            { id: "trichogramm", label: "Trichogramm (Haarausriss)", correct: true, explanation: "Alternative/Ergaenzung: Demodex-Milben sitzen in den Haarfollikeln. Bei interdigitalen Laesionen oft einfacher als Geschabsel." },
+            { id: "zytologie", label: "Zytologie (Abklatsch von Pusteln)", correct: true, explanation: "Nachweis einer sekundaeren bakteriellen Infektion (Staphylokokken). Wichtig fuer Therapieentscheidung." },
+            { id: "blut", label: "Blutbild + Biochemie", correct: false, explanation: "Bei juveniler Demodikose initial nicht notwendig, es sei denn Hinweis auf Immunsuppression (selten bei Jungtieren)." },
+            { id: "biopsie", label: "Hautbiopsie", correct: false, explanation: "Nur bei negativen Geschabseln trotz starkem Verdacht (z.B. Shar-Pei mit Muzinose). Nicht initial." },
+            { id: "allergie", label: "Allergietest (Serologie/Intrakutantest)", correct: false, explanation: "Demodikose ist keine Allergie. Allergietests sind hier fehlindiziert." }
+        ],
+        laborbefunde: {
+            haematologie: [],
+            chemie: [],
+            harn: [],
+            bildgebung: "Tiefes Hautgeschabsel (5 Lokalisationen): Zahlreiche Demodex canis in allen Entwicklungsstadien: Adulte (zigarrenfoermig, 8 Beine), Nymphen, Larven (6 Beine), zahlreiche Eier (ovoid, spindelfoermig). Verhaeltnis unreife:adulte Milben ca. 3:1 (aktive Reproduktion). Zytologie Pusteln: Neutrophile Granulozyten, intra- und extrazellullaere Kokken (V.a. Staphylococcus pseudintermedius). Befund: Generalisierte Demodikose mit sekundaerer bakterieller Pyodermie."
+        },
+        diagnoseOptionen: [
+            { id: "demo", label: "Generalisierte juvenile Demodikose mit sekundaerer bakterieller Pyodermie", correct: true },
+            { id: "raude", label: "Sarcoptes-Raude", correct: false },
+            { id: "dermatophytose", label: "Dermatophytose (Pilzinfektion)", correct: false },
+            { id: "atopie", label: "Canine atopische Dermatitis", correct: false }
+        ],
+        diagnoseErklaerung: "Generalisierte juvenile Demodikose: >5 Laesionen oder >2 Koerperregionen betroffen. Die massenhaften Demodex canis im Geschabsel mit aktiver Reproduktion (Eier, Larven) sind diagnostisch. Die sekundaere bakterielle Pyodermie (Zytologie: Kokken) ist eine haeufige Komplikation und muss mitbehandelt werden. Rassedisposition bei Franzoesischen Bulldoggen (Immundefizit-Hypothese).",
+        therapieOptionen: [
+            { id: "isoxazolin", label: "Isoxazoline: Fluralaner (Bravecto) oder Sarolaner (Simparica) fuer mind. 3 Monate", correct: true, explanation: "Goldstandard! Isoxazoline haben die Demodikose-Therapie revolutioniert. Hohe Wirksamkeit (>95%), einfache Anwendung." },
+            { id: "antibiotika", label: "Systemische Antibiotika (Cephalosporin) fuer sekundaere Pyodermie", correct: true, explanation: "Cephalexin 25 mg/kg BID fuer 3-4 Wochen bei nachgewiesener bakterieller Pyodermie." },
+            { id: "shampoo", label: "Antimikrobielles Shampoo (Chlorhexidin 3%) 2x woechentlich", correct: true, explanation: "Unterstuetzt die Behandlung der sekundaeren Pyodermie und entfernt Krusten." },
+            { id: "kontrolle", label: "Geschabsel-Kontrolle alle 4 Wochen + Therapie bis 2 negative Kontrollen", correct: true, explanation: "Therapie NICHT nach klinischer Besserung absetzen! Mindestens 2 konsekutiv negative Geschabsel (im Abstand von 4 Wochen)." },
+            { id: "ivermectin", label: "Ivermectin oral (Standardtherapie)", correct: false, explanation: "Frueher Standard, aber durch Isoxazoline abgeloest. MDR1-Gentest noetig bei bestimmten Rassen. Mehr Nebenwirkungen." },
+            { id: "kortison", label: "Kortikosteroide gegen den Juckreiz", correct: false, explanation: "Absolut kontraindiziert! Kortikosteroide sind immunsuppressiv und verschlimmern die Demodikose massiv." }
+        ],
+        zusammenfassung: "Generalisierte juvenile Demodikose bei einer Franzoesischen Bulldogge mit sekundaerer Pyodermie. Lernpunkte: (1) Demodex canis ist ein normaler Hautsymbiont -- die Erkrankung entsteht durch ein T-Zell-Immundefizit. (2) Isoxazoline (Fluralaner, Sarolaner, Afoxolaner) sind heute Mittel der 1. Wahl. (3) Therapiedauer: Mindestens bis 2 negative Geschabsel im Abstand von 4 Wochen. (4) Generalisierte Demodikose bei Adulten erfordert Abklaerung einer Grunderkrankung (Cushing, Hypothyreose, Neoplasie). (5) Zuchtausschluss empfehlen (genetische Praedisposition).",
+        lernziele: [
+            "Lokalisierte von generalisierter Demodikose unterscheiden",
+            "Tiefes Hautgeschabsel korrekt durchfuehren und interpretieren",
+            "Isoxazoline als Goldstandard-Therapie kennen",
+            "Therapieendpunkte definieren (2 negative Geschabsel)",
+            "Kortikosteroide als kontraindiziert erkennen"
+        ]
+    },
+    {
+        id: 11,
+        title: "E. cuniculi (Enzephalitozoonose) beim Kaninchen",
+        category: "exoten",
+        categoryLabel: "Exoten / Heimtiere",
+        species: "Kaninchen",
+        speciesIcon: "&#128048;",
+        difficulty: 2,
+        emergency: false,
+        signalment: {
+            rasse: "Zwergkaninchen (Loewenkopf)",
+            alter: "4 Jahre",
+            geschlecht: "maennlich kastriert",
+            gewicht: "1.8 kg"
+        },
+        anamnese: {
+            besitzer: "Das Kaninchen hat seit 3 Tagen den Kopf schief. Es torkelt und faellt beim Laufen um. Es frisst weniger als sonst. Ein zweites Kaninchen lebt mit ihm zusammen und ist gesund.",
+            fragen: [
+                { q: "Ist der Kopf staendig schief oder nur manchmal?", a: "Staendig, immer nach links." },
+                { q: "Hat es Ausfluss aus Nase oder Augen?", a: "Nein, kein Ausfluss." },
+                { q: "Hat es sich am Ohr gekratzt?", a: "Nein, keine Anzeichen." },
+                { q: "Wurde es gegen E. cuniculi behandelt?", a: "Nein, wir wussten nicht, dass es das gibt." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Wach, frisst mit Unterstuetzung, sichtbar verunsichert durch Gleichgewichtsstoerung",
+            gewicht: "1.8 kg (leicht untergewichtig)",
+            temperatur: "38.8 Grad Celsius (normal: 38.5-40 Grad Celsius)",
+            herzfrequenz: "240/min (normal)",
+            atemfrequenz: "50/min (normal)",
+            schleimhaeute: "Rosa, normal",
+            hydratation: "Leicht dehydriert",
+            lymphknoten: "Unauffaellig",
+            abdomen: "Darm gefuellt, etwas gasig",
+            sonstiges: "Neurologie: Head Tilt nach links (ca. 30 Grad). Horizontaler Nystagmus (schnelle Phase nach rechts = laesionsseitig). Ataxie der Hinterhand, faellt nach links. Propriozeption hinten links reduziert. Keine Fazialisparese. Ohren: Aeusserlich sauber, keine Entzuendung sichtbar. Augen: Phakoclastische Uveitis links nicht sicher, Linse erscheint leicht getruebt."
+        },
+        diagnostikOptionen: [
+            { id: "ak", label: "E. cuniculi Antikoerpertiter (IgG und IgM)", correct: true, explanation: "Hoher IgM-Titer spricht fuer aktive Infektion. IgG allein zeigt nur Exposition. Cave: Seronegative Tiere koennen trotzdem infiziert sein." },
+            { id: "blut", label: "Blutbild + Biochemie (Nierenwerte!)", correct: true, explanation: "E. cuniculi befaellt auch die Nieren (Granulomatoese Nephritis). Harnstoff und Kreatinin pruefen!" },
+            { id: "otoskop", label: "Otoskopische Untersuchung", correct: true, explanation: "Ausschluss einer Otitis media/interna als Differentialdiagnose fuer Head Tilt." },
+            { id: "roentgen", label: "Roentgen Bulla tympanica", correct: true, explanation: "Beurteilung der Bulla (verdickt, verschattet bei Otitis). Differentialdiagnose!" },
+            { id: "mrt", label: "MRT Kopf", correct: false, explanation: "Waere ideal zur Beurteilung von ZNS-Laesionen, ist beim Kaninchen aber selten verfuegbar und erfordert Narkose." },
+            { id: "pcr", label: "PCR auf E. cuniculi (Harn)", correct: false, explanation: "Intermittierende Ausscheidung, daher wenig sensitiv. Negativer Befund schliesst E. cuniculi nicht aus." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "38%", ref: "33-45%", status: "normal" },
+                { param: "Leukozyten", wert: "8.5 G/l", ref: "5-12 G/l", status: "normal" },
+                { param: "Heterophile", wert: "42%", ref: "30-50%", status: "normal" }
+            ],
+            chemie: [
+                { param: "Harnstoff", wert: "12 mmol/l", ref: "5-10 mmol/l", status: "high" },
+                { param: "Kreatinin", wert: "140 umol/l", ref: "50-120 umol/l", status: "high" },
+                { param: "Glukose", wert: "7.5 mmol/l", ref: "4-8 mmol/l", status: "normal" }
+            ],
+            harn: [
+                { param: "USG", wert: "1.025", ref: ">1.030", status: "low" }
+            ],
+            bildgebung: "Roentgen Bulla: Beidseitig normal, keine Verschattung. E. cuniculi IgG: 1:640 (positiv). E. cuniculi IgM: 1:160 (positiv, spricht fuer aktive Infektion). Ophthalmoskopie: Links: leichte Linsentruebung, vereinbar mit fruehe phakoclastische Uveitis."
+        },
+        diagnoseOptionen: [
+            { id: "ecuniculi", label: "E. cuniculi-Enzephalitis (Enzephalitozoonose) mit Vestibularsyndrom und beginnender Nephropathie", correct: true },
+            { id: "otitis", label: "Otitis media/interna (Pasteurella)", correct: false },
+            { id: "tumor", label: "ZNS-Neoplasie", correct: false },
+            { id: "trauma", label: "Traumatische Hirnschaedigung", correct: false }
+        ],
+        diagnoseErklaerung: "Die Kombination aus Head Tilt, Nystagmus, Ataxie, positivem IgM-Titer (aktive Infektion) und der leicht erhoehten Nierenwerte spricht fuer eine aktive Enzephalitozoonose. Die normale Bulla schliesst eine Otitis media/interna als primaere Ursache weitgehend aus. Die beginnende Linsentruebung (phakoclastische Uveitis) ist ein weiterer Hinweis auf E. cuniculi (Erreger vermehrt sich in der Linse).",
+        therapieOptionen: [
+            { id: "fenbendazol", label: "Fenbendazol (Panacur) 20 mg/kg SID oral fuer 28 Tage", correct: true, explanation: "Einziges Antiparasitikum mit Wirksamkeit gegen E. cuniculi. Lange Therapiedauer (28 Tage) ist essentiell!" },
+            { id: "meloxicam", label: "Meloxicam 0.3-0.5 mg/kg SID als Entzuendungshemmer", correct: true, explanation: "NSAID reduziert die Entzuendung im ZNS und die Schmerzen. Nicht bei Nierenproblemen erhoehen." },
+            { id: "zwangsfuetterung", label: "Zwangsfuetterung mit Critical Care (Herbivor) wenn Appetit reduziert", correct: true, explanation: "Kaninchen duerfen NIEMALS hungern -- hepatische Lipidose-Risiko und GI-Stase!" },
+            { id: "infusion", label: "Subkutane Fluessigkeit (20-40 ml/kg/Tag) bei Dehydratation", correct: true, explanation: "Unterstuetzt die Rehydratation und die Nierenfunktion." },
+            { id: "antibiotika", label: "Enrofloxacin gegen Pasteurella (als DDx-Abdeckung)", correct: false, explanation: "Bei negativer Bulla-Roentgen und typischem E. cuniculi-Bild nicht primaer indiziert. Nur bei zusaetzlichem Hinweis auf Otitis." },
+            { id: "kortison", label: "Dexamethason als Entzuendungshemmer", correct: false, explanation: "Kortikosteroide sind beim Kaninchen riskant (GI-Stase, Immunsuppression). Meloxicam ist vorzuziehen." }
+        ],
+        zusammenfassung: "E. cuniculi-Enzephalitozoonose bei einem Zwergkaninchen mit Vestibularsyndrom. Lernpunkte: (1) E. cuniculi ist eine der haeufigsten Ursachen fuer Head Tilt beim Kaninchen. (2) Differentialdiagnosen: Otitis media/interna (Pasteurella, Bulla-Roentgen!), Trauma, Neoplasie. (3) IgM-positiv = aktive Infektion. (4) Fenbendazol 28 Tage ist die Standardtherapie. (5) Mitbewohner-Kaninchen vorsorglich behandeln (E. cuniculi wird ueber Urin uebertragen). (6) Prognose: Viele Kaninchen behalten einen leichten Head Tilt, koennen aber gut damit leben.",
+        lernziele: [
+            "Vestibularsyndrom beim Kaninchen differentialdiagnostisch aufarbeiten",
+            "E. cuniculi-Serologie interpretieren (IgG vs. IgM)",
+            "Fenbendazol-Therapie korrekt durchfuehren (Dauer, Dosis)",
+            "Supportive Care beim Kaninchen (Zwangsfuetterung, Fluessigkeit)",
+            "Zoonosepotenzial und Mitbewohner-Management beruecksichtigen"
+        ]
+    },
+    {
+        id: 12,
+        title: "Metabolische Knochenerkrankung (MBD) bei Bartagame",
+        category: "exoten",
+        categoryLabel: "Exoten / Heimtiere",
+        species: "Reptil",
+        speciesIcon: "&#129422;",
+        difficulty: 2,
+        emergency: true,
+        signalment: {
+            rasse: "Bartagame (Pogona vitticeps)",
+            alter: "ca. 1 Jahr",
+            geschlecht: "unbestimmt",
+            gewicht: "180 g (untergewichtig)"
+        },
+        anamnese: {
+            besitzer: "Die Bartagame frisst seit 2 Wochen schlecht und bewegt sich kaum noch. Die Beine sehen geschwollen aus und der Unterkiefer fuehlt sich weich an. Sie zittert manchmal.",
+            fragen: [
+                { q: "Welche Beleuchtung verwenden Sie?", a: "Eine normale Waermelampe, 60 Watt." },
+                { q: "Gibt es eine UV-Lampe?", a: "Nein, wir dachten die Waermelampe reicht." },
+                { q: "Was fuettern Sie?", a: "Hauptsaechlich Salat und Mehlwuermer." },
+                { q: "Geben Sie Kalzium oder Vitamine?", a: "Nein, wir wussten nicht, dass das noetig ist." }
+            ]
+        },
+        untersuchung: {
+            allgemein: "Lethargisch, bewegt sich nur bei Stimulation, liegt flach",
+            gewicht: "180 g (untergewichtig fuer 1 Jahr, sollte >300 g sein)",
+            temperatur: "Koerpertemperatur 28 Grad Celsius (zu niedrig, Vorzugstemperatur 35-38 Grad Celsius)",
+            herzfrequenz: "Nicht sicher beurteilbar (Doppler empfohlen)",
+            atemfrequenz: "12/min (normal 15-30/min)",
+            schleimhaeute: "Blass",
+            hydratation: "Dehydriert (eingefallene Augen, Hautfalte steht)",
+            lymphknoten: "Nicht zutreffend bei Reptilien",
+            abdomen: "Eingefallene Flanken",
+            sonstiges: "Muskuloskeletal: 'Gummikiefer' -- Unterkiefer weich und deformierbar bei Palpation. Alle 4 Extremitaeten geschwollen (Radius/Ulna, Tibia/Fibula verdickt). Fibrotische Schwellung der Gliedmassen ('Frakturkallus'). Feiner Tremor bei Manipulation. Kloake: unauffaellig. Schwanz: leicht deformiert."
+        },
+        diagnostikOptionen: [
+            { id: "roentgen", label: "Ganzkoerper-Roentgen (2 Ebenen)", correct: true, explanation: "Zeigt generalisierte Osteopenie, pathologische Frakturen, Kallus-Bildung. Knochendichte stark reduziert." },
+            { id: "blut", label: "Blutchemie: Kalzium (ionisiert + gesamt), Phosphat, Vitamin D3", correct: true, explanation: "Ionisiertes Kalzium ist der aussagekraeftigste Parameter. Ca:P-Verhaeltnis beurteilen (sollte 2:1 sein)." },
+            { id: "haltung", label: "Detaillierte Haltungsanamnese (Terrarium-Check)", correct: true, explanation: "Essentiell! UVB-Mangel und falsche Ernaehrung sind die haeufigsten Ursachen. Temperaturgradient, UVB-Quelle, Supplementierung pruefen." },
+            { id: "parasiten", label: "Kotuntersuchung auf Parasiten", correct: true, explanation: "Parasiten (Oxyuren, Kokzidien) verschlechtern die Naehrstoffaufnahme und sind bei Reptilien haeufig." },
+            { id: "biopsie", label: "Knochenbiopsie", correct: false, explanation: "Invasiv und bei ohnehin fragilem Skelett gefaehrlich. Roentgen + Labor sind ausreichend." },
+            { id: "mrt", label: "MRT", correct: false, explanation: "Bei Reptilien dieser Groesse nicht praktikabel und nicht notwendig." }
+        ],
+        laborbefunde: {
+            haematologie: [
+                { param: "Haematokrit", wert: "22%", ref: "25-40%", status: "low" },
+                { param: "Leukozyten", wert: "12 G/l", ref: "5-15 G/l", status: "normal" }
+            ],
+            chemie: [
+                { param: "Kalzium (gesamt)", wert: "1.5 mmol/l", ref: "2.5-4.5 mmol/l", status: "critical" },
+                { param: "Ionisiertes Ca", wert: "0.6 mmol/l", ref: "1.0-1.5 mmol/l", status: "critical" },
+                { param: "Phosphat", wert: "3.2 mmol/l", ref: "1.0-2.5 mmol/l", status: "high" },
+                { param: "Ca:P Verhaeltnis", wert: "0.47:1", ref: "2:1", status: "critical" },
+                { param: "Harnsaeure", wert: "650 umol/l", ref: "100-400 umol/l", status: "high" },
+                { param: "Gesamtprotein", wert: "35 g/l", ref: "40-70 g/l", status: "low" }
+            ],
+            harn: [],
+            bildgebung: "Roentgen Ganzkoerper: Generalisierte hochgradige Osteopenie -- Knochen kaum sichtbar, 'Glas-Knochen-Aspekt'. Multiple pathologische Frakturen an Radius/Ulna beidseits und Tibia links mit Kallusbildung. Wirbelsaeule: Kyphose thorakolumbal. Kiefer: Mandibula stark ausgeduennt. Nieren: nicht vergroessert. Kotuntersuchung: Moderate Oxyuren-Infektion."
+        },
+        diagnoseOptionen: [
+            { id: "mbd", label: "Schwere Metabolische Knochenerkrankung (MBD) durch nutritiven sekundaeren Hyperparathyreoidismus", correct: true },
+            { id: "primaer", label: "Primaerer Hyperparathyreoidismus", correct: false },
+            { id: "rachitis", label: "Vitamin-D-resistente Rachitis (genetisch)", correct: false },
+            { id: "osteomyelitis", label: "Multifokale Osteomyelitis", correct: false }
+        ],
+        diagnoseErklaerung: "Schwere MBD durch kombinierten UVB-Mangel und Kalzium-/Vitamin-D3-Mangel in der Ernaehrung. Die Pathophysiologie: Kein UVB -> kein Vitamin D3 -> keine Kalziumabsorption -> Hypokalzaemie -> sekundaerer Hyperparathyreoidismus -> Kalziummobilisierung aus Knochen -> Osteopenie, Frakturen, Gummikiefer. Das inverse Ca:P-Verhaeltnis (0.47:1 statt 2:1) bestaetigt den Mechanismus. Mehlwuermer haben ein schlechtes Ca:P (1:15!) und verschlimmern das Problem.",
+        therapieOptionen: [
+            { id: "cacrit", label: "Akut: Kalziumglukonat 10% (50-100 mg/kg i.v./i.o. langsam) bei Tremor/Tetanie", correct: true, explanation: "Lebensrettend bei Hypokalzaemie-bedingter Tetanie. Langsam ueber 10 min unter EKG-/Herzfrequenz-Monitoring." },
+            { id: "caoral", label: "Kalzium-Supplementierung oral (Kalziumglukonat, Kalziumkarbonat)", correct: true, explanation: "Langfristige orale Supplementierung zusammen mit Vitamin D3." },
+            { id: "uvb", label: "Sofortige UVB-Beleuchtung installieren (UVB 10-12%, korrekte Distanz)", correct: true, explanation: "UVB ist essentiell fuer die endogene Vitamin-D3-Synthese. Ohne UVB kann Kalzium nicht absorbiert werden!" },
+            { id: "ernaehrung", label: "Ernaehrungsumstellung: Kalziumreiche Insekten (Heimchen statt Mehlwuermer), Gemuese, Supplementierung", correct: true, explanation: "Futtertiere mit Kalziumpulver bestauben (Dusting). Gemuese: Rucula, Loewenzahn, Kresse. Kein Salat (naehrstoffarm)." },
+            { id: "fluessig", label: "Rehydratation: Subkutan oder per Magensonde", correct: true, explanation: "Dehydrierte Reptilien muessen vor weiterer Therapie rehydriert werden. Badelosung (warm!) oder SC-Fluessigkeit." },
+            { id: "calcitonin", label: "Calcitonin-Injektionen", correct: false, explanation: "Calcitonin senkt den Kalziumspiegel -- wuerde die Hypokalzaemie verschlimmern! Kontraindiziert." },
+            { id: "chirurgie", label: "Chirurgische Frakturversorgung", correct: false, explanation: "Die Knochen sind zu fragil fuer chirurgische Fixation. Konservative Schienung und Kalzium-Therapie sind vorzuziehen." }
+        ],
+        zusammenfassung: "Schwere MBD bei einer juvenilen Bartagame durch fehlende UVB-Beleuchtung und mangelhafte Kalzium-Supplementierung. Lernpunkte: (1) UVB-Licht ist fuer Reptilien essentiell -- ohne UVB kein Vitamin D3 und keine Kalziumabsorption. (2) Mehlwuermer haben ein katastrophales Ca:P-Verhaeltnis (1:15). (3) 'Gummikiefer' ist pathognomonisch fuer MBD. (4) Akute Hypokalzaemie (Tremor, Tetanie) erfordert IV/IO Kalziumglukonat. (5) Langzeitmanagement: Korrekte Haltung (UVB, Temperatur, Ernaehrung) ist die eigentliche Therapie. (6) Haltungsberatung ist bei Reptilien mindestens genauso wichtig wie die medikamentoese Therapie.",
+        lernziele: [
+            "Haltungsbedingte Erkrankungen bei Reptilien erkennen",
+            "UVB-Vitamin D3-Kalzium-Achse verstehen",
+            "Akuttherapie der Hypokalzaemie bei Reptilien durchfuehren",
+            "Ernaehrungsberatung fuer Bartagamen geben",
+            "Ca:P-Verhaeltnis verschiedener Futtertiere kennen"
+        ]
+    }
+];
+
+// ============================================================
+// APP STATE
+// ============================================================
+const state = {
+    screen: 'overview', // 'overview' | 'case' | 'summary'
+    activeFilter: 'all',
+    activeDifficulty: 'all',
+    currentCase: null,
+    currentStep: 0, // 0=Anamnese, 1=Untersuchung, 2=Diagnostik, 3=Diagnose, 4=Therapie
+    selectedDiagnostik: [],
+    selectedDiagnose: null,
+    selectedTherapie: [],
+    answeredSteps: [],
+    score: 0,
+    maxScore: 0,
+    completedCases: JSON.parse(localStorage.getItem('pathoCases_completed') || '{}'),
+    caseScores: JSON.parse(localStorage.getItem('pathoCases_scores') || '{}')
+};
+
+const STEPS = [
+    { label: "Anamnese", icon: "1" },
+    { label: "Untersuchung", icon: "2" },
+    { label: "Diagnostik", icon: "3" },
+    { label: "Diagnose", icon: "4" },
+    { label: "Therapie", icon: "5" }
+];
+
+const CATEGORIES = [
+    { id: 'all', label: 'Alle' },
+    { id: 'innere-hund', label: 'Innere Hund' },
+    { id: 'innere-katze', label: 'Innere Katze' },
+    { id: 'chirurgie', label: 'Chirurgie' },
+    { id: 'pferd', label: 'Pferd' },
+    { id: 'dermatologie', label: 'Dermatologie' },
+    { id: 'exoten', label: 'Exoten' }
+];
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+    const app = document.getElementById('app');
+    switch (state.screen) {
+        case 'overview': app.innerHTML = renderOverview(); break;
+        case 'case': app.innerHTML = renderCase(); break;
+        case 'summary': app.innerHTML = renderSummary(); break;
+    }
+    bindEvents();
+}
+
+function renderOverview() {
+    const filteredCases = CASES.filter(c => {
+        const catMatch = state.activeFilter === 'all' || c.category === state.activeFilter;
+        const diffMatch = state.activeDifficulty === 'all' || c.difficulty === parseInt(state.activeDifficulty);
+        return catMatch && diffMatch;
+    });
+
+    const totalCompleted = Object.keys(state.completedCases).length;
+    const totalCases = CASES.length;
+    const avgScore = totalCompleted > 0
+        ? Math.round(Object.values(state.caseScores).reduce((a,b) => a+b, 0) / totalCompleted)
+        : 0;
+
+    return `
+    <div class="max-w-6xl mx-auto px-4 py-6 fade-in">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <a href="vetscan-version-selector.html" class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1 mb-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Zurueck zur Versionauswahl
+                </a>
+                <h1 class="text-3xl font-bold">Pathologie-Fallstudien</h1>
+                <p class="text-slate-400 mt-1">Fallbasiertes Lernen mit realistischen klinischen Szenarien</p>
+            </div>
+            <div class="flex gap-4">
+                <div class="text-center">
+                    <div class="stat-value">${totalCompleted}/${totalCases}</div>
+                    <div class="text-xs text-slate-400">Faelle abgeschlossen</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-value">${avgScore}%</div>
+                    <div class="text-xs text-slate-400">Durchschn. Score</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="mb-6">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${(totalCompleted / totalCases) * 100}%"></div>
+            </div>
+            <div class="text-xs text-slate-500 mt-1">${Math.round((totalCompleted / totalCases) * 100)}% abgeschlossen</div>
+        </div>
+
+        <!-- Filters -->
+        <div class="mb-6">
+            <div class="flex flex-wrap gap-2 mb-3">
+                ${CATEGORIES.map(cat => `
+                    <button class="filter-chip ${state.activeFilter === cat.id ? 'active' : ''}" data-filter="${cat.id}">
+                        ${cat.label}
+                    </button>
+                `).join('')}
+            </div>
+            <div class="flex gap-2">
+                <button class="filter-chip ${state.activeDifficulty === 'all' ? 'active' : ''}" data-difficulty="all">Alle Stufen</button>
+                <button class="filter-chip ${state.activeDifficulty === '1' ? 'active' : ''}" data-difficulty="1">Leicht</button>
+                <button class="filter-chip ${state.activeDifficulty === '2' ? 'active' : ''}" data-difficulty="2">Mittel</button>
+                <button class="filter-chip ${state.activeDifficulty === '3' ? 'active' : ''}" data-difficulty="3">Schwer</button>
+            </div>
+        </div>
+
+        <!-- Cases Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            ${filteredCases.map(c => renderCaseCard(c)).join('')}
+        </div>
+
+        ${filteredCases.length === 0 ? '<p class="text-center text-slate-500 mt-8">Keine Faelle fuer diesen Filter gefunden.</p>' : ''}
+
+        <!-- Footer -->
+        <div class="mt-12 text-center text-xs text-slate-600">
+            VetScan Pro -- Pathologie-Fallstudien | Nur fuer Lernzwecke
+        </div>
+    </div>`;
+}
+
+function renderCaseCard(c) {
+    const isCompleted = state.completedCases[c.id];
+    const score = state.caseScores[c.id];
+    const catColors = {
+        'innere-hund': 'badge-blue',
+        'innere-katze': 'badge-purple',
+        'chirurgie': 'badge-red',
+        'pferd': 'badge-orange',
+        'dermatologie': 'badge-teal',
+        'exoten': 'badge-green'
+    };
+
+    return `
+    <div class="case-card ${isCompleted ? 'completed-case' : ''}" data-case-id="${c.id}">
+        <div class="flex items-start justify-between mb-3">
+            <span class="text-2xl">${c.speciesIcon}</span>
+            <div class="flex items-center gap-2">
+                ${c.emergency ? '<span class="badge badge-red">NOTFALL</span>' : ''}
+                <span class="badge ${catColors[c.category] || 'badge-blue'}">${c.categoryLabel}</span>
+            </div>
+        </div>
+        <h3 class="font-semibold text-base mb-2">${c.title}</h3>
+        <p class="text-sm text-slate-400 mb-3">${c.signalment.rasse}, ${c.signalment.alter}, ${c.signalment.geschlecht}</p>
+        <div class="flex items-center justify-between">
+            <div class="difficulty-dots" title="Schwierigkeit: ${c.difficulty}/3">
+                ${[1,2,3].map(d => `<div class="difficulty-dot ${d <= c.difficulty ? 'filled' : ''}"></div>`).join('')}
+            </div>
+            ${isCompleted
+                ? `<span class="text-xs text-emerald-400 font-semibold">${score}% Score</span>`
+                : '<span class="text-xs text-slate-500">Noch nicht bearbeitet</span>'
+            }
+        </div>
+    </div>`;
+}
+
+function renderCase() {
+    const c = state.currentCase;
+    const step = state.currentStep;
+
+    return `
+    <div class="max-w-4xl mx-auto px-4 py-6 fade-in">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <button class="btn-secondary flex items-center gap-2" id="btn-back">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Zurueck
+            </button>
+            <div class="flex items-center gap-3">
+                ${c.emergency ? '<span class="badge badge-red">NOTFALL</span>' : ''}
+                <span class="text-2xl">${c.speciesIcon}</span>
+            </div>
+        </div>
+
+        <!-- Case Title -->
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold mb-1">${c.title}</h2>
+            <p class="text-slate-400">${c.signalment.rasse} | ${c.signalment.alter} | ${c.signalment.geschlecht} | ${c.signalment.gewicht}</p>
+        </div>
+
+        <!-- Stepper -->
+        <div class="stepper">
+            ${STEPS.map((s, i) => `
+                <div class="stepper-step ${i === step ? 'active' : ''} ${state.answeredSteps.includes(i) ? 'completed' : ''}">
+                    <div class="stepper-circle">
+                        ${state.answeredSteps.includes(i) ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>' : s.icon}
+                    </div>
+                    <div class="stepper-label">${s.label}</div>
+                </div>
+            `).join('')}
+        </div>
+
+        <!-- Step Content -->
+        <div class="step-card p-6 ${state.answeredSteps.includes(step) ? 'step-completed' : 'step-active'}">
+            ${renderStepContent(c, step)}
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex justify-between mt-6">
+            <button class="btn-secondary" id="btn-prev" ${step === 0 ? 'disabled style="opacity:0.3;pointer-events:none"' : ''}>
+                Zurueck
+            </button>
+            ${step < 4
+                ? `<button class="btn-primary" id="btn-next" ${!state.answeredSteps.includes(step) ? 'disabled' : ''}>
+                    Naechster Schritt
+                   </button>`
+                : `<button class="btn-success" id="btn-finish" ${!state.answeredSteps.includes(step) ? 'disabled' : ''}>
+                    Fallzusammenfassung
+                   </button>`
+            }
+        </div>
+    </div>`;
+}
+
+function renderStepContent(c, step) {
+    switch (step) {
+        case 0: return renderAnamnese(c);
+        case 1: return renderUntersuchung(c);
+        case 2: return renderDiagnostik(c);
+        case 3: return renderDiagnose(c);
+        case 4: return renderTherapie(c);
+    }
+}
+
+function renderAnamnese(c) {
+    const isAnswered = state.answeredSteps.includes(0);
+    return `
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            Anamnese
+        </h3>
+
+        <div class="info-box mb-4">
+            <p class="text-sm font-medium text-blue-300 mb-1">Besitzerbericht:</p>
+            <p class="text-sm">${c.anamnese.besitzer}</p>
+        </div>
+
+        <p class="text-sm text-slate-400 mb-3 font-medium">Stellen Sie gezielte Fragen an den Besitzer:</p>
+
+        <div class="space-y-2">
+            ${c.anamnese.fragen.map((f, i) => `
+                <div class="step-card p-3">
+                    <button class="w-full text-left text-sm font-medium text-blue-300 hover:text-blue-200 flex items-center justify-between frage-toggle" data-frage="${i}">
+                        <span>${f.q}</span>
+                        <svg class="w-4 h-4 transform transition-transform ${isAnswered ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div class="frage-antwort mt-2 text-sm text-slate-300 ${isAnswered ? '' : 'hidden'}" data-frage-content="${i}">
+                        <p class="pl-3 border-l-2 border-blue-500/30">${f.a}</p>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+
+        ${!isAnswered ? `
+        <div class="mt-4 text-center">
+            <button class="btn-primary" id="btn-anamnese-done">
+                Anamnese abgeschlossen -- weiter zur Untersuchung
+            </button>
+        </div>
+        ` : `
+        <div class="success-box mt-4">
+            <p class="text-sm text-emerald-300">Anamnese abgeschlossen. Gehen Sie weiter zur klinischen Untersuchung.</p>
+        </div>
+        `}
+    `;
+}
+
+function renderUntersuchung(c) {
+    const isAnswered = state.answeredSteps.includes(1);
+    const u = c.untersuchung;
+    const findings = [
+        { label: "Allgemeinbefinden", value: u.allgemein },
+        { label: "Gewicht", value: u.gewicht },
+        { label: "Temperatur", value: u.temperatur },
+        { label: "Herzfrequenz", value: u.herzfrequenz },
+        { label: "Atemfrequenz", value: u.atemfrequenz },
+        { label: "Schleimhaeute", value: u.schleimhaeute },
+        { label: "Hydratation", value: u.hydratation },
+        { label: "Lymphknoten", value: u.lymphknoten },
+        { label: "Abdomen", value: u.abdomen },
+        { label: "Sonstiges", value: u.sonstiges }
+    ];
+
+    return `
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Klinische Untersuchung
+        </h3>
+
+        <p class="text-sm text-slate-400 mb-4">Decken Sie die Untersuchungsbefunde Schritt fuer Schritt auf:</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${findings.map((f, i) => `
+                <div class="step-card p-3 befund-card" data-befund="${i}">
+                    <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">${f.label}</div>
+                    <div class="text-sm befund-value ${isAnswered ? '' : 'hidden'}" data-befund-value="${i}">${f.value}</div>
+                    ${!isAnswered ? `<div class="text-sm text-slate-600 italic befund-placeholder" data-befund-placeholder="${i}">Klicken zum Aufdecken</div>` : ''}
+                </div>
+            `).join('')}
+        </div>
+
+        ${!isAnswered ? `
+        <div class="mt-4 text-center">
+            <button class="btn-primary" id="btn-untersuchung-done">
+                Untersuchung abgeschlossen -- weiter zur Diagnostik
+            </button>
+        </div>
+        ` : `
+        <div class="success-box mt-4">
+            <p class="text-sm text-emerald-300">Untersuchungsbefunde vollstaendig erhoben.</p>
+        </div>
+        `}
+    `;
+}
+
+function renderDiagnostik(c) {
+    const isAnswered = state.answeredSteps.includes(2);
+
+    return `
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+            Diagnostik anfordern
+        </h3>
+
+        <p class="text-sm text-slate-400 mb-4">Welche diagnostischen Massnahmen ordnen Sie an? (Mehrfachauswahl moeglich)</p>
+
+        <div class="space-y-2">
+            ${c.diagnostikOptionen.map(opt => {
+                const isSelected = state.selectedDiagnostik.includes(opt.id);
+                let cls = 'option-btn';
+                if (isAnswered) {
+                    if (opt.correct && isSelected) cls += ' correct';
+                    else if (!opt.correct && isSelected) cls += ' incorrect';
+                    else if (opt.correct && !isSelected) cls += ' correct';
+                }
+                else if (isSelected) cls += ' selected';
+
+                return `
+                <button class="${cls}" data-diagnostik="${opt.id}" ${isAnswered ? 'disabled' : ''}>
+                    <div class="flex items-start gap-3">
+                        <div class="mt-0.5">
+                            ${isAnswered
+                                ? (opt.correct
+                                    ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                                    : (isSelected
+                                        ? '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                                        : '<span class="w-5 h-5 block"></span>'))
+                                : `<div class="w-5 h-5 border-2 rounded ${isSelected ? 'border-blue-400 bg-blue-400/20' : 'border-slate-500'} flex items-center justify-center">
+                                    ${isSelected ? '<svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+                                   </div>`
+                            }
+                        </div>
+                        <div>
+                            <span class="font-medium">${opt.label}</span>
+                            ${isAnswered ? `<p class="text-xs mt-1 ${opt.correct ? 'text-emerald-300' : 'text-slate-400'}">${opt.explanation}</p>` : ''}
+                        </div>
+                    </div>
+                </button>`;
+            }).join('')}
+        </div>
+
+        ${!isAnswered ? `
+        <div class="mt-4 text-center">
+            <button class="btn-primary" id="btn-diagnostik-done" ${state.selectedDiagnostik.length === 0 ? 'disabled' : ''}>
+                Diagnostik anfordern und Ergebnisse anzeigen
+            </button>
+        </div>
+        ` : `
+        ${renderLaborbefunde(c)}
+        `}
+    `;
+}
+
+function renderLaborbefunde(c) {
+    const lab = c.laborbefunde;
+    let html = '<div class="mt-6">';
+    html += '<h4 class="text-base font-semibold mb-3 text-blue-300">Laborergebnisse und Bildgebung</h4>';
+
+    // Haematologie
+    if (lab.haematologie.length > 0) {
+        html += '<div class="mb-4"><h5 class="text-sm font-semibold text-slate-300 mb-2">Haematologie</h5>';
+        html += renderLabTable(lab.haematologie);
+        html += '</div>';
+    }
+
+    // Chemie
+    if (lab.chemie.length > 0) {
+        html += '<div class="mb-4"><h5 class="text-sm font-semibold text-slate-300 mb-2">Klinische Chemie</h5>';
+        html += renderLabTable(lab.chemie);
+        html += '</div>';
+    }
+
+    // Harn
+    if (lab.harn && lab.harn.length > 0) {
+        html += '<div class="mb-4"><h5 class="text-sm font-semibold text-slate-300 mb-2">Harnuntersuchung</h5>';
+        html += renderLabTable(lab.harn);
+        html += '</div>';
+    }
+
+    // Bildgebung
+    if (lab.bildgebung) {
+        html += `<div class="info-box">
+            <p class="text-sm font-medium text-blue-300 mb-1">Bildgebung / Weitergehende Diagnostik:</p>
+            <p class="text-sm">${lab.bildgebung}</p>
+        </div>`;
+    }
+
+    html += `<div class="success-box">
+        <p class="text-sm text-emerald-300">Diagnostik abgeschlossen. Stellen Sie nun Ihre Diagnose.</p>
+    </div>`;
+
+    html += '</div>';
+    return html;
+}
+
+function renderLabTable(data) {
+    const statusClasses = {
+        'normal': 'lab-value-normal',
+        'high': 'lab-value-high',
+        'low': 'lab-value-low',
+        'critical': 'lab-value-critical'
+    };
+
+    return `
+    <table class="lab-table">
+        <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Wert</th>
+                <th>Referenz</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${data.map(row => `
+                <tr>
+                    <td>${row.param}</td>
+                    <td class="${statusClasses[row.status] || ''}">${row.wert}${row.status === 'critical' ? ' !' : row.status === 'high' ? ' &#8593;' : row.status === 'low' ? ' &#8595;' : ''}</td>
+                    <td class="text-slate-400 text-xs">${row.ref}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>`;
+}
+
+function renderDiagnose(c) {
+    const isAnswered = state.answeredSteps.includes(3);
+
+    return `
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Diagnose stellen
+        </h3>
+
+        <p class="text-sm text-slate-400 mb-4">Basierend auf Anamnese, Untersuchung und Diagnostik -- welche Diagnose stellen Sie?</p>
+
+        <div class="space-y-2">
+            ${c.diagnoseOptionen.map(opt => {
+                const isSelected = state.selectedDiagnose === opt.id;
+                let cls = 'option-btn';
+                if (isAnswered) {
+                    if (opt.correct) cls += ' correct';
+                    else if (isSelected && !opt.correct) cls += ' incorrect';
+                }
+                else if (isSelected) cls += ' selected';
+
+                return `
+                <button class="${cls}" data-diagnose="${opt.id}" ${isAnswered ? 'disabled' : ''}>
+                    <div class="flex items-start gap-3">
+                        <div class="mt-0.5">
+                            ${isAnswered
+                                ? (opt.correct
+                                    ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                                    : (isSelected
+                                        ? '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                                        : '<span class="w-5 h-5 block"></span>'))
+                                : `<div class="w-5 h-5 rounded-full border-2 ${isSelected ? 'border-blue-400 bg-blue-400/20' : 'border-slate-500'} flex items-center justify-center">
+                                    ${isSelected ? '<div class="w-2.5 h-2.5 rounded-full bg-blue-400"></div>' : ''}
+                                   </div>`
+                            }
+                        </div>
+                        <span class="font-medium">${opt.label}</span>
+                    </div>
+                </button>`;
+            }).join('')}
+        </div>
+
+        ${!isAnswered ? `
+        <div class="mt-4 text-center">
+            <button class="btn-primary" id="btn-diagnose-done" ${!state.selectedDiagnose ? 'disabled' : ''}>
+                Diagnose bestaetigen
+            </button>
+        </div>
+        ` : `
+        <div class="${c.diagnoseOptionen.find(o => o.id === state.selectedDiagnose)?.correct ? 'success-box' : 'danger-box'} mt-4">
+            <p class="text-sm font-medium mb-2">${c.diagnoseOptionen.find(o => o.id === state.selectedDiagnose)?.correct ? 'Korrekte Diagnose!' : 'Leider nicht die optimale Diagnose.'}</p>
+            <p class="text-sm">${c.diagnoseErklaerung}</p>
+        </div>
+        `}
+    `;
+}
+
+function renderTherapie(c) {
+    const isAnswered = state.answeredSteps.includes(4);
+
+    return `
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+            Therapieplan erstellen
+        </h3>
+
+        <p class="text-sm text-slate-400 mb-4">Welche therapeutischen Massnahmen leiten Sie ein? (Mehrfachauswahl)</p>
+
+        <div class="space-y-2">
+            ${c.therapieOptionen.map(opt => {
+                const isSelected = state.selectedTherapie.includes(opt.id);
+                let cls = 'option-btn';
+                if (isAnswered) {
+                    if (opt.correct && isSelected) cls += ' correct';
+                    else if (!opt.correct && isSelected) cls += ' incorrect';
+                    else if (opt.correct && !isSelected) cls += ' correct';
+                }
+                else if (isSelected) cls += ' selected';
+
+                return `
+                <button class="${cls}" data-therapie="${opt.id}" ${isAnswered ? 'disabled' : ''}>
+                    <div class="flex items-start gap-3">
+                        <div class="mt-0.5">
+                            ${isAnswered
+                                ? (opt.correct
+                                    ? '<svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                                    : (isSelected
+                                        ? '<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>'
+                                        : '<span class="w-5 h-5 block"></span>'))
+                                : `<div class="w-5 h-5 border-2 rounded ${isSelected ? 'border-blue-400 bg-blue-400/20' : 'border-slate-500'} flex items-center justify-center">
+                                    ${isSelected ? '<svg class="w-3 h-3 text-blue-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>' : ''}
+                                   </div>`
+                            }
+                        </div>
+                        <div>
+                            <span class="font-medium">${opt.label}</span>
+                            ${isAnswered ? `<p class="text-xs mt-1 ${opt.correct ? 'text-emerald-300' : 'text-slate-400'}">${opt.explanation}</p>` : ''}
+                        </div>
+                    </div>
+                </button>`;
+            }).join('')}
+        </div>
+
+        ${!isAnswered ? `
+        <div class="mt-4 text-center">
+            <button class="btn-primary" id="btn-therapie-done" ${state.selectedTherapie.length === 0 ? 'disabled' : ''}>
+                Therapieplan bestaetigen
+            </button>
+        </div>
+        ` : `
+        <div class="success-box mt-4">
+            <p class="text-sm text-emerald-300">Therapieplan erstellt. Sehen Sie sich die Fallzusammenfassung an.</p>
+        </div>
+        `}
+    `;
+}
+
+function renderSummary() {
+    const c = state.currentCase;
+    const pct = state.maxScore > 0 ? Math.round((state.score / state.maxScore) * 100) : 0;
+    const circumference = 2 * Math.PI * 52;
+    const dashOffset = circumference - (pct / 100) * circumference;
+
+    let scoreColor = '#22c55e';
+    if (pct < 50) scoreColor = '#dc2626';
+    else if (pct < 75) scoreColor = '#f59e0b';
+
+    return `
+    <div class="max-w-4xl mx-auto px-4 py-6 fade-in">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold mb-2">Fallzusammenfassung</h2>
+            <p class="text-slate-400">${c.title}</p>
+        </div>
+
+        <!-- Score -->
+        <div class="flex justify-center mb-8">
+            <div class="score-ring">
+                <svg viewBox="0 0 120 120">
+                    <circle class="bg-ring" cx="60" cy="60" r="52"/>
+                    <circle class="score-arc" cx="60" cy="60" r="52"
+                        stroke="${scoreColor}"
+                        stroke-dasharray="${circumference}"
+                        stroke-dashoffset="${dashOffset}"/>
+                </svg>
+                <div class="text-center">
+                    <div class="text-3xl font-bold" style="color: ${scoreColor}">${pct}%</div>
+                    <div class="text-xs text-slate-400">${state.score}/${state.maxScore} Pkt.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-6">
+            ${pct >= 90
+                ? '<span class="badge badge-green text-base px-4 py-1">Hervorragend!</span>'
+                : pct >= 75
+                    ? '<span class="badge badge-blue text-base px-4 py-1">Gut gemacht!</span>'
+                    : pct >= 50
+                        ? '<span class="badge badge-orange text-base px-4 py-1">Solide Leistung</span>'
+                        : '<span class="badge badge-red text-base px-4 py-1">Wiederholung empfohlen</span>'
+            }
+        </div>
+
+        <!-- Zusammenfassung -->
+        <div class="step-card p-6 mb-6">
+            <h3 class="text-base font-semibold mb-3">Klinische Zusammenfassung</h3>
+            <p class="text-sm text-slate-300 leading-relaxed">${c.zusammenfassung}</p>
+        </div>
+
+        <!-- Lernziele -->
+        <div class="step-card p-6 mb-6">
+            <h3 class="text-base font-semibold mb-3">Lernziele dieses Falls</h3>
+            <ul class="space-y-2">
+                ${c.lernziele.map(lz => `
+                    <li class="flex items-start gap-2 text-sm">
+                        <svg class="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+                        <span class="text-slate-300">${lz}</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-center gap-4 mt-8">
+            <button class="btn-secondary" id="btn-retry">
+                Fall wiederholen
+            </button>
+            <button class="btn-primary" id="btn-overview">
+                Zurueck zur Falluebersicht
+            </button>
+        </div>
+    </div>`;
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function calculateScore() {
+    const c = state.currentCase;
+    let score = 0;
+    let maxScore = 0;
+
+    // Diagnostik (each correct selection = +2, each incorrect = -1)
+    const correctDiag = c.diagnostikOptionen.filter(o => o.correct);
+    const incorrectDiag = c.diagnostikOptionen.filter(o => !o.correct);
+    maxScore += correctDiag.length * 2;
+
+    correctDiag.forEach(o => {
+        if (state.selectedDiagnostik.includes(o.id)) score += 2;
+    });
+    incorrectDiag.forEach(o => {
+        if (state.selectedDiagnostik.includes(o.id)) score -= 1;
+    });
+
+    // Diagnose (+5 if correct)
+    maxScore += 5;
+    const correctDiagnose = c.diagnoseOptionen.find(o => o.correct);
+    if (state.selectedDiagnose === correctDiagnose?.id) score += 5;
+
+    // Therapie (each correct = +2, incorrect = -1)
+    const correctTher = c.therapieOptionen.filter(o => o.correct);
+    const incorrectTher = c.therapieOptionen.filter(o => !o.correct);
+    maxScore += correctTher.length * 2;
+
+    correctTher.forEach(o => {
+        if (state.selectedTherapie.includes(o.id)) score += 2;
+    });
+    incorrectTher.forEach(o => {
+        if (state.selectedTherapie.includes(o.id)) score -= 1;
+    });
+
+    // Minimum 0
+    score = Math.max(0, score);
+
+    state.score = score;
+    state.maxScore = maxScore;
+}
+
+// ============================================================
+// EVENT BINDING
+// ============================================================
+function bindEvents() {
+    // Overview: Filter chips
+    document.querySelectorAll('[data-filter]').forEach(el => {
+        el.addEventListener('click', () => {
+            state.activeFilter = el.dataset.filter;
+            render();
+        });
+    });
+
+    document.querySelectorAll('[data-difficulty]').forEach(el => {
+        el.addEventListener('click', () => {
+            state.activeDifficulty = el.dataset.difficulty;
+            render();
+        });
+    });
+
+    // Overview: Case cards
+    document.querySelectorAll('[data-case-id]').forEach(el => {
+        el.addEventListener('click', () => {
+            const caseId = parseInt(el.dataset.caseId);
+            startCase(caseId);
+        });
+    });
+
+    // Case: Back button
+    const btnBack = document.getElementById('btn-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', () => {
+            state.screen = 'overview';
+            render();
+        });
+    }
+
+    // Case: Navigation
+    const btnPrev = document.getElementById('btn-prev');
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            if (state.currentStep > 0) {
+                state.currentStep--;
+                render();
+            }
+        });
+    }
+
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            if (state.currentStep < 4 && state.answeredSteps.includes(state.currentStep)) {
+                state.currentStep++;
+                render();
+            }
+        });
+    }
+
+    const btnFinish = document.getElementById('btn-finish');
+    if (btnFinish) {
+        btnFinish.addEventListener('click', () => {
+            calculateScore();
+            const pct = state.maxScore > 0 ? Math.round((state.score / state.maxScore) * 100) : 0;
+            state.completedCases[state.currentCase.id] = true;
+            state.caseScores[state.currentCase.id] = pct;
+            localStorage.setItem('pathoCases_completed', JSON.stringify(state.completedCases));
+            localStorage.setItem('pathoCases_scores', JSON.stringify(state.caseScores));
+            state.screen = 'summary';
+            render();
+        });
+    }
+
+    // Step: Anamnese
+    document.querySelectorAll('.frage-toggle').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = el.dataset.frage;
+            const content = document.querySelector(`[data-frage-content="${idx}"]`);
+            if (content) content.classList.toggle('hidden');
+        });
+    });
+
+    const btnAnamneseDone = document.getElementById('btn-anamnese-done');
+    if (btnAnamneseDone) {
+        btnAnamneseDone.addEventListener('click', () => {
+            state.answeredSteps.push(0);
+            render();
+        });
+    }
+
+    // Step: Untersuchung
+    document.querySelectorAll('.befund-card').forEach(el => {
+        el.addEventListener('click', () => {
+            if (state.answeredSteps.includes(1)) return;
+            const idx = el.dataset.befund;
+            const val = document.querySelector(`[data-befund-value="${idx}"]`);
+            const ph = document.querySelector(`[data-befund-placeholder="${idx}"]`);
+            if (val) val.classList.remove('hidden');
+            if (ph) ph.classList.add('hidden');
+        });
+    });
+
+    const btnUntersuchungDone = document.getElementById('btn-untersuchung-done');
+    if (btnUntersuchungDone) {
+        btnUntersuchungDone.addEventListener('click', () => {
+            state.answeredSteps.push(1);
+            render();
+        });
+    }
+
+    // Step: Diagnostik
+    document.querySelectorAll('[data-diagnostik]').forEach(el => {
+        el.addEventListener('click', () => {
+            if (state.answeredSteps.includes(2)) return;
+            const id = el.dataset.diagnostik;
+            const idx = state.selectedDiagnostik.indexOf(id);
+            if (idx >= 0) state.selectedDiagnostik.splice(idx, 1);
+            else state.selectedDiagnostik.push(id);
+            render();
+        });
+    });
+
+    const btnDiagnostikDone = document.getElementById('btn-diagnostik-done');
+    if (btnDiagnostikDone) {
+        btnDiagnostikDone.addEventListener('click', () => {
+            state.answeredSteps.push(2);
+            render();
+        });
+    }
+
+    // Step: Diagnose
+    document.querySelectorAll('[data-diagnose]').forEach(el => {
+        el.addEventListener('click', () => {
+            if (state.answeredSteps.includes(3)) return;
+            state.selectedDiagnose = el.dataset.diagnose;
+            render();
+        });
+    });
+
+    const btnDiagnoseDone = document.getElementById('btn-diagnose-done');
+    if (btnDiagnoseDone) {
+        btnDiagnoseDone.addEventListener('click', () => {
+            state.answeredSteps.push(3);
+            render();
+        });
+    }
+
+    // Step: Therapie
+    document.querySelectorAll('[data-therapie]').forEach(el => {
+        el.addEventListener('click', () => {
+            if (state.answeredSteps.includes(4)) return;
+            const id = el.dataset.therapie;
+            const idx = state.selectedTherapie.indexOf(id);
+            if (idx >= 0) state.selectedTherapie.splice(idx, 1);
+            else state.selectedTherapie.push(id);
+            render();
+        });
+    });
+
+    const btnTherapieDone = document.getElementById('btn-therapie-done');
+    if (btnTherapieDone) {
+        btnTherapieDone.addEventListener('click', () => {
+            state.answeredSteps.push(4);
+            render();
+        });
+    }
+
+    // Summary buttons
+    const btnRetry = document.getElementById('btn-retry');
+    if (btnRetry) {
+        btnRetry.addEventListener('click', () => {
+            startCase(state.currentCase.id);
+        });
+    }
+
+    const btnOverview = document.getElementById('btn-overview');
+    if (btnOverview) {
+        btnOverview.addEventListener('click', () => {
+            state.screen = 'overview';
+            render();
+        });
+    }
+}
+
+// ============================================================
+// CASE MANAGEMENT
+// ============================================================
+function startCase(caseId) {
+    const c = CASES.find(c => c.id === caseId);
+    if (!c) return;
+    state.currentCase = c;
+    state.currentStep = 0;
+    state.selectedDiagnostik = [];
+    state.selectedDiagnose = null;
+    state.selectedTherapie = [];
+    state.answeredSteps = [];
+    state.score = 0;
+    state.maxScore = 0;
+    state.screen = 'case';
+    window.scrollTo(0, 0);
+    render();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+render();
+</script>
+</body>
+</html>
