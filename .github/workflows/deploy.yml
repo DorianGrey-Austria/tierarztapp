@@ -62,6 +62,9 @@ jobs:
         cp vetscan-quick-reference.html deploy/ 2>/dev/null || true
         cp vetscan-glossary.html deploy/ 2>/dev/null || true
 
+        # 3D Anatomie-Viewer (Hyper3D Rodin models)
+        cp vetscan-3d-viewer.html deploy/ 2>/dev/null || true
+
         # Copy JS directory (shared module + Version 9)
         cp -r js deploy/ 2>/dev/null || true
         
@@ -153,14 +156,14 @@ jobs:
                 <p class="subtitle">Wähle deine Spielversion:</p>
                 
                 <div class="version-grid">
-                    <div class="version-card" style="opacity: 0.6; cursor: not-allowed; background: #e5e7eb;">
-                        <div style="position: absolute; top: -10px; right: 10px; background: #6b7280; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🚧 IN ENTWICKLUNG</div>
-                        <h3>🏥 VetScan Pro 2.0 BMAD</h3>
-                        <p>Professional Multi-Species 3D Medical Simulation mit 20 Tierarten. Assets werden noch generiert.</p>
-                        <small style="color: #6b7280;">Coming Soon - 3D Models in Bearbeitung</small>
-                    </div>
-                    
-                    <a href="vetscan-all-animals-showcase.html" class="version-card recommended" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: 3px solid #22c55e; position: relative;">
+                    <a href="vetscan-3d-viewer.html" class="version-card recommended" style="background: linear-gradient(135deg, #059669 0%, #0891b2 100%); border: 3px solid #10b981; position: relative;">
+                        <div style="position: absolute; top: -10px; right: 10px; background: #059669; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">NEU!</div>
+                        <h3>3D Anatomie-Viewer</h3>
+                        <p>30 KI-generierte Tiermodelle (Hyper3D Rodin). Interaktiv mit Roentgen, Wireframe und Waermebild.</p>
+                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Three.js | 30 Spezies</small>
+                    </a>
+
+                    <a href="vetscan-all-animals-showcase.html" class="version-card" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: 3px solid #22c55e; position: relative;">
                         <div style="position: absolute; top: -10px; right: 10px; background: #16a34a; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔥 AKTUELL</div>
                         <h3>🐾 VetScan Pro 9.0</h3>
                         <p>Realistische 3D-Tiere mit Blender MCP Integration. Funktioniert perfekt!</p>
@@ -242,7 +245,13 @@ jobs:
             ExpiresByType image/jpeg "access plus 1 year"
             ExpiresByType image/gif "access plus 1 year"
             ExpiresByType image/svg+xml "access plus 1 year"
+            ExpiresByType model/gltf-binary "access plus 1 year"
+            ExpiresByType application/octet-stream "access plus 1 month"
         </ifModule>
+
+        # MIME types for 3D models
+        AddType model/gltf-binary .glb
+        AddType model/gltf+json .gltf
         
         # Security headers
         Header always set X-Content-Type-Options nosniff

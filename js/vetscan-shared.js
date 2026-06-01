@@ -24,6 +24,7 @@
     { id: 'anatomy-layers', name: 'Anatomie-Atlas', file: 'vetscan-anatomy-layers.html', icon: '\u{1F9B4}', category: 'Grundlagen' },
     { id: 'quick-reference', name: 'Normalwerte', file: 'vetscan-quick-reference.html', icon: '\u{1F4CA}', category: 'Referenz' },
     { id: 'glossary', name: 'Glossar', file: 'vetscan-glossary.html', icon: '\u{1F4D6}', category: 'Referenz' },
+    { id: '3d-viewer', name: '3D Anatomie-Viewer', file: 'vetscan-3d-viewer.html', icon: '\u{1F9B4}', category: '3D' },
     { id: 'dashboard', name: 'Dashboard', file: 'vetscan-dashboard.html', icon: '\u{1F3E0}', category: 'System' },
   ];
 

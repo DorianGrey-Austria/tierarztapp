@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - 3D Anatomie-Viewer</title>
+<meta name="description" content="Interaktiver 3D-Viewer fuer veterinaeranatomische Modelle - Hyper3D Rodin generiert">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --vs-primary:#2563eb;--vs-primary-dark:#1d4ed8;
+  --vs-bg:#0f172a;--vs-surface:#1e293b;--vs-surface-2:#334155;
+  --vs-text:#f1f5f9;--vs-text-muted:#94a3b8;
+  --vs-accent:#10b981;--vs-danger:#ef4444;--vs-warning:#f59e0b;
+  --vs-radius:12px;--vs-shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--vs-bg);color:var(--vs-text)}
+
+/* Layout */
+.app{display:grid;grid-template-columns:280px 1fr;grid-template-rows:56px 1fr 48px;height:100vh}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--vs-surface);border-bottom:1px solid var(--vs-surface-2);z-index:10}
+.header h1{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.header h1 span{color:var(--vs-accent)}
+.sidebar{grid-row:2/4;overflow-y:auto;background:var(--vs-surface);border-right:1px solid var(--vs-surface-2);padding:12px}
+.viewport{position:relative;overflow:hidden;background:var(--vs-bg)}
+.statusbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--vs-surface);border-top:1px solid var(--vs-surface-2);font-size:0.75rem;color:var(--vs-text-muted)}
+
+/* Sidebar */
+.sidebar h3{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--vs-text-muted);margin:16px 0 8px;padding:0 4px}
+.sidebar h3:first-child{margin-top:4px}
+.species-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--vs-text);cursor:pointer;font-size:0.85rem;text-align:left;transition:all 0.15s}
+.species-btn:hover{background:var(--vs-surface-2)}
+.species-btn.active{background:var(--vs-primary);border-color:var(--vs-primary-dark);font-weight:600}
+.species-btn .icon{font-size:1.3rem;width:28px;text-align:center;flex-shrink:0}
+.species-btn .info{display:flex;flex-direction:column}
+.species-btn .info small{font-size:0.7rem;color:var(--vs-text-muted);margin-top:1px}
+.species-btn.active .info small{color:rgba(255,255,255,0.7)}
+
+/* Viewport controls */
+.viewport-controls{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.ctrl-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--vs-surface-2);background:rgba(30,41,59,0.9);color:var(--vs-text);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;backdrop-filter:blur(8px)}
+.ctrl-btn:hover{background:var(--vs-primary);border-color:var(--vs-primary)}
+.ctrl-btn.active{background:var(--vs-accent);border-color:var(--vs-accent);color:#fff}
+
+/* Info panel */
+.info-panel{position:absolute;bottom:16px;left:16px;right:16px;background:rgba(30,41,59,0.92);backdrop-filter:blur(12px);border:1px solid var(--vs-surface-2);border-radius:var(--vs-radius);padding:16px 20px;z-index:5;display:none}
+.info-panel.visible{display:block}
+.info-panel h2{font-size:1rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.info-panel p{font-size:0.82rem;color:var(--vs-text-muted);line-height:1.5}
+.info-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.info-tag{font-size:0.7rem;padding:3px 10px;border-radius:20px;background:var(--vs-surface-2);color:var(--vs-text-muted)}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--vs-bg);z-index:20;transition:opacity 0.4s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:48px;height:48px;border:3px solid var(--vs-surface-2);border-top-color:var(--vs-primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;color:var(--vs-text-muted);font-size:0.85rem}
+
+/* View mode selector */
+.view-modes{position:absolute;top:16px;left:16px;display:flex;gap:4px;z-index:5;background:rgba(30,41,59,0.9);border-radius:10px;padding:4px;backdrop-filter:blur(8px);border:1px solid var(--vs-surface-2)}
+.view-mode-btn{padding:6px 14px;border:none;border-radius:7px;background:transparent;color:var(--vs-text-muted);cursor:pointer;font-size:0.78rem;font-weight:500;transition:all 0.15s}
+.view-mode-btn:hover{color:var(--vs-text)}
+.view-mode-btn.active{background:var(--vs-primary);color:#fff}
+
+/* Responsive */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;grid-template-rows:56px auto 1fr 48px}
+  .sidebar{grid-row:2;grid-column:1;display:flex;overflow-x:auto;gap:6px;padding:8px;border-right:none;border-bottom:1px solid var(--vs-surface-2)}
+  .sidebar h3{display:none}
+  .species-btn{white-space:nowrap;min-width:fit-content;padding:8px 12px}
+  .species-btn .info small{display:none}
+  .viewport{grid-row:3}
+}
+
+/* Accessibility */
+:focus-visible{outline:2px solid var(--vs-primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+
+/* Screenshot hint */
+.screenshot-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--vs-text-muted);pointer-events:none}
+.screenshot-hint .big-icon{font-size:4rem;margin-bottom:16px;opacity:0.3}
+.screenshot-hint p{font-size:0.9rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <h1><span>&#x1F9B4;</span> VetScan 3D Anatomie-Viewer</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <a href="vetscan-version-selector.html" style="color:var(--vs-text-muted);text-decoration:none;font-size:0.8rem">Alle Werkzeuge</a>
+    </div>
+  </header>
+
+  <!-- Sidebar - Species Selection -->
+  <nav class="sidebar" id="sidebar" role="navigation" aria-label="Tierauswahl"></nav>
+
+  <!-- 3D Viewport -->
+  <main class="viewport" id="viewport">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loaderText">3D-Viewer wird geladen...</div>
+    </div>
+
+    <div class="screenshot-hint" id="placeholder">
+      <div class="big-icon">&#x1F43E;</div>
+      <p>Waehle ein Tier aus der Liste</p>
+    </div>
+
+    <!-- View mode selector -->
+    <div class="view-modes" id="viewModes" style="display:none">
+      <button class="view-mode-btn active" data-mode="normal" title="Normales Modell">Standard</button>
+      <button class="view-mode-btn" data-mode="wireframe" title="Drahtgitter">Wireframe</button>
+      <button class="view-mode-btn" data-mode="xray" title="Roentgen-Simulation">Roentgen</button>
+      <button class="view-mode-btn" data-mode="thermal" title="Waermebilddarstellung">Thermal</button>
+    </div>
+
+    <!-- Viewport controls -->
+    <div class="viewport-controls" id="viewControls" style="display:none">
+      <button class="ctrl-btn" id="btnAutoRotate" title="Auto-Rotation (R)">&#x1F504;</button>
+      <button class="ctrl-btn" id="btnReset" title="Ansicht zuruecksetzen (0)">&#x1F3AF;</button>
+      <button class="ctrl-btn" id="btnGrid" title="Gitter ein/aus (G)">&#x25A6;</button>
+      <button class="ctrl-btn" id="btnScreenshot" title="Screenshot (S)">&#x1F4F7;</button>
+      <button class="ctrl-btn" id="btnFullscreen" title="Vollbild (F)">&#x26F6;</button>
+    </div>
+
+    <!-- Info panel -->
+    <div class="info-panel" id="infoPanel">
+      <h2 id="infoTitle"></h2>
+      <p id="infoDesc"></p>
+      <div class="info-tags" id="infoTags"></div>
+    </div>
+  </main>
+
+  <!-- Status bar -->
+  <footer class="statusbar">
+    <span id="statusLeft">Bereit</span>
+    <span id="statusRight">Hyper3D Rodin Modelle | Three.js r170</span>
+  </footer>
+</div>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r170/three.min.js"></script>
+<script>
+// GLTFLoader inline (minimal version for CDN three.js)
+</script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// === Species Data ===
+const SPECIES = [
+  // Kleintiere
+  { id:'dog', name:'Hund (Golden Retriever)', latin:'Canis lupus familiaris', file:'assets/models/animals/dog/dog_golden_retriever.glb', icon:'&#x1F415;', category:'Kleintiere', tags:['Haustier','Fleischfresser','haeufig'] },
+  { id:'german-shepherd', name:'Dt. Schaeferhund', latin:'Canis lupus familiaris', file:'assets/models/animals/german-shepherd/german_shepherd.glb', icon:'&#x1F415;', category:'Kleintiere', tags:['Haustier','Arbeitshund','gross'] },
+  { id:'cat', name:'Katze', latin:'Felis catus', file:'assets/models/animals/cat/cat_domestic.glb', icon:'&#x1F408;', category:'Kleintiere', tags:['Haustier','Fleischfresser','haeufig'] },
+  { id:'rabbit', name:'Kaninchen', latin:'Oryctolagus cuniculus', file:'assets/models/animals/rabbit/rabbit.glb', icon:'&#x1F407;', category:'Kleintiere', tags:['Haustier','Pflanzenfresser','Lagomorph'] },
+  { id:'hamster', name:'Hamster', latin:'Mesocricetus auratus', file:'assets/models/animals/hamster/hamster.glb', icon:'&#x1F439;', category:'Kleintiere', tags:['Nager','Allesfresser','klein'] },
+  { id:'guinea-pig', name:'Meerschweinchen', latin:'Cavia porcellus', file:'assets/models/animals/guinea-pig/guinea_pig.glb', icon:'&#x1F439;', category:'Kleintiere', tags:['Nager','Pflanzenfresser','Vitamin C'] },
+  { id:'ferret', name:'Frettchen', latin:'Mustela putorius furo', file:'assets/models/animals/ferret/ferret.glb', icon:'&#x1F9A6;', category:'Kleintiere', tags:['Fleischfresser','Mustelidae'] },
+  { id:'rat', name:'Ratte', latin:'Rattus norvegicus', file:'assets/models/animals/rat/rat.glb', icon:'&#x1F400;', category:'Kleintiere', tags:['Labor','Nager','Allesfresser'] },
+  { id:'chinchilla', name:'Chinchilla', latin:'Chinchilla lanigera', file:'assets/models/animals/chinchilla/chinchilla.glb', icon:'&#x1F401;', category:'Kleintiere', tags:['Nager','Pflanzenfresser','exotisch'] },
+
+  // Grosstiere
+  { id:'horse', name:'Pferd', latin:'Equus caballus', file:'assets/models/animals/horse/horse.glb', icon:'&#x1F40E;', category:'Grosstiere', tags:['Equide','Pflanzenfresser','Nutztier'] },
+  { id:'cow', name:'Rind', latin:'Bos taurus', file:'assets/models/animals/cow/cow.glb', icon:'&#x1F404;', category:'Grosstiere', tags:['Wiederkaeuer','Nutztier','Milchvieh'] },
+  { id:'pig', name:'Schwein', latin:'Sus scrofa domesticus', file:'assets/models/animals/pig/pig.glb', icon:'&#x1F416;', category:'Grosstiere', tags:['Allesfresser','Nutztier'] },
+  { id:'goat', name:'Ziege', latin:'Capra aegagrus hircus', file:'assets/models/animals/goat/goat.glb', icon:'&#x1F410;', category:'Grosstiere', tags:['Wiederkaeuer','Nutztier','klein'] },
+  { id:'sheep', name:'Schaf', latin:'Ovis aries', file:'assets/models/animals/sheep/sheep.glb', icon:'&#x1F411;', category:'Grosstiere', tags:['Wiederkaeuer','Nutztier','Wolle'] },
+  { id:'donkey', name:'Esel', latin:'Equus asinus', file:'assets/models/animals/donkey/donkey.glb', icon:'&#x1F434;', category:'Grosstiere', tags:['Equide','Pflanzenfresser'] },
+  { id:'alpaca', name:'Alpaka', latin:'Vicugna pacos', file:'assets/models/animals/alpaca/alpaca.glb', icon:'&#x1F999;', category:'Grosstiere', tags:['Kamelide','Pflanzenfresser','Neuweltkamelid'] },
+
+  // Voegel
+  { id:'parrot', name:'Papagei', latin:'Psittacidae', file:'assets/models/animals/parrot/parrot.glb', icon:'&#x1F99C;', category:'Voegel', tags:['Vogel','Exot','Psittacidae'] },
+  { id:'budgerigar', name:'Wellensittich', latin:'Melopsittacus undulatus', file:'assets/models/animals/budgerigar/budgerigar.glb', icon:'&#x1F426;', category:'Voegel', tags:['Vogel','Sittich','klein'] },
+
+  // Reptilien & Exoten
+  { id:'snake', name:'Schlange', latin:'Serpentes', file:'assets/models/animals/snake/snake.glb', icon:'&#x1F40D;', category:'Reptilien', tags:['Reptil','Exot','wechselwarm'] },
+  { id:'turtle', name:'Schildkroete', latin:'Testudines', file:'assets/models/animals/turtle/turtle.glb', icon:'&#x1F422;', category:'Reptilien', tags:['Reptil','Panzer','langlebig'] },
+  { id:'iguana', name:'Leguan', latin:'Iguana iguana', file:'assets/models/animals/iguana/iguana.glb', icon:'&#x1F98E;', category:'Reptilien', tags:['Reptil','Pflanzenfresser','Exot'] },
+  { id:'hedgehog', name:'Igel', latin:'Erinaceus europaeus', file:'assets/models/animals/hedgehog/hedgehog.glb', icon:'&#x1F994;', category:'Reptilien', tags:['Insektenfresser','Stacheln','Winterschlaf'] },
+  { id:'fish', name:'Fisch', latin:'Actinopterygii', file:'assets/models/animals/fish/fish.glb', icon:'&#x1F41F;', category:'Reptilien', tags:['Aquatisch','Kiemen','Schuppen'] },
+
+  // Medizinische Varianten
+  { id:'dog-xray', name:'Hund Roentgen', latin:'Roentgenvisualisierung', file:'assets/models/animals/dog-xray/dog_xray.glb', icon:'&#x2622;', category:'Medizinisch', tags:['Roentgen','Skelett','Diagnostik'] },
+  { id:'dog-skeleton', name:'Hund Skelett', latin:'Osteologie', file:'assets/models/animals/dog-skeleton/dog_skeleton.glb', icon:'&#x1F9B4;', category:'Medizinisch', tags:['Skelett','Anatomie','Knochen'] },
+  { id:'cat-skeleton', name:'Katze Skelett', latin:'Osteologie', file:'assets/models/animals/cat-skeleton/cat_skeleton.glb', icon:'&#x1F9B4;', category:'Medizinisch', tags:['Skelett','Anatomie','Knochen'] },
+  { id:'horse-skeleton', name:'Pferd Skelett', latin:'Osteologie', file:'assets/models/animals/horse-skeleton/horse_skeleton.glb', icon:'&#x1F9B4;', category:'Medizinisch', tags:['Skelett','Anatomie','Knochen'] },
+  { id:'cow-anatomy', name:'Rind Anatomie', latin:'Organtopographie', file:'assets/models/animals/cow-anatomy/cow_anatomy.glb', icon:'&#x1F52C;', category:'Medizinisch', tags:['Organe','Verdauung','Wiederkaeuer'] },
+  { id:'cat-xray', name:'Katze Roentgen', latin:'Roentgenvisualisierung', file:'assets/models/animals/cat-xray/cat_xray.glb', icon:'&#x2622;', category:'Medizinisch', tags:['Roentgen','Skelett','Diagnostik'] },
+  { id:'horse-anatomy', name:'Pferd Anatomie', latin:'Organtopographie', file:'assets/models/animals/horse-anatomy/horse_anatomy.glb', icon:'&#x1F52C;', category:'Medizinisch', tags:['Organe','Anatomie','Equide'] },
+];
+
+// === App State ===
+const state = {
+  currentSpecies: null,
+  currentModel: null,
+  viewMode: 'normal',
+  autoRotate: true,
+  showGrid: true,
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  loader: new GLTFLoader(),
+  gridHelper: null,
+  animationId: null,
+};
+
+// === Build Sidebar ===
+function buildSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const categories = {};
+  SPECIES.forEach(s => {
+    if (!categories[s.category]) categories[s.category] = [];
+    categories[s.category].push(s);
+  });
+
+  let html = '';
+  for (const [cat, species] of Object.entries(categories)) {
+    html += `<h3>${cat} (${species.length})</h3>`;
+    species.forEach(s => {
+      html += `<button class="species-btn" data-id="${s.id}" title="${s.latin}">
+        <span class="icon">${s.icon}</span>
+        <span class="info"><span>${s.name}</span><small>${s.latin}</small></span>
+      </button>`;
+    });
+  }
+  sidebar.innerHTML = html;
+
+  sidebar.querySelectorAll('.species-btn').forEach(btn => {
+    btn.addEventListener('click', () => loadSpecies(btn.dataset.id));
+  });
+}
+
+// === Three.js Setup ===
+function initThreeJS() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  // Scene
+  state.scene = new THREE.Scene();
+  state.scene.background = new THREE.Color(0x0f172a);
+
+  // Camera
+  state.camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 100);
+  state.camera.position.set(3, 2, 3);
+
+  // Renderer
+  state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  state.renderer.setSize(rect.width, rect.height);
+  state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.2;
+  state.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(state.renderer.domElement);
+
+  // Controls
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.08;
+  state.controls.autoRotate = true;
+  state.controls.autoRotateSpeed = 1.5;
+  state.controls.minDistance = 0.5;
+  state.controls.maxDistance = 20;
+
+  // Lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  state.scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(5, 8, 5);
+  dirLight.castShadow = false;
+  state.scene.add(dirLight);
+
+  const fillLight = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fillLight.position.set(-3, 2, -5);
+  state.scene.add(fillLight);
+
+  const rimLight = new THREE.DirectionalLight(0xff8844, 0.3);
+  rimLight.position.set(0, -2, -3);
+  state.scene.add(rimLight);
+
+  // Grid
+  state.gridHelper = new THREE.GridHelper(10, 20, 0x334155, 0x1e293b);
+  state.scene.add(state.gridHelper);
+
+  // Resize handler
+  const ro = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      state.camera.aspect = width / height;
+      state.camera.updateProjectionMatrix();
+      state.renderer.setSize(width, height);
+    }
+  });
+  ro.observe(container);
+
+  // Animation loop
+  function animate() {
+    state.animationId = requestAnimationFrame(animate);
+    state.controls.update();
+    state.renderer.render(state.scene, state.camera);
+  }
+  animate();
+
+  // Hide loader
+  document.getElementById('loader').classList.add('hidden');
+  document.getElementById('statusLeft').textContent = `${SPECIES.length} Tiermodelle verfuegbar`;
+}
+
+// === Load Species ===
+function loadSpecies(speciesId) {
+  const species = SPECIES.find(s => s.id === speciesId);
+  if (!species) return;
+
+  state.currentSpecies = species;
+
+  // Update sidebar active state
+  document.querySelectorAll('.species-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.id === speciesId);
+  });
+
+  // Show controls
+  document.getElementById('viewModes').style.display = 'flex';
+  document.getElementById('viewControls').style.display = 'flex';
+  document.getElementById('placeholder').style.display = 'none';
+
+  // Show loader
+  const loader = document.getElementById('loader');
+  loader.classList.remove('hidden');
+  document.getElementById('loaderText').textContent = `${species.name} wird geladen...`;
+
+  // Remove old model
+  if (state.currentModel) {
+    state.scene.remove(state.currentModel);
+    state.currentModel.traverse(child => {
+      if (child.isMesh) {
+        child.geometry.dispose();
+        if (child.material.map) child.material.map.dispose();
+        child.material.dispose();
+      }
+    });
+    state.currentModel = null;
+  }
+
+  // Load GLB
+  state.loader.load(
+    species.file,
+    (gltf) => {
+      const model = gltf.scene;
+
+      // Center and scale model
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 2.0 / maxDim;
+
+      model.scale.setScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      model.position.y -= (box.min.y * scale);
+
+      state.scene.add(model);
+      state.currentModel = model;
+
+      // Reset camera
+      state.camera.position.set(3, 2, 3);
+      state.controls.target.set(0, size.y * scale * 0.4, 0);
+      state.controls.update();
+
+      // Apply current view mode
+      applyViewMode(state.viewMode);
+
+      // Update info panel
+      showInfoPanel(species, size, maxDim);
+
+      // Update status
+      const vertCount = countVertices(model);
+      document.getElementById('statusLeft').textContent = `${species.name} | ${(vertCount/1000).toFixed(1)}k Vertices`;
+
+      // Hide loader
+      loader.classList.add('hidden');
+    },
+    (progress) => {
+      if (progress.total > 0) {
+        const pct = Math.round(progress.loaded / progress.total * 100);
+        document.getElementById('loaderText').textContent = `${species.name}: ${pct}%`;
+      }
+    },
+    (error) => {
+      console.error('GLB load error:', error);
+      loader.classList.add('hidden');
+      document.getElementById('statusLeft').textContent = `Fehler beim Laden: ${species.name}`;
+    }
+  );
+}
+
+function countVertices(object) {
+  let count = 0;
+  object.traverse(child => {
+    if (child.isMesh && child.geometry) {
+      count += child.geometry.attributes.position?.count || 0;
+    }
+  });
+  return count;
+}
+
+// === View Modes ===
+function applyViewMode(mode) {
+  state.viewMode = mode;
+  if (!state.currentModel) return;
+
+  state.currentModel.traverse(child => {
+    if (!child.isMesh) return;
+
+    switch (mode) {
+      case 'normal':
+        child.material = child.material.clone ? child.material.clone() : child.material;
+        child.material.wireframe = false;
+        child.material.transparent = false;
+        child.material.opacity = 1;
+        child.material.color?.setHex(child.userData.originalColor || 0xcccccc);
+        break;
+
+      case 'wireframe':
+        if (!child.userData.originalColor && child.material.color) {
+          child.userData.originalColor = child.material.color.getHex();
+        }
+        child.material = new THREE.MeshBasicMaterial({
+          color: 0x10b981,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.8,
+        });
+        break;
+
+      case 'xray':
+        if (!child.userData.originalColor && child.material.color) {
+          child.userData.originalColor = child.material.color.getHex();
+        }
+        child.material = new THREE.MeshPhongMaterial({
+          color: 0x88ccff,
+          transparent: true,
+          opacity: 0.4,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          emissive: 0x223344,
+        });
+        break;
+
+      case 'thermal':
+        if (!child.userData.originalColor && child.material.color) {
+          child.userData.originalColor = child.material.color.getHex();
+        }
+        child.material = new THREE.MeshStandardMaterial({
+          color: 0xff4422,
+          emissive: 0x331100,
+          emissiveIntensity: 0.5,
+          roughness: 0.8,
+          metalness: 0.0,
+        });
+        break;
+    }
+    child.material.needsUpdate = true;
+  });
+
+  // Adjust scene background per mode
+  const bg = { normal: 0x0f172a, wireframe: 0x0a0f1a, xray: 0x050a15, thermal: 0x0a0505 };
+  state.scene.background.setHex(bg[mode] || 0x0f172a);
+}
+
+// === Info Panel ===
+function showInfoPanel(species, size, maxDim) {
+  const panel = document.getElementById('infoPanel');
+  document.getElementById('infoTitle').innerHTML = `${species.icon} ${species.name} <small style="color:var(--vs-text-muted);font-style:italic;font-weight:normal">${species.latin}</small>`;
+
+  document.getElementById('infoDesc').textContent = `Kategorie: ${species.category} | Generiert mit Hyper3D Rodin`;
+
+  const tagsEl = document.getElementById('infoTags');
+  tagsEl.innerHTML = species.tags.map(t => `<span class="info-tag">${t}</span>`).join('');
+
+  panel.classList.add('visible');
+}
+
+// === Controls ===
+function setupControls() {
+  // View mode buttons
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyViewMode(btn.dataset.mode);
+    });
+  });
+
+  // Auto rotate
+  document.getElementById('btnAutoRotate').addEventListener('click', function() {
+    state.controls.autoRotate = !state.controls.autoRotate;
+    this.classList.toggle('active', state.controls.autoRotate);
+  });
+  document.getElementById('btnAutoRotate').classList.add('active');
+
+  // Reset view
+  document.getElementById('btnReset').addEventListener('click', () => {
+    state.camera.position.set(3, 2, 3);
+    state.controls.target.set(0, 0.5, 0);
+    state.controls.update();
+  });
+
+  // Grid toggle
+  document.getElementById('btnGrid').addEventListener('click', function() {
+    state.showGrid = !state.showGrid;
+    state.gridHelper.visible = state.showGrid;
+    this.classList.toggle('active', state.showGrid);
+  });
+  document.getElementById('btnGrid').classList.add('active');
+
+  // Screenshot
+  document.getElementById('btnScreenshot').addEventListener('click', () => {
+    state.renderer.render(state.scene, state.camera);
+    const link = document.createElement('a');
+    link.download = `vetscan-3d-${state.currentSpecies?.id || 'screenshot'}.png`;
+    link.href = state.renderer.domElement.toDataURL('image/png');
+    link.click();
+  });
+
+  // Fullscreen
+  document.getElementById('btnFullscreen').addEventListener('click', () => {
+    const vp = document.getElementById('viewport');
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      vp.requestFullscreen();
+    }
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key.toLowerCase()) {
+      case 'r': document.getElementById('btnAutoRotate').click(); break;
+      case '0': document.getElementById('btnReset').click(); break;
+      case 'g': document.getElementById('btnGrid').click(); break;
+      case 's': if (!e.ctrlKey && !e.metaKey) document.getElementById('btnScreenshot').click(); break;
+      case 'f': document.getElementById('btnFullscreen').click(); break;
+      case '1': loadViewMode('normal'); break;
+      case '2': loadViewMode('wireframe'); break;
+      case '3': loadViewMode('xray'); break;
+      case '4': loadViewMode('thermal'); break;
+    }
+  });
+}
+
+function loadViewMode(mode) {
+  document.querySelectorAll('.view-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  applyViewMode(mode);
+}
+
+// === Init ===
+buildSidebar();
+initThreeJS();
+setupControls();
+
+// Auto-load first species
+loadSpecies('dog');
+</script>
+
+<!-- Shared module for nav -->
+<script src="js/vetscan-shared.js"></script>
+</body>
+</html>
