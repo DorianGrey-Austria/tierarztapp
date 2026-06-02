@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Pathologie-Scanner</title>
+<meta name="description" content="Interaktives Diagnose-Spiel: Finde die Pathologie im 3D-Scan">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a14;--surface:#0d1424;--surface2:#151e35;--surface3:#1e2a4a;
+  --primary:#3b82f6;--accent:#10b981;--danger:#ef4444;--warning:#f59e0b;
+  --text:#e2e8f0;--muted:#64748b;
+  --radius:12px;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+.game{display:grid;grid-template-columns:1fr 360px;grid-template-rows:56px 1fr;height:100vh}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
+.header h1{font-size:1rem;font-weight:700}
+.header-stats{display:flex;gap:16px;align-items:center}
+.header-stat{text-align:center}
+.header-stat .val{font-size:1.1rem;font-weight:700;color:var(--accent)}
+.header-stat .lbl{font-size:0.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+
+.scanner-area{position:relative;overflow:hidden}
+.case-panel{background:var(--surface);border-left:1px solid var(--surface2);overflow-y:auto;padding:16px}
+
+/* Scanner viewport */
+.scanner-viewport{width:100%;height:100%;position:relative}
+.scan-overlay{position:absolute;inset:0;pointer-events:none;z-index:3}
+.scan-corners{position:absolute;inset:40px}
+.scan-corners::before,.scan-corners::after{content:'';position:absolute;border-color:var(--accent);border-style:solid}
+.scan-corners::before{top:0;left:0;width:40px;height:40px;border-width:2px 0 0 2px}
+.scan-corners::after{bottom:0;right:0;width:40px;height:40px;border-width:0 2px 2px 0}
+.scan-label{position:absolute;top:12px;left:12px;font-size:0.65rem;color:var(--accent);font-family:monospace;letter-spacing:0.1em}
+.scan-label span{display:block;margin-bottom:2px}
+
+/* Scan type buttons */
+.scan-type-bar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:4px;z-index:5;background:rgba(13,20,36,0.95);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:var(--radius);padding:4px}
+.scan-type-btn{padding:10px 20px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.8rem;font-weight:600;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+.scan-type-btn:hover{color:var(--text);background:var(--surface2)}
+.scan-type-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.scan-type-btn .cost{font-size:0.6rem;background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:4px}
+
+/* Finding marker */
+.finding-marker{position:absolute;width:48px;height:48px;border:2px solid var(--danger);border-radius:50%;cursor:pointer;transform:translate(-50%,-50%);animation:pulse-ring 2s ease-out infinite;z-index:4;display:none}
+.finding-marker::after{content:'';position:absolute;inset:8px;border-radius:50%;background:rgba(239,68,68,0.3)}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}100%{box-shadow:0 0 0 20px rgba(239,68,68,0)}}
+
+/* Case panel */
+.case-card{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.case-card h3{font-size:0.85rem;margin-bottom:8px}
+.case-card p{font-size:0.78rem;color:var(--muted);line-height:1.5}
+
+.patient-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.patient-field{background:var(--surface3);border-radius:8px;padding:8px}
+.patient-field .lbl{font-size:0.6rem;color:var(--muted);text-transform:uppercase}
+.patient-field .val{font-size:0.85rem;font-weight:600;margin-top:2px}
+
+.vitals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.vital{text-align:center;background:var(--surface3);border-radius:8px;padding:8px}
+.vital .val{font-size:1rem;font-weight:700}
+.vital .lbl{font-size:0.6rem;color:var(--muted)}
+.vital.abnormal .val{color:var(--danger)}
+
+.symptom-list{margin-top:10px}
+.symptom{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--surface3);font-size:0.8rem}
+.symptom:last-child{border-bottom:none}
+.symptom .dot{width:6px;height:6px;border-radius:50%;background:var(--warning);flex-shrink:0}
+
+/* Diagnosis section */
+.diagnosis-section{margin-top:12px}
+.dx-option{display:block;width:100%;padding:12px;margin-bottom:6px;background:var(--surface2);border:1px solid var(--surface3);border-radius:8px;color:var(--text);cursor:pointer;font-size:0.8rem;text-align:left;transition:all 0.15s}
+.dx-option:hover{border-color:var(--primary);background:rgba(59,130,246,0.08)}
+.dx-option.correct{border-color:var(--accent);background:rgba(16,185,129,0.1);color:var(--accent)}
+.dx-option.wrong{border-color:var(--danger);background:rgba(239,68,68,0.08);color:var(--danger)}
+.dx-option.selected{border-color:var(--primary);background:rgba(59,130,246,0.15)}
+
+.confirm-btn{width:100%;padding:14px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:8px;transition:all 0.15s}
+.confirm-btn:hover{background:var(--accent)}
+.confirm-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+.result-card{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-top:12px;border-left:4px solid transparent}
+.result-card.correct{border-left-color:var(--accent)}
+.result-card.wrong{border-left-color:var(--danger)}
+.result-card h4{font-size:0.85rem;margin-bottom:6px}
+.result-card p{font-size:0.78rem;color:var(--muted);line-height:1.5}
+
+.next-btn{width:100%;padding:12px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:0.85rem;font-weight:600;cursor:pointer;margin-top:12px;transition:all 0.15s}
+.next-btn:hover{background:var(--accent);color:#fff}
+
+/* Score display */
+.score-bar{display:flex;gap:8px;margin-bottom:12px}
+.score-item{flex:1;text-align:center;padding:8px;background:var(--surface2);border-radius:8px}
+.score-item .num{font-size:1.2rem;font-weight:700}
+.score-item .txt{font-size:0.6rem;color:var(--muted);text-transform:uppercase}
+
+/* Start screen */
+.start-screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:var(--bg)}
+.start-content{text-align:center;max-width:500px;padding:40px}
+.start-content h2{font-size:1.6rem;margin-bottom:12px}
+.start-content p{color:var(--muted);margin-bottom:24px;line-height:1.6}
+.start-btn{padding:14px 40px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:transform 0.15s}
+.start-btn:hover{transform:scale(1.05)}
+
+/* Responsive */
+@media(max-width:768px){
+  .game{grid-template-columns:1fr;grid-template-rows:56px 50vh auto}
+}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+<div class="game">
+  <header class="header">
+    <h1>&#x1F50D; VetScan Pathologie-Scanner</h1>
+    <div class="header-stats">
+      <div class="header-stat"><div class="val" id="scoreDisplay">0</div><div class="lbl">Punkte</div></div>
+      <div class="header-stat"><div class="val" id="caseDisplay">-/-</div><div class="lbl">Fall</div></div>
+      <div class="header-stat"><div class="val" id="streakDisplay">0</div><div class="lbl">Serie</div></div>
+    </div>
+  </header>
+
+  <!-- Scanner Area -->
+  <div class="scanner-area" id="scannerArea">
+    <div class="start-screen" id="startScreen">
+      <div class="start-content">
+        <h2>&#x1F3E5; Pathologie-Scanner</h2>
+        <p>Untersuche Patienten mit verschiedenen bildgebenden Verfahren, finde die Pathologie und stelle die richtige Diagnose. Jeder Fall bringt Punkte - je schneller und genauer, desto mehr!</p>
+        <button class="start-btn" onclick="startGame()">Spiel starten</button>
+      </div>
+    </div>
+
+    <div class="scanner-viewport" id="viewport"></div>
+
+    <div class="scan-overlay">
+      <div class="scan-corners"></div>
+      <div class="scan-label">
+        <span id="scanMode">STANDARD-ANSICHT</span>
+        <span id="scanInfo">Bereit</span>
+      </div>
+    </div>
+
+    <div class="scan-type-bar" id="scanTypeBar" style="display:none">
+      <button class="scan-type-btn active" data-scan="visual" onclick="setScanType('visual')">Inspektion</button>
+      <button class="scan-type-btn" data-scan="xray" onclick="setScanType('xray')">Roentgen <span class="cost">-1P</span></button>
+      <button class="scan-type-btn" data-scan="ultrasound" onclick="setScanType('ultrasound')">Ultraschall <span class="cost">-1P</span></button>
+      <button class="scan-type-btn" data-scan="palpation" onclick="setScanType('palpation')">Palpation</button>
+      <button class="scan-type-btn" data-scan="auscultation" onclick="setScanType('auscultation')">Auskultation</button>
+    </div>
+  </div>
+
+  <!-- Case Panel -->
+  <aside class="case-panel" id="casePanel">
+    <div class="score-bar">
+      <div class="score-item"><div class="num" id="correctCount">0</div><div class="txt">Richtig</div></div>
+      <div class="score-item"><div class="num" id="wrongCount">0</div><div class="txt">Falsch</div></div>
+      <div class="score-item"><div class="num" id="totalScore">0</div><div class="txt">Gesamt</div></div>
+    </div>
+
+    <div class="case-card" id="patientCard" style="display:none">
+      <h3>&#x1F43E; Patienteninformation</h3>
+      <div class="patient-info" id="patientInfo"></div>
+    </div>
+
+    <div class="case-card" id="symptomsCard" style="display:none">
+      <h3>&#x26A0; Vorstellungsgrund / Symptome</h3>
+      <div class="symptom-list" id="symptomList"></div>
+    </div>
+
+    <div class="case-card" id="vitalsCard" style="display:none">
+      <h3>&#x1F4CA; Vitalparameter</h3>
+      <div class="vitals-grid" id="vitalsGrid"></div>
+    </div>
+
+    <div class="case-card" id="findingsCard" style="display:none">
+      <h3>&#x1F50E; Deine Befunde</h3>
+      <p id="findingsText" style="font-size:0.8rem;color:var(--muted)">Verwende die Scan-Modi, um Befunde zu erheben.</p>
+    </div>
+
+    <div class="diagnosis-section" id="diagnosisSection" style="display:none">
+      <div class="case-card">
+        <h3>&#x1F9D1;&#x200D;&#x2695; Diagnose stellen</h3>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px">Waehle die wahrscheinlichste Diagnose:</p>
+        <div id="dxOptions"></div>
+        <button class="confirm-btn" id="confirmBtn" disabled onclick="confirmDiagnosis()">Diagnose bestaetigen</button>
+      </div>
+    </div>
+
+    <div id="resultArea"></div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// === CASE DATABASE ===
+const CASES = [
+  {
+    id: 1,
+    patient: { name:'Bruno', species:'Hund', breed:'Dobermann', age:'7 Jahre', weight:'38 kg', sex:'maennlich kastriert', icon:'&#x1F415;' },
+    symptoms: ['Leistungsintoleranz seit 3 Wochen','Husten, besonders nachts','Synkopen (2x in letzter Woche)','Appetit reduziert'],
+    vitals: [
+      {label:'HF',value:'160',unit:'/min',abnormal:true},
+      {label:'AF',value:'40',unit:'/min',abnormal:true},
+      {label:'Temp',value:'38.2',unit:'C',abnormal:false},
+      {label:'SH',value:'blass',unit:'',abnormal:true},
+      {label:'KFZ',value:'3',unit:'s',abnormal:true},
+      {label:'BCS',value:'3/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/dog/dog_golden_retriever.glb',
+    pathModel:'assets/models/pathology/enlarged-heart/enlarged_heart_dcm.glb',
+    scanFindings: {
+      visual:'Abdomen leicht umfangsvermehrt. Aszites? Muskelmasse reduziert.',
+      xray:'Herzsilhouette deutlich vergroessert (VHS 12.5). Lungenvenen gestaut. Alveolares Muster perilhilaer: Lungenoedem.',
+      ultrasound:'Linker Ventrikel dilatiert (LVIDs 52mm). Mitralklappeninsuffizienz Grad III. FS 15% (deutlich reduziert).',
+      palpation:'Schwacher, schneller Femoralpuls. Jugularvenen gefuellt. Aszites: Fluessigkeitswelle positiv.',
+      auscultation:'Systolisches Herzgeraeusch Grad IV/VI, PMI links apikal. Gallopprhythmus (S3). Feuchte Rasselgeraeusche beidseits caudal.'
+    },
+    correctDx: 'Dilatative Kardiomyopathie (DCM)',
+    options: ['Dilatative Kardiomyopathie (DCM)','Mitralklappenendokardiose','Perikarderguss','Lungenoedem ohne Herzerkrankung'],
+    explanation:'Bruno zeigt die klassische Trias der DCM beim Dobermann: Dilatation des linken Ventrikels, systolische Dysfunktion (FS 15%), und sekundaere Mitralklappeninsuffizienz. Die Rasse (Dobermann) ist stark praedisponiert. Therapie: Pimobendan, ACE-Hemmer, Furosemid, Spironolacton.',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 2,
+    patient: { name:'Luna', species:'Hund', breed:'Labrador Retriever', age:'9 Jahre', weight:'32 kg', sex:'weiblich intakt', icon:'&#x1F415;' },
+    symptoms: ['Polydipsie/Polyurie seit 2 Wochen','Vaginalausfluss (eitrig)','Inappetenz seit 3 Tagen','Lethargie, liegt nur noch'],
+    vitals: [
+      {label:'HF',value:'140',unit:'/min',abnormal:true},
+      {label:'AF',value:'35',unit:'/min',abnormal:true},
+      {label:'Temp',value:'40.1',unit:'C',abnormal:true},
+      {label:'SH',value:'injiziert',unit:'',abnormal:true},
+      {label:'KFZ',value:'2.5',unit:'s',abnormal:true},
+      {label:'BCS',value:'5/9',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/dog/dog_golden_retriever.glb',
+    pathModel:'assets/models/pathology/pyometra/pyometra_uterus.glb',
+    scanFindings: {
+      visual:'Abdomen umfangsvermehrt. Eitriger Vaginalausfluss. Dehydratation (Hautturgor reduziert).',
+      xray:'Tubulaere, fluessigkeitsgefuellte Strukturen im kaudalen Abdomen. Darmverlagerung nach cranial. Verdacht: vergroesserter Uterus.',
+      ultrasound:'Uterushoerner massiv dilatiert (6 cm Durchmesser), gefuellt mit echogenem Inhalt. Endometriumverdickung. Kein Hinweis auf Traechtigkeit.',
+      palpation:'Abdomen druckdolent, v.a. kaudal. Fluktuation palpierbar. Uterushoerner als derbe Straenge tastbar.',
+      auscultation:'Herz: Tachykardie, keine Geraeusche. Darm: reduzierte Motilitaet. Lunge: unauffaellig.'
+    },
+    correctDx: 'Pyometra (offene Form)',
+    options: ['Pyometra (offene Form)','Traechtigkeit mit Komplikationen','Abdominaler Tumor','Harnwegsinfektion mit Stauung'],
+    explanation:'Luna zeigt die klassische Praesentation einer offenen Pyometra: Intakte Huendin, PU/PD, eitriger Vaginalausfluss, Fieber, Leukozytose. Laeufigkeit war vor 6 Wochen. Therapie der Wahl: Notfall-Ovariohysterektomie nach Stabilisierung (Fluessigkeitstherapie, Antibiose).',
+    difficulty: 'leicht',
+    points: 80
+  },
+  {
+    id: 3,
+    patient: { name:'Max', species:'Hund', breed:'Deutsche Dogge', age:'5 Jahre', weight:'62 kg', sex:'maennlich intakt', icon:'&#x1F415;' },
+    symptoms: ['Akuter Beginn vor 2 Stunden','Unproduktives Wuergen/Brechversuche','Unruhe, Hecheln','Stark aufgeblaehtes Abdomen'],
+    vitals: [
+      {label:'HF',value:'180',unit:'/min',abnormal:true},
+      {label:'AF',value:'50',unit:'/min',abnormal:true},
+      {label:'Temp',value:'38.8',unit:'C',abnormal:false},
+      {label:'SH',value:'blass',unit:'',abnormal:true},
+      {label:'KFZ',value:'4',unit:'s',abnormal:true},
+      {label:'BCS',value:'5/9',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/dog/dog_golden_retriever.glb',
+    pathModel:'assets/models/pathology/gdv/gdv_twisted_stomach.glb',
+    scanFindings: {
+      visual:'Abdomen massiv aufgetrieben, tympanitisch. Hund sehr unruhig, versucht sich hinzulegen aber steht wieder auf.',
+      xray:'Klassisches "Double-Bubble" Zeichen: gasdilatierter Magen mit Kompartimentierung. Pylorus nach dorsocranial verlagert. GDV!',
+      ultrasound:'Magen extrem dilatiert, gasgefuellt. Kein normaler Inhalt. Milz verlagert.',
+      palpation:'Abdomen prall, tympanitisch. Perkussion: metallischer Klang. Magensonde: kann NICHT vorgeschoben werden!',
+      auscultation:'Tachykardie. Keine Darmgeraeusche. Herzrhythmus: vereinzelte VES (ventrikulaere Extrasystolen).'
+    },
+    correctDx: 'Magendrehung (GDV)',
+    options: ['Magendrehung (GDV)','Magendilatation ohne Torsion','Milztorsion','Darmverschluss (Ileus)'],
+    explanation:'Max zeigt den klassischen GDV-Notfall: Grosse Rasse mit tiefer Brust, akuter Beginn, unproduktives Wuergen, tympanitisches Abdomen, Schock. Das "Double-Bubble" im Roentgen und die nicht-passierbare Magensonde bestaetigen die Torsion. Sofortige Dekompression + Notfall-OP (Gastropexie)! Arrhythmien (VES) sind typische GDV-Komplikation.',
+    difficulty: 'leicht',
+    points: 80
+  },
+  {
+    id: 4,
+    patient: { name:'Mimi', species:'Katze', breed:'Perser', age:'12 Jahre', weight:'3.2 kg', sex:'weiblich kastriert', icon:'&#x1F408;' },
+    symptoms: ['Gewichtsverlust ueber 6 Monate (von 4.5 auf 3.2 kg)','Erhoehter Appetit','Vermehrtes Trinken','Erbrechen gelegentlich'],
+    vitals: [
+      {label:'HF',value:'220',unit:'/min',abnormal:true},
+      {label:'AF',value:'40',unit:'/min',abnormal:true},
+      {label:'Temp',value:'39.3',unit:'C',abnormal:false},
+      {label:'SH',value:'rosa',unit:'',abnormal:false},
+      {label:'KFZ',value:'1.5',unit:'s',abnormal:false},
+      {label:'BCS',value:'2/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/cat/cat_domestic.glb',
+    scanFindings: {
+      visual:'Kachektisch, Fell stumpf, Muskelatrophie. Hyperaktiv, unruhig.',
+      xray:'Herzsilhouette grenzwertig vergroessert. Thorax sonst unauffaellig.',
+      ultrasound:'Echokardiographie: Konzentrische Hypertrophie des linken Ventrikels (LVPWd 7mm). Nieren beidseits verkleinert (2.8cm).',
+      palpation:'Kleiner, derber Knoten ventral am Hals palpierbar (ca. 1.5cm). Nieren klein, glatt. Abdomen unauffaellig.',
+      auscultation:'Tachykardie (220/min). Systolisches Herzgeraeusch Grad II/VI. Gallopprhythmus. Lunge unauffaellig.'
+    },
+    correctDx: 'Feline Hyperthyreose',
+    options: ['Feline Hyperthyreose','Diabetes mellitus','Chronische Niereninsuffizienz','Intestinales Lymphom'],
+    explanation:'Mimi zeigt die klassische Hyperthyreose-Trias: Gewichtsverlust trotz Polyphagie, Tachykardie, palpierbare Schilddruesenvergroesserung. Die sekundaere HCM (LVPWd 7mm) ist eine haeufige Komplikation. T4 gesamt wird erhoeht sein. Therapie: Methimazol oder Radioiodtherapie. WICHTIG: Nierenfunktion nach Therapiebeginn kontrollieren (maskierte CKD)!',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 5,
+    patient: { name:'Blitz', species:'Pferd', breed:'Warmblut', age:'14 Jahre', weight:'550 kg', sex:'Wallach', icon:'&#x1F40E;' },
+    symptoms: ['Koliksymptome seit 4 Stunden','Scharren, Fluehmen, auf den Boden legen','Kein Kotabsatz seit gestern','Reduzierte Futteraufnahme seit 2 Tagen'],
+    vitals: [
+      {label:'HF',value:'56',unit:'/min',abnormal:true},
+      {label:'AF',value:'24',unit:'/min',abnormal:true},
+      {label:'Temp',value:'38.0',unit:'C',abnormal:false},
+      {label:'SH',value:'dunkelrot',unit:'',abnormal:true},
+      {label:'KFZ',value:'3.5',unit:'s',abnormal:true},
+      {label:'BCS',value:'6/9',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/horse/horse.glb',
+    scanFindings: {
+      visual:'Unruhig, schaut zum Flankenbereich. Moderater Schweissausbruch. Kotzustand: kein frischer Kot in der Box.',
+      xray:'Nicht verfuegbar (Pferd zu gross fuer Standard-Roentgen)',
+      ultrasound:'Duenndarmdistension (>5cm Durchmesser). Reduzierte Motilitaet. Freie Fluessigkeit: wenig (echofrei). Dickdarm: Gas.',
+      palpation:'Rektale Untersuchung: Grosses Kolon mit Gasansammlung. Gestieltes Lipom am Mesenterium tastbar! Duenndarm-Schlinge um den Stiel gewickelt.',
+      auscultation:'Darmgeraeusche: Links dorsal und ventral reduziert. Rechts: vereinzelt. Gesamteindruck: Hypomotilitaet.'
+    },
+    correctDx: 'Strangulierender Lipom (Duenndarm)',
+    options: ['Strangulierender Lipom (Duenndarm)','Krampfkolik','Dickdarmverlagerung links','Magenueberladung'],
+    explanation:'Blitz zeigt eine Duenndarmstrangulation durch ein gestieltes Lipom - typisch fuer aeltere Pferde. Entscheidend: rektaler Befund (Lipom tastbar), Ultraschall (Duenndarm-Distension >5cm), und die klinischen Zeichen (moderater Schmerz, kein Kotabsatz). Notfall-OP (Laparotomie) mit Darmresektion wenn noetig. Prognose abhaengig von der Ischaemiedauer.',
+    difficulty: 'schwer',
+    points: 150
+  },
+  {
+    id: 6,
+    patient: { name:'Felix', species:'Katze', breed:'EKH', age:'8 Jahre', weight:'5.8 kg', sex:'maennlich kastriert', icon:'&#x1F408;' },
+    symptoms: ['Ploetzliche Hinterhandlaehmung seit 30 Minuten','Schreien vor Schmerz','Hinterlaeufe kalt','Keine Bewegung der Hinterbeine'],
+    vitals: [
+      {label:'HF',value:'240',unit:'/min',abnormal:true},
+      {label:'AF',value:'60',unit:'/min',abnormal:true},
+      {label:'Temp',value:'37.0',unit:'C',abnormal:true},
+      {label:'SH',value:'zyanotisch',unit:'',abnormal:true},
+      {label:'KFZ',value:'5',unit:'s',abnormal:true},
+      {label:'BCS',value:'7/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/cat/cat_domestic.glb',
+    scanFindings: {
+      visual:'Hinterlaeufe in Extension, keine willkuerliche Bewegung. Ballen kalt und zyanotisch (blaeulich). Krallen nicht zurueckziehbar.',
+      xray:'Herzsilhouette deutlich vergroessert ("Valentine-shaped"). Lungenfeld leicht verschattet.',
+      ultrasound:'Echokardiographie: Massive konzentrische Hypertrophie (IVSd 8.5mm, LVPWd 9mm). Spontaner Echokontrast im linken Vorhof ("Smoke"). Aorta: kein Fluss distal der Bifurkation!',
+      palpation:'Kein Femoralpuls beidseits! Hinterlaeufe: Gastrocnemius-Muskulatur hart, schmerzhaft. Keine Tiefensensibilitaet.',
+      auscultation:'Massive Tachykardie. Systolisches Herzgeraeusch Grad III. Arrhythmie (VES). Lunge: verschaerft vesikulaer.'
+    },
+    correctDx: 'Aortenthrombose bei HCM (Sattelthrombus)',
+    options: ['Aortenthrombose bei HCM (Sattelthrombus)','Bandscheibenvorfall','Trauma/Fraktur Becken','Spinale Neoplasie'],
+    explanation:'Felix zeigt die klassische Feline Aortenthromboembolie (FATE): Ploetzliche beidseitige Hinterhandlaehmung, fehlender Femoralpuls, kalte zyanotische Pfoten, Schmerz. Ursache: HCM mit Thrombusbildung im linken Vorhof. Prognose: Vorsichtig bis schlecht. Therapie: Analgesie, Antithrombotika (Clopidogrel), Herztherapie. Bei fehlendem Ansprechen innerhalb 72h: Euthanasie erwaegen.',
+    difficulty: 'schwer',
+    points: 150
+  }
+];
+
+// === GAME STATE ===
+const game = {
+  started: false,
+  currentCaseIdx: 0,
+  score: 0,
+  correct: 0,
+  wrong: 0,
+  streak: 0,
+  selectedDx: null,
+  diagnosed: false,
+  findings: [],
+  scansUsed: [],
+};
+
+let scene, camera, renderer, controls, loader, currentModel;
+
+// === THREE.JS INIT ===
+function initThreeJS() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060a14);
+
+  camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.1, 100);
+  camera.position.set(3, 2, 3);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(rect.width, rect.height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(renderer.domElement);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = false;
+  controls.minDistance = 0.5;
+  controls.maxDistance = 15;
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambient);
+  const key = new THREE.DirectionalLight(0xffffff, 1.2);
+  key.position.set(5, 8, 5);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x6688aa, 0.4);
+  fill.position.set(-3, 2, -5);
+  scene.add(fill);
+
+  const grid = new THREE.GridHelper(8, 16, 0x151e35, 0x0d1424);
+  scene.add(grid);
+
+  loader = new GLTFLoader();
+
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      camera.aspect = e.contentRect.width / e.contentRect.height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(e.contentRect.width, e.contentRect.height);
+    }
+  });
+  ro.observe(container);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+}
+
+function loadModel(path, callback) {
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel.traverse(c => {
+      if (c.isMesh) { c.geometry.dispose(); c.material.dispose(); }
+    });
+  }
+
+  loader.load(path, (gltf) => {
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const s = 2.0 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(s);
+    model.position.sub(center.multiplyScalar(s));
+    model.position.y -= box.min.y * s;
+    scene.add(model);
+    currentModel = model;
+    camera.position.set(3, 2, 3);
+    controls.target.set(0, size.y * s * 0.4, 0);
+    controls.update();
+    if (callback) callback(model);
+  }, null, () => {
+    // Create placeholder
+    const geo = new THREE.SphereGeometry(0.8, 32, 32);
+    const mat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.5, transparent: true, opacity: 0.7 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.y = 0.8;
+    scene.add(mesh);
+    currentModel = mesh;
+    if (callback) callback(mesh);
+  });
+}
+
+function applyScanEffect(mode) {
+  if (!currentModel) return;
+  if (!currentModel.traverse) return;
+
+  currentModel.traverse(child => {
+    if (!child.isMesh) return;
+    switch(mode) {
+      case 'visual':
+        if (child.userData.origMat) child.material = child.userData.origMat.clone();
+        break;
+      case 'xray':
+        if (!child.userData.origMat) child.userData.origMat = child.material.clone();
+        child.material = new THREE.MeshPhongMaterial({ color:0x88ccff, transparent:true, opacity:0.3, side:THREE.DoubleSide, depthWrite:false, emissive:0x223344 });
+        break;
+      case 'ultrasound':
+        if (!child.userData.origMat) child.userData.origMat = child.material.clone();
+        child.material = new THREE.MeshStandardMaterial({ color:0x111111, roughness:1, emissive:0x334455, emissiveIntensity:0.3 });
+        break;
+      case 'palpation':
+        if (child.userData.origMat) child.material = child.userData.origMat.clone();
+        break;
+      case 'auscultation':
+        if (child.userData.origMat) child.material = child.userData.origMat.clone();
+        break;
+    }
+    child.material.needsUpdate = true;
+  });
+
+  const bgs = { visual:0x060a14, xray:0x030510, ultrasound:0x000308, palpation:0x060a14, auscultation:0x060a14 };
+  scene.background.setHex(bgs[mode] || 0x060a14);
+}
+
+// === GAME LOGIC ===
+window.startGame = function() {
+  game.started = true;
+  game.currentCaseIdx = 0;
+  game.score = 0;
+  game.correct = 0;
+  game.wrong = 0;
+  game.streak = 0;
+  document.getElementById('startScreen').style.display = 'none';
+  document.getElementById('scanTypeBar').style.display = 'flex';
+  loadCase(0);
+};
+
+function loadCase(idx) {
+  const c = CASES[idx];
+  if (!c) {
+    showFinalResults();
+    return;
+  }
+
+  game.selectedDx = null;
+  game.diagnosed = false;
+  game.findings = [];
+  game.scansUsed = [];
+
+  document.getElementById('caseDisplay').textContent = `${idx + 1}/${CASES.length}`;
+
+  // Patient info
+  document.getElementById('patientCard').style.display = 'block';
+  document.getElementById('patientInfo').innerHTML = [
+    {l:'Name',v:`${c.patient.icon} ${c.patient.name}`},
+    {l:'Spezies',v:c.patient.species},
+    {l:'Rasse',v:c.patient.breed},
+    {l:'Alter',v:c.patient.age},
+    {l:'Gewicht',v:c.patient.weight},
+    {l:'Geschlecht',v:c.patient.sex}
+  ].map(f => `<div class="patient-field"><div class="lbl">${f.l}</div><div class="val">${f.v}</div></div>`).join('');
+
+  // Symptoms
+  document.getElementById('symptomsCard').style.display = 'block';
+  document.getElementById('symptomList').innerHTML = c.symptoms.map(s => `<div class="symptom"><span class="dot"></span>${s}</div>`).join('');
+
+  // Vitals
+  document.getElementById('vitalsCard').style.display = 'block';
+  document.getElementById('vitalsGrid').innerHTML = c.vitals.map(v => `<div class="vital${v.abnormal?' abnormal':''}"><div class="val">${v.value}</div><div class="lbl">${v.label} ${v.unit}</div></div>`).join('');
+
+  // Reset findings
+  document.getElementById('findingsCard').style.display = 'block';
+  document.getElementById('findingsText').textContent = 'Verwende die Scan-Modi, um Befunde zu erheben.';
+
+  // Diagnosis options
+  document.getElementById('diagnosisSection').style.display = 'block';
+  document.getElementById('dxOptions').innerHTML = c.options.map((opt, i) =>
+    `<button class="dx-option" data-idx="${i}" onclick="selectDx(${i})">${opt}</button>`
+  ).join('');
+  document.getElementById('confirmBtn').disabled = true;
+  document.getElementById('resultArea').innerHTML = '';
+
+  // Reset scan buttons
+  document.querySelectorAll('.scan-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('[data-scan="visual"]').classList.add('active');
+  document.getElementById('scanMode').textContent = 'INSPEKTION';
+  document.getElementById('scanInfo').textContent = c.scanFindings.visual;
+
+  // Load 3D model
+  loadModel(c.model);
+}
+
+window.setScanType = function(type) {
+  const c = CASES[game.currentCaseIdx];
+  if (!c) return;
+
+  document.querySelectorAll('.scan-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-scan="${type}"]`).classList.add('active');
+
+  const labels = { visual:'INSPEKTION', xray:'ROENTGEN', ultrasound:'ULTRASCHALL', palpation:'PALPATION', auscultation:'AUSKULTATION' };
+  document.getElementById('scanMode').textContent = labels[type] || type.toUpperCase();
+  document.getElementById('scanInfo').textContent = c.scanFindings[type] || 'Keine besonderen Befunde.';
+
+  // Track findings
+  if (!game.scansUsed.includes(type)) {
+    game.scansUsed.push(type);
+    if (type === 'xray' || type === 'ultrasound') {
+      // These cost a point
+    }
+  }
+
+  // Update findings display
+  const findings = game.scansUsed.map(s => `${labels[s]}: ${c.scanFindings[s]}`).join('\n\n');
+  document.getElementById('findingsText').textContent = findings;
+
+  // Apply 3D effect
+  applyScanEffect(type);
+};
+
+window.selectDx = function(idx) {
+  if (game.diagnosed) return;
+  game.selectedDx = idx;
+  document.querySelectorAll('.dx-option').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('confirmBtn').disabled = false;
+};
+
+window.confirmDiagnosis = function() {
+  if (game.selectedDx === null || game.diagnosed) return;
+  game.diagnosed = true;
+
+  const c = CASES[game.currentCaseIdx];
+  const selectedOption = c.options[game.selectedDx];
+  const isCorrect = selectedOption === c.correctDx;
+
+  // Highlight correct/wrong
+  document.querySelectorAll('.dx-option').forEach((el, i) => {
+    if (c.options[i] === c.correctDx) el.classList.add('correct');
+    if (i === game.selectedDx && !isCorrect) el.classList.add('wrong');
+  });
+
+  // Update score
+  if (isCorrect) {
+    const bonus = Math.max(0, 5 - game.scansUsed.length) * 10; // bonus for fewer scans
+    const points = c.points + bonus;
+    game.score += points;
+    game.correct++;
+    game.streak++;
+  } else {
+    game.wrong++;
+    game.streak = 0;
+  }
+
+  document.getElementById('scoreDisplay').textContent = game.score;
+  document.getElementById('correctCount').textContent = game.correct;
+  document.getElementById('wrongCount').textContent = game.wrong;
+  document.getElementById('totalScore').textContent = game.score;
+  document.getElementById('streakDisplay').textContent = game.streak;
+  document.getElementById('confirmBtn').disabled = true;
+
+  // Show result
+  const resultHtml = `
+    <div class="result-card ${isCorrect ? 'correct' : 'wrong'}">
+      <h4>${isCorrect ? '&#x2705; Richtig!' : '&#x274C; Leider falsch'}</h4>
+      <p><strong>Korrekte Diagnose:</strong> ${c.correctDx}</p>
+      <p style="margin-top:8px">${c.explanation}</p>
+    </div>
+    <button class="next-btn" onclick="nextCase()">Naechster Fall &rarr;</button>
+  `;
+  document.getElementById('resultArea').innerHTML = resultHtml;
+
+  // Load pathology model if available
+  if (c.pathModel) {
+    loadModel(c.pathModel);
+  }
+};
+
+window.nextCase = function() {
+  game.currentCaseIdx++;
+  if (game.currentCaseIdx < CASES.length) {
+    loadCase(game.currentCaseIdx);
+  } else {
+    showFinalResults();
+  }
+};
+
+function showFinalResults() {
+  const pct = Math.round(game.correct / CASES.length * 100);
+  let grade = 'Anfaenger';
+  if (pct >= 90) grade = 'Facharzt-Niveau';
+  else if (pct >= 70) grade = 'Assistenzarzt';
+  else if (pct >= 50) grade = 'Famulant';
+
+  document.getElementById('casePanel').innerHTML = `
+    <div class="case-card" style="text-align:center;padding:30px">
+      <h3 style="font-size:1.3rem;margin-bottom:16px">&#x1F3C6; Spiel beendet!</h3>
+      <p style="font-size:2.5rem;font-weight:700;color:var(--accent);margin:16px 0">${game.score}</p>
+      <p style="color:var(--muted);margin-bottom:20px">Punkte</p>
+      <div class="stat-grid" style="margin-bottom:20px">
+        <div class="stat"><div class="label">Richtig</div><div class="value" style="color:var(--accent)">${game.correct}</div></div>
+        <div class="stat"><div class="label">Falsch</div><div class="value" style="color:var(--danger)">${game.wrong}</div></div>
+        <div class="stat"><div class="label">Quote</div><div class="value">${pct}%</div></div>
+        <div class="stat"><div class="label">Niveau</div><div class="value" style="font-size:0.85rem">${grade}</div></div>
+      </div>
+      <button class="start-btn" onclick="location.reload()">Nochmal spielen</button>
+    </div>
+  `;
+
+  // Save score
+  if (typeof VetScan !== 'undefined' && VetScan.saveScore) {
+    VetScan.saveScore('pathology-scanner', game.score, CASES.length * 150);
+  }
+}
+
+// === INIT ===
+initThreeJS();
+</script>
+<script src="js/vetscan-shared.js"></script>
+</body>
+</html>

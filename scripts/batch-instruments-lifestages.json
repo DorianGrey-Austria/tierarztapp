@@ -1,0 +1,17 @@
+[
+  {"name": "stethoscope", "prompt": "medical stethoscope, realistic veterinary instrument, chest piece with diaphragm and bell, tubing, ear tips, professional quality", "output": "assets/models/instruments/stethoscope/stethoscope.glb"},
+  {"name": "ultrasound_probe", "prompt": "ultrasound transducer probe, convex array medical device, cable, realistic veterinary diagnostic instrument, professional", "output": "assets/models/instruments/ultrasound-probe/ultrasound_probe.glb"},
+  {"name": "surgical_scalpel", "prompt": "surgical scalpel with blade, stainless steel handle, realistic veterinary surgical instrument, medical professional quality", "output": "assets/models/instruments/surgical-set/surgical_scalpel.glb"},
+  {"name": "syringe", "prompt": "medical syringe with needle, 5ml graduated markings, plunger, realistic veterinary instrument, professional quality", "output": "assets/models/instruments/syringe/syringe.glb"},
+  {"name": "otoscope", "prompt": "veterinary otoscope, cone-shaped speculum, light source, handle, realistic diagnostic instrument, professional medical device", "output": "assets/models/instruments/otoscope/otoscope.glb"},
+  {"name": "ophthalmoscope", "prompt": "direct ophthalmoscope, aperture wheel, lens selection, handle, realistic veterinary diagnostic instrument, professional", "output": "assets/models/instruments/ophthalmoscope/ophthalmoscope.glb"},
+  {"name": "thermometer", "prompt": "digital veterinary thermometer, LCD display, probe tip, realistic medical instrument, professional quality", "output": "assets/models/instruments/thermometer/thermometer.glb"},
+  {"name": "surgical_forceps", "prompt": "surgical hemostatic forceps clamp, stainless steel, ratchet mechanism, realistic veterinary instrument, professional", "output": "assets/models/instruments/surgical-set/surgical_forceps.glb"},
+  {"name": "puppy", "prompt": "cute golden retriever puppy, 8 weeks old, realistic young dog, small proportions, big eyes, veterinary pediatric model", "output": "assets/models/special/puppy/puppy.glb"},
+  {"name": "kitten", "prompt": "cute tabby kitten, 8 weeks old, realistic young cat, small proportions, big eyes, veterinary pediatric model", "output": "assets/models/special/kitten/kitten.glb"},
+  {"name": "pregnant_dog", "prompt": "pregnant female dog, distended abdomen, late pregnancy, realistic veterinary obstetric model, side view", "output": "assets/models/special/pregnant-dog/pregnant_dog.glb"},
+  {"name": "pregnant_cat", "prompt": "pregnant female cat, enlarged abdomen with kittens, late pregnancy, realistic veterinary obstetric model", "output": "assets/models/special/pregnant-cat/pregnant_cat.glb"},
+  {"name": "foal", "prompt": "young foal horse, newborn, long legs, realistic young horse, veterinary equine pediatric model, standing", "output": "assets/models/special/foal/foal.glb"},
+  {"name": "calf", "prompt": "young calf, newborn Holstein dairy calf, realistic young cow, veterinary bovine pediatric model, standing", "output": "assets/models/special/calf/calf.glb"},
+  {"name": "xray_abdomen_dog", "prompt": "dog abdominal x-ray radiograph model, white skeletal structures on dark background, spine ribs pelvis visible, veterinary diagnostic", "output": "assets/models/special/embryo/xray_abdomen_dog.glb"}
+]

@@ -62,8 +62,10 @@ jobs:
         cp vetscan-quick-reference.html deploy/ 2>/dev/null || true
         cp vetscan-glossary.html deploy/ 2>/dev/null || true
 
-        # 3D Anatomie-Viewer (Hyper3D Rodin models)
+        # 3D Interactive tools (Hyper3D Rodin models)
         cp vetscan-3d-viewer.html deploy/ 2>/dev/null || true
+        cp vetscan-organ-explorer.html deploy/ 2>/dev/null || true
+        cp vetscan-pathology-scanner.html deploy/ 2>/dev/null || true
 
         # Copy JS directory (shared module + Version 9)
         cp -r js deploy/ 2>/dev/null || true

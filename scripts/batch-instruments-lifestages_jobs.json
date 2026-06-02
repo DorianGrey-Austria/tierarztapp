@@ -1,0 +1,92 @@
+[
+  {
+    "name": "stethoscope",
+    "prompt": "medical stethoscope, realistic veterinary instrument, chest piece with diaphragm and bell, tubing, ear tips, professional quality",
+    "output": "assets/models/instruments/stethoscope/stethoscope.glb",
+    "uuid": "31f0ab66-bbdf-4c85-b578-df1080721ecf"
+  },
+  {
+    "name": "ultrasound_probe",
+    "prompt": "ultrasound transducer probe, convex array medical device, cable, realistic veterinary diagnostic instrument, professional",
+    "output": "assets/models/instruments/ultrasound-probe/ultrasound_probe.glb",
+    "uuid": "2a4153bc-d8dc-4f1c-939e-080d239e5b1f"
+  },
+  {
+    "name": "surgical_scalpel",
+    "prompt": "surgical scalpel with blade, stainless steel handle, realistic veterinary surgical instrument, medical professional quality",
+    "output": "assets/models/instruments/surgical-set/surgical_scalpel.glb",
+    "uuid": "5a622706-8392-4feb-934d-37fd05815d0c"
+  },
+  {
+    "name": "syringe",
+    "prompt": "medical syringe with needle, 5ml graduated markings, plunger, realistic veterinary instrument, professional quality",
+    "output": "assets/models/instruments/syringe/syringe.glb",
+    "uuid": "d5e9196f-523e-4c2b-bfcc-a1f4e0412a64"
+  },
+  {
+    "name": "otoscope",
+    "prompt": "veterinary otoscope, cone-shaped speculum, light source, handle, realistic diagnostic instrument, professional medical device",
+    "output": "assets/models/instruments/otoscope/otoscope.glb",
+    "uuid": "0a13cf2b-053e-4f4e-b5a5-1d58d98e5f73"
+  },
+  {
+    "name": "ophthalmoscope",
+    "prompt": "direct ophthalmoscope, aperture wheel, lens selection, handle, realistic veterinary diagnostic instrument, professional",
+    "output": "assets/models/instruments/ophthalmoscope/ophthalmoscope.glb",
+    "uuid": "52c813a4-2624-4269-b358-8b4337921999"
+  },
+  {
+    "name": "thermometer",
+    "prompt": "digital veterinary thermometer, LCD display, probe tip, realistic medical instrument, professional quality",
+    "output": "assets/models/instruments/thermometer/thermometer.glb",
+    "uuid": "69116787-f4d1-4a9c-89a2-9950dda10e3b"
+  },
+  {
+    "name": "surgical_forceps",
+    "prompt": "surgical hemostatic forceps clamp, stainless steel, ratchet mechanism, realistic veterinary instrument, professional",
+    "output": "assets/models/instruments/surgical-set/surgical_forceps.glb",
+    "uuid": "5f619e0b-045c-4879-b6b4-f3a13663d2b8"
+  },
+  {
+    "name": "puppy",
+    "prompt": "cute golden retriever puppy, 8 weeks old, realistic young dog, small proportions, big eyes, veterinary pediatric model",
+    "output": "assets/models/special/puppy/puppy.glb",
+    "uuid": "2ae54c97-1fcc-4c06-8edc-0fdaf20ac91e"
+  },
+  {
+    "name": "kitten",
+    "prompt": "cute tabby kitten, 8 weeks old, realistic young cat, small proportions, big eyes, veterinary pediatric model",
+    "output": "assets/models/special/kitten/kitten.glb",
+    "uuid": "10942b18-909f-4f69-b287-d1938ebd4f36"
+  },
+  {
+    "name": "pregnant_dog",
+    "prompt": "pregnant female dog, distended abdomen, late pregnancy, realistic veterinary obstetric model, side view",
+    "output": "assets/models/special/pregnant-dog/pregnant_dog.glb",
+    "uuid": "e380ab18-0962-4226-87e1-984bd33d23c2"
+  },
+  {
+    "name": "pregnant_cat",
+    "prompt": "pregnant female cat, enlarged abdomen with kittens, late pregnancy, realistic veterinary obstetric model",
+    "output": "assets/models/special/pregnant-cat/pregnant_cat.glb",
+    "uuid": "1295baca-3a1a-44e3-a371-6cd453206a3e"
+  },
+  {
+    "name": "foal",
+    "prompt": "young foal horse, newborn, long legs, realistic young horse, veterinary equine pediatric model, standing",
+    "output": "assets/models/special/foal/foal.glb",
+    "uuid": "544549f7-cddf-44d4-a137-562a9c69ff92"
+  },
+  {
+    "name": "calf",
+    "prompt": "young calf, newborn Holstein dairy calf, realistic young cow, veterinary bovine pediatric model, standing",
+    "output": "assets/models/special/calf/calf.glb",
+    "uuid": "f6d78615-ee26-4189-a53c-46ad5846b2d2"
+  },
+  {
+    "name": "xray_abdomen_dog",
+    "prompt": "dog abdominal x-ray radiograph model, white skeletal structures on dark background, spine ribs pelvis visible, veterinary diagnostic",
+    "output": "assets/models/special/embryo/xray_abdomen_dog.glb",
+    "uuid": "9a7bc048-5a03-4e6d-8374-8d4115132186"
+  }
+]

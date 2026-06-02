@@ -1,0 +1,20 @@
+[
+  {"name": "dog_heart", "prompt": "anatomical dog heart, realistic veterinary medical model, four chambers visible, aorta and pulmonary arteries, detailed cardiovascular anatomy, educational model", "output": "assets/models/organs/heart/dog_heart.glb"},
+  {"name": "dog_lungs", "prompt": "anatomical dog lungs pair, realistic veterinary model, left and right lung lobes, bronchi visible, pink tissue, medical educational", "output": "assets/models/organs/lungs/dog_lungs.glb"},
+  {"name": "dog_liver", "prompt": "anatomical dog liver, realistic veterinary model, multiple lobes, gallbladder attached, hepatic vessels visible, medical educational", "output": "assets/models/organs/liver/dog_liver.glb"},
+  {"name": "dog_kidney", "prompt": "anatomical dog kidney cross-section, realistic veterinary model, cortex and medulla visible, renal pelvis, ureter, medical educational", "output": "assets/models/organs/kidney/dog_kidney.glb"},
+  {"name": "dog_stomach", "prompt": "anatomical dog stomach, realistic veterinary model, gastric folds visible, esophagus and pylorus connection, medical educational model", "output": "assets/models/organs/stomach/dog_stomach.glb"},
+  {"name": "dog_intestines", "prompt": "anatomical dog intestinal tract, small and large intestine coiled, realistic veterinary model, mesentery visible, medical educational", "output": "assets/models/organs/intestines/dog_intestines.glb"},
+  {"name": "dog_spleen", "prompt": "anatomical dog spleen, realistic elongated shape, splenic vessels, veterinary medical model, educational", "output": "assets/models/organs/spleen/dog_spleen.glb"},
+  {"name": "dog_bladder", "prompt": "anatomical urinary bladder, realistic veterinary model, ureters entering, urethra exit, smooth muscle wall, medical educational", "output": "assets/models/organs/bladder/dog_bladder.glb"},
+  {"name": "dog_brain", "prompt": "anatomical dog brain, realistic cerebrum cerebellum brainstem, gyri and sulci visible, veterinary neuroanatomy model, educational", "output": "assets/models/organs/brain/dog_brain.glb"},
+  {"name": "cat_heart", "prompt": "anatomical cat heart, realistic small feline heart, four chambers, great vessels, veterinary medical model, educational", "output": "assets/models/organs/heart/cat_heart.glb"},
+  {"name": "cat_kidney", "prompt": "anatomical cat kidneys pair, realistic feline kidneys, bean-shaped, cortex medulla visible, veterinary medical model", "output": "assets/models/organs/kidney/cat_kidney.glb"},
+  {"name": "cat_thyroid", "prompt": "anatomical cat thyroid gland, two lobes connected by isthmus, on trachea, realistic veterinary endocrine model, educational", "output": "assets/models/organs/thyroid/cat_thyroid.glb"},
+  {"name": "horse_heart", "prompt": "anatomical horse heart, large equine heart, realistic four chambers, great vessels, coronary arteries, veterinary educational model", "output": "assets/models/organs/heart/horse_heart.glb"},
+  {"name": "horse_hoof", "prompt": "anatomical horse hoof cross-section, showing laminae, coffin bone, digital cushion, frog, sole, wall, veterinary farriery educational model", "output": "assets/models/organs/hoof/horse_hoof.glb"},
+  {"name": "horse_intestines", "prompt": "anatomical horse large intestine and cecum, realistic equine GI tract, large cecum comma-shaped, veterinary educational model", "output": "assets/models/organs/intestines/horse_intestines.glb"},
+  {"name": "cow_rumen", "prompt": "anatomical cow four-chamber stomach, rumen reticulum omasum abomasum, realistic ruminant digestive system, veterinary educational model", "output": "assets/models/organs/stomach/cow_rumen.glb"},
+  {"name": "cow_udder", "prompt": "anatomical cow udder with four teats, mammary gland tissue, milk cistern, realistic veterinary model, educational", "output": "assets/models/organs/udder/cow_udder.glb"},
+  {"name": "dog_uterus", "prompt": "anatomical dog uterus, bicornuate uterine horns, ovaries, realistic veterinary reproductive model, educational", "output": "assets/models/organs/uterus/dog_uterus.glb"}
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "name": "enlarged_heart_dcm",
+    "prompt": "dilated cardiomyopathy enlarged heart, pathological veterinary model, grossly enlarged chambers, thin walls, medical educational model",
+    "output": "assets/models/pathology/enlarged-heart/enlarged_heart_dcm.glb",
+    "uuid": "36983169-f730-4b37-bc8d-acd3c00f0a09"
+  },
+  {
+    "name": "abdominal_tumor",
+    "prompt": "abdominal tumor mass, irregular round neoplasm with blood vessels, pathological veterinary model, medical educational",
+    "output": "assets/models/pathology/tumor/abdominal_tumor.glb",
+    "uuid": "b1391100-9186-4ac7-bf34-5253980266a3"
+  },
+  {
+    "name": "stomach_foreign_body",
+    "prompt": "dog stomach with foreign body inside, sock or ball visible through stomach wall, pathological veterinary model, educational",
+    "output": "assets/models/pathology/foreign-body/stomach_foreign_body.glb",
+    "uuid": "7b6e805f-845e-4830-8303-f66859d51edf"
+  },
+  {
+    "name": "fractured_femur",
+    "prompt": "fractured dog femur bone, transverse mid-shaft fracture, displaced bone fragments, veterinary orthopedic model, educational",
+    "output": "assets/models/pathology/fracture/fractured_femur.glb",
+    "uuid": "7dd6a0cb-5898-4491-ba10-37ec3b3c420c"
+  },
+  {
+    "name": "kidney_stones",
+    "prompt": "kidney with uroliths stones inside, calcium oxalate stones in renal pelvis, pathological veterinary model, educational",
+    "output": "assets/models/pathology/kidney-stone/kidney_stones.glb",
+    "uuid": "09da9a44-b3e2-4124-9a46-187c819bb3c3"
+  },
+  {
+    "name": "pyometra_uterus",
+    "prompt": "pyometra infected enlarged dog uterus, pus-filled distended uterine horns, pathological veterinary model, medical educational",
+    "output": "assets/models/pathology/pyometra/pyometra_uterus.glb",
+    "uuid": "15731b88-7415-4113-b78e-040ab84e33aa"
+  },
+  {
+    "name": "gdv_twisted_stomach",
+    "prompt": "gastric dilatation volvulus GDV, bloated twisted dog stomach, rotated spleen, pathological emergency veterinary model, educational",
+    "output": "assets/models/pathology/gdv/gdv_twisted_stomach.glb",
+    "uuid": "fd737137-b998-4411-a4ff-3cd23e4064e6"
+  },
+  {
+    "name": "hip_dysplasia",
+    "prompt": "canine hip dysplasia, shallow acetabulum, subluxated femoral head, pathological veterinary orthopedic model, educational",
+    "output": "assets/models/pathology/hip-dysplasia/hip_dysplasia.glb",
+    "uuid": "5dc0cec1-b3bb-4c70-8d94-ce94e4221db1"
+  },
+  {
+    "name": "cruciate_tear",
+    "prompt": "dog stifle knee joint with torn cranial cruciate ligament, tibial plateau, meniscus, pathological veterinary model, educational",
+    "output": "assets/models/pathology/cruciate-tear/cruciate_tear.glb",
+    "uuid": "2c2acbb5-6641-432a-a00d-317489d60398"
+  },
+  {
+    "name": "liver_cirrhosis",
+    "prompt": "cirrhotic liver, shrunken nodular surface, fibrotic tissue, pathological veterinary model, medical educational",
+    "output": "assets/models/pathology/liver-cirrhosis/liver_cirrhosis.glb",
+    "uuid": "6378de6f-1516-45c3-8c93-0bbf0ed58891"
+  },
+  {
+    "name": "bladder_stones",
+    "prompt": "urinary bladder with multiple cystic calculi stones inside, distended wall, pathological veterinary model, educational",
+    "output": "assets/models/pathology/bladder-stones/bladder_stones.glb",
+    "uuid": "4b203929-8ece-4c1f-828a-232ea8bf5752"
+  },
+  {
+    "name": "heartworm",
+    "prompt": "heart with dirofilaria heartworm parasites inside chambers and pulmonary arteries, pathological veterinary parasitology model",
+    "output": "assets/models/pathology/enlarged-heart/heartworm.glb",
+    "uuid": "99b464fa-992d-4dba-b2d0-fc351a5e6657"
+  }
+]

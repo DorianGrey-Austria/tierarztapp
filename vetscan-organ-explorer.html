@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Organ Explorer</title>
+<meta name="description" content="Interaktiver 3D-Organatlas fuer die Veterinaermedizin">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#131829;--surface2:#1c2340;--surface3:#252d4a;
+  --primary:#3b82f6;--primary-dark:#2563eb;
+  --accent:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#06b6d4;
+  --text:#e2e8f0;--muted:#64748b;
+  --radius:12px;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+.app{display:grid;grid-template-columns:300px 1fr 340px;grid-template-rows:52px 1fr;height:100vh}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
+.header h1{font-size:1rem;font-weight:700}
+.header h1 span{color:var(--accent)}
+
+/* Left panel - Species + Organ selection */
+.left-panel{background:var(--surface);border-right:1px solid var(--surface2);overflow-y:auto;padding:12px}
+.section-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:12px 0 8px;padding:0 4px}
+.section-title:first-child{margin-top:4px}
+
+.species-select{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.sp-btn{padding:8px 6px;border:1px solid transparent;border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.78rem;text-align:center;transition:all 0.15s}
+.sp-btn:hover{border-color:var(--primary)}
+.sp-btn.active{background:var(--primary);border-color:var(--primary-dark);font-weight:600}
+.sp-btn .emoji{font-size:1.2rem;display:block;margin-bottom:2px}
+
+.organ-list{display:flex;flex-direction:column;gap:4px}
+.organ-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:0.82rem;text-align:left;transition:all 0.15s;width:100%}
+.organ-btn:hover{background:var(--surface2)}
+.organ-btn.active{background:var(--primary);border-color:var(--primary-dark)}
+.organ-btn .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.organ-btn .label{flex:1}
+.organ-btn .status{font-size:0.65rem;padding:2px 6px;border-radius:4px;background:var(--surface3);color:var(--muted)}
+
+/* 3D Viewport */
+.viewport{position:relative;background:var(--bg)}
+.viewport canvas{display:block}
+
+/* Controls overlay */
+.scan-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:var(--radius);padding:6px;z-index:5}
+.scan-btn{padding:8px 16px;border:1px solid var(--surface2);border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.78rem;font-weight:500;transition:all 0.15s;white-space:nowrap}
+.scan-btn:hover{border-color:var(--primary)}
+.scan-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+.mode-indicator{position:absolute;top:16px;left:50%;transform:translateX(-50%);padding:6px 16px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:20px;font-size:0.75rem;color:var(--accent);font-weight:600;z-index:5;display:none}
+
+/* Right panel - Organ info */
+.right-panel{background:var(--surface);border-left:1px solid var(--surface2);overflow-y:auto;padding:16px}
+.info-card{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.info-card h3{font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.info-card p{font-size:0.8rem;color:var(--muted);line-height:1.6}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.stat{background:var(--surface3);border-radius:8px;padding:10px}
+.stat .label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.stat .value{font-size:1.1rem;font-weight:700;margin-top:2px}
+.stat .unit{font-size:0.7rem;color:var(--muted)}
+
+.pathology-toggle{display:flex;gap:4px;margin-top:12px}
+.pt-btn{flex:1;padding:8px;border:1px solid var(--surface3);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:0.75rem;text-align:center;transition:all 0.15s}
+.pt-btn:hover{border-color:var(--primary)}
+.pt-btn.active{border-color:var(--accent);background:rgba(16,185,129,0.1);color:var(--accent)}
+.pt-btn.danger{border-color:var(--danger);background:rgba(239,68,68,0.1);color:var(--danger)}
+
+.pathology-list{margin-top:12px}
+.pathology-item{padding:10px 12px;background:var(--surface3);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
+.pathology-item:hover{border-left-color:var(--danger)}
+.pathology-item.active{border-left-color:var(--danger);background:rgba(239,68,68,0.08)}
+.pathology-item h4{font-size:0.8rem;margin-bottom:4px}
+.pathology-item p{font-size:0.72rem;color:var(--muted);line-height:1.4}
+.pathology-item .severity{display:inline-block;font-size:0.6rem;padding:2px 6px;border-radius:4px;margin-top:4px}
+.severity-high{background:rgba(239,68,68,0.15);color:var(--danger)}
+.severity-medium{background:rgba(245,158,11,0.15);color:var(--warning)}
+.severity-low{background:rgba(6,182,212,0.15);color:var(--info)}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:20;transition:opacity 0.3s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{margin-top:12px;color:var(--muted);font-size:0.82rem}
+
+/* Welcome screen */
+.welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;z-index:3}
+.welcome .big-icon{font-size:5rem;margin-bottom:16px;opacity:0.2}
+.welcome h2{font-size:1.2rem;margin-bottom:8px;color:var(--text)}
+.welcome p{color:var(--muted);font-size:0.85rem;max-width:400px;line-height:1.6}
+
+/* Responsive */
+@media(max-width:1024px){
+  .app{grid-template-columns:1fr;grid-template-rows:52px auto 50vh auto}
+  .left-panel{display:flex;gap:8px;overflow-x:auto;padding:8px;border-right:none;border-bottom:1px solid var(--surface2)}
+  .section-title{display:none}
+  .species-select{display:flex;gap:4px}
+  .organ-list{flex-direction:row;overflow-x:auto}
+  .right-panel{border-left:none;border-top:1px solid var(--surface2)}
+}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1><span>&#x1F52C;</span> VetScan Organ Explorer</h1>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="vetscan-3d-viewer.html" style="color:var(--muted);text-decoration:none;font-size:0.75rem">3D-Viewer</a>
+      <a href="vetscan-version-selector.html" style="color:var(--muted);text-decoration:none;font-size:0.75rem">Alle Werkzeuge</a>
+    </div>
+  </header>
+
+  <!-- Left Panel -->
+  <nav class="left-panel" id="leftPanel">
+    <div class="section-title">Tierart waehlen</div>
+    <div class="species-select" id="speciesSelect"></div>
+    <div class="section-title">Organsystem</div>
+    <div class="organ-list" id="organList"></div>
+  </nav>
+
+  <!-- 3D Viewport -->
+  <main class="viewport" id="viewport">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="load-text" id="loadText">Organ Explorer wird geladen...</div>
+    </div>
+    <div class="welcome" id="welcome">
+      <div class="big-icon">&#x1FA7A;</div>
+      <h2>Waehle ein Organ zum Erkunden</h2>
+      <p>Waehle links eine Tierart und dann ein Organ, um es in 3D zu betrachten. Du kannst zwischen gesunden und pathologischen Zustaenden wechseln.</p>
+    </div>
+    <div class="mode-indicator" id="modeIndicator"></div>
+    <div class="scan-controls" id="scanControls" style="display:none">
+      <button class="scan-btn active" data-mode="standard">Standard</button>
+      <button class="scan-btn" data-mode="xray">Roentgen</button>
+      <button class="scan-btn" data-mode="ultrasound">Ultraschall</button>
+      <button class="scan-btn" data-mode="thermal">Thermal</button>
+      <button class="scan-btn" data-mode="section">Schnitt</button>
+    </div>
+  </main>
+
+  <!-- Right Panel - Organ Info -->
+  <aside class="right-panel" id="rightPanel">
+    <div class="info-card" id="organInfo" style="display:none">
+      <h3 id="organTitle"></h3>
+      <p id="organDesc"></p>
+      <div class="stat-grid" id="organStats"></div>
+    </div>
+
+    <div id="pathologySection" style="display:none">
+      <div class="info-card">
+        <h3>&#x26A0; Zustand</h3>
+        <div class="pathology-toggle">
+          <button class="pt-btn active" id="btnHealthy" onclick="setOrganState('healthy')">Gesund</button>
+          <button class="pt-btn" id="btnDiseased" onclick="setOrganState('diseased')">Erkrankt</button>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>&#x1F4CB; Haeufige Erkrankungen</h3>
+        <div class="pathology-list" id="pathologyList"></div>
+      </div>
+    </div>
+
+    <div class="info-card" id="examTips" style="display:none">
+      <h3>&#x1F9D1;&#x200D;&#x2695; Untersuchungstipps</h3>
+      <p id="examTipsContent"></p>
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// === VETERINARY ORGAN DATABASE ===
+const SPECIES = [
+  { id:'dog', name:'Hund', icon:'&#x1F415;' },
+  { id:'cat', name:'Katze', icon:'&#x1F408;' },
+  { id:'horse', name:'Pferd', icon:'&#x1F40E;' },
+  { id:'cow', name:'Rind', icon:'&#x1F404;' },
+];
+
+const ORGANS = {
+  dog: [
+    { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
+      model:'assets/models/organs/heart/dog_heart.glb',
+      pathModel:'assets/models/pathology/enlarged-heart/enlarged_heart_dcm.glb',
+      desc:'Das Hundeherz hat vier Kammern und wiegt bei einem mittelgrossen Hund ca. 200-300g. Die Herzfrequenz liegt in Ruhe bei 60-120/min.',
+      stats:[
+        {label:'Herzfrequenz',value:'60-120',unit:'/min'},
+        {label:'Gewicht',value:'200-300',unit:'g'},
+        {label:'Auswurf',value:'3-5',unit:'L/min'},
+        {label:'Systole',value:'100-160',unit:'mmHg'}
+      ],
+      pathologies:[
+        {name:'Dilatative Kardiomyopathie (DCM)',desc:'Erweiterung der Herzkammern mit verduennter Wand. Haeufig bei Dobermann, Dogge, Irischem Wolfshund.',severity:'high',model:'assets/models/pathology/enlarged-heart/enlarged_heart_dcm.glb'},
+        {name:'Mitralklappenendokardiose (MMVD)',desc:'Degenerative Verdickung der Mitralklappe. Haeufigste Herzerkrankung beim alten Hund, v.a. Cavalier King Charles.',severity:'high'},
+        {name:'Herzwurmerkrankung',desc:'Dirofilaria immitis in Pulmonalarterien und rechtem Herzen. Endemisch in Suedeuropa.',severity:'high',model:'assets/models/pathology/enlarged-heart/heartworm.glb'},
+        {name:'Perikarderguss',desc:'Fluessigkeitsansammlung im Herzbeutel. Kann zu Herztamponade fuehren.',severity:'medium'}
+      ],
+      examTips:'Auskultation: Linke Thoraxseite, 4.-6. Interkostalraum. Auf Herzgeraeusche (Grad I-VI), Rhythmus und Frequenz achten. Bei Verdacht auf DCM: Roentgen (VHS) und Echokardiographie.'
+    },
+    { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
+      model:'assets/models/organs/lungs/dog_lungs.glb',
+      desc:'Die Hundelunge hat links 2 Lappen (Cranialis, Caudalis) und rechts 4 Lappen. Atemfrequenz in Ruhe: 15-30/min.',
+      stats:[
+        {label:'Atemfrequenz',value:'15-30',unit:'/min'},
+        {label:'Tidalvolumen',value:'10-15',unit:'ml/kg'},
+        {label:'Lappen links',value:'2',unit:''},
+        {label:'Lappen rechts',value:'4',unit:''}
+      ],
+      pathologies:[
+        {name:'Pneumonie',desc:'Bakterielle oder virale Lungenentzuendung. Symptome: Husten, Fieber, Dyspnoe, Nasenausfluss.',severity:'high'},
+        {name:'Lungenoedem',desc:'Fluessigkeitsansammlung in den Alveolen. Haeufig bei Linksherzinsuffizienz.',severity:'high'},
+        {name:'Lungenmetastasen',desc:'Tumorableger in der Lunge. Roentgenologisch: multiple runde Verschattungen ("cannonball lesions").',severity:'high'},
+        {name:'Trachealkollaps',desc:'Dorsoventrales Abflachen der Trachea. Typisch: Zwergrassen, "Gansehupfen"-Husten.',severity:'medium'}
+      ],
+      examTips:'Auskultation: Beide Thoraxseiten, systematisch von cranial nach caudal. Normale Atemgeraeusche: vesikulaer. Pathologisch: verstaerkt, rasselnd, giemend. Bei Verdacht: Thoraxroentgen in 2 Ebenen.'
+    },
+    { id:'liver', name:'Leber', color:'#8b5cf6', system:'Gastrointestinal',
+      model:'assets/models/organs/liver/dog_liver.glb',
+      pathModel:'assets/models/pathology/liver-cirrhosis/liver_cirrhosis.glb',
+      desc:'Die Hundeleber liegt im kranialen Abdomen und hat 6 Lappen. Sie wiegt ca. 3-4% des Koerpergewichts und ist das zentrale Stoffwechselorgan.',
+      stats:[
+        {label:'Gewicht',value:'3-4',unit:'% KGW'},
+        {label:'Lappen',value:'6',unit:''},
+        {label:'ALT normal',value:'10-125',unit:'U/L'},
+        {label:'AP normal',value:'23-212',unit:'U/L'}
+      ],
+      pathologies:[
+        {name:'Leberzirrhose',desc:'Chronische Lebererkrankung mit Fibrosierung. Endstadium verschiedener Hepatopathien.',severity:'high',model:'assets/models/pathology/liver-cirrhosis/liver_cirrhosis.glb'},
+        {name:'Portosystemischer Shunt',desc:'Abnormale Gefaessverbindung, die die Leber umgeht. Kongenital oder erworben. Hepatoenzephalopathie moeglich.',severity:'high'},
+        {name:'Hepatitis',desc:'Entzuendung der Leber. Akut: infektioese Hepatitis (Adenovirus). Chronisch: Kupferassoziiert (Bedlington Terrier).',severity:'medium'}
+      ],
+      examTips:'Palpation: Kaudal des Rippenbogens. Normale Leber kaum palpierbar. Vergroesserung: ueber Rippenbogen tastbar. Labor: ALT, AST, AP, GGT, Bilirubin, Albumin, Gerinnungswerte.'
+    },
+    { id:'kidney', name:'Niere', color:'#06b6d4', system:'Urogenital',
+      model:'assets/models/organs/kidney/dog_kidney.glb',
+      pathModel:'assets/models/pathology/kidney-stone/kidney_stones.glb',
+      desc:'Hunde haben zwei bohnenfoermige Nieren retroperitoneal. Die linke Niere liegt kaudaler und ist mobiler als die rechte.',
+      stats:[
+        {label:'Kreatinin',value:'0.5-1.8',unit:'mg/dL'},
+        {label:'Harnstoff',value:'21-60',unit:'mg/dL'},
+        {label:'spez. Gewicht',value:'>1.030',unit:''},
+        {label:'SDMA',value:'0-14',unit:'ug/dL'}
+      ],
+      pathologies:[
+        {name:'Chronische Niereninsuffizienz (CKD)',desc:'Progressiver Verlust der Nierenfunktion. IRIS Staging I-IV. Haeufig bei aelteren Hunden.',severity:'high'},
+        {name:'Nephrolithiasis',desc:'Harnsteine in der Niere. Kalziumoxalat, Struvit, Urat. Ultraschall und Roentgen zur Diagnose.',severity:'medium',model:'assets/models/pathology/kidney-stone/kidney_stones.glb'},
+        {name:'Akute Nierenschaedigung (AKI)',desc:'Ploetzlicher Nierenfunktionsverlust. Ursachen: Toxine (Trauben, Lilien, NSAIDs), Ischaemie.',severity:'high'}
+      ],
+      examTips:'Palpation: Beidseits der Wirbelsaeule, lumbal. Linke Niere oft gut palpierbar. Auf Groesse, Form, Schmerzhaftigkeit achten. Labor: Kreatinin, Harnstoff, SDMA, Urinanalyse.'
+    },
+    { id:'stomach', name:'Magen', color:'#f59e0b', system:'Gastrointestinal',
+      model:'assets/models/organs/stomach/dog_stomach.glb',
+      pathModel:'assets/models/pathology/gdv/gdv_twisted_stomach.glb',
+      desc:'Der einfache Magen des Hundes fasst je nach Groesse 0.5-8 Liter. Magensaeure pH 1-2. Magenentleerung nach 6-8 Stunden.',
+      stats:[
+        {label:'Fassungsvermoegen',value:'0.5-8',unit:'L'},
+        {label:'pH Magensaft',value:'1-2',unit:''},
+        {label:'Entleerung',value:'6-8',unit:'h'},
+        {label:'Abb. Roentgen',value:'C-Form',unit:''}
+      ],
+      pathologies:[
+        {name:'Magendrehung (GDV)',desc:'Lebensbedrohlicher Notfall! Magen blaet sich auf und dreht sich. Grosse Rassen, tiefe Brust. Sofortige OP!',severity:'high',model:'assets/models/pathology/gdv/gdv_twisted_stomach.glb'},
+        {name:'Fremdkoerper',desc:'Verschluckte Gegenstaende (Socken, Spielzeug, Knochen). Symptome: Erbrechen, Inappetenz, Bauchschmerzen.',severity:'medium',model:'assets/models/pathology/foreign-body/stomach_foreign_body.glb'},
+        {name:'Gastritis',desc:'Entzuendung der Magenschleimhaut. Akut: Erbrechen, Inappetenz. Chronisch: intermittierendes Erbrechen.',severity:'low'}
+      ],
+      examTips:'Palpation: Kraniodorsales Abdomen, links der Medianlinie. GDV-Verdacht: aufgetriebenes Abdomen, Tympanie, erfolgloser Brechversuch. SOFORT Roentgen! Klassisches "Double-Bubble"-Zeichen.'
+    },
+    { id:'bladder', name:'Harnblase', color:'#14b8a6', system:'Urogenital',
+      model:'assets/models/organs/bladder/dog_bladder.glb',
+      pathModel:'assets/models/pathology/bladder-stones/bladder_stones.glb',
+      desc:'Die Harnblase liegt im kaudalen Abdomen/Becken. Normale Kapazitaet abhaengig von der Groesse: 50-500 ml.',
+      stats:[
+        {label:'Kapazitaet',value:'50-500',unit:'ml'},
+        {label:'Urin-pH',value:'6.0-7.5',unit:''},
+        {label:'Wanddicke',value:'<3',unit:'mm'},
+        {label:'Harnmenge/Tag',value:'20-40',unit:'ml/kg'}
+      ],
+      pathologies:[
+        {name:'Urolithiasis (Blasensteine)',desc:'Struvit, Kalziumoxalat, Urat. Symptome: Haematurie, Strangurie, Pollakisurie.',severity:'medium',model:'assets/models/pathology/bladder-stones/bladder_stones.glb'},
+        {name:'Harnwegsinfektion',desc:'Bakterielle Zystitis, haeufiger bei Huendinnen. E. coli, Staphylokokken.',severity:'low'},
+        {name:'Blasenruptur',desc:'Riss der Harnblasenwand nach Trauma oder Ueberdilatation. Uroabdomen! Notfall.',severity:'high'}
+      ],
+      examTips:'Palpation: Kaudales Abdomen. Groesse, Prallheit, Schmerzhaftigkeit beurteilen. Ausdrueckbar? Bei Obstruktion: steinhart, nicht ausdrueckbar. Ultraschall: Wanddicke, Inhalt (Steine, Sediment).'
+    },
+    { id:'uterus', name:'Gebaermutter', color:'#f472b6', system:'Reproduktion',
+      model:'assets/models/organs/uterus/dog_uterus.glb',
+      pathModel:'assets/models/pathology/pyometra/pyometra_uterus.glb',
+      desc:'Der Hundeuterus ist bicornuat (Y-foermig) mit zwei langen Uterushoernern. Welpen entwickeln sich in den Hoernern.',
+      stats:[
+        {label:'Traechtigkeit',value:'63',unit:'Tage'},
+        {label:'Wurfgroesse',value:'4-8',unit:'Welpen'},
+        {label:'Laeufikeitszyklus',value:'6-8',unit:'Monate'},
+        {label:'Geschlechtsreife',value:'6-12',unit:'Monate'}
+      ],
+      pathologies:[
+        {name:'Pyometra',desc:'Eitriger Inhalt in der Gebaermutter. Offen oder geschlossen. Lebensbedrohlich! Typisch 4-8 Wochen nach Laeufigkeit.',severity:'high',model:'assets/models/pathology/pyometra/pyometra_uterus.glb'},
+        {name:'Uterustorsion',desc:'Drehung des Uterus, meist in der Traechtigkeit. Selten. Notfall-OP erforderlich.',severity:'high'},
+        {name:'Endometritis',desc:'Entzuendung der Gebharmutterschleimhaut. Kann zu Pyometra fortschreiten.',severity:'medium'}
+      ],
+      examTips:'Palpation: Ab Tag 25 der Traechtigkeit tastbar. Pyometra: Vergroesserte, wurstfoermige Struktur im kaudalen Abdomen. Ultraschall: Fluessigkeitsgefuellte Uterushoerner. Labor: Leukozytose, CRP erhoeht.'
+    },
+    { id:'spleen', name:'Milz', color:'#a855f7', system:'Lymphatisch',
+      model:'assets/models/organs/spleen/dog_spleen.glb',
+      pathModel:'assets/models/pathology/tumor/abdominal_tumor.glb',
+      desc:'Die Hundemilz liegt links im kranialen Abdomen. Laenglich, blattfoermig. Wichtig fuer Immunfunktion und Blutfilterung.',
+      stats:[
+        {label:'Gewicht',value:'50-200',unit:'g'},
+        {label:'Laenge',value:'15-25',unit:'cm'},
+        {label:'Blutreservoir',value:'10-20',unit:'% BV'},
+        {label:'Breite',value:'5-8',unit:'cm'}
+      ],
+      pathologies:[
+        {name:'Haemangiosarkom',desc:'Maligner Gefaesstumor. Haeufigster Milztumor beim Hund. Gefahr der Ruptur und Haemoabdomen!',severity:'high',model:'assets/models/pathology/tumor/abdominal_tumor.glb'},
+        {name:'Milztorsion',desc:'Drehung der Milz um ihren Gefaessstiel. Akutes Abdomen. Oft mit GDV assoziiert.',severity:'high'},
+        {name:'Splenomegalie',desc:'Milzvergroesserung. Ursachen: Stauung, Entzuendung, Neoplasie, Haemolyse.',severity:'medium'}
+      ],
+      examTips:'Palpation: Linkes kraniales Abdomen. Bei Splenomegalie ueber Mittellinie tastbar. Bei Milztumor-Verdacht: Ultraschall (nodulare Veraenderungen), KEIN Punktat (Blutungsgefahr)!'
+    },
+    { id:'brain', name:'Gehirn', color:'#94a3b8', system:'Neurologie',
+      model:'assets/models/organs/brain/dog_brain.glb',
+      desc:'Das Hundegehirn wiegt ca. 50-130g. Grosshirn, Kleinhirn und Hirnstamm. Liquor cerebrospinalis schuetzt und naehrt das Gehirn.',
+      stats:[
+        {label:'Gewicht',value:'50-130',unit:'g'},
+        {label:'Liquor-Produktion',value:'0.03-0.05',unit:'ml/min'},
+        {label:'Liquor-Protein',value:'<25',unit:'mg/dL'},
+        {label:'Liquor-Zellen',value:'<5',unit:'/uL'}
+      ],
+      pathologies:[
+        {name:'Epilepsie',desc:'Idiopathische Epilepsie: haeufig bei genetisch praedisponierten Rassen (Labrador, Beagle, GSH). Strukturelle Epilepsie: Tumor, Enzephalitis.',severity:'high'},
+        {name:'Meningoenzephalitis',desc:'Entzuendung von Hirnhaeuten und Gehirn. GME, NME, NLE (immunvermittelt). MRT + Liquoruntersuchung.',severity:'high'},
+        {name:'Hirntumor',desc:'Meningeom (haeufigster extraaxialer Tumor), Gliom. Symptome: Anfaelle, Verhaltensaenderungen, Kreislaufen.',severity:'high'}
+      ],
+      examTips:'Neurologische Untersuchung: Bewusstsein, Kopfnerven (I-XII), Haltungs-/Stellreaktionen, Reflexe, Schmerz. Lokalisierung: Vorderhirn, Hirnstamm, Kleinhirn, Rueckenmark. Goldstandard: MRT.'
+    }
+  ],
+  cat: [
+    { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
+      model:'assets/models/organs/heart/cat_heart.glb',
+      desc:'Das Katzenherz wiegt nur 15-20g. Herzfrequenz in Ruhe: 120-180/min. Haeufigste Herzerkrankung: HCM.',
+      stats:[
+        {label:'Herzfrequenz',value:'120-180',unit:'/min'},
+        {label:'Gewicht',value:'15-20',unit:'g'},
+        {label:'Blutdruck syst.',value:'120-170',unit:'mmHg'},
+        {label:'Herztondauer',value:'0.1-0.2',unit:'s'}
+      ],
+      pathologies:[
+        {name:'Hypertrophe Kardiomyopathie (HCM)',desc:'Verdickung des linken Ventrikels. Haeufigste Herzerkrankung der Katze. Genetisch bei Maine Coon, Ragdoll.',severity:'high'},
+        {name:'Aortenthrombose (ATE)',desc:'Blutgerinnsel in der Aorta bifurkation ("Sattelthrombus"). Akute Hinterhandlaehmung, Schmerz. Notfall!',severity:'high'},
+        {name:'Restriktive Kardiomyopathie',desc:'Versteifung des Herzmuskels. Schlechte Fuellbarkeit. Schlechtere Prognose als HCM.',severity:'high'}
+      ],
+      examTips:'Auskultation schwieriger als beim Hund: Katze oft gestresst (Purring!). Ruhe abwarten. ProBNP und Troponin I bei Verdacht. Echokardiographie: IVSd und LVPWd > 6mm = HCM.'
+    },
+    { id:'kidney', name:'Niere', color:'#06b6d4', system:'Urogenital',
+      model:'assets/models/organs/kidney/cat_kidney.glb',
+      desc:'Katzennieren sind relativ gross im Verhaeltnis zum Koerpergewicht. CKD ist eine der haeufigsten Erkrankungen alter Katzen.',
+      stats:[
+        {label:'Kreatinin',value:'0.8-1.8',unit:'mg/dL'},
+        {label:'SDMA',value:'0-14',unit:'ug/dL'},
+        {label:'spez. Gewicht',value:'>1.035',unit:''},
+        {label:'IRIS Stadium',value:'I-IV',unit:''}
+      ],
+      pathologies:[
+        {name:'Chronische Niereninsuffizienz (CKD)',desc:'Haeufigste Erkrankung alter Katzen (>30% ueber 15 Jahre). IRIS Staging. Fruehe Marker: SDMA, spezifisches Gewicht.',severity:'high'},
+        {name:'Polyzystische Nierenerkrankung (PKD)',desc:'Autosomal dominant bei Persern und verwandten Rassen. Multiple Zysten, progressive Niereninsuffizienz.',severity:'high'},
+        {name:'Akute Nierenschaedigung',desc:'Toxisch: Lilien (!), Ethylenglykol, NSAIDs. Infektioees: FIP, Pyelonephritis.',severity:'high'}
+      ],
+      examTips:'Palpation: Beide Nieren gut tastbar bei schlanken Katzen. Groesse, Asymmetrie, Schmerz. SDMA frueher auffaellig als Kreatinin. Ultraschall: Nierengroesse, Parenchymstruktur, Beckenweite.'
+    },
+    { id:'thyroid', name:'Schilddruese', color:'#f97316', system:'Endokrin',
+      model:'assets/models/organs/thyroid/cat_thyroid.glb',
+      desc:'Die Schilddruese liegt beidseits der Trachea. Bei der Katze ist Hyperthyreose (Ueberfunktion) die haeufigste Endokrinopathie.',
+      stats:[
+        {label:'T4 gesamt',value:'1.0-4.0',unit:'ug/dL'},
+        {label:'fT4',value:'12-30',unit:'pmol/L'},
+        {label:'TSH',value:'0.05-0.4',unit:'ng/mL'},
+        {label:'Alter bei Diagnose',value:'>10',unit:'Jahre'}
+      ],
+      pathologies:[
+        {name:'Hyperthyreose',desc:'Haeufigste Endokrinopathie alter Katzen. Adenom/Hyperplasie. Symptome: Gewichtsverlust trotz Polyphagie, Tachykardie, Unruhe.',severity:'high'},
+        {name:'Schilddruesenkarzinom',desc:'Maligner Tumor. Selten (2-5% der Hyperthyreosen). Grosse, derbe, fixierte Masse. Metastasen moeglich.',severity:'high'}
+      ],
+      examTips:'Palpation: Ventral am Hals, beidseits der Trachea. Vergroesserte Schilddruese als kleiner Knoten tastbar. Labor: T4 gesamt als Screening. fT4 bei grenzwertigen Werten. Blutdruck messen!'
+    }
+  ],
+  horse: [
+    { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
+      model:'assets/models/organs/heart/horse_heart.glb',
+      desc:'Das Pferdeherz wiegt 3-5 kg und ist eines der groessten Saeugetierherzen. Ruhepuls 28-40/min. Herzgeraeusche Grad I-II sind oft physiologisch.',
+      stats:[
+        {label:'Herzfrequenz',value:'28-40',unit:'/min'},
+        {label:'Gewicht',value:'3-5',unit:'kg'},
+        {label:'Herzminuten-Vol.',value:'30-40',unit:'L/min'},
+        {label:'Systole',value:'80-120',unit:'mmHg'}
+      ],
+      pathologies:[
+        {name:'Vorhofflimmern',desc:'Haeufigste klinisch relevante Arrhythmie beim Pferd. Unregelmaessig-unregelmaessiger Rhythmus. Leistungsabfall.',severity:'medium'},
+        {name:'Mitralklappeninsuffizienz',desc:'Haeufigster erworbener Herzklappenfehler. Degenerativ oder sekundaer bei Myokarditis.',severity:'medium'},
+        {name:'Myokarditis',desc:'Entzuendung des Herzmuskels. Post-infektioees (Streptokokken, Influenza). Arrhythmien.',severity:'high'}
+      ],
+      examTips:'Auskultation: Linke Seite 3.-5. IKR. Rechts: 3.-4. IKR. Physiologische Geraeusche (Grad I-II) beim Pferd haeufig! EKG: Limb-Lead Basisuntersuchung. Echokardiographie bei Leistungsminderung.'
+    },
+    { id:'hoof', name:'Huf', color:'#92400e', system:'Bewegungsapparat',
+      model:'assets/models/organs/hoof/horse_hoof.glb',
+      desc:'Der Huf ist das modifizierte dritte Zehenglied des Pferdes. Hufwand, Sohle, Strahl, Hufbein, Hufknorpel, Strahlkissen bilden eine funktionelle Einheit.',
+      stats:[
+        {label:'Wachstum',value:'6-10',unit:'mm/Monat'},
+        {label:'Beschlagintervall',value:'6-8',unit:'Wochen'},
+        {label:'Hufwinkel vorne',value:'50-55',unit:'Grad'},
+        {label:'Hufwinkel hinten',value:'55-60',unit:'Grad'}
+      ],
+      pathologies:[
+        {name:'Hufrehe (Laminitis)',desc:'Entzuendung der Huflederhaut. Rotation/Senkung des Hufbeins. NOTFALL! Ursachen: metabolisch (EMS), toxisch, belastungsbedingt.',severity:'high'},
+        {name:'Hufabszess',desc:'Eitrige Infektion in der weissen Linie oder Sohle. Akute, hochgradige Lahmheit. Hufzange zum Lokalisieren.',severity:'medium'},
+        {name:'Strahlbeinerkrankung (Podotrochlitis)',desc:'Degenerative Veraenderung im Bereich des Strahlbeins und der tiefen Beugesehne. Chronische Lahmheit.',severity:'medium'}
+      ],
+      examTips:'Adspektion: Hufform, Trachtenhoehe, Hufwandqualitaet. Hufzangenprobe: Druckschmerz lokalisieren. Digitaler Puls: Bei Hufrehe verstaerkt. Roentgen: Hufbeinstellung (Rotation? Senkung?).'
+    },
+    { id:'intestines', name:'Darm/Caecum', color:'#84cc16', system:'Gastrointestinal',
+      model:'assets/models/organs/intestines/horse_intestines.glb',
+      desc:'Der Pferdedarm ist ca. 25-30m lang. Das Caecum fasst 25-35 Liter. Kolik ist die haeufigste Todesursache beim Pferd.',
+      stats:[
+        {label:'Darmlaenge',value:'25-30',unit:'m'},
+        {label:'Caecum-Volumen',value:'25-35',unit:'L'},
+        {label:'Kotabsatz',value:'6-10',unit:'x/Tag'},
+        {label:'Passage-Zeit',value:'36-72',unit:'h'}
+      ],
+      pathologies:[
+        {name:'Krampfkolik (spasmodisch)',desc:'Haeufigste Kolikform. Erhoehte Darmmotilitaet, Spasmen. Meist selbstlimitierend oder gut therapierbar.',severity:'medium'},
+        {name:'Dickdarmverlagerung',desc:'Lageveraenderung des Colon ascendens. Links-/Rechtsverlagerung, Torsion. Oft OP erforderlich.',severity:'high'},
+        {name:'Duenndarm-Strangulation',desc:'Einklemmung oder Abschnuerung. Strangulierender Lipom (alte Pferde). Notfall-OP!',severity:'high'},
+        {name:'Sandkolik',desc:'Sandansammlung im grossen Kolon. Regionen mit sandigem Boden. Diagnose: Kotprobe in Wasser.',severity:'medium'}
+      ],
+      examTips:'Rektale Untersuchung: Standardprozedur bei Kolik! Labmagen-Verlagerung ausschliessen. Darmgeraeusche in allen 4 Quadranten auskultieren. Bauchhoehlenpunktat: Protein, Zellzahl, Farbe. Nasenschlundsonde: Reflux?'
+    }
+  ],
+  cow: [
+    { id:'rumen', name:'Pansen/Vormagen', color:'#16a34a', system:'Gastrointestinal',
+      model:'assets/models/organs/stomach/cow_rumen.glb',
+      desc:'Der Wiederkaeuer-Magen besteht aus 4 Abteilungen: Pansen (Rumen, 150-200L), Netzmagen (Reticulum), Blaettermagen (Omasum) und Labmagen (Abomasum).',
+      stats:[
+        {label:'Pansen-Vol.',value:'150-200',unit:'L'},
+        {label:'pH Pansen',value:'5.5-7.0',unit:''},
+        {label:'Wiederkautakte',value:'40-70',unit:'/Tag'},
+        {label:'Pansentemp.',value:'39-40',unit:'C'}
+      ],
+      pathologies:[
+        {name:'Pansenazidose',desc:'pH-Abfall im Pansen durch uebermassige Kraftfuttergabe. Akut: lebensbedrohlich. Subklinisch: Klauenprobleme.',severity:'high'},
+        {name:'Labmagenverlagerung',desc:'Links- oder Rechtsverlagerung des Labmagens. Typisch postpartal bei Hochleistungskuehen. Auskultation: "Plings".',severity:'high'},
+        {name:'Fremdkoerper-Perikarditis',desc:'Nagel/Draht durchbohrt Netzmagen und Zwerchfell -> Herzbeutelentzuendung. "Kuhgrippe".',severity:'high'}
+      ],
+      examTips:'Pansenauskultation: Links, Hungergrube. Normale Kontraktionen: 2-3/2 min. Pansensaftentnahme mit Schlundsonde. Labmagenverlagerung: Perkussion + Auskultation der rechten Bauchwand ("Ping"-Test).'
+    },
+    { id:'udder', name:'Euter', color:'#f472b6', system:'Reproduktion',
+      model:'assets/models/organs/udder/cow_udder.glb',
+      desc:'Das Kuheuter hat 4 separate Druesen mit je einer Zitze. Tagesleistung bei Hochleistungskuehen: 30-60 Liter Milch.',
+      stats:[
+        {label:'Milchleistung',value:'30-60',unit:'L/Tag'},
+        {label:'Zitzen',value:'4',unit:''},
+        {label:'Zellzahl normal',value:'<100.000',unit:'/mL'},
+        {label:'Fettgehalt',value:'3.5-4.5',unit:'%'}
+      ],
+      pathologies:[
+        {name:'Mastitis (Euterentzuendung)',desc:'Haeufigste und teuerste Erkrankung der Milchkuh. Klinisch oder subklinisch. Erreger: S. aureus, E. coli, Streptokokken.',severity:'high'},
+        {name:'Euteroedem',desc:'Schwellung des Euters peripartal. Physiologisch mild, pathologisch bei starker Auspraegung.',severity:'low'},
+        {name:'Zitzenverletzung',desc:'Tritt- oder Quetschverletzungen der Zitze. Kann zu Strichkanalverengung fuehren.',severity:'medium'}
+      ],
+      examTips:'Adspektion: Symmetrie, Schwellung, Roetung, Waerme. Palpation: Konsistenz, Schmerz. Milchproben: CMT (California Mastitis Test) als Schnelltest. Bakteriologische Untersuchung. Zellzahl im Labor.'
+    }
+  ]
+};
+
+// === APP STATE ===
+const state = {
+  currentSpecies: 'dog',
+  currentOrgan: null,
+  currentState: 'healthy', // healthy | diseased
+  currentMode: 'standard', // standard | xray | ultrasound | thermal | section
+  scene: null, camera: null, renderer: null, controls: null,
+  currentModel: null,
+  loader: new GLTFLoader(),
+};
+
+// === BUILD UI ===
+function buildSpeciesSelect() {
+  const el = document.getElementById('speciesSelect');
+  el.innerHTML = SPECIES.map(s =>
+    `<button class="sp-btn${s.id === state.currentSpecies ? ' active' : ''}" data-id="${s.id}">
+      <span class="emoji">${s.icon}</span>${s.name}
+    </button>`
+  ).join('');
+  el.querySelectorAll('.sp-btn').forEach(btn => {
+    btn.addEventListener('click', () => selectSpecies(btn.dataset.id));
+  });
+}
+
+function buildOrganList() {
+  const organs = ORGANS[state.currentSpecies] || [];
+  const el = document.getElementById('organList');
+  el.innerHTML = organs.map(o =>
+    `<button class="organ-btn${state.currentOrgan?.id === o.id ? ' active' : ''}" data-id="${o.id}">
+      <span class="dot" style="background:${o.color}"></span>
+      <span class="label">${o.name}</span>
+      <span class="status">${o.system}</span>
+    </button>`
+  ).join('');
+  el.querySelectorAll('.organ-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const organ = organs.find(o => o.id === btn.dataset.id);
+      if (organ) selectOrgan(organ);
+    });
+  });
+}
+
+function selectSpecies(speciesId) {
+  state.currentSpecies = speciesId;
+  state.currentOrgan = null;
+  buildSpeciesSelect();
+  buildOrganList();
+  clearOrganInfo();
+  clearModel();
+}
+
+function selectOrgan(organ) {
+  state.currentOrgan = organ;
+  state.currentState = 'healthy';
+  buildOrganList();
+  showOrganInfo(organ);
+  loadOrganModel(organ);
+  document.getElementById('scanControls').style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+}
+
+// === ORGAN INFO PANEL ===
+function showOrganInfo(organ) {
+  const infoEl = document.getElementById('organInfo');
+  infoEl.style.display = 'block';
+  document.getElementById('organTitle').innerHTML = `<span style="color:${organ.color}">&#x25CF;</span> ${organ.name} <small style="color:var(--muted);font-weight:normal">(${SPECIES.find(s=>s.id===state.currentSpecies)?.name})</small>`;
+  document.getElementById('organDesc').textContent = organ.desc;
+
+  const statsEl = document.getElementById('organStats');
+  statsEl.innerHTML = organ.stats.map(s =>
+    `<div class="stat"><div class="label">${s.label}</div><div class="value">${s.value} <span class="unit">${s.unit}</span></div></div>`
+  ).join('');
+
+  // Pathologies
+  const pathSection = document.getElementById('pathologySection');
+  pathSection.style.display = 'block';
+  document.getElementById('btnHealthy').classList.add('active');
+  document.getElementById('btnDiseased').classList.remove('active','danger');
+
+  const pathList = document.getElementById('pathologyList');
+  pathList.innerHTML = organ.pathologies.map((p, i) =>
+    `<div class="pathology-item" data-idx="${i}" onclick="selectPathology(${i})">
+      <h4>${p.name}</h4>
+      <p>${p.desc}</p>
+      <span class="severity severity-${p.severity}">${p.severity === 'high' ? 'Schwerwiegend' : p.severity === 'medium' ? 'Mittel' : 'Leicht'}</span>
+    </div>`
+  ).join('');
+
+  // Exam tips
+  const tipsEl = document.getElementById('examTips');
+  tipsEl.style.display = organ.examTips ? 'block' : 'none';
+  document.getElementById('examTipsContent').textContent = organ.examTips || '';
+}
+
+function clearOrganInfo() {
+  document.getElementById('organInfo').style.display = 'none';
+  document.getElementById('pathologySection').style.display = 'none';
+  document.getElementById('examTips').style.display = 'none';
+  document.getElementById('scanControls').style.display = 'none';
+}
+
+// === ORGAN STATE (healthy/diseased) ===
+window.setOrganState = function(st) {
+  state.currentState = st;
+  document.getElementById('btnHealthy').classList.toggle('active', st === 'healthy');
+  document.getElementById('btnHealthy').classList.remove('danger');
+  document.getElementById('btnDiseased').classList.toggle('active', st === 'diseased');
+  document.getElementById('btnDiseased').classList.toggle('danger', st === 'diseased');
+
+  if (state.currentOrgan) {
+    loadOrganModel(state.currentOrgan);
+  }
+};
+
+window.selectPathology = function(idx) {
+  const organ = state.currentOrgan;
+  if (!organ) return;
+  const pathology = organ.pathologies[idx];
+
+  document.querySelectorAll('.pathology-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+
+  // Switch to diseased state if pathology has a model
+  if (pathology.model) {
+    state.currentState = 'diseased';
+    document.getElementById('btnHealthy').classList.remove('active');
+    document.getElementById('btnDiseased').classList.add('active', 'danger');
+    loadModelFromPath(pathology.model);
+  }
+};
+
+// === THREE.JS ===
+function initThreeJS() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  state.scene = new THREE.Scene();
+  state.scene.background = new THREE.Color(0x0a0e1a);
+
+  state.camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.01, 100);
+  state.camera.position.set(2, 1.5, 2);
+
+  state.renderer = new THREE.WebGLRenderer({ antialias: true });
+  state.renderer.setSize(rect.width, rect.height);
+  state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.2;
+  state.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(state.renderer.domElement);
+
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.08;
+  state.controls.autoRotate = true;
+  state.controls.autoRotateSpeed = 1.0;
+  state.controls.minDistance = 0.2;
+  state.controls.maxDistance = 10;
+
+  // Lighting for medical models
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  state.scene.add(ambient);
+
+  const key = new THREE.DirectionalLight(0xffffff, 1.5);
+  key.position.set(5, 8, 5);
+  state.scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fill.position.set(-3, 3, -5);
+  state.scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xff6644, 0.3);
+  rim.position.set(0, -2, -3);
+  state.scene.add(rim);
+
+  // Grid
+  const grid = new THREE.GridHelper(6, 12, 0x1c2340, 0x131829);
+  state.scene.add(grid);
+
+  // Resize
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const { width, height } = e.contentRect;
+      state.camera.aspect = width / height;
+      state.camera.updateProjectionMatrix();
+      state.renderer.setSize(width, height);
+    }
+  });
+  ro.observe(container);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    state.controls.update();
+    state.renderer.render(state.scene, state.camera);
+  }
+  animate();
+
+  document.getElementById('loader').classList.add('hidden');
+}
+
+function clearModel() {
+  if (state.currentModel) {
+    state.scene.remove(state.currentModel);
+    state.currentModel.traverse(c => {
+      if (c.isMesh) {
+        c.geometry.dispose();
+        if (c.material.map) c.material.map.dispose();
+        c.material.dispose();
+      }
+    });
+    state.currentModel = null;
+  }
+}
+
+function loadOrganModel(organ) {
+  const modelPath = (state.currentState === 'diseased' && organ.pathModel)
+    ? organ.pathModel
+    : organ.model;
+  loadModelFromPath(modelPath);
+}
+
+function loadModelFromPath(modelPath) {
+  const loader = document.getElementById('loader');
+  loader.classList.remove('hidden');
+  document.getElementById('loadText').textContent = 'Modell wird geladen...';
+
+  clearModel();
+
+  state.loader.load(
+    modelPath,
+    (gltf) => {
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 1.5 / maxDim;
+
+      model.scale.setScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      model.position.y -= (box.min.y * scale);
+
+      state.scene.add(model);
+      state.currentModel = model;
+
+      // Apply color tint based on organ
+      if (state.currentOrgan) {
+        const color = new THREE.Color(state.currentOrgan.color);
+        model.traverse(child => {
+          if (child.isMesh) {
+            child.userData.originalMaterial = child.material.clone();
+          }
+        });
+      }
+
+      // Apply current scan mode
+      applyScanMode(state.currentMode);
+
+      state.camera.position.set(2, 1.5, 2);
+      state.controls.target.set(0, size.y * scale * 0.4, 0);
+      state.controls.update();
+
+      loader.classList.add('hidden');
+    },
+    (prog) => {
+      if (prog.total > 0) {
+        document.getElementById('loadText').textContent = `${Math.round(prog.loaded/prog.total*100)}%`;
+      }
+    },
+    (err) => {
+      console.error('Load error:', err);
+      loader.classList.add('hidden');
+      // Show placeholder for missing models
+      showPlaceholderOrgan();
+    }
+  );
+}
+
+function showPlaceholderOrgan() {
+  clearModel();
+  const organ = state.currentOrgan;
+  if (!organ) return;
+
+  // Create a procedural placeholder sphere with the organ's color
+  const geo = new THREE.SphereGeometry(0.5, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: organ.color,
+    roughness: 0.6,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0.5;
+  state.scene.add(mesh);
+  state.currentModel = mesh;
+
+  const indicator = document.getElementById('modeIndicator');
+  indicator.textContent = 'Platzhalter (3D-Modell wird generiert)';
+  indicator.style.display = 'block';
+  indicator.style.color = '#f59e0b';
+}
+
+// === SCAN MODES ===
+function applyScanMode(mode) {
+  state.currentMode = mode;
+  if (!state.currentModel || !state.currentModel.traverse) return;
+
+  const indicator = document.getElementById('modeIndicator');
+
+  state.currentModel.traverse(child => {
+    if (!child.isMesh) return;
+    const orig = child.userData.originalMaterial;
+
+    switch (mode) {
+      case 'standard':
+        if (orig) child.material = orig.clone();
+        indicator.style.display = 'none';
+        break;
+      case 'xray':
+        child.material = new THREE.MeshPhongMaterial({
+          color: 0x88ccff, transparent: true, opacity: 0.35,
+          side: THREE.DoubleSide, depthWrite: false, emissive: 0x223344
+        });
+        indicator.textContent = 'Roentgen-Modus';
+        indicator.style.display = 'block';
+        indicator.style.color = '#3b82f6';
+        break;
+      case 'ultrasound':
+        child.material = new THREE.MeshStandardMaterial({
+          color: 0x111111, roughness: 1, metalness: 0,
+          emissive: 0x445566, emissiveIntensity: 0.3
+        });
+        indicator.textContent = 'Ultraschall-Modus';
+        indicator.style.display = 'block';
+        indicator.style.color = '#06b6d4';
+        break;
+      case 'thermal':
+        child.material = new THREE.MeshStandardMaterial({
+          color: 0xff4422, emissive: 0x661100, emissiveIntensity: 0.5,
+          roughness: 0.8, metalness: 0
+        });
+        indicator.textContent = 'Waermebild-Modus';
+        indicator.style.display = 'block';
+        indicator.style.color = '#ef4444';
+        break;
+      case 'section':
+        child.material = new THREE.MeshPhongMaterial({
+          color: orig ? orig.color : new THREE.Color(0xcccccc),
+          side: THREE.DoubleSide,
+          clippingPlanes: [new THREE.Plane(new THREE.Vector3(0, 0, 1), 0)],
+          clipShadows: true
+        });
+        state.renderer.localClippingEnabled = true;
+        indicator.textContent = 'Schnitt-Ansicht';
+        indicator.style.display = 'block';
+        indicator.style.color = '#10b981';
+        break;
+    }
+    child.material.needsUpdate = true;
+  });
+
+  const bgColors = {
+    standard: 0x0a0e1a, xray: 0x050810, ultrasound: 0x000508,
+    thermal: 0x0a0505, section: 0x0a0e1a
+  };
+  state.scene.background.setHex(bgColors[mode] || 0x0a0e1a);
+}
+
+// Scan controls
+document.querySelectorAll('.scan-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scan-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyScanMode(btn.dataset.mode);
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  switch(e.key) {
+    case '1': applyScanMode('standard'); break;
+    case '2': applyScanMode('xray'); break;
+    case '3': applyScanMode('ultrasound'); break;
+    case '4': applyScanMode('thermal'); break;
+    case '5': applyScanMode('section'); break;
+    case 'h': window.setOrganState('healthy'); break;
+    case 'd': window.setOrganState('diseased'); break;
+    case 'r': state.controls.autoRotate = !state.controls.autoRotate; break;
+  }
+});
+
+// === INIT ===
+buildSpeciesSelect();
+buildOrganList();
+initThreeJS();
+</script>
+<script src="js/vetscan-shared.js"></script>
+</body>
+</html>

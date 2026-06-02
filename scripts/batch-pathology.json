@@ -1,0 +1,14 @@
+[
+  {"name": "enlarged_heart_dcm", "prompt": "dilated cardiomyopathy enlarged heart, pathological veterinary model, grossly enlarged chambers, thin walls, medical educational model", "output": "assets/models/pathology/enlarged-heart/enlarged_heart_dcm.glb"},
+  {"name": "abdominal_tumor", "prompt": "abdominal tumor mass, irregular round neoplasm with blood vessels, pathological veterinary model, medical educational", "output": "assets/models/pathology/tumor/abdominal_tumor.glb"},
+  {"name": "stomach_foreign_body", "prompt": "dog stomach with foreign body inside, sock or ball visible through stomach wall, pathological veterinary model, educational", "output": "assets/models/pathology/foreign-body/stomach_foreign_body.glb"},
+  {"name": "fractured_femur", "prompt": "fractured dog femur bone, transverse mid-shaft fracture, displaced bone fragments, veterinary orthopedic model, educational", "output": "assets/models/pathology/fracture/fractured_femur.glb"},
+  {"name": "kidney_stones", "prompt": "kidney with uroliths stones inside, calcium oxalate stones in renal pelvis, pathological veterinary model, educational", "output": "assets/models/pathology/kidney-stone/kidney_stones.glb"},
+  {"name": "pyometra_uterus", "prompt": "pyometra infected enlarged dog uterus, pus-filled distended uterine horns, pathological veterinary model, medical educational", "output": "assets/models/pathology/pyometra/pyometra_uterus.glb"},
+  {"name": "gdv_twisted_stomach", "prompt": "gastric dilatation volvulus GDV, bloated twisted dog stomach, rotated spleen, pathological emergency veterinary model, educational", "output": "assets/models/pathology/gdv/gdv_twisted_stomach.glb"},
+  {"name": "hip_dysplasia", "prompt": "canine hip dysplasia, shallow acetabulum, subluxated femoral head, pathological veterinary orthopedic model, educational", "output": "assets/models/pathology/hip-dysplasia/hip_dysplasia.glb"},
+  {"name": "cruciate_tear", "prompt": "dog stifle knee joint with torn cranial cruciate ligament, tibial plateau, meniscus, pathological veterinary model, educational", "output": "assets/models/pathology/cruciate-tear/cruciate_tear.glb"},
+  {"name": "liver_cirrhosis", "prompt": "cirrhotic liver, shrunken nodular surface, fibrotic tissue, pathological veterinary model, medical educational", "output": "assets/models/pathology/liver-cirrhosis/liver_cirrhosis.glb"},
+  {"name": "bladder_stones", "prompt": "urinary bladder with multiple cystic calculi stones inside, distended wall, pathological veterinary model, educational", "output": "assets/models/pathology/bladder-stones/bladder_stones.glb"},
+  {"name": "heartworm", "prompt": "heart with dirofilaria heartworm parasites inside chambers and pulmonary arteries, pathological veterinary parasitology model", "output": "assets/models/pathology/enlarged-heart/heartworm.glb"}
+]
