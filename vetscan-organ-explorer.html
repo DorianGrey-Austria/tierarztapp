@@ -11,7 +11,7 @@
   --bg:#0a0e1a;--surface:#131829;--surface2:#1c2340;--surface3:#252d4a;
   --primary:#3b82f6;--primary-dark:#2563eb;
   --accent:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#06b6d4;
-  --text:#e2e8f0;--muted:#64748b;
+  --text:#e2e8f0;--muted:#9ca3af;
   --radius:12px;
 }
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
@@ -95,6 +95,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .welcome p{color:var(--muted);font-size:0.85rem;max-width:400px;line-height:1.6}
 
 /* Responsive */
+@media(max-width:1280px){
+  .app{grid-template-columns:240px 1fr 300px}
+}
 @media(max-width:1024px){
   .app{grid-template-columns:1fr;grid-template-rows:52px auto 50vh auto}
   .left-panel{display:flex;gap:8px;overflow-x:auto;padding:8px;border-right:none;border-bottom:1px solid var(--surface2)}
@@ -102,6 +105,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   .species-select{display:flex;gap:4px}
   .organ-list{flex-direction:row;overflow-x:auto}
   .right-panel{border-left:none;border-top:1px solid var(--surface2)}
+}
+@media(max-width:768px){
+  .app{grid-template-rows:52px auto 40vh auto}
+  .info-card{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .pathology-item p{display:none}
 }
 :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
@@ -888,5 +897,6 @@ buildOrganList();
 initThreeJS();
 </script>
 <script src="js/vetscan-shared.js"></script>
+<script src="js/vetscan-pro.js"></script>
 </body>
 </html>

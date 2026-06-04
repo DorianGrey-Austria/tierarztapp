@@ -10,7 +10,7 @@
 :root{
   --vs-primary:#2563eb;--vs-primary-dark:#1d4ed8;
   --vs-bg:#0f172a;--vs-surface:#1e293b;--vs-surface-2:#334155;
-  --vs-text:#f1f5f9;--vs-text-muted:#94a3b8;
+  --vs-text:#f1f5f9;--vs-text-muted:#a1a1aa;
   --vs-accent:#10b981;--vs-danger:#ef4444;--vs-warning:#f59e0b;
   --vs-radius:12px;--vs-shadow:0 4px 24px rgba(0,0,0,0.3);
 }
@@ -38,7 +38,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* Viewport controls */
 .viewport-controls{position:absolute;top:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:5}
-.ctrl-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--vs-surface-2);background:rgba(30,41,59,0.9);color:var(--vs-text);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;backdrop-filter:blur(8px)}
+.ctrl-btn{width:48px;height:48px;border-radius:10px;border:1px solid var(--vs-surface-2);background:rgba(30,41,59,0.9);color:var(--vs-text);cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;backdrop-filter:blur(8px)}
 .ctrl-btn:hover{background:var(--vs-primary);border-color:var(--vs-primary)}
 .ctrl-btn.active{background:var(--vs-accent);border-color:var(--vs-accent);color:#fff}
 
@@ -580,5 +580,6 @@ loadSpecies('dog');
 
 <!-- Shared module for nav -->
 <script src="js/vetscan-shared.js"></script>
+<script src="js/vetscan-pro.js"></script>
 </body>
 </html>

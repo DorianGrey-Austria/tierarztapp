@@ -67,8 +67,11 @@ jobs:
         cp vetscan-organ-explorer.html deploy/ 2>/dev/null || true
         cp vetscan-pathology-scanner.html deploy/ 2>/dev/null || true
 
-        # Copy JS directory (shared module + Version 9)
+        # Copy JS directory (shared module, pro module, Version 9)
         cp -r js deploy/ 2>/dev/null || true
+
+        # Copy Service Worker to root
+        cp sw.js deploy/ 2>/dev/null || true
         
         # Copy assets for 3D models
         cp -r assets deploy/ 2>/dev/null || true
