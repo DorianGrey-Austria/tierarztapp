@@ -283,14 +283,11 @@ function loadThumbnail(idx, m) {
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    let angle = 0;
-    function spin() {
-      angle += 0.008;
-      model.rotation.y = angle;
-      renderer.render(scene, camera);
-      requestAnimationFrame(spin);
-    }
-    spin();
+    // Render 3 static frames at slight rotation for a nice pose, then stop
+    // (no infinite rAF loop = no memory leak when filtering)
+    model.rotation.y = 0.4;
+    renderer.render(scene, camera);
+    renderer.dispose();
   }, undefined, () => {
     container.querySelector('.card-loading').textContent = 'Fehler';
   });
