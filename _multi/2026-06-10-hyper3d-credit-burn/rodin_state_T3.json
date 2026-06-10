@@ -2,9 +2,9 @@
   "lane": "rodin_state_T3",
   "project": "tierarztapp",
   "summary": {
-    "accepted": 12,
-    "failed": 3,
-    "credits_used": 6.0
+    "accepted": 44,
+    "failed": 0,
+    "credits_used": 16.0
   },
   "models": {
     "vet_equip_blood_pressure": {
@@ -92,17 +92,229 @@
       "at": "2026-06-10T18:57:20"
     },
     "vet_equip_scissors_metzenbaum": {
-      "status": "FAILED",
-      "at": "2026-06-10T18:57:29"
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_scissors_metzenbaum.glb",
+      "size_kb": 598,
+      "at": "2026-06-10T20:44:25"
     },
     "vet_equip_needle_holder": {
-      "status": "FAILED",
-      "at": "2026-06-10T18:57:35"
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_needle_holder.glb",
+      "size_kb": 579,
+      "at": "2026-06-10T20:45:50"
     },
     "vet_equip_retractor_balfour": {
-      "status": "FAILED",
-      "at": "2026-06-10T18:57:41"
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_retractor_balfour.glb",
+      "size_kb": 515,
+      "at": "2026-06-10T20:47:11"
+    },
+    "vet_equip_suture_needle": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_suture_needle.glb",
+      "size_kb": 1099,
+      "at": "2026-06-10T20:49:30"
+    },
+    "vet_equip_electrocautery": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_electrocautery.glb",
+      "size_kb": 540,
+      "at": "2026-06-10T20:52:38"
+    },
+    "vet_equip_surgical_drape": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_surgical_drape.glb",
+      "size_kb": 680,
+      "at": "2026-06-10T20:54:27"
+    },
+    "vet_equip_iv_catheter": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_iv_catheter.glb",
+      "size_kb": 429,
+      "at": "2026-06-10T20:56:37"
+    },
+    "vet_equip_endotracheal_tube": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_endotracheal_tube.glb",
+      "size_kb": 421,
+      "at": "2026-06-10T20:57:59"
+    },
+    "vet_equip_laryngoscope": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_laryngoscope.glb",
+      "size_kb": 580,
+      "at": "2026-06-10T20:59:30"
+    },
+    "vet_equip_iv_fluid_bag": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_iv_fluid_bag.glb",
+      "size_kb": 648,
+      "at": "2026-06-10T21:00:44"
+    },
+    "vet_equip_bandage_roll": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_bandage_roll.glb",
+      "size_kb": 1191,
+      "at": "2026-06-10T21:01:55"
+    },
+    "vet_equip_splint": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_splint.glb",
+      "size_kb": 1489,
+      "at": "2026-06-10T21:03:33"
+    },
+    "vet_equip_e_collar": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_e_collar.glb",
+      "size_kb": 944,
+      "at": "2026-06-10T21:04:49"
+    },
+    "vet_equip_muzzle": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_muzzle.glb",
+      "size_kb": 864,
+      "at": "2026-06-10T21:06:43"
+    },
+    "vet_equip_nail_clippers": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_nail_clippers.glb",
+      "size_kb": 736,
+      "at": "2026-06-10T21:08:00"
+    },
+    "vet_equip_dental_scaler": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_dental_scaler.glb",
+      "size_kb": 533,
+      "at": "2026-06-10T21:09:21"
+    },
+    "vet_equip_feeding_tube": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_feeding_tube.glb",
+      "size_kb": 388,
+      "at": "2026-06-10T21:10:46"
+    },
+    "vet_equip_wound_care_kit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_wound_care_kit.glb",
+      "size_kb": 881,
+      "at": "2026-06-10T21:12:20"
+    },
+    "vet_equip_xray_machine": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_xray_machine.glb",
+      "size_kb": 958,
+      "at": "2026-06-10T21:13:45"
+    },
+    "vet_equip_ultrasound_machine": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_ultrasound_machine.glb",
+      "size_kb": 864,
+      "at": "2026-06-10T21:15:23"
+    },
+    "vet_equip_surgery_table": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_surgery_table.glb",
+      "size_kb": 790,
+      "at": "2026-06-10T21:17:45"
+    },
+    "vet_equip_anesthesia_machine": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_anesthesia_machine.glb",
+      "size_kb": 885,
+      "at": "2026-06-10T21:19:18"
+    },
+    "vet_equip_dental_unit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_dental_unit.glb",
+      "size_kb": 598,
+      "at": "2026-06-10T21:20:41"
+    },
+    "vet_equip_autoclave": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_autoclave.glb",
+      "size_kb": 700,
+      "at": "2026-06-10T21:22:13"
+    },
+    "vet_equip_examination_table": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_examination_table.glb",
+      "size_kb": 824,
+      "at": "2026-06-10T21:23:36"
+    },
+    "vet_animal_chicken": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_chicken.glb",
+      "size_kb": 1416,
+      "at": "2026-06-10T21:25:05"
+    },
+    "vet_animal_rooster": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_rooster.glb",
+      "size_kb": 1146,
+      "at": "2026-06-10T21:27:02"
+    },
+    "vet_animal_sugar_glider": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_sugar_glider.glb",
+      "size_kb": 1191,
+      "at": "2026-06-10T21:28:26"
+    },
+    "vet_animal_mouse": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_mouse.glb",
+      "size_kb": 778,
+      "at": "2026-06-10T21:30:00"
+    },
+    "vet_animal_duckling": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_duckling.glb",
+      "size_kb": 781,
+      "at": "2026-06-10T21:31:31"
+    },
+    "vet_animal_gecko": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_gecko.glb",
+      "size_kb": 1041,
+      "at": "2026-06-10T21:33:08"
+    },
+    "vet_animal_bearded_dragon": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_animal_bearded_dragon.glb",
+      "size_kb": 1593,
+      "at": "2026-06-10T21:34:44"
     }
   },
-  "updated_at": "2026-06-10T18:57:41"
+  "updated_at": "2026-06-10T21:34:44"
 }
