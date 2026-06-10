@@ -239,7 +239,7 @@ const state = {
   viewMode: 'normal',
   autoRotate: true,
   showGrid: true,
-  animated: true,
+  animated: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   scene: null,
   camera: null,
   renderer: null,

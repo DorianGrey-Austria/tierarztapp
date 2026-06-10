@@ -217,7 +217,7 @@ const state = {
   clock: new THREE.Clock(),
   currentScene: 'meadow',
   models: [],       // { mesh, anim, phase, basePos, baseScale, baseRotY }
-  animated: true,
+  animated: !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   wireframe: false,
   ground: null,
   particles: null,
