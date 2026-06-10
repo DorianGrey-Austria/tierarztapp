@@ -1094,8 +1094,8 @@ function initThreeJS() {
     const elapsed = state.clock.getElapsedTime();
     state.controls.update();
 
-    // Organ pulsing animation
-    if (state.currentModel && state.modelBaseScale > 0) {
+    // Organ pulsing animation (respects prefers-reduced-motion)
+    if (state.currentModel && state.modelBaseScale > 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const organ = state.currentOrgan;
       const isHeart = organ && organ.id === 'heart';
       const isLungs = organ && organ.id === 'lungs';

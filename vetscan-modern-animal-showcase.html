@@ -808,7 +808,7 @@
                         // Progress callback
                     },
                     (error) => {
-                        console.log('Primary model failed, trying fallback...');
+                        console.warn('Primary model failed, trying fallback');
                         if (animal.fallbackPath) {
                             loader.load(
                                 animal.fallbackPath,
@@ -862,7 +862,7 @@
 
         function createProceduralModel(animal) {
             // Use Hyper3D Generator for realistic procedural models
-            console.log(`🤖 Generating Hyper3D model for ${animal.name}...`);
+            // Generating procedural model
             
             if (hyper3DGenerator) {
                 const model = hyper3DGenerator.generateAnimal(animal.id);
@@ -1030,6 +1030,7 @@
         let modelBaseScale = 1;
         let modelBaseY = 0;
         const animStart = Date.now() * 0.001;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         function animate() {
             requestAnimationFrame(animate);
@@ -1041,20 +1042,20 @@
                 // Slow rotation
                 currentModel.rotation.y += 0.005;
 
-                // Breathing animation
-                const breathPhase = Math.sin(elapsed * 0.9 * Math.PI * 2);
-                const s = modelBaseScale;
-                if (s > 0) {
-                    currentModel.scale.set(
-                        s * (1 - breathPhase * 0.01 * 0.3),
-                        s * (1 + breathPhase * 0.01),
-                        s * (1 - breathPhase * 0.01 * 0.3)
-                    );
-                    // Subtle idle sway
-                    const sway = Math.sin(elapsed * 0.3 * Math.PI * 2) * 0.008;
-                    currentModel.rotation.z = sway;
-                    // Gentle Y bob
-                    currentModel.position.y = modelBaseY + Math.sin(elapsed * 1.2) * 0.003;
+                // Breathing animation (respects prefers-reduced-motion)
+                if (!prefersReducedMotion) {
+                    const breathPhase = Math.sin(elapsed * 0.9 * Math.PI * 2);
+                    const s = modelBaseScale;
+                    if (s > 0) {
+                        currentModel.scale.set(
+                            s * (1 - breathPhase * 0.01 * 0.3),
+                            s * (1 + breathPhase * 0.01),
+                            s * (1 - breathPhase * 0.01 * 0.3)
+                        );
+                        const sway = Math.sin(elapsed * 0.3 * Math.PI * 2) * 0.008;
+                        currentModel.rotation.z = sway;
+                        currentModel.position.y = modelBaseY + Math.sin(elapsed * 1.2) * 0.003;
+                    }
                 }
             }
 

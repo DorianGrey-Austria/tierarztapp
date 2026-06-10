@@ -657,7 +657,7 @@ function initThreeJS() {
     controls.update();
 
     // Subtle pulse animation for pathology models
-    if (currentModel && pathModelBaseScale > 0) {
+    if (currentModel && pathModelBaseScale > 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const pulse = Math.sin(elapsed * 0.5 * Math.PI * 2) * 0.01;
       const s = pathModelBaseScale;
       currentModel.scale.setScalar(s * (1 + pulse));

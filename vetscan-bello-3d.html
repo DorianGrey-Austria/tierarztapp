@@ -680,8 +680,7 @@
                         setupInteractiveZones(model);
                         hideLoading();
 
-                        console.log(`🐕 Real Bello model loaded (${quality} quality)`);
-                        console.log(`📊 Polygons: ${countPolygons(model)}`);
+                        // Model loaded successfully
                     },
                     // Progress
                     function(progress) {
@@ -690,7 +689,7 @@
                     },
                     // Error - try next quality or fallback
                     function(error) {
-                        console.log(`⚠️ Could not load ${quality} quality:`, error.message);
+                        console.warn(`Could not load ${quality} quality:`, error.message);
                         currentQualityIndex++;
                         tryLoadNextQuality();
                     }
@@ -854,7 +853,7 @@
             // Loading beenden
             hideLoading();
 
-            console.log('🐕 Fallback Bello model created');
+            // Fallback model created
         }
 
         function setupInteractiveZones(model) {
@@ -937,7 +936,7 @@
                 }
             }
 
-            console.log(`🔬 Switched to ${mode} visualization`);
+            // Visualization mode applied
         }
 
         function onCanvasClick(event) {

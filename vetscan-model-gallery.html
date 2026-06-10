@@ -22,7 +22,7 @@ html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe U
 
 /* Filter bar */
 .filter-bar{padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--surface2);background:var(--surface)}
-.filter-btn{padding:6px 14px;border:1px solid var(--surface3);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.78rem;transition:all 0.15s;white-space:nowrap}
+.filter-btn{padding:6px 14px;min-height:44px;border:1px solid var(--surface3);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.78rem;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center}
 .filter-btn:hover{border-color:var(--primary);color:var(--text)}
 .filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
 .filter-btn .count{font-size:0.65rem;opacity:0.7;margin-left:4px}
@@ -68,6 +68,7 @@ html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe U
   .card-viewport{height:140px}
   .modal-content{width:98vw;height:90vh;border-radius:10px}
 }
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
 </style>
 </head>
@@ -94,11 +95,11 @@ html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe U
         <h2 id="modalTitle">-</h2>
         <span class="meta" id="modalMeta">-</span>
       </div>
-      <button class="modal-close" id="modalClose" title="Schliessen (Esc)">&#x2715;</button>
+      <button class="modal-close" id="modalClose" title="Schliessen (Esc)" aria-label="Schliessen">&#x2715;</button>
     </div>
     <div class="modal-viewport" id="modalViewport">
-      <button class="nav-arrow nav-prev" id="navPrev" title="Vorheriges Modell">&#x2190;</button>
-      <button class="nav-arrow nav-next" id="navNext" title="Naechstes Modell">&#x2192;</button>
+      <button class="nav-arrow nav-prev" id="navPrev" title="Vorheriges Modell" aria-label="Vorheriges Modell">&#x2190;</button>
+      <button class="nav-arrow nav-next" id="navNext" title="Naechstes Modell" aria-label="Naechstes Modell">&#x2192;</button>
       <div class="modal-controls">
         <button class="mctr active" id="mBtnRotate">Auto-Rotation</button>
         <button class="mctr" id="mBtnWire">Wireframe</button>
@@ -385,6 +386,8 @@ function loadModalModel(m) {
     modalControls.update();
 
     if (modalWireframe) applyWireframe(true);
+  }, undefined, () => {
+    document.getElementById('modalTitle').textContent = m.label + ' (Fehler beim Laden)';
   });
 }
 

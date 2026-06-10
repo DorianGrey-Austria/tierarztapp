@@ -24,7 +24,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
 /* Scene selector */
 .scene-tabs{display:flex;gap:4px;background:var(--vs-surface);border-radius:8px;padding:3px}
-.scene-tab{padding:6px 14px;border:none;border-radius:6px;background:transparent;color:var(--vs-text-muted);cursor:pointer;font-size:0.8rem;transition:all 0.15s;white-space:nowrap}
+.scene-tab{padding:6px 14px;min-height:44px;border:none;border-radius:6px;background:transparent;color:var(--vs-text-muted);cursor:pointer;font-size:0.8rem;transition:all 0.15s;white-space:nowrap;display:flex;align-items:center}
 .scene-tab:hover{background:var(--vs-surface-2);color:var(--vs-text)}
 .scene-tab.active{background:var(--vs-primary);color:#fff}
 
@@ -46,6 +46,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{margin-top:16px;font-size:0.9rem;color:var(--vs-text-muted)}
 
+:focus-visible{outline:2px solid var(--vs-primary);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
 </style>
 </head>
@@ -73,10 +74,10 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <p id="infoDesc">Interaktive Szene mit animierten Tieren und Naturelemente. Drehe die Kamera mit der Maus, scrolle zum Zoomen.</p>
     </div>
     <div class="controls-overlay">
-      <button class="ctrl-btn active" id="btnAnimate" title="Animationen ein/aus">&#x1F4AB; Animiert</button>
-      <button class="ctrl-btn active" id="btnAutoRotate" title="Kamera-Rotation">&#x1F504; Rotation</button>
-      <button class="ctrl-btn" id="btnWireframe" title="Drahtgitter-Modus">&#x25A6; Wireframe</button>
-      <button class="ctrl-btn" id="btnScreenshot" title="Screenshot">&#x1F4F7; Screenshot</button>
+      <button class="ctrl-btn active" id="btnAnimate" title="Animationen ein/aus" aria-label="Animationen ein/aus">&#x1F4AB; Animiert</button>
+      <button class="ctrl-btn active" id="btnAutoRotate" title="Kamera-Rotation" aria-label="Kamera-Rotation ein/aus">&#x1F504; Rotation</button>
+      <button class="ctrl-btn" id="btnWireframe" title="Drahtgitter-Modus" aria-label="Drahtgitter-Modus ein/aus">&#x25A6; Wireframe</button>
+      <button class="ctrl-btn" id="btnScreenshot" title="Screenshot" aria-label="Screenshot erstellen">&#x1F4F7; Screenshot</button>
     </div>
   </main>
 
