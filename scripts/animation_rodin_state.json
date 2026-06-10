@@ -1,0 +1,369 @@
+{
+  "lane": "animation_rodin_state",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 51,
+    "failed": 0,
+    "credits_used": 25.5
+  },
+  "models": {
+    "horse_walking": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/horse_walking.glb",
+      "size_kb": 703,
+      "at": "2026-06-10T21:01:31"
+    },
+    "horse_trotting": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/horse_trotting.glb",
+      "size_kb": 865,
+      "at": "2026-06-10T21:02:48"
+    },
+    "horse_galloping": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/horse_galloping.glb",
+      "size_kb": 729,
+      "at": "2026-06-10T21:04:15"
+    },
+    "horse_grazing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/horse_grazing.glb",
+      "size_kb": 915,
+      "at": "2026-06-10T21:05:38"
+    },
+    "horse_rearing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/horse_rearing.glb",
+      "size_kb": 937,
+      "at": "2026-06-10T21:07:27"
+    },
+    "foal_playing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/foal_playing.glb",
+      "size_kb": 1006,
+      "at": "2026-06-10T21:09:08"
+    },
+    "dog_running": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/dog_running.glb",
+      "size_kb": 943,
+      "at": "2026-06-10T21:10:28"
+    },
+    "dog_sitting": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/dog_sitting.glb",
+      "size_kb": 1246,
+      "at": "2026-06-10T21:11:57"
+    },
+    "dog_playing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/dog_playing.glb",
+      "size_kb": 873,
+      "at": "2026-06-10T21:14:08"
+    },
+    "dog_lying_down": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/dog_lying_down.glb",
+      "size_kb": 1347,
+      "at": "2026-06-10T21:15:47"
+    },
+    "cat_walking": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cat_walking.glb",
+      "size_kb": 929,
+      "at": "2026-06-10T21:17:15"
+    },
+    "cat_stretching": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cat_stretching.glb",
+      "size_kb": 1319,
+      "at": "2026-06-10T21:19:20"
+    },
+    "cat_sitting_alert": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cat_sitting_alert.glb",
+      "size_kb": 1199,
+      "at": "2026-06-10T21:21:35"
+    },
+    "cat_jumping": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cat_jumping.glb",
+      "size_kb": 1128,
+      "at": "2026-06-10T21:22:55"
+    },
+    "cat_sleeping_curled": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cat_sleeping_curled.glb",
+      "size_kb": 1271,
+      "at": "2026-06-10T21:24:20"
+    },
+    "rabbit_hopping": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/rabbit_hopping.glb",
+      "size_kb": 1160,
+      "at": "2026-06-10T21:25:48"
+    },
+    "rabbit_sitting_up": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/rabbit_sitting_up.glb",
+      "size_kb": 1266,
+      "at": "2026-06-10T21:28:06"
+    },
+    "cow_grazing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cow_grazing.glb",
+      "size_kb": 929,
+      "at": "2026-06-10T21:29:49"
+    },
+    "cow_walking": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/cow_walking.glb",
+      "size_kb": 927,
+      "at": "2026-06-10T21:31:40"
+    },
+    "sheep_grazing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/sheep_grazing.glb",
+      "size_kb": 1612,
+      "at": "2026-06-10T21:33:03"
+    },
+    "goat_climbing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/goat_climbing.glb",
+      "size_kb": 1169,
+      "at": "2026-06-10T21:34:31"
+    },
+    "pig_trotting": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/pig_trotting.glb",
+      "size_kb": 1079,
+      "at": "2026-06-10T21:35:48"
+    },
+    "parrot_flying": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/parrot_flying.glb",
+      "size_kb": 806,
+      "at": "2026-06-10T21:37:14"
+    },
+    "parrot_wings_up": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/parrot_wings_up.glb",
+      "size_kb": 791,
+      "at": "2026-06-10T21:38:27"
+    },
+    "parrot_wings_down": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/parrot_wings_down.glb",
+      "size_kb": 887,
+      "at": "2026-06-10T21:39:53"
+    },
+    "eagle_soaring": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/eagle_soaring.glb",
+      "size_kb": 950,
+      "at": "2026-06-10T21:41:13"
+    },
+    "eagle_diving": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/eagle_diving.glb",
+      "size_kb": 1145,
+      "at": "2026-06-10T21:42:34"
+    },
+    "owl_flying": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/owl_flying.glb",
+      "size_kb": 750,
+      "at": "2026-06-10T21:43:43"
+    },
+    "swallow_flight": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/swallow_flight.glb",
+      "size_kb": 581,
+      "at": "2026-06-10T21:44:49"
+    },
+    "hummingbird_hovering": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/hummingbird_hovering.glb",
+      "size_kb": 661,
+      "at": "2026-06-10T21:46:05"
+    },
+    "budgerigar_perched": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/budgerigar_perched.glb",
+      "size_kb": 765,
+      "at": "2026-06-10T21:47:26"
+    },
+    "budgerigar_flying": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/budgerigar_flying.glb",
+      "size_kb": 831,
+      "at": "2026-06-10T21:48:52"
+    },
+    "snake_striking": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/snake_striking.glb",
+      "size_kb": 254,
+      "at": "2026-06-10T21:50:06"
+    },
+    "snake_slithering": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/snake_slithering.glb",
+      "size_kb": 1025,
+      "at": "2026-06-10T21:51:27"
+    },
+    "turtle_walking": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/turtle_walking.glb",
+      "size_kb": 846,
+      "at": "2026-06-10T21:52:46"
+    },
+    "iguana_climbing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/iguana_climbing.glb",
+      "size_kb": 797,
+      "at": "2026-06-10T21:54:10"
+    },
+    "fish_swimming": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/fish_swimming.glb",
+      "size_kb": 680,
+      "at": "2026-06-10T21:55:29"
+    },
+    "hamster_running": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/hamster_running.glb",
+      "size_kb": 820,
+      "at": "2026-06-10T21:56:58"
+    },
+    "ferret_playing": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/ferret_playing.glb",
+      "size_kb": 1050,
+      "at": "2026-06-10T21:58:39"
+    },
+    "guinea_pig_eating": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/guinea_pig_eating.glb",
+      "size_kb": 1677,
+      "at": "2026-06-10T22:00:09"
+    },
+    "grass_patch_tall": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/grass_patch_tall.glb",
+      "size_kb": 2237,
+      "at": "2026-06-10T22:02:33"
+    },
+    "grass_patch_short": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/grass_patch_short.glb",
+      "size_kb": 1581,
+      "at": "2026-06-10T22:04:40"
+    },
+    "grass_patch_wild": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/grass_patch_wild.glb",
+      "size_kb": 260,
+      "at": "2026-06-10T22:11:07"
+    },
+    "wheat_stalks": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/wheat_stalks.glb",
+      "size_kb": 1377,
+      "at": "2026-06-10T22:13:28"
+    },
+    "fern_plant": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/fern_plant.glb",
+      "size_kb": 2344,
+      "at": "2026-06-10T22:20:22"
+    },
+    "wildflower_daisies": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/wildflower_daisies.glb",
+      "size_kb": 1341,
+      "at": "2026-06-10T22:22:30"
+    },
+    "wildflower_poppies": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/wildflower_poppies.glb",
+      "size_kb": 941,
+      "at": "2026-06-10T22:23:39"
+    },
+    "wildflower_lavender": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/wildflower_lavender.glb",
+      "size_kb": 1945,
+      "at": "2026-06-10T22:25:37"
+    },
+    "small_bush_green": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/small_bush_green.glb",
+      "size_kb": 2246,
+      "at": "2026-06-10T22:26:59"
+    },
+    "oak_tree_small": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/oak_tree_small.glb",
+      "size_kb": 1683,
+      "at": "2026-06-10T22:29:17"
+    },
+    "willow_tree": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/willow_tree.glb",
+      "size_kb": 1340,
+      "at": "2026-06-10T22:35:34"
+    }
+  },
+  "updated_at": "2026-06-10T22:35:34"
+}

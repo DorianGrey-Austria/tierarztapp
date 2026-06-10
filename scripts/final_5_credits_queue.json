@@ -1,0 +1,12 @@
+[
+  {"name": "heart_systole", "prompt": "An anatomically accurate human heart in systole contraction phase, compressed ventricles, tense muscular walls, medical education model. Isolated on white background, soft studio lighting."},
+  {"name": "heart_diastole", "prompt": "An anatomically accurate human heart in diastole relaxation phase, expanded ventricles, relaxed muscular walls, medical education model. Isolated on white background, soft studio lighting."},
+  {"name": "lungs_inflated", "prompt": "A pair of fully inflated lungs with visible bronchial tree, expanded alveoli, peak inhalation state, medical education model. Isolated on white background, soft studio lighting."},
+  {"name": "brain_lateral_view", "prompt": "A human brain viewed from the side showing detailed gyri and sulci, cerebral cortex folds, cerebellum, brainstem. Medical education model. Isolated on white background, soft studio lighting."},
+  {"name": "butterfly_monarch", "prompt": "A monarch butterfly with wings fully open, detailed orange and black wing pattern, delicate antennae. Isolated on white background, soft studio lighting, game-ready 3D model."},
+  {"name": "red_blood_cells", "prompt": "A group of red blood cells (erythrocytes) in biconcave disc shape, clustered together flowing through, medical microscopic view. Isolated on white background, soft studio lighting, game-ready 3D model."},
+  {"name": "neuron_cell", "prompt": "A detailed neuron nerve cell with cell body, dendrites branching, long axon with myelin sheath, synaptic terminals. Medical education model. Isolated on white background, soft studio lighting."},
+  {"name": "dna_helix", "prompt": "A DNA double helix structure with visible base pairs, sugar-phosphate backbone, twisted ladder shape, molecular biology model. Isolated on white background, soft studio lighting, game-ready 3D model."},
+  {"name": "vet_examining_dog", "prompt": "A veterinarian in white coat using stethoscope to examine a dog on examination table, professional medical scene. Isolated on white background, soft studio lighting, game-ready 3D model."},
+  {"name": "dog_with_cone", "prompt": "A dog wearing a veterinary cone collar (Elizabethan collar), slightly sad expression, post-surgery recovery. Isolated on white background, soft studio lighting, game-ready 3D model."}
+]

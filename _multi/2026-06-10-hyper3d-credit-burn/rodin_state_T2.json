@@ -1,0 +1,164 @@
+{
+  "lane": "rodin_state_T2",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 20,
+    "failed": 3,
+    "credits_used": 10.0
+  },
+  "models": {
+    "vet_path_hcm_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_hcm_heart.glb",
+      "size_kb": 1061,
+      "at": "2026-06-10T18:28:23"
+    },
+    "vet_path_fatty_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_fatty_liver.glb",
+      "size_kb": 755,
+      "at": "2026-06-10T18:29:42"
+    },
+    "vet_path_polycystic_kidney": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_polycystic_kidney.glb",
+      "size_kb": 1940,
+      "at": "2026-06-10T18:31:16"
+    },
+    "vet_path_pneumonia_lung": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_pneumonia_lung.glb",
+      "size_kb": 976,
+      "at": "2026-06-10T18:32:29"
+    },
+    "vet_path_pulmonary_edema": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_pulmonary_edema.glb",
+      "size_kb": 1623,
+      "at": "2026-06-10T18:33:58"
+    },
+    "vet_path_tumor_spleen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_tumor_spleen.glb",
+      "size_kb": 1376,
+      "at": "2026-06-10T18:35:56"
+    },
+    "vet_path_mastitis_udder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_mastitis_udder.glb",
+      "size_kb": 1107,
+      "at": "2026-06-10T18:37:38"
+    },
+    "vet_path_laminitis_hoof": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_laminitis_hoof.glb",
+      "size_kb": 267,
+      "at": "2026-06-10T18:39:04"
+    },
+    "vet_path_gi_stasis_rabbit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_gi_stasis_rabbit.glb",
+      "size_kb": 1593,
+      "at": "2026-06-10T18:40:27"
+    },
+    "vet_path_bloat_rumen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_bloat_rumen.glb",
+      "size_kb": 995,
+      "at": "2026-06-10T18:42:24"
+    },
+    "vet_path_abscess_rabbit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_abscess_rabbit.glb",
+      "size_kb": 1365,
+      "at": "2026-06-10T18:43:55"
+    },
+    "vet_path_mammary_tumor": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_mammary_tumor.glb",
+      "size_kb": 1840,
+      "at": "2026-06-10T18:45:22"
+    },
+    "vet_path_cataracts_eye": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_cataracts_eye.glb",
+      "size_kb": 1823,
+      "at": "2026-06-10T18:46:43"
+    },
+    "vet_path_dental_disease": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_dental_disease.glb",
+      "size_kb": 1064,
+      "at": "2026-06-10T18:48:15"
+    },
+    "vet_path_ear_infection": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_ear_infection.glb",
+      "size_kb": 1148,
+      "at": "2026-06-10T18:50:01"
+    },
+    "vet_path_skin_mast_cell": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_skin_mast_cell.glb",
+      "size_kb": 1185,
+      "at": "2026-06-10T18:51:25"
+    },
+    "vet_path_pancreatitis": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_pancreatitis.glb",
+      "size_kb": 1765,
+      "at": "2026-06-10T18:53:07"
+    },
+    "vet_path_megaesophagus": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_path_megaesophagus.glb",
+      "size_kb": 618,
+      "at": "2026-06-10T18:54:27"
+    },
+    "vet_parasite_roundworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_roundworm.glb",
+      "size_kb": 1088,
+      "at": "2026-06-10T18:55:51"
+    },
+    "vet_parasite_tapeworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_tapeworm.glb",
+      "size_kb": 942,
+      "at": "2026-06-10T18:57:14"
+    },
+    "vet_parasite_flea": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:23"
+    },
+    "vet_parasite_tick": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:29"
+    },
+    "vet_parasite_ear_mite": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:34"
+    }
+  },
+  "updated_at": "2026-06-10T18:57:34"
+}

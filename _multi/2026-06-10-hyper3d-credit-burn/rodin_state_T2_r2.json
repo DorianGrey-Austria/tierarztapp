@@ -1,0 +1,208 @@
+{
+  "lane": "rodin_state_T2_r2",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 28,
+    "failed": 0,
+    "credits_used": 14.0
+  },
+  "models": {
+    "vet_parasite_flea": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_flea.glb",
+      "size_kb": 1181,
+      "at": "2026-06-10T20:43:44"
+    },
+    "vet_parasite_tick": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_tick.glb",
+      "size_kb": 1333,
+      "at": "2026-06-10T20:45:06"
+    },
+    "vet_parasite_ear_mite": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_ear_mite.glb",
+      "size_kb": 1931,
+      "at": "2026-06-10T20:46:36"
+    },
+    "vet_parasite_sarcoptic_mite": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_sarcoptic_mite.glb",
+      "size_kb": 1869,
+      "at": "2026-06-10T20:48:11"
+    },
+    "vet_parasite_hookworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_hookworm.glb",
+      "size_kb": 984,
+      "at": "2026-06-10T20:52:21"
+    },
+    "vet_parasite_heartworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_heartworm.glb",
+      "size_kb": 1519,
+      "at": "2026-06-10T20:53:41"
+    },
+    "vet_parasite_coccidia": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_coccidia.glb",
+      "size_kb": 1632,
+      "at": "2026-06-10T20:56:00"
+    },
+    "vet_parasite_giardia": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_parasite_giardia.glb",
+      "size_kb": 587,
+      "at": "2026-06-10T20:57:50"
+    },
+    "vet_bone_dog_skull": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_skull.glb",
+      "size_kb": 1371,
+      "at": "2026-06-10T20:59:44"
+    },
+    "vet_bone_dog_femur": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_femur.glb",
+      "size_kb": 571,
+      "at": "2026-06-10T21:01:23"
+    },
+    "vet_bone_dog_pelvis": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_pelvis.glb",
+      "size_kb": 1124,
+      "at": "2026-06-10T21:03:01"
+    },
+    "vet_bone_dog_spine_thoracic": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_spine_thoracic.glb",
+      "size_kb": 1034,
+      "at": "2026-06-10T21:04:20"
+    },
+    "vet_bone_dog_ribcage": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_ribcage.glb",
+      "size_kb": 869,
+      "at": "2026-06-10T21:05:57"
+    },
+    "vet_bone_dog_humerus": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_humerus.glb",
+      "size_kb": 660,
+      "at": "2026-06-10T21:07:10"
+    },
+    "vet_bone_dog_tibia_fibula": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_tibia_fibula.glb",
+      "size_kb": 989,
+      "at": "2026-06-10T21:08:33"
+    },
+    "vet_bone_dog_scapula": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_scapula.glb",
+      "size_kb": 809,
+      "at": "2026-06-10T21:09:43"
+    },
+    "vet_bone_cat_skull": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_cat_skull.glb",
+      "size_kb": 1182,
+      "at": "2026-06-10T21:11:41"
+    },
+    "vet_bone_horse_skull": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_horse_skull.glb",
+      "size_kb": 1276,
+      "at": "2026-06-10T21:13:14"
+    },
+    "vet_bone_horse_distal_limb": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_horse_distal_limb.glb",
+      "size_kb": 1098,
+      "at": "2026-06-10T21:14:40"
+    },
+    "vet_bone_horse_cannon": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_horse_cannon.glb",
+      "size_kb": 411,
+      "at": "2026-06-10T21:16:15"
+    },
+    "vet_bone_cow_skull": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_cow_skull.glb",
+      "size_kb": 1072,
+      "at": "2026-06-10T21:17:45"
+    },
+    "vet_bone_bird_skeleton": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_bird_skeleton.glb",
+      "size_kb": 1195,
+      "at": "2026-06-10T21:19:49"
+    },
+    "vet_bone_rabbit_skull": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_rabbit_skull.glb",
+      "size_kb": 1301,
+      "at": "2026-06-10T21:21:41"
+    },
+    "vet_bone_dog_mandible": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_dog_mandible.glb",
+      "size_kb": 1098,
+      "at": "2026-06-10T21:23:21"
+    },
+    "vet_bone_horse_spine_lumbar": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_horse_spine_lumbar.glb",
+      "size_kb": 1016,
+      "at": "2026-06-10T21:24:38"
+    },
+    "vet_bone_fracture_plate": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_fracture_plate.glb",
+      "size_kb": 677,
+      "at": "2026-06-10T21:25:48"
+    },
+    "vet_bone_hip_prosthesis": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_hip_prosthesis.glb",
+      "size_kb": 712,
+      "at": "2026-06-10T21:27:16"
+    },
+    "vet_bone_external_fixator": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_bone_external_fixator.glb",
+      "size_kb": 891,
+      "at": "2026-06-10T21:28:58"
+    }
+  },
+  "updated_at": "2026-06-10T21:28:58"
+}

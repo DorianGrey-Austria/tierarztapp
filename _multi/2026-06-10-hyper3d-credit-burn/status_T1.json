@@ -1,0 +1,30 @@
+{
+  "terminal": "T1",
+  "status": "COMPLETED",
+  "phase": "done",
+  "updated": "2026-06-10T19:15:00",
+  "blocker": null,
+  "gates": {},
+  "progress": [
+    "checkpoint set: d4c2c8cc",
+    "pipeline verified: imports OK",
+    "dry-run: 54 new models queued",
+    "generation: 22/54 accepted, 0 failed, 11.0 credits used",
+    "balance exhausted at 0.0 (shared across 3 lanes)",
+    "GLBs sorted into organ subdirectories",
+    "flat vet_organ_*.glb files cleaned up",
+    "final inventory: 40 organ GLBs (18 pre-existing + 22 new)"
+  ],
+  "results": {
+    "generated": 22,
+    "failed": 0,
+    "credits_used": 11.0,
+    "new_species_coverage": {
+      "cat": ["lungs", "liver", "stomach", "intestines", "bladder", "brain"],
+      "horse": ["lungs", "liver", "kidneys", "stomach", "spleen", "brain"],
+      "cow": ["heart", "lungs", "liver", "kidneys", "abomasum", "reticulum", "omasum"],
+      "rabbit": ["heart", "lungs", "liver"]
+    },
+    "remaining": ["rabbit (5 organs)", "bird (9)", "pig (6)", "sheep (4)", "goat (4)", "guinea_pig (4)"]
+  }
+}

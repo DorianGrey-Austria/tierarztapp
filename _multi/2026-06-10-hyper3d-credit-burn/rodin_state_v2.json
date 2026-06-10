@@ -1,0 +1,537 @@
+{
+  "lane": "rodin_state_v2",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 75,
+    "failed": 0,
+    "credits_used": 16.0
+  },
+  "models": {
+    "vet_v2_organ_cow_abomasum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_abomasum.glb",
+      "size_kb": 1426,
+      "at": "2026-06-10T20:52:39"
+    },
+    "vet_v2_organ_cat_bladder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_bladder.glb",
+      "size_kb": 1163,
+      "at": "2026-06-10T20:54:29"
+    },
+    "vet_v2_organ_dog_bladder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_bladder.glb",
+      "size_kb": 1518,
+      "at": "2026-06-10T20:57:49"
+    },
+    "vet_v2_organ_cat_brain": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_brain.glb",
+      "size_kb": 1115,
+      "at": "2026-06-10T20:59:46"
+    },
+    "vet_v2_organ_dog_brain": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_brain.glb",
+      "size_kb": 1151,
+      "at": "2026-06-10T21:01:13"
+    },
+    "vet_v2_organ_horse_brain": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_brain.glb",
+      "size_kb": 1165,
+      "at": "2026-06-10T21:02:41"
+    },
+    "vet_v2_organ_cat_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_heart.glb",
+      "size_kb": 1154,
+      "at": "2026-06-10T21:04:07"
+    },
+    "vet_v2_organ_cow_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_heart.glb",
+      "size_kb": 1098,
+      "at": "2026-06-10T21:05:43"
+    },
+    "vet_v2_organ_dog_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_heart.glb",
+      "size_kb": 879,
+      "at": "2026-06-10T21:07:01"
+    },
+    "vet_v2_organ_horse_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_heart.glb",
+      "size_kb": 1278,
+      "at": "2026-06-10T21:08:27"
+    },
+    "vet_v2_organ_rabbit_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_rabbit_heart.glb",
+      "size_kb": 946,
+      "at": "2026-06-10T21:09:54"
+    },
+    "vet_v2_organ_horse_hoof": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_hoof.glb",
+      "size_kb": 909,
+      "at": "2026-06-10T21:11:26"
+    },
+    "vet_v2_organ_cat_intestines": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_intestines.glb",
+      "size_kb": 1226,
+      "at": "2026-06-10T21:12:56"
+    },
+    "vet_v2_organ_dog_intestines": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_intestines.glb",
+      "size_kb": 1115,
+      "at": "2026-06-10T21:14:47"
+    },
+    "vet_v2_organ_horse_intestines": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_intestines.glb",
+      "size_kb": 1058,
+      "at": "2026-06-10T21:16:23"
+    },
+    "vet_v2_organ_cat_kidney": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_kidney.glb",
+      "size_kb": 1239,
+      "at": "2026-06-10T21:18:45"
+    },
+    "vet_v2_organ_dog_kidney": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_kidney.glb",
+      "size_kb": 1447,
+      "at": "2026-06-10T21:20:08"
+    },
+    "vet_v2_organ_cow_kidneys": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_kidneys.glb",
+      "size_kb": 1220,
+      "at": "2026-06-10T21:21:45"
+    },
+    "vet_v2_organ_horse_kidneys": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_kidneys.glb",
+      "size_kb": 1326,
+      "at": "2026-06-10T21:23:12"
+    },
+    "vet_v2_organ_cat_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_liver.glb",
+      "size_kb": 984,
+      "at": "2026-06-10T21:24:41"
+    },
+    "vet_v2_organ_cow_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_liver.glb",
+      "size_kb": 1014,
+      "at": "2026-06-10T21:26:07"
+    },
+    "vet_v2_organ_dog_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_liver.glb",
+      "size_kb": 882,
+      "at": "2026-06-10T21:27:56"
+    },
+    "vet_v2_organ_horse_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_liver.glb",
+      "size_kb": 814,
+      "at": "2026-06-10T21:29:53"
+    },
+    "vet_v2_organ_rabbit_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_rabbit_liver.glb",
+      "size_kb": 974,
+      "at": "2026-06-10T21:31:24"
+    },
+    "vet_v2_organ_cat_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_lungs.glb",
+      "size_kb": 1424,
+      "at": "2026-06-10T21:32:49"
+    },
+    "vet_v2_organ_cow_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_lungs.glb",
+      "size_kb": 1236,
+      "at": "2026-06-10T21:34:03"
+    },
+    "vet_v2_organ_dog_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_lungs.glb",
+      "size_kb": 920,
+      "at": "2026-06-10T21:35:21"
+    },
+    "vet_v2_organ_horse_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_lungs.glb",
+      "size_kb": 1491,
+      "at": "2026-06-10T21:36:34"
+    },
+    "vet_v2_organ_rabbit_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_rabbit_lungs.glb",
+      "size_kb": 1298,
+      "at": "2026-06-10T21:38:04"
+    },
+    "vet_v2_organ_cow_omasum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_omasum.glb",
+      "size_kb": 1179,
+      "at": "2026-06-10T21:39:26"
+    },
+    "vet_v2_organ_cow_reticulum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_reticulum.glb",
+      "size_kb": 1366,
+      "at": "2026-06-10T21:41:35"
+    },
+    "vet_v2_organ_dog_spleen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_spleen.glb",
+      "size_kb": 1427,
+      "at": "2026-06-10T21:42:53"
+    },
+    "vet_v2_organ_horse_spleen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_spleen.glb",
+      "size_kb": 1265,
+      "at": "2026-06-10T21:44:11"
+    },
+    "vet_v2_organ_cat_stomach": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_stomach.glb",
+      "size_kb": 781,
+      "at": "2026-06-10T21:45:35"
+    },
+    "vet_v2_organ_cow_rumen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_rumen.glb",
+      "size_kb": 1878,
+      "at": "2026-06-10T21:47:14"
+    },
+    "vet_v2_organ_dog_stomach": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_stomach.glb",
+      "size_kb": 1121,
+      "at": "2026-06-10T21:49:12"
+    },
+    "vet_v2_organ_horse_stomach": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_horse_stomach.glb",
+      "size_kb": 1136,
+      "at": "2026-06-10T21:50:59"
+    },
+    "vet_v2_organ_cat_thyroid": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cat_thyroid.glb",
+      "size_kb": 1094,
+      "at": "2026-06-10T21:52:21"
+    },
+    "vet_v2_organ_cow_udder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_cow_udder.glb",
+      "size_kb": 1098,
+      "at": "2026-06-10T21:53:40"
+    },
+    "vet_v2_organ_dog_uterus": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_organ_dog_uterus.glb",
+      "size_kb": 837,
+      "at": "2026-06-10T21:54:56"
+    },
+    "vet_v2_path_abscess-rabbit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_abscess-rabbit.glb",
+      "size_kb": 1388,
+      "at": "2026-06-10T21:56:25"
+    },
+    "vet_v2_path_bladder-stones": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_bladder-stones.glb",
+      "size_kb": 1769,
+      "at": "2026-06-10T21:58:19"
+    },
+    "vet_v2_path_bloat-rumen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_bloat-rumen.glb",
+      "size_kb": 1218,
+      "at": "2026-06-10T21:59:57"
+    },
+    "vet_v2_path_cataracts-eye": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_cataracts-eye.glb",
+      "size_kb": 1507,
+      "at": "2026-06-10T22:04:13"
+    },
+    "vet_v2_path_cruciate-tear": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_cruciate-tear.glb",
+      "size_kb": 1519,
+      "at": "2026-06-10T22:05:32"
+    },
+    "vet_v2_path_dental-disease": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_dental-disease.glb",
+      "size_kb": 1397,
+      "at": "2026-06-10T22:06:54"
+    },
+    "vet_v2_path_ear-infection": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_ear-infection.glb",
+      "size_kb": 706,
+      "at": "2026-06-10T22:08:14"
+    },
+    "vet_v2_path_enlarged-heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_enlarged-heart.glb",
+      "size_kb": 1038,
+      "at": "2026-06-10T22:09:48"
+    },
+    "vet_v2_path_fatty-liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_fatty-liver.glb",
+      "size_kb": 1112,
+      "at": "2026-06-10T22:11:06"
+    },
+    "vet_v2_path_foreign-body": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_foreign-body.glb",
+      "size_kb": 1486,
+      "at": "2026-06-10T22:12:41"
+    },
+    "vet_v2_path_fracture": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_fracture.glb",
+      "size_kb": 1420,
+      "at": "2026-06-10T22:14:00"
+    },
+    "vet_v2_path_gdv": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_gdv.glb",
+      "size_kb": 1210,
+      "at": "2026-06-10T22:15:43"
+    },
+    "vet_v2_path_gi-stasis-rabbit": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_gi-stasis-rabbit.glb",
+      "size_kb": 1552,
+      "at": "2026-06-10T22:17:14"
+    },
+    "vet_v2_path_hcm-heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_hcm-heart.glb",
+      "size_kb": 1371,
+      "at": "2026-06-10T22:18:36"
+    },
+    "vet_v2_path_hip-dysplasia": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_hip-dysplasia.glb",
+      "size_kb": 1047,
+      "at": "2026-06-10T22:19:59"
+    },
+    "vet_v2_path_kidney-stone": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_kidney-stone.glb",
+      "size_kb": 1182,
+      "at": "2026-06-10T22:22:13"
+    },
+    "vet_v2_path_laminitis-hoof": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_laminitis-hoof.glb",
+      "size_kb": 1921,
+      "at": "2026-06-10T22:23:46"
+    },
+    "vet_v2_path_liver-cirrhosis": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_liver-cirrhosis.glb",
+      "size_kb": 1293,
+      "at": "2026-06-10T22:25:16"
+    },
+    "vet_v2_path_mammary-tumor": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_mammary-tumor.glb",
+      "size_kb": 1211,
+      "at": "2026-06-10T22:26:42"
+    },
+    "vet_v2_path_mastitis-udder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_mastitis-udder.glb",
+      "size_kb": 1803,
+      "at": "2026-06-10T22:28:19"
+    },
+    "vet_v2_path_megaesophagus": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_megaesophagus.glb",
+      "size_kb": 1372,
+      "at": "2026-06-10T22:29:59"
+    },
+    "vet_v2_path_pancreatitis": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_pancreatitis.glb",
+      "size_kb": 1513,
+      "at": "2026-06-10T22:31:23"
+    },
+    "vet_v2_path_pneumonia-lung": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_pneumonia-lung.glb",
+      "size_kb": 1145,
+      "at": "2026-06-10T22:32:39"
+    },
+    "vet_v2_path_polycystic-kidney": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_polycystic-kidney.glb",
+      "size_kb": 1672,
+      "at": "2026-06-10T22:33:56"
+    },
+    "vet_v2_path_pulmonary-edema": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_pulmonary-edema.glb",
+      "size_kb": 1139,
+      "at": "2026-06-10T22:35:14"
+    },
+    "vet_v2_path_pyometra": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_pyometra.glb",
+      "size_kb": 1059,
+      "at": "2026-06-10T22:36:36"
+    },
+    "vet_v2_path_skin-mast-cell": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_skin-mast-cell.glb",
+      "size_kb": 1193,
+      "at": "2026-06-10T22:38:19"
+    },
+    "vet_v2_path_tumor": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_tumor.glb",
+      "size_kb": 1506,
+      "at": "2026-06-10T22:39:38"
+    },
+    "vet_v2_path_tumor-spleen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_path_tumor-spleen.glb",
+      "size_kb": 970,
+      "at": "2026-06-10T22:41:04"
+    },
+    "vet_v2_parasite_roundworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_parasite_roundworm.glb",
+      "size_kb": 639,
+      "at": "2026-06-10T22:42:23"
+    },
+    "vet_v2_parasite_tapeworm": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_parasite_tapeworm.glb",
+      "size_kb": 968,
+      "at": "2026-06-10T22:43:46"
+    },
+    "vet_v2_instr_vet_equip_blood_pressure": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_instr_vet_equip_blood_pressure.glb",
+      "size_kb": 610,
+      "at": "2026-06-10T22:45:05"
+    },
+    "vet_v2_instr_vet_equip_blood_smear": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_instr_vet_equip_blood_smear.glb",
+      "size_kb": 1235,
+      "at": "2026-06-10T22:47:09"
+    },
+    "vet_v2_instr_vet_equip_centrifuge": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_instr_vet_equip_centrifuge.glb",
+      "size_kb": 805,
+      "at": "2026-06-10T22:49:58"
+    },
+    "vet_v2_instr_vet_equip_glucometer": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/v2/vet_v2_instr_vet_equip_glucometer.glb",
+      "size_kb": 689,
+      "at": "2026-06-10T22:51:14"
+    }
+  },
+  "updated_at": "2026-06-10T22:51:14"
+}

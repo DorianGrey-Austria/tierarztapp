@@ -1,0 +1,19 @@
+{
+  "terminal": "T2",
+  "status": "COMPLETED",
+  "phase": "done",
+  "updated": "2026-06-10T20:15:00",
+  "blocker": null,
+  "gates": {},
+  "progress": [
+    "Round 1: 20/48 accepted, 10.0 credits (old key depleted)",
+    "Round 2: 28/28 accepted, 14.0 credits (new key, 0 failures)",
+    "Total: 48/48 models generated, 24.0 credits total",
+    "Pathology: 18 new + 12 existing = 30 conditions (39 MB)",
+    "Parasites: 10 models (12.8 MB)",
+    "Bones: 20 models (18.9 MB)",
+    "All 60 GLBs in T2 dirs validated (glTF magic OK)",
+    "No orphaned vet_path/parasite/bone files remain",
+    "Total disk: 70.7 MB"
+  ]
+}

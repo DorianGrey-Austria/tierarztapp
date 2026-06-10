@@ -1,0 +1,75 @@
+{
+  "lane": "final_5_credits_state",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 9,
+    "failed": 0,
+    "credits_used": 4.5
+  },
+  "models": {
+    "heart_systole": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/heart_systole.glb",
+      "size_kb": 838,
+      "at": "2026-06-10T22:38:44"
+    },
+    "heart_diastole": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/heart_diastole.glb",
+      "size_kb": 989,
+      "at": "2026-06-10T22:40:03"
+    },
+    "lungs_inflated": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/lungs_inflated.glb",
+      "size_kb": 1232,
+      "at": "2026-06-10T22:41:23"
+    },
+    "brain_lateral_view": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/brain_lateral_view.glb",
+      "size_kb": 1129,
+      "at": "2026-06-10T22:43:01"
+    },
+    "butterfly_monarch": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/butterfly_monarch.glb",
+      "size_kb": 1356,
+      "at": "2026-06-10T22:44:14"
+    },
+    "red_blood_cells": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/red_blood_cells.glb",
+      "size_kb": 1202,
+      "at": "2026-06-10T22:45:22"
+    },
+    "neuron_cell": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/neuron_cell.glb",
+      "size_kb": 522,
+      "at": "2026-06-10T22:48:03"
+    },
+    "dna_helix": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/dna_helix.glb",
+      "size_kb": 1374,
+      "at": "2026-06-10T22:50:01"
+    },
+    "vet_examining_dog": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/animated/vet_examining_dog.glb",
+      "size_kb": 935,
+      "at": "2026-06-10T22:51:21"
+    }
+  },
+  "updated_at": "2026-06-10T22:51:21"
+}

@@ -1,0 +1,398 @@
+[
+  {
+    "name": "vet_v2_organ_cow_abomasum",
+    "prompt": "Realistic anatomical cow abomasum, opened view showing glandular folds and pyloric region, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_bladder",
+    "prompt": "Realistic anatomical cat urinary bladder, hemisected showing detrusor muscle layers and ureteral openings, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_bladder",
+    "prompt": "Realistic anatomical dog urinary bladder, hemisected showing detrusor muscle layers and ureteral openings, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_brain",
+    "prompt": "Realistic anatomical cat brain, midsagittal section showing corpus callosum thalamus and ventricles, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_brain",
+    "prompt": "Realistic anatomical dog brain, midsagittal section showing corpus callosum thalamus and ventricles, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_brain",
+    "prompt": "Realistic anatomical horse brain, midsagittal section showing corpus callosum thalamus and ventricles, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_heart",
+    "prompt": "Realistic anatomical cat heart, cross-section cutaway view showing internal chambers valves and septum, detailed cardiac anatomy, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_heart",
+    "prompt": "Realistic anatomical cow heart, cross-section cutaway view showing internal chambers valves and septum, detailed cardiac anatomy, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_heart",
+    "prompt": "Realistic anatomical dog heart, cross-section cutaway view showing internal chambers valves and septum, detailed cardiac anatomy, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_heart",
+    "prompt": "Realistic anatomical horse heart, cross-section cutaway view showing internal chambers valves and septum, detailed cardiac anatomy, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_rabbit_heart",
+    "prompt": "Realistic anatomical rabbit heart, cross-section cutaway view showing internal chambers valves and septum, detailed cardiac anatomy, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_hoof",
+    "prompt": "Realistic anatomical horse hoof, lateral cross-section showing internal structures coffin joint and digital cushion, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_intestines",
+    "prompt": "Realistic anatomical cat intestinal tract, cross-section segment showing villi and wall layers, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_intestines",
+    "prompt": "Realistic anatomical dog intestinal tract, cross-section segment showing villi and wall layers, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_intestines",
+    "prompt": "Realistic anatomical horse intestinal tract, cross-section segment showing villi and wall layers, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_kidney",
+    "prompt": "Realistic anatomical cat kidney, longitudinal cross-section showing cortex medulla pelvis and nephron structure, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_kidney",
+    "prompt": "Realistic anatomical dog kidney, longitudinal cross-section showing cortex medulla pelvis and nephron structure, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_kidneys",
+    "prompt": "Realistic anatomical cow kidney pair, one kidney cut open showing internal cortex medulla and renal pelvis, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_kidneys",
+    "prompt": "Realistic anatomical horse kidney pair, one kidney cut open showing internal cortex medulla and renal pelvis, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_liver",
+    "prompt": "Realistic anatomical cat liver, inferior view showing porta hepatis and vascular supply, gallbladder visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_liver",
+    "prompt": "Realistic anatomical cow liver, inferior view showing porta hepatis and vascular supply, gallbladder visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_liver",
+    "prompt": "Realistic anatomical dog liver, inferior view showing porta hepatis and vascular supply, gallbladder visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_liver",
+    "prompt": "Realistic anatomical horse liver, inferior view showing porta hepatis and vascular supply, gallbladder visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_rabbit_liver",
+    "prompt": "Realistic anatomical rabbit liver, inferior view showing porta hepatis and vascular supply, gallbladder visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_lungs",
+    "prompt": "Realistic anatomical cat lungs, sagittal cross-section showing bronchial tree alveoli and pulmonary vessels, internal view, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_lungs",
+    "prompt": "Realistic anatomical cow lungs, sagittal cross-section showing bronchial tree alveoli and pulmonary vessels, internal view, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_lungs",
+    "prompt": "Realistic anatomical dog lungs, sagittal cross-section showing bronchial tree alveoli and pulmonary vessels, internal view, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_lungs",
+    "prompt": "Realistic anatomical horse lungs, sagittal cross-section showing bronchial tree alveoli and pulmonary vessels, internal view, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_rabbit_lungs",
+    "prompt": "Realistic anatomical rabbit lungs, sagittal cross-section showing bronchial tree alveoli and pulmonary vessels, internal view, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_omasum",
+    "prompt": "Realistic anatomical cow omasum, cross-section showing laminae leaves at different stages of absorption, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_reticulum",
+    "prompt": "Realistic anatomical cow reticulum, close-up of interior honeycomb pattern with detailed cell structure, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_spleen",
+    "prompt": "Realistic anatomical dog spleen, cut surface showing white pulp and red pulp trabeculae, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_spleen",
+    "prompt": "Realistic anatomical horse spleen, cut surface showing white pulp and red pulp trabeculae, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_stomach",
+    "prompt": "Realistic anatomical cat stomach, opened along greater curvature showing mucosal folds and rugae interior, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_rumen",
+    "prompt": "Realistic anatomical cow rumen, alternative viewing angle, cross-section showing internal structure, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_stomach",
+    "prompt": "Realistic anatomical dog stomach, opened along greater curvature showing mucosal folds and rugae interior, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_horse_stomach",
+    "prompt": "Realistic anatomical horse stomach, opened along greater curvature showing mucosal folds and rugae interior, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cat_thyroid",
+    "prompt": "Realistic anatomical cat thyroid gland, with parathyroid glands visible, cross-section showing follicles, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_cow_udder",
+    "prompt": "Realistic anatomical cow udder, cross-section showing milk ducts cisterns and glandular tissue, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_organ_dog_uterus",
+    "prompt": "Realistic anatomical dog uterus, longitudinal section showing endometrium myometrium and cervix, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_abscess-rabbit",
+    "prompt": "Pathological veterinary specimen, abscess rabbit, different stage of maturation, early encapsulation phase, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_bladder-stones",
+    "prompt": "Pathological veterinary specimen, bladder stones, showing multiple stone types struvite and calcium oxalate, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_bloat-rumen",
+    "prompt": "Pathological veterinary specimen, bloat rumen, frothy bloat variant with foam visible, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_cataracts-eye",
+    "prompt": "Pathological veterinary specimen, cataracts eye, immature cataracts with partial lens opacity, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_cruciate-tear",
+    "prompt": "Pathological veterinary specimen, cruciate tear, partial tear with synovial effusion, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_dental-disease",
+    "prompt": "Pathological veterinary specimen, dental disease, early stage gingivitis before bone loss, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_ear-infection",
+    "prompt": "Pathological veterinary specimen, ear infection, middle ear infection otitis media with effusion, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_enlarged-heart",
+    "prompt": "Pathological veterinary specimen, enlarged heart, right-sided congestive heart failure with dilated right ventricle, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_enlarged-heart",
+    "prompt": "Pathological veterinary specimen, enlarged heart, right-sided congestive heart failure with dilated right ventricle, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_fatty-liver",
+    "prompt": "Pathological veterinary specimen, fatty liver, moderate hepatic lipidosis with sectoral distribution, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_foreign-body",
+    "prompt": "Pathological veterinary specimen, foreign body, linear foreign body string with intestinal plication, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_fracture",
+    "prompt": "Pathological veterinary specimen, fracture, comminuted fracture with multiple fragments, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_gdv",
+    "prompt": "Pathological veterinary specimen, gdv, early stage gastric dilation before volvulus, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_gi-stasis-rabbit",
+    "prompt": "Pathological veterinary specimen, gi stasis rabbit, late stage with cecal impaction, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_hcm-heart",
+    "prompt": "Pathological veterinary specimen, hcm heart, end-stage with left atrial enlargement and thrombus, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_hip-dysplasia",
+    "prompt": "Pathological veterinary specimen, hip dysplasia, bilateral with secondary osteoarthritis, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_kidney-stone",
+    "prompt": "Pathological veterinary specimen, kidney stone, staghorn calculus filling entire renal pelvis, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_laminitis-hoof",
+    "prompt": "Pathological veterinary specimen, laminitis hoof, acute phase with edema and hemorrhage in laminae, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_liver-cirrhosis",
+    "prompt": "Pathological veterinary specimen, liver cirrhosis, end-stage micronodular cirrhosis with ascites, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_mammary-tumor",
+    "prompt": "Pathological veterinary specimen, mammary tumor, ulcerated mammary carcinoma with skin involvement, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_mastitis-udder",
+    "prompt": "Pathological veterinary specimen, mastitis udder, gangrenous mastitis with tissue necrosis, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_megaesophagus",
+    "prompt": "Pathological veterinary specimen, megaesophagus, with aspiration pneumonia complication visible in lungs, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_pancreatitis",
+    "prompt": "Pathological veterinary specimen, pancreatitis, chronic pancreatitis with fibrosis and atrophy, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_pneumonia-lung",
+    "prompt": "Pathological veterinary specimen, pneumonia lung, aspiration pneumonia with dependent lobe consolidation, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_polycystic-kidney",
+    "prompt": "Pathological veterinary specimen, polycystic kidney, advanced stage with minimal remaining parenchyma, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_pulmonary-edema",
+    "prompt": "Pathological veterinary specimen, pulmonary edema, cardiogenic pulmonary edema with pleural effusion, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_pyometra",
+    "prompt": "Pathological veterinary specimen, pyometra, closed pyometra with massively distended uterus about to rupture, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_skin-mast-cell",
+    "prompt": "Pathological veterinary specimen, skin mast cell, high-grade mast cell tumor with satellite nodules, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_tumor",
+    "prompt": "Pathological veterinary specimen, tumor, ruptured splenic hemangiosarcoma with hemoperitoneum, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_path_tumor-spleen",
+    "prompt": "Pathological veterinary specimen, tumor spleen, ruptured splenic hemangiosarcoma with hemoperitoneum, medical education pathology specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_parasite_roundworm",
+    "prompt": "Toxocara canis adult roundworm, stretched out straight showing full length, detailed cuticle surface rings, head and tail differentiation visible, medical specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_parasite_tapeworm",
+    "prompt": "Dipylidium caninum mature tapeworm, gravid proglottids detaching from strobila, showing egg packets, scolex detail with hooks, medical specimen, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_blood_pressure",
+    "prompt": "Professional veterinary blood pressure, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_blood_smear",
+    "prompt": "Professional veterinary blood smear, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_centrifuge",
+    "prompt": "Professional veterinary centrifuge, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_glucometer",
+    "prompt": "Professional veterinary glucometer, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_microscope",
+    "prompt": "Professional veterinary microscope, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_penlight",
+    "prompt": "Professional veterinary penlight, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_pulse_oximeter",
+    "prompt": "Professional veterinary pulse oximeter, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_reflex_hammer",
+    "prompt": "Professional veterinary reflex hammer, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_test_tubes",
+    "prompt": "Professional veterinary test tubes, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_urine_dipstick",
+    "prompt": "Professional veterinary urine dipstick, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_xray_viewer",
+    "prompt": "Professional veterinary xray viewer, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_ophthalmoscope",
+    "prompt": "Professional veterinary ophthalmoscope, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_otoscope",
+    "prompt": "Professional veterinary otoscope, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_stethoscope",
+    "prompt": "Professional veterinary stethoscope, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_vet_equip_hemostats",
+    "prompt": "Professional veterinary hemostats, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_surgical_forceps",
+    "prompt": "Professional veterinary surgical forceps, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_surgical_scalpel",
+    "prompt": "Professional veterinary surgical scalpel, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_syringe",
+    "prompt": "Professional veterinary syringe, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_thermometer",
+    "prompt": "Professional veterinary thermometer, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_instr_ultrasound_probe",
+    "prompt": "Professional veterinary ultrasound probe, different manufacturer design variant, slightly different shape and ergonomics, high-quality medical instrument, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_calf",
+    "prompt": "Newborn dairy calf, Holstein breed, black and white patches, standing on wobbly legs, umbilical cord stump visible, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_embryo",
+    "prompt": "Canine fetal development, late-stage puppy embryo, curled position, visible features forming, translucent amniotic membrane, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_foal",
+    "prompt": "Newborn Thoroughbred foal, bay coat, lying down with legs tucked, first hours after birth, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_kitten",
+    "prompt": "Newborn kitten, eyes still closed, tiny pink paws, grey tabby fur, curled up sleeping, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_pregnant-cat",
+    "prompt": "Pregnant cat in late gestation, large round abdomen, calico coat, side view showing belly, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_pregnant-dog",
+    "prompt": "Pregnant Golden Retriever in late gestation, visible mammary development, resting position, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  },
+  {
+    "name": "vet_v2_special_puppy",
+    "prompt": "Young Labrador puppy, 4 weeks old, floppy ears, pudgy build, sitting alert, chocolate coat, Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+  }
+]

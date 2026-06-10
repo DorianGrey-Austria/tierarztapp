@@ -1,0 +1,80 @@
+session_id: "2026-06-10-hyper3d-credit-burn"
+created: "2026-06-10T18:00:00"
+project: "tierarztapp"
+project_root: "/Users/cardrevolution/Desktop/coding/tierarztapp"
+goal: "80 Hyper3D Credits in ~160 veterinaermedizinische 3D-Assets umsetzen (Organe, Pathologie, Instrumente)"
+mode: "shared"
+main_branch: "main"
+session_checkpoint: "d4c2c8cc86f88692182bf5072dabbbd37ac6e249"
+
+# Pipeline
+pipeline_script: "/Users/cardrevolution/Desktop/coding/pferdehof/scripts/rodin_batch_generate.py"
+api_key_path: "~/.hyper3d_api_key"
+prompt_suffix: "Isolated on white background, soft studio lighting, medical education style, high anatomical detail, realistic proportions, game-ready 3D model"
+reserve: 0  # Credits verfallen morgen — alles verbrauchen
+
+terminals:
+  T1:
+    role: "Organ-Spezialist"
+    port: null
+    merge_order: 1
+    owned_files:
+      - "assets/models/organs/**"
+      - "_multi/2026-06-10-hyper3d-credit-burn/queue_T1.json"
+      - "_multi/2026-06-10-hyper3d-credit-burn/rodin_state_T1.json"
+    read_files:
+      - "CLAUDE.md"
+      - "scripts/**"
+  T2:
+    role: "Pathologie-Spezialist"
+    port: null
+    merge_order: 2
+    owned_files:
+      - "assets/models/pathology/**"
+      - "assets/models/parasites/**"
+      - "assets/models/bones/**"
+      - "_multi/2026-06-10-hyper3d-credit-burn/queue_T2.json"
+      - "_multi/2026-06-10-hyper3d-credit-burn/rodin_state_T2.json"
+    read_files:
+      - "CLAUDE.md"
+      - "scripts/**"
+  T3:
+    role: "Equipment-Spezialist"
+    port: null
+    merge_order: 3
+    owned_files:
+      - "assets/models/instruments/**"
+      - "assets/models/equipment/**"
+      - "assets/models/animals/chicken/**"
+      - "assets/models/animals/sugar-glider/**"
+      - "assets/models/animals/mouse/**"
+      - "assets/models/animals/gecko/**"
+      - "assets/models/animals/bearded-dragon/**"
+      - "assets/models/animals/rooster/**"
+      - "assets/models/animals/duckling/**"
+      - "_multi/2026-06-10-hyper3d-credit-burn/queue_T3.json"
+      - "_multi/2026-06-10-hyper3d-credit-burn/rodin_state_T3.json"
+    read_files:
+      - "CLAUDE.md"
+      - "scripts/**"
+
+dag:
+  edges: []  # Keine Abhaengigkeiten — alle parallel
+  critical_path: []
+
+gates: {}
+
+merge_order: ["T1", "T2", "T3"]
+setup_cmd: "pip3 install certifi 2>/dev/null || true"
+build_cmd: null
+test_cmd: null
+dev_cmd: null
+
+lock_files:
+  owner: "T1"
+  files: []
+
+no_go:
+  - "Deploy"
+  - "Secrets committen"
+  - "Bestehende GLBs ueberschreiben (ausser --force)"

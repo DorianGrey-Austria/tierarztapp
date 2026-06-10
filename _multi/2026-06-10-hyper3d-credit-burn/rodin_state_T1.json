@@ -1,0 +1,166 @@
+{
+  "lane": "rodin_state_T1",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 22,
+    "failed": 0,
+    "credits_used": 11.0
+  },
+  "models": {
+    "vet_organ_cat_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_lungs.glb",
+      "size_kb": 1147,
+      "at": "2026-06-10T18:27:49"
+    },
+    "vet_organ_cat_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_liver.glb",
+      "size_kb": 1323,
+      "at": "2026-06-10T18:29:10"
+    },
+    "vet_organ_cat_stomach": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_stomach.glb",
+      "size_kb": 686,
+      "at": "2026-06-10T18:30:32"
+    },
+    "vet_organ_cat_intestines": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_intestines.glb",
+      "size_kb": 998,
+      "at": "2026-06-10T18:32:04"
+    },
+    "vet_organ_cat_bladder": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_bladder.glb",
+      "size_kb": 749,
+      "at": "2026-06-10T18:33:29"
+    },
+    "vet_organ_cat_brain": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cat_brain.glb",
+      "size_kb": 1312,
+      "at": "2026-06-10T18:35:16"
+    },
+    "vet_organ_horse_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_lungs.glb",
+      "size_kb": 1206,
+      "at": "2026-06-10T18:36:51"
+    },
+    "vet_organ_horse_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_liver.glb",
+      "size_kb": 779,
+      "at": "2026-06-10T18:38:24"
+    },
+    "vet_organ_horse_kidneys": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_kidneys.glb",
+      "size_kb": 1357,
+      "at": "2026-06-10T18:40:06"
+    },
+    "vet_organ_horse_stomach": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_stomach.glb",
+      "size_kb": 705,
+      "at": "2026-06-10T18:41:24"
+    },
+    "vet_organ_horse_spleen": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_spleen.glb",
+      "size_kb": 715,
+      "at": "2026-06-10T18:42:56"
+    },
+    "vet_organ_horse_brain": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_horse_brain.glb",
+      "size_kb": 1040,
+      "at": "2026-06-10T18:44:17"
+    },
+    "vet_organ_cow_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_heart.glb",
+      "size_kb": 1018,
+      "at": "2026-06-10T18:45:44"
+    },
+    "vet_organ_cow_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_lungs.glb",
+      "size_kb": 1490,
+      "at": "2026-06-10T18:47:35"
+    },
+    "vet_organ_cow_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_liver.glb",
+      "size_kb": 942,
+      "at": "2026-06-10T18:48:56"
+    },
+    "vet_organ_cow_kidneys": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_kidneys.glb",
+      "size_kb": 1357,
+      "at": "2026-06-10T18:50:12"
+    },
+    "vet_organ_cow_abomasum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_abomasum.glb",
+      "size_kb": 1043,
+      "at": "2026-06-10T18:51:36"
+    },
+    "vet_organ_cow_reticulum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_reticulum.glb",
+      "size_kb": 1081,
+      "at": "2026-06-10T18:52:57"
+    },
+    "vet_organ_cow_omasum": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_cow_omasum.glb",
+      "size_kb": 790,
+      "at": "2026-06-10T18:54:18"
+    },
+    "vet_organ_rabbit_heart": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_rabbit_heart.glb",
+      "size_kb": 771,
+      "at": "2026-06-10T18:55:35"
+    },
+    "vet_organ_rabbit_lungs": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_rabbit_lungs.glb",
+      "size_kb": 1160,
+      "at": "2026-06-10T18:56:46"
+    },
+    "vet_organ_rabbit_liver": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/organs/vet_organ_rabbit_liver.glb",
+      "size_kb": 1189,
+      "at": "2026-06-10T18:58:19"
+    }
+  },
+  "updated_at": "2026-06-10T18:58:19"
+}
