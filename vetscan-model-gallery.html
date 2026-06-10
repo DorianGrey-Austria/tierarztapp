@@ -284,11 +284,9 @@ function loadThumbnail(idx, m) {
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    // Render 3 static frames at slight rotation for a nice pose, then stop
-    // (no infinite rAF loop = no memory leak when filtering)
+    // Render a single static frame (no infinite rAF loop = no memory leak)
     model.rotation.y = 0.4;
     renderer.render(scene, camera);
-    renderer.dispose();
   }, undefined, () => {
     container.querySelector('.card-loading').textContent = 'Fehler';
   });
