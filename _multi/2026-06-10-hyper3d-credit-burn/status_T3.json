@@ -1,0 +1,24 @@
+{
+  "terminal": "T3",
+  "status": "COMPLETED",
+  "phase": "done",
+  "updated": "2026-06-10T19:00:00",
+  "blocker": null,
+  "gates": {},
+  "progress": [
+    "Dry-run passed: 44 jobs, 44 new, ~22 credits",
+    "Generation completed: 12/44 accepted, 3 failed (API_INSUFFICIENT_FUNDS)",
+    "Credits used: 6.0 / 26.0 cap (account depleted by parallel lanes)",
+    "GLBs sorted: 11 diagnostic + 1 surgical into category dirs",
+    "32 models not generated (no credits remaining)",
+    "All diagnostic instruments complete (11/11)",
+    "Surgical: 1/10, Treatment: 0/9, Equipment: 0/7, Animals: 0/7"
+  ],
+  "result": {
+    "generated": 12,
+    "failed_insufficient_funds": 3,
+    "not_attempted": 29,
+    "credits_used": 6.0,
+    "final_balance": 0.5
+  }
+}

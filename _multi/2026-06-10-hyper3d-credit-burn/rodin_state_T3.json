@@ -1,0 +1,108 @@
+{
+  "lane": "rodin_state_T3",
+  "project": "tierarztapp",
+  "summary": {
+    "accepted": 12,
+    "failed": 3,
+    "credits_used": 6.0
+  },
+  "models": {
+    "vet_equip_blood_pressure": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_blood_pressure.glb",
+      "size_kb": 1145,
+      "at": "2026-06-10T18:41:53"
+    },
+    "vet_equip_reflex_hammer": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_reflex_hammer.glb",
+      "size_kb": 764,
+      "at": "2026-06-10T18:43:06"
+    },
+    "vet_equip_penlight": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_penlight.glb",
+      "size_kb": 830,
+      "at": "2026-06-10T18:44:31"
+    },
+    "vet_equip_pulse_oximeter": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_pulse_oximeter.glb",
+      "size_kb": 598,
+      "at": "2026-06-10T18:45:39"
+    },
+    "vet_equip_glucometer": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_glucometer.glb",
+      "size_kb": 734,
+      "at": "2026-06-10T18:47:03"
+    },
+    "vet_equip_microscope": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_microscope.glb",
+      "size_kb": 960,
+      "at": "2026-06-10T18:48:24"
+    },
+    "vet_equip_centrifuge": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_centrifuge.glb",
+      "size_kb": 730,
+      "at": "2026-06-10T18:49:53"
+    },
+    "vet_equip_test_tubes": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_test_tubes.glb",
+      "size_kb": 1020,
+      "at": "2026-06-10T18:51:44"
+    },
+    "vet_equip_blood_smear": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_blood_smear.glb",
+      "size_kb": 1227,
+      "at": "2026-06-10T18:53:21"
+    },
+    "vet_equip_urine_dipstick": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_urine_dipstick.glb",
+      "size_kb": 548,
+      "at": "2026-06-10T18:54:30"
+    },
+    "vet_equip_xray_viewer": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_xray_viewer.glb",
+      "size_kb": 986,
+      "at": "2026-06-10T18:56:02"
+    },
+    "vet_equip_hemostats": {
+      "status": "ACCEPTED",
+      "attempts": 1,
+      "output": "assets/models/vet_equip_hemostats.glb",
+      "size_kb": 478,
+      "at": "2026-06-10T18:57:20"
+    },
+    "vet_equip_scissors_metzenbaum": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:29"
+    },
+    "vet_equip_needle_holder": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:35"
+    },
+    "vet_equip_retractor_balfour": {
+      "status": "FAILED",
+      "at": "2026-06-10T18:57:41"
+    }
+  },
+  "updated_at": "2026-06-10T18:57:41"
+}
