@@ -58,4 +58,7 @@ venv/
 
 # Lock files (keep package-lock.json)
 yarn.lock
-pnpm-lock.yaml
+pnpm-lock.yaml_multi/
+scripts/*_queue.json
+scripts/*_state.json
+scripts/*rodin_state*.json

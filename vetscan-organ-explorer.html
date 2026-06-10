@@ -69,6 +69,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .pt-btn:hover{border-color:var(--primary)}
 .pt-btn.active{border-color:var(--accent);background:rgba(16,185,129,0.1);color:var(--accent)}
 .pt-btn.danger{border-color:var(--danger);background:rgba(239,68,68,0.1);color:var(--danger)}
+.pt-btn.crosssection{border-color:var(--info);background:rgba(6,182,212,0.1);color:var(--info)}
 
 .pathology-list{margin-top:12px}
 .pathology-item{padding:10px 12px;background:var(--surface3);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent}
@@ -169,6 +170,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         <div class="pathology-toggle">
           <button class="pt-btn active" id="btnHealthy" onclick="setOrganState('healthy')">Gesund</button>
           <button class="pt-btn" id="btnDiseased" onclick="setOrganState('diseased')">Erkrankt</button>
+          <button class="pt-btn" id="btnCrossSection" onclick="setOrganState('crosssection')">Querschnitt</button>
         </div>
       </div>
 
@@ -977,6 +979,7 @@ function showOrganInfo(organ) {
   pathSection.style.display = 'block';
   document.getElementById('btnHealthy').classList.add('active');
   document.getElementById('btnDiseased').classList.remove('active','danger');
+  document.getElementById('btnCrossSection').classList.remove('active','crosssection');
 
   const pathList = document.getElementById('pathologyList');
   pathList.innerHTML = organ.pathologies.map((p, i) =>
@@ -1007,6 +1010,8 @@ window.setOrganState = function(st) {
   document.getElementById('btnHealthy').classList.remove('danger');
   document.getElementById('btnDiseased').classList.toggle('active', st === 'diseased');
   document.getElementById('btnDiseased').classList.toggle('danger', st === 'diseased');
+  document.getElementById('btnCrossSection').classList.toggle('active', st === 'crosssection');
+  document.getElementById('btnCrossSection').classList.toggle('crosssection', st === 'crosssection');
 
   if (state.currentOrgan) {
     loadOrganModel(state.currentOrgan);
@@ -1137,11 +1142,29 @@ function clearModel() {
   }
 }
 
+function getV2ModelPath(organ) {
+  const species = state.currentSpecies;
+  const organId = organ.id;
+  return `assets/models/v2/vet_v2_organ_${species}_${organId}.glb`;
+}
+
 function loadOrganModel(organ) {
-  const modelPath = (state.currentState === 'diseased' && organ.pathModel)
-    ? organ.pathModel
-    : organ.model;
+  let modelPath;
+  if (state.currentState === 'crosssection') {
+    modelPath = getV2ModelPath(organ);
+  } else if (state.currentState === 'diseased' && organ.pathModel) {
+    modelPath = organ.pathModel;
+  } else {
+    modelPath = organ.model;
+  }
   loadModelFromPath(modelPath);
+
+  if (state.currentState === 'crosssection') {
+    const indicator = document.getElementById('modeIndicator');
+    indicator.textContent = 'Querschnitt-Ansicht';
+    indicator.style.display = 'block';
+    indicator.style.color = '#06b6d4';
+  }
 }
 
 function loadModelFromPath(modelPath) {
@@ -1314,6 +1337,7 @@ document.addEventListener('keydown', (e) => {
     case '5': applyScanMode('section'); break;
     case 'h': window.setOrganState('healthy'); break;
     case 'd': window.setOrganState('diseased'); break;
+    case 'c': window.setOrganState('crosssection'); break;
     case 'r': state.controls.autoRotate = !state.controls.autoRotate; break;
   }
 });
