@@ -1014,6 +1014,7 @@
         }
 
         // === Breathing/Idle Animation ===
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let modelBaseScale = 1;
         let modelBaseY = 0;
         const animStartTime = Date.now() * 0.001;
@@ -1041,7 +1042,7 @@
             }
 
             // Breathing animation for Bello
-            if (currentModel && modelBaseScale > 0) {
+            if (currentModel && modelBaseScale > 0 && !prefersReducedMotion) {
                 const breathRate = 0.9;
                 const breathAmt = 0.012;
                 const breathPhase = Math.sin(elapsed * breathRate * Math.PI * 2);
