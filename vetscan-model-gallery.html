@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - 3D-Modell-Galerie (60 Modelle)</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c16;--surface:#111827;--surface2:#1e293b;--surface3:#334155;
+  --primary:#3b82f6;--accent:#10b981;--text:#f1f5f9;--muted:#94a3b8;
+  --radius:12px;
+}
+html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:rgba(17,24,39,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--surface2);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:1.15rem;font-weight:700;white-space:nowrap}
+.header h1 span{color:var(--accent)}
+.header-stats{display:flex;gap:16px;font-size:0.8rem;color:var(--muted)}
+.header-stats b{color:var(--accent)}
+
+/* Filter bar */
+.filter-bar{padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--surface2);background:var(--surface)}
+.filter-btn{padding:6px 14px;border:1px solid var(--surface3);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:0.78rem;transition:all 0.15s;white-space:nowrap}
+.filter-btn:hover{border-color:var(--primary);color:var(--text)}
+.filter-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+.filter-btn .count{font-size:0.65rem;opacity:0.7;margin-left:4px}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding:24px}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--surface2);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;position:relative}
+.card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 32px rgba(59,130,246,0.12)}
+.card-viewport{width:100%;height:200px;background:var(--bg);position:relative;overflow:hidden}
+.card-viewport canvas{width:100%!important;height:100%!important;display:block}
+.card-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.75rem}
+.card-info{padding:12px 14px}
+.card-name{font-size:0.88rem;font-weight:600;margin-bottom:4px}
+.card-meta{display:flex;justify-content:space-between;align-items:center}
+.card-category{font-size:0.68rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em}
+.card-size{font-size:0.68rem;color:var(--muted)}
+
+/* Full viewer modal */
+.modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px)}
+.modal.open{display:flex;align-items:center;justify-content:center}
+.modal-content{width:90vw;height:85vh;max-width:1200px;background:var(--surface);border:1px solid var(--surface2);border-radius:16px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--surface2)}
+.modal-header h2{font-size:1rem;font-weight:600}
+.modal-header .meta{font-size:0.75rem;color:var(--muted)}
+.modal-close{width:36px;height:36px;border:1px solid var(--surface3);border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.modal-close:hover{background:var(--primary);border-color:var(--primary)}
+.modal-viewport{flex:1;position:relative}
+.modal-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
+.mctr{padding:8px 14px;border:1px solid var(--surface3);border-radius:8px;background:rgba(17,24,39,0.9);backdrop-filter:blur(8px);color:var(--text);cursor:pointer;font-size:0.8rem;transition:all 0.15s}
+.mctr:hover{background:var(--primary);border-color:var(--primary)}
+.mctr.active{background:var(--accent);border-color:var(--accent)}
+
+/* Nav arrows in modal */
+.nav-arrow{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid var(--surface3);border-radius:50%;background:rgba(17,24,39,0.85);backdrop-filter:blur(8px);color:var(--text);cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;z-index:5;transition:all 0.15s}
+.nav-arrow:hover{background:var(--primary);border-color:var(--primary)}
+.nav-prev{left:16px}
+.nav-next{right:16px}
+
+@media(max-width:640px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:12px}
+  .card-viewport{height:140px}
+  .modal-content{width:98vw;height:90vh;border-radius:10px}
+}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <h1><span>&#x1F3A8;</span> VetScan 3D-Modell-Galerie</h1>
+  <div class="header-stats">
+    <span><b id="totalCount">60</b> Modelle</span>
+    <span><b id="totalSize">64</b> MB gesamt</span>
+    <span>Hyper3D Rodin generiert</span>
+  </div>
+</header>
+
+<div class="filter-bar" id="filterBar"></div>
+
+<div class="grid" id="grid"></div>
+
+<!-- Full viewer modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitle">-</h2>
+        <span class="meta" id="modalMeta">-</span>
+      </div>
+      <button class="modal-close" id="modalClose" title="Schliessen (Esc)">&#x2715;</button>
+    </div>
+    <div class="modal-viewport" id="modalViewport">
+      <button class="nav-arrow nav-prev" id="navPrev" title="Vorheriges Modell">&#x2190;</button>
+      <button class="nav-arrow nav-next" id="navNext" title="Naechstes Modell">&#x2192;</button>
+      <div class="modal-controls">
+        <button class="mctr active" id="mBtnRotate">Auto-Rotation</button>
+        <button class="mctr" id="mBtnWire">Wireframe</button>
+        <button class="mctr" id="mBtnScreenshot">Screenshot</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const MODELS = [
+  {name:"brain_lateral_view",label:"Gehirn (Lateral)",cat:"Organe",size:1157},
+  {name:"budgerigar_flying",label:"Wellensittich (Flug)",cat:"Voegel",size:852},
+  {name:"budgerigar_perched",label:"Wellensittich (sitzend)",cat:"Voegel",size:784},
+  {name:"butterfly_monarch",label:"Monarchfalter",cat:"Insekten",size:1389},
+  {name:"cat_jumping",label:"Katze (Sprung)",cat:"Katzen",size:1156},
+  {name:"cat_sitting_alert",label:"Katze (sitzend)",cat:"Katzen",size:1228},
+  {name:"cat_sleeping_curled",label:"Katze (schlafend)",cat:"Katzen",size:1302},
+  {name:"cat_stretching",label:"Katze (streckend)",cat:"Katzen",size:1351},
+  {name:"cat_walking",label:"Katze (Schritt)",cat:"Katzen",size:952},
+  {name:"cow_grazing",label:"Kuh (grasend)",cat:"Nutztiere",size:952},
+  {name:"cow_walking",label:"Kuh (Schritt)",cat:"Nutztiere",size:950},
+  {name:"dna_helix",label:"DNA-Doppelhelix",cat:"Mikrowelt",size:1408},
+  {name:"dog_lying_down",label:"Hund (liegend)",cat:"Hunde",size:1379},
+  {name:"dog_playing",label:"Hund (spielend)",cat:"Hunde",size:895},
+  {name:"dog_running",label:"Hund (rennend)",cat:"Hunde",size:966},
+  {name:"dog_sitting",label:"Hund (sitzend)",cat:"Hunde",size:1276},
+  {name:"eagle_diving",label:"Adler (Sturzflug)",cat:"Voegel",size:1173},
+  {name:"eagle_soaring",label:"Adler (Gleitflug)",cat:"Voegel",size:974},
+  {name:"fern_plant",label:"Farn",cat:"Natur",size:2401},
+  {name:"ferret_playing",label:"Frettchen (spielend)",cat:"Exoten",size:1075},
+  {name:"fish_swimming",label:"Clownfisch",cat:"Exoten",size:697},
+  {name:"foal_playing",label:"Fohlen (spielend)",cat:"Pferde",size:1031},
+  {name:"goat_climbing",label:"Ziege (kletternd)",cat:"Nutztiere",size:1198},
+  {name:"grass_patch_short",label:"Rasen (kurz)",cat:"Natur",size:1619},
+  {name:"grass_patch_tall",label:"Wiesengras (hoch)",cat:"Natur",size:2291},
+  {name:"grass_patch_wild",label:"Wildgras mit Blumen",cat:"Natur",size:267},
+  {name:"guinea_pig_eating",label:"Meerschweinchen",cat:"Exoten",size:1718},
+  {name:"hamster_running",label:"Hamster (rennend)",cat:"Exoten",size:840},
+  {name:"heart_diastole",label:"Herz (Diastole)",cat:"Organe",size:1013},
+  {name:"heart_systole",label:"Herz (Systole)",cat:"Organe",size:859},
+  {name:"horse_galloping",label:"Pferd (Galopp)",cat:"Pferde",size:747},
+  {name:"horse_grazing",label:"Pferd (grasend)",cat:"Pferde",size:937},
+  {name:"horse_rearing",label:"Pferd (steigend)",cat:"Pferde",size:960},
+  {name:"horse_trotting",label:"Pferd (Trab)",cat:"Pferde",size:886},
+  {name:"horse_walking",label:"Pferd (Schritt)",cat:"Pferde",size:721},
+  {name:"hummingbird_hovering",label:"Kolibri (schwebend)",cat:"Voegel",size:677},
+  {name:"iguana_climbing",label:"Leguan (kletternd)",cat:"Exoten",size:817},
+  {name:"lungs_inflated",label:"Lunge (aufgeblasen)",cat:"Organe",size:1262},
+  {name:"neuron_cell",label:"Nervenzelle",cat:"Mikrowelt",size:535},
+  {name:"oak_tree_small",label:"Eiche (klein)",cat:"Natur",size:1724},
+  {name:"owl_flying",label:"Eule (Flug)",cat:"Voegel",size:769},
+  {name:"parrot_flying",label:"Papagei (Flug)",cat:"Voegel",size:826},
+  {name:"parrot_wings_down",label:"Papagei (Fluegel unten)",cat:"Voegel",size:908},
+  {name:"parrot_wings_up",label:"Papagei (Fluegel oben)",cat:"Voegel",size:811},
+  {name:"pig_trotting",label:"Schwein (trabend)",cat:"Nutztiere",size:1105},
+  {name:"rabbit_hopping",label:"Kaninchen (hoppelnd)",cat:"Nutztiere",size:1189},
+  {name:"rabbit_sitting_up",label:"Kaninchen (aufrecht)",cat:"Nutztiere",size:1297},
+  {name:"red_blood_cells",label:"Erythrozyten",cat:"Mikrowelt",size:1231},
+  {name:"sheep_grazing",label:"Schaf (grasend)",cat:"Nutztiere",size:1652},
+  {name:"small_bush_green",label:"Busch (gruen)",cat:"Natur",size:2301},
+  {name:"snake_slithering",label:"Schlange (gleitend)",cat:"Exoten",size:1050},
+  {name:"snake_striking",label:"Schlange (Angriff)",cat:"Exoten",size:261},
+  {name:"swallow_flight",label:"Schwalbe (Flug)",cat:"Voegel",size:595},
+  {name:"turtle_walking",label:"Schildkroete",cat:"Exoten",size:867},
+  {name:"vet_examining_dog",label:"Tierarzt + Hund",cat:"Tierklinik",size:958},
+  {name:"wheat_stalks",label:"Weizenhalme",cat:"Natur",size:1410},
+  {name:"wildflower_daisies",label:"Gaensebluemchen",cat:"Natur",size:1374},
+  {name:"wildflower_lavender",label:"Lavendel",cat:"Natur",size:1992},
+  {name:"wildflower_poppies",label:"Mohnblumen",cat:"Natur",size:964},
+  {name:"willow_tree",label:"Trauerweide",cat:"Natur",size:1373},
+];
+
+const BASE = 'assets/models/animated/';
+const loader = new GLTFLoader();
+let activeFilter = 'Alle';
+let modalIdx = -1;
+let modalScene, modalCamera, modalRenderer, modalControls, modalModel, modalAnimId;
+let modalAutoRotate = true, modalWireframe = false;
+
+// === Categories ===
+const cats = {};
+MODELS.forEach(m => { cats[m.cat] = (cats[m.cat]||0) + 1; });
+const catOrder = ['Pferde','Hunde','Katzen','Voegel','Nutztiere','Exoten','Natur','Insekten','Organe','Mikrowelt','Tierklinik'];
+
+// === Filter bar ===
+function buildFilters() {
+  const bar = document.getElementById('filterBar');
+  let html = `<button class="filter-btn active" data-cat="Alle">Alle<span class="count">${MODELS.length}</span></button>`;
+  catOrder.forEach(c => {
+    if (cats[c]) html += `<button class="filter-btn" data-cat="${c}">${c}<span class="count">${cats[c]}</span></button>`;
+  });
+  bar.innerHTML = html;
+  bar.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.cat;
+      buildGrid();
+    });
+  });
+}
+
+// === Grid ===
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  const filtered = activeFilter === 'Alle' ? MODELS : MODELS.filter(m => m.cat === activeFilter);
+  grid.innerHTML = '';
+  filtered.forEach((m, i) => {
+    const globalIdx = MODELS.indexOf(m);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-viewport" id="vp-${globalIdx}">
+        <div class="card-loading">Lade 3D...</div>
+      </div>
+      <div class="card-info">
+        <div class="card-name">${m.label}</div>
+        <div class="card-meta">
+          <span class="card-category">${m.cat}</span>
+          <span class="card-size">${m.size < 1024 ? m.size + ' KB' : (m.size/1024).toFixed(1) + ' MB'}</span>
+        </div>
+      </div>`;
+    card.addEventListener('click', () => openModal(globalIdx));
+    grid.appendChild(card);
+    // Lazy-load thumbnail 3D
+    requestIdleCallback(() => loadThumbnail(globalIdx, m), {timeout: 2000 + i * 200});
+  });
+  document.getElementById('totalCount').textContent = filtered.length;
+}
+
+// === Thumbnail renderer ===
+function loadThumbnail(idx, m) {
+  const container = document.getElementById(`vp-${idx}`);
+  if (!container || container.dataset.loaded) return;
+  container.dataset.loaded = '1';
+
+  const w = container.clientWidth || 260;
+  const h = container.clientHeight || 200;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080c16);
+  const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
+  camera.position.set(2.5, 1.8, 2.5);
+
+  const renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const amb = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(amb);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+  dir.position.set(3, 5, 4);
+  scene.add(dir);
+  const fill = new THREE.DirectionalLight(0x6688cc, 0.3);
+  fill.position.set(-2, 1, -3);
+  scene.add(fill);
+
+  loader.load(BASE + m.name + '.glb', (gltf) => {
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const s = 1.8 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(s);
+    model.position.sub(center.multiplyScalar(s));
+    model.position.y -= box.min.y * s;
+    scene.add(model);
+
+    camera.position.set(2.2, 1.5, 2.2);
+    camera.lookAt(0, size.y * s * 0.35, 0);
+
+    container.innerHTML = '';
+    container.appendChild(renderer.domElement);
+
+    let angle = 0;
+    function spin() {
+      angle += 0.008;
+      model.rotation.y = angle;
+      renderer.render(scene, camera);
+      requestAnimationFrame(spin);
+    }
+    spin();
+  }, undefined, () => {
+    container.querySelector('.card-loading').textContent = 'Fehler';
+  });
+}
+
+// === Modal ===
+function initModal() {
+  const vp = document.getElementById('modalViewport');
+  modalScene = new THREE.Scene();
+  modalScene.background = new THREE.Color(0x080c16);
+
+  modalCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  modalCamera.position.set(3, 2, 3);
+
+  modalRenderer = new THREE.WebGLRenderer({antialias: true});
+  modalRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  modalRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+  modalRenderer.toneMappingExposure = 1.2;
+  modalRenderer.outputColorSpace = THREE.SRGBColorSpace;
+  vp.insertBefore(modalRenderer.domElement, vp.firstChild);
+
+  modalControls = new OrbitControls(modalCamera, modalRenderer.domElement);
+  modalControls.enableDamping = true;
+  modalControls.dampingFactor = 0.08;
+  modalControls.autoRotate = true;
+  modalControls.autoRotateSpeed = 2;
+  modalControls.minDistance = 0.5;
+  modalControls.maxDistance = 20;
+
+  const amb = new THREE.AmbientLight(0xffffff, 0.5);
+  modalScene.add(amb);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.3);
+  dir.position.set(5, 8, 5);
+  modalScene.add(dir);
+  const fill = new THREE.DirectionalLight(0x6688cc, 0.4);
+  fill.position.set(-3, 2, -5);
+  modalScene.add(fill);
+  const rim = new THREE.DirectionalLight(0xff8844, 0.2);
+  rim.position.set(0, -2, -3);
+  modalScene.add(rim);
+
+  const grid = new THREE.GridHelper(8, 16, 0x1e293b, 0x111827);
+  modalScene.add(grid);
+
+  function animate() {
+    modalAnimId = requestAnimationFrame(animate);
+    modalControls.autoRotate = modalAutoRotate;
+    modalControls.update();
+    modalRenderer.render(modalScene, modalCamera);
+  }
+  animate();
+}
+
+function resizeModal() {
+  const vp = document.getElementById('modalViewport');
+  const w = vp.clientWidth;
+  const h = vp.clientHeight;
+  modalCamera.aspect = w / h;
+  modalCamera.updateProjectionMatrix();
+  modalRenderer.setSize(w, h);
+}
+
+function openModal(idx) {
+  modalIdx = idx;
+  const m = MODELS[idx];
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalTitle').textContent = m.label;
+  document.getElementById('modalMeta').textContent = `${m.cat} | ${m.name}.glb | ${m.size < 1024 ? m.size + ' KB' : (m.size/1024).toFixed(1) + ' MB'}`;
+  resizeModal();
+  loadModalModel(m);
+}
+
+function loadModalModel(m) {
+  if (modalModel) {
+    modalScene.remove(modalModel);
+    modalModel.traverse(c => {
+      if (c.isMesh) { c.geometry.dispose(); if (c.material.map) c.material.map.dispose(); c.material.dispose(); }
+    });
+    modalModel = null;
+  }
+  loader.load(BASE + m.name + '.glb', (gltf) => {
+    const model = gltf.scene;
+    const box = new THREE.Box3().setFromObject(model);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const s = 2.0 / Math.max(size.x, size.y, size.z);
+    model.scale.setScalar(s);
+    model.position.sub(center.multiplyScalar(s));
+    model.position.y -= box.min.y * s;
+    modalScene.add(model);
+    modalModel = model;
+
+    modalCamera.position.set(3, 2, 3);
+    modalControls.target.set(0, size.y * s * 0.35, 0);
+    modalControls.update();
+
+    if (modalWireframe) applyWireframe(true);
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  modalIdx = -1;
+}
+
+function navModal(dir) {
+  const filtered = activeFilter === 'Alle' ? MODELS : MODELS.filter(m => m.cat === activeFilter);
+  const currentInFiltered = filtered.indexOf(MODELS[modalIdx]);
+  let next = currentInFiltered + dir;
+  if (next < 0) next = filtered.length - 1;
+  if (next >= filtered.length) next = 0;
+  const globalIdx = MODELS.indexOf(filtered[next]);
+  modalIdx = globalIdx;
+  const m = MODELS[globalIdx];
+  document.getElementById('modalTitle').textContent = m.label;
+  document.getElementById('modalMeta').textContent = `${m.cat} | ${m.name}.glb | ${m.size < 1024 ? m.size + ' KB' : (m.size/1024).toFixed(1) + ' MB'}`;
+  loadModalModel(m);
+}
+
+function applyWireframe(on) {
+  if (!modalModel) return;
+  modalModel.traverse(c => {
+    if (c.isMesh) c.material.wireframe = on;
+  });
+}
+
+// === Setup ===
+buildFilters();
+buildGrid();
+initModal();
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('navPrev').addEventListener('click', () => navModal(-1));
+document.getElementById('navNext').addEventListener('click', () => navModal(1));
+document.getElementById('mBtnRotate').addEventListener('click', function() {
+  modalAutoRotate = !modalAutoRotate;
+  this.classList.toggle('active', modalAutoRotate);
+});
+document.getElementById('mBtnWire').addEventListener('click', function() {
+  modalWireframe = !modalWireframe;
+  this.classList.toggle('active', modalWireframe);
+  applyWireframe(modalWireframe);
+});
+document.getElementById('mBtnScreenshot').addEventListener('click', () => {
+  modalRenderer.render(modalScene, modalCamera);
+  const link = document.createElement('a');
+  link.download = `vetscan-${MODELS[modalIdx]?.name || 'model'}.png`;
+  link.href = modalRenderer.domElement.toDataURL('image/png');
+  link.click();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (!document.getElementById('modal').classList.contains('open')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowLeft') navModal(-1);
+  if (e.key === 'ArrowRight') navModal(1);
+});
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('modal').classList.contains('open')) resizeModal();
+});
+</script>
+</body>
+</html>

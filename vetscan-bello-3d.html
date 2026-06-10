@@ -676,9 +676,10 @@
 
                         scene.add(model);
                         currentModel = model;
+                        storeModelBase();
                         setupInteractiveZones(model);
                         hideLoading();
-                        
+
                         console.log(`🐕 Real Bello model loaded (${quality} quality)`);
                         console.log(`📊 Polygons: ${countPolygons(model)}`);
                     },
@@ -845,6 +846,7 @@
 
             scene.add(dog);
             currentModel = dog;
+            storeModelBase();
 
             // Setup interaktive Zonen
             setupInteractiveZones(dog);
@@ -1011,10 +1013,23 @@
             document.getElementById('blood-pressure').textContent = `${values.bp} mmHg (Normal: 110-160)`;
         }
 
+        // === Breathing/Idle Animation ===
+        let modelBaseScale = 1;
+        let modelBaseY = 0;
+        const animStartTime = Date.now() * 0.001;
+
+        function storeModelBase() {
+            if (currentModel) {
+                modelBaseScale = currentModel.scale.x;
+                modelBaseY = currentModel.position.y;
+            }
+        }
+
         function animate() {
             requestAnimationFrame(animate);
 
             const time = Date.now() * 0.001;
+            const elapsed = time - animStartTime;
 
             // Update shader uniforms
             if (currentModel && currentVisualizationMode !== 'normal') {
@@ -1023,6 +1038,22 @@
                         child.material.uniforms.time.value = time;
                     }
                 });
+            }
+
+            // Breathing animation for Bello
+            if (currentModel && modelBaseScale > 0) {
+                const breathRate = 0.9;
+                const breathAmt = 0.012;
+                const breathPhase = Math.sin(elapsed * breathRate * Math.PI * 2);
+                const s = modelBaseScale;
+                currentModel.scale.set(
+                    s * (1 - breathPhase * breathAmt * 0.3),
+                    s * (1 + breathPhase * breathAmt),
+                    s * (1 - breathPhase * breathAmt * 0.3)
+                );
+                // Subtle idle sway
+                currentModel.rotation.z = Math.sin(elapsed * 0.3 * Math.PI * 2) * 0.008;
+                currentModel.position.y = modelBaseY + Math.sin(elapsed * 1.2) * 0.003 * s;
             }
 
             controls.update();

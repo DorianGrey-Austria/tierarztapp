@@ -26,6 +26,7 @@
     { id: 'glossary', name: 'Glossar', file: 'vetscan-glossary.html', icon: '\u{1F4D6}', category: 'Referenz' },
     { id: '3d-viewer', name: '3D Anatomie-Viewer', file: 'vetscan-3d-viewer.html', icon: '\u{1F9B4}', category: '3D' },
     { id: 'organ-explorer', name: 'Organ Explorer', file: 'vetscan-organ-explorer.html', icon: '\u{1F52C}', category: '3D' },
+    { id: 'animated-showcase', name: 'Animierte 3D-Szenen', file: 'vetscan-animated-showcase.html', icon: '\u{1F3AC}', category: '3D' },
     { id: 'pathology-scanner', name: 'Pathologie-Scanner', file: 'vetscan-pathology-scanner.html', icon: '\u{1F50D}', category: 'Diagnostik' },
     { id: 'dashboard', name: 'Dashboard', file: 'vetscan-dashboard.html', icon: '\u{1F3E0}', category: 'System' },
   ];

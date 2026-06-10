@@ -366,6 +366,220 @@ const CASES = [
     explanation:'Felix zeigt die klassische Feline Aortenthromboembolie (FATE): Ploetzliche beidseitige Hinterhandlaehmung, fehlender Femoralpuls, kalte zyanotische Pfoten, Schmerz. Ursache: HCM mit Thrombusbildung im linken Vorhof. Prognose: Vorsichtig bis schlecht. Therapie: Analgesie, Antithrombotika (Clopidogrel), Herztherapie. Bei fehlendem Ansprechen innerhalb 72h: Euthanasie erwaegen.',
     difficulty: 'schwer',
     points: 150
+  },
+  {
+    id: 7,
+    patient: { name:'Bella', species:'Rind', breed:'Holstein-Friesian', age:'4 Jahre', weight:'680 kg', sex:'weiblich (Kuh)', icon:'&#x1F404;' },
+    symptoms: ['Milchleistungsabfall seit 3 Tagen','Reduzierte Futteraufnahme','Steife Bewegungen, will sich nicht hinlegen','Kein Wiederkaeuen beobachtet'],
+    vitals: [
+      {label:'HF',value:'88',unit:'/min',abnormal:true},
+      {label:'AF',value:'30',unit:'/min',abnormal:false},
+      {label:'Temp',value:'39.8',unit:'C',abnormal:true},
+      {label:'SH',value:'rosa',unit:'',abnormal:false},
+      {label:'Pansen',value:'1/2min',unit:'Kontr.',abnormal:true},
+      {label:'BCS',value:'3.0/5',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/cow/cow.glb',
+    pathModel:'assets/models/pathology/bloat-rumen/bloat-rumen.glb',
+    scanFindings: {
+      visual:'Kuh steht mit aufgekruemmtem Ruecken, Ellbogen abduiert. Bewegt sich sehr vorsichtig. Pansen links wenig gefuellt.',
+      xray:'Metallischer Schatten cranio-ventral im Bereich des Netzmagens sichtbar. Verdacht auf Fremdkoerper (Nagel/Draht).',
+      ultrasound:'Netzmagen: Reduzierte Motilitaet. Fibrinaer-eitrige Auflagerungen auf dem Peritoneum cranio-ventral. Freie Fluessigkeit: wenig, echogen.',
+      palpation:'Schmerzprobe positiv: Rueckengriff → deutliches Stoehnen. Stabdruck unter Processus xiphoideus schmerzhaft. Bauchhoehlenpunktat: trueb, erhoehlte Leukozytenzahl.',
+      auscultation:'Pansen: Reduzierte Frequenz (1 Kontraktion/2 min statt 2-3/2 min). Darmgeraeusche reduziert. Herz: leicht gedaempfte Herztoene.'
+    },
+    correctDx: 'Reticuloperitonitis traumatica (Fremdkoerperkrankheit)',
+    options: ['Reticuloperitonitis traumatica (Fremdkoerperkrankheit)','Labmagenverlagerung links','Pansenazidose','Peritonitis ohne Fremdkoerper'],
+    explanation:'Bella zeigt die klassischen Zeichen der traumatischen Reticuloperitonitis ("Hardware Disease"): Vorsichtige Bewegungen, aufgekruemmter Ruecken, positive Schmerzprobe, reduzierte Pansenmotilitaet. Der Fremdkoerper (Nagel/Draht) hat den Netzmagen perforiert. Therapie: Konservativ mit Magnetsonde + Antibiose oder chirurgisch (Rumenotomie). Prophylaxe: Magnetsondenapplikation bei allen Kuehen.',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 8,
+    patient: { name:'Sternchen', species:'Rind', breed:'Fleckvieh', age:'3 Jahre', weight:'650 kg', sex:'weiblich (Kuh)', icon:'&#x1F404;' },
+    symptoms: ['Abkalbung vor 10 Tagen','Milchleistung unter Erwartung','Linke Flanke aufgetrieben','Gelegentliches Scharren'],
+    vitals: [
+      {label:'HF',value:'72',unit:'/min',abnormal:false},
+      {label:'AF',value:'22',unit:'/min',abnormal:false},
+      {label:'Temp',value:'38.5',unit:'C',abnormal:false},
+      {label:'SH',value:'rosa',unit:'',abnormal:false},
+      {label:'Pansen',value:'2/2min',unit:'Kontr.',abnormal:false},
+      {label:'BCS',value:'2.5/5',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/cow/cow.glb',
+    scanFindings: {
+      visual:'Linke Flanke leicht aufgetrieben, v.a. dorsal. Rechte Seite unauffaellig. Kuh frisst zoegeslich aber reduziert.',
+      xray:'Gasblase links dorsal sichtbar, zwischen Pansen und Bauchwand. Verdacht auf verlagerten Labmagen.',
+      ultrasound:'Links zwischen 9. und 13. Rippe: Gasschicht zwischen Bauchwand und Pansen. Labmagen links verlagert (Abomasum zwischen Pansen und Bauchwand).',
+      palpation:'Perkussion + Auskultation links 11.-13. Rippe: Metallischer "Ping"-Ton! Deutlich hoerbar. Schwingauskultation: Fluessigkeitsspiegel rechts nicht hoerbar.',
+      auscultation:'Pansen: Normal. Links dorsal 11.-13. Rippe: Hoher, metallischer Klingel-Ton bei Perkussion ("Ping"). Herz unauffaellig.'
+    },
+    correctDx: 'Labmagenverlagerung links (LDA)',
+    options: ['Labmagenverlagerung links (LDA)','Pansenazidose','Blinddarmdilatation','Pneumoperitoneum'],
+    explanation:'Sternchen zeigt die klassische Labmagenverlagerung links (LDA): Typisch 1-4 Wochen post partum bei Hochleistungskuehen mit negativer Energiebilanz. Der pathognomonische "Ping"-Ton bei Perkussion + Auskultation links bestaetigt die Diagnose. Therapie: Chirurgisch (Omentopexie oder Abomasopexie) oder Toggle-Pin-Methode. Prognose bei LDA: gut (>90% Heilung).',
+    difficulty: 'leicht',
+    points: 80
+  },
+  {
+    id: 9,
+    patient: { name:'Schnuffi', species:'Kaninchen', breed:'Zwergwidder', age:'5 Jahre', weight:'1.8 kg', sex:'maennlich kastriert', icon:'&#x1F407;' },
+    symptoms: ['Frisst seit gestern nichts mehr','Kein Kotabsatz seit heute frueh','Sitzt aufgeplustet in der Ecke','Zaehnepressen (Schmerzzeichen)'],
+    vitals: [
+      {label:'HF',value:'280',unit:'/min',abnormal:true},
+      {label:'AF',value:'55',unit:'/min',abnormal:true},
+      {label:'Temp',value:'37.2',unit:'C',abnormal:true},
+      {label:'SH',value:'blass',unit:'',abnormal:true},
+      {label:'KFZ',value:'3',unit:'s',abnormal:true},
+      {label:'BCS',value:'4/9',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/rabbit/rabbit.glb',
+    pathModel:'assets/models/pathology/gi-stasis-rabbit/gi-stasis-rabbit.glb',
+    scanFindings: {
+      visual:'Kaninchen sitzt zusammengekauert, Fell gestraeubt. Keine Bewegung. Schmerzgesicht (Orbital Tightening, Cheek Flattening nach Rabbit Grimace Scale).',
+      xray:'Magen massiv gasgefuellt und dilatiert. Duenndarm: multiple Gas-Fluessigkeits-Spiegel. Caecum: Aufgasung. Gesamteindruck: GI-Stasis mit sekundaerer Magenueberladung.',
+      ultrasound:'Magen stark dilatiert, Inhalt geschichtet (Gas + Fluessigkeit). Darmmotilitaet: Keine peristaltischen Wellen sichtbar. Caecum aufgegast.',
+      palpation:'Magen: Hart, aufgeblaet, deutlich vergroessert tastbar. Bauch insgesamt gespannt und schmerzhaft. Kein Kot im Rektum.',
+      auscultation:'Darm: Keine Geraeusche hoerbar (Totenstille!). Herz: Tachykardie, regelmaessig. Lunge: unauffaellig.'
+    },
+    correctDx: 'GI-Stasis (Magenueberladung/Darmstillstand)',
+    options: ['GI-Stasis (Magenueberladung/Darmstillstand)','Darmverschluss durch Haarballen','Lebertorsion','Blasensteine mit Obstruktion'],
+    explanation:'Schnuffi zeigt die klassische GI-Stasis - den haeufigsten Notfall beim Kaninchen. Anorexie + kein Kotabsatz + aufgeblaehter Magen + Schmerzzeichen. Roentgen bestaetigt Magenueberladung und fehlende Darmmotilitaet. Therapie: Analgesie (Metamizol), Motilitaetsfoerderung (Metoclopramid), Infusion, Simethicon gegen Gas, Zwangsfuettern mit Critical Care. KEINE Magensonde beim Kaninchen (Rupturgefahr)! Prognose: Gut bei frueher Therapie.',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 10,
+    patient: { name:'Rocky', species:'Hund', breed:'Rottweiler', age:'6 Jahre', weight:'42 kg', sex:'maennlich intakt', icon:'&#x1F415;' },
+    symptoms: ['Lahmheit hinten rechts seit 2 Wochen','Verschlimmerung nach Ruhe','Leichtes Hinken beim Aufstehen','Keine Verletzung erinnerlich'],
+    vitals: [
+      {label:'HF',value:'100',unit:'/min',abnormal:false},
+      {label:'AF',value:'22',unit:'/min',abnormal:false},
+      {label:'Temp',value:'38.5',unit:'C',abnormal:false},
+      {label:'SH',value:'rosa',unit:'',abnormal:false},
+      {label:'KFZ',value:'1.5',unit:'s',abnormal:false},
+      {label:'BCS',value:'6/9',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/dog/dog_golden_retriever.glb',
+    pathModel:'assets/models/pathology/cruciate-tear/cruciate_tear.glb',
+    scanFindings: {
+      visual:'Leichte Lahmheit Grad 2/5 hinten rechts. Sitzprobe positiv: Hund sitzt mit abgestrecktem rechtem Hinterbein ("lazy sit").',
+      xray:'Kniegelenk rechts: Fettpolsterzeichen positiv (intrakapsulare Schwellung). Leichte Arthrose. Kein Kreuzbandschatten sichtbar.',
+      ultrasound:'Kniegelenk: Erguss im Gelenk. Kreuzbandstruktur aufgelockert, Faserriss? Mediales Meniskushinterhorn: Verdacht auf Schaedigung.',
+      palpation:'Schubladentest: POSITIV rechts (leichte craniale Translation der Tibia). Tibiakompressionsptest: POSITIV. Kniegelenk: leichte Schwellung, erwaermt. Muskelmasse rechts reduziert vs. links.',
+      auscultation:'Herz und Lunge unauffaellig. Krepitation im rechten Kniegelenk bei Beugung/Streckung.'
+    },
+    correctDx: 'Kreuzbandruptur (CCL-Ruptur)',
+    options: ['Kreuzbandruptur (CCL-Ruptur)','Hueftdysplasie','Patellaluxation','Osteosarkom distaler Femur'],
+    explanation:'Rocky zeigt die klassische Kreuzbandruptur (Cranial Cruciate Ligament): Schleichender Beginn, Lahmheit nach Ruhe, positiver Schubladentest und Tibiakompressions-test. Der "lazy sit" ist ein typisches Fruehzeichen. Rottweiler sind praedisponiert (grosse Rasse, Uebergewicht). Therapie: Chirurgisch (TPLO, TTA oder Tightrope). Konservativ nur bei kleinen Hunden <10kg. CAVE: 40-60% bilaterale Ruptur innerhalb von 1-2 Jahren!',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 11,
+    patient: { name:'Sultan', species:'Pferd', breed:'Araber', age:'18 Jahre', weight:'430 kg', sex:'Wallach', icon:'&#x1F40E;' },
+    symptoms: ['Akute Lahmheit Grad 4/5 beidseits vorne','Trippeln auf der Stelle','Will sich nicht bewegen','Pulsation der Zehenarterien'],
+    vitals: [
+      {label:'HF',value:'64',unit:'/min',abnormal:true},
+      {label:'AF',value:'28',unit:'/min',abnormal:true},
+      {label:'Temp',value:'38.2',unit:'C',abnormal:false},
+      {label:'SH',value:'injiziert',unit:'',abnormal:true},
+      {label:'KFZ',value:'2.5',unit:'s',abnormal:true},
+      {label:'BCS',value:'8/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/horse/horse.glb',
+    pathModel:'assets/models/pathology/laminitis-hoof/laminitis-hoof.glb',
+    scanFindings: {
+      visual:'Pferd steht in "Rehehaltung": Hinterhand vorgestellt, Vorderbeine nach vorn, Gewicht auf den Trachten. Trippelt, will nicht gehen. Sichtbare Pulsation an den Fesselkoepfen.',
+      xray:'Roentgen Hufe vorne beidseits: Rotation des Hufbeins (8 Grad links, 6 Grad rechts). Verbreiterte weisse Linie. Keine Senkung. Verdacht auf akute Hufrehe Grad II-III.',
+      ultrasound:'Digitale Arterien: Erhoehter Blutfluss, hohe Pulsatilitaet. Huflederhaut: verdickt, oedematös.',
+      palpation:'Hufwand: WARM, deutlich waermer als normal. Digitaler Puls: STARK pochend beidseits vorne. Hufzangenprobe: Druckschmerz diffus ueber die gesamte Sohle. Koronband: leicht geschwollen.',
+      auscultation:'Herz: Tachykardie, keine Geraeusche. Darm: Normale Motilitaet. Hufe: Digitaler Puls mit Stethoskop ueber Zehenarterie deutlich hoerbar.'
+    },
+    correctDx: 'Akute Hufrehe (Laminitis)',
+    options: ['Akute Hufrehe (Laminitis)','Hufabszess beidseits','Hufrollensyndrom (Podotrochlitis)','Krongelenksentzuendung'],
+    explanation:'Sultan zeigt die klassische akute Hufrehe: Adipoeser Araber (Risikorasse fuer EMS!), Rehehaltung, starker digitaler Puls, warme Hufe, diffuser Hufzangenschmerz. Roentgen bestaetigt Rotation des Hufbeins. Ursache wahrscheinlich: Equines Metabolisches Syndrom (EMS). Sofortmassnahmen: Weicher Untergrund, Kryotherapie (Eisbad), NSAIDs, Durchblutungsfoerderung. Langfristig: Gewichtsreduktion, Diaetmanagement, orthopaeadischer Hufbeschlag.',
+    difficulty: 'leicht',
+    points: 80
+  },
+  {
+    id: 12,
+    patient: { name:'Daisy', species:'Katze', breed:'Maine Coon', age:'6 Jahre', weight:'5.2 kg', sex:'weiblich kastriert', icon:'&#x1F408;' },
+    symptoms: ['Schleichender Gewichtsverlust (von 6.5 auf 5.2 kg)','Gelegentliches Erbrechen','Durchfall intermittierend','Fell stumpf und duenn'],
+    vitals: [
+      {label:'HF',value:'180',unit:'/min',abnormal:false},
+      {label:'AF',value:'28',unit:'/min',abnormal:false},
+      {label:'Temp',value:'38.6',unit:'C',abnormal:false},
+      {label:'SH',value:'blass-rosa',unit:'',abnormal:true},
+      {label:'KFZ',value:'2',unit:'s',abnormal:false},
+      {label:'BCS',value:'3/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/cat/cat_domestic.glb',
+    scanFindings: {
+      visual:'Katze mager, Muskelmasse reduziert (Wirbelsaeule prominant). Fell stumpf, duenn. Verhalten unauffaellig, aufmerksam.',
+      xray:'Thorax: Unauffaellig. Abdomen: Verdickte Darmschlingen im Duenndarmbereich. Mesenteriallymphknoten moeglicherweise vergroessert.',
+      ultrasound:'Duenndarm: Diffuse Wandverdickung (3.5mm, normal <2.5mm). Wandschichtung teilweise aufgehoben. Mesenteriallymphknoten: 12mm (vergroessert). Leber + Nieren unauffaellig.',
+      palpation:'Abdomen: Verdickte Darmschlingen palpierbar. Mesenteriallymphknoten als kleine derbe Knoten tastbar. Keine Masse. Nieren normal gross.',
+      auscultation:'Herz: Regelmaessig, kein Geraeusch. Darm: Leicht verstaerkte Geraeusche. Lunge: Unauffaellig.'
+    },
+    correctDx: 'Intestinales Lymphom (low-grade)',
+    options: ['Intestinales Lymphom (low-grade)','Inflammatory Bowel Disease (IBD)','Feline Hyperthyreose','Chronische Pankreatitis'],
+    explanation:'Daisy zeigt das typische Bild eines low-grade intestinalen Lymphoms bei der Katze: Schleichender Gewichtsverlust, intermittierendes Erbrechen/Durchfall bei einer mittelalten Katze. Ultraschall zeigt diffuse Wandverdickung mit Schichtverlust und vergroesserte Lymphknoten. Differenzierung zu IBD nur durch Biopsie (Vollwand > Endoskopie fuer Lymphom!). Immunhistochemie + Klonalitaetsanalyse. Low-grade Lymphom: Chlorambucil + Prednisolon, mediane Ueberlebenszeit 1.5-2 Jahre.',
+    difficulty: 'schwer',
+    points: 150
+  },
+  {
+    id: 13,
+    patient: { name:'Charly', species:'Hund', breed:'Miniature Schnauzer', age:'8 Jahre', weight:'9 kg', sex:'maennlich kastriert', icon:'&#x1F415;' },
+    symptoms: ['Akutes Erbrechen seit gestern','Inappetenz seit 2 Tagen','Durchfall (waessrig)','Bauchschmerzen ("Gebetsstellung")'],
+    vitals: [
+      {label:'HF',value:'130',unit:'/min',abnormal:true},
+      {label:'AF',value:'30',unit:'/min',abnormal:false},
+      {label:'Temp',value:'39.5',unit:'C',abnormal:true},
+      {label:'SH',value:'injiziert',unit:'',abnormal:true},
+      {label:'KFZ',value:'2.5',unit:'s',abnormal:true},
+      {label:'BCS',value:'7/9',unit:'',abnormal:true}
+    ],
+    model:'assets/models/animals/dog/dog_golden_retriever.glb',
+    pathModel:'assets/models/pathology/pancreatitis/pancreatitis.glb',
+    scanFindings: {
+      visual:'Hund nimmt wiederholt "Gebetsstellung" ein (Vorderbeine tief, Hinterteil hoch). Abdomen angespannt. Dehydriert (Hautturgor reduziert).',
+      xray:'Abdomen: Fokaler Detailverlust im cranio-dorsalen Abdomen (rechts). "Ground-glass"-Erscheinung peripankreatisch. Duodenum leicht dilatiert.',
+      ultrasound:'Pankreas: Vergroessert, hypoechogen, inhomogen. Peripankreatisches Fett: Hyperechogen ("saponifiziert"). Freie Fluessigkeit peripankreatisch. Duodenum: Wandverdickung, Motilitaetsreduktion.',
+      palpation:'Craniales Abdomen schmerzhaft! Abwehrspannung bei Palpation. Hund zeigt deutliche Schmerzreaktion. Dehydratation: Hautfalte steht 3 Sekunden.',
+      auscultation:'Darm: Reduzierte Geraeusche, vereinzelt Spasmen hoerbar. Herz: Tachykardie, sonst unauffaellig.'
+    },
+    correctDx: 'Akute Pankreatitis',
+    options: ['Akute Pankreatitis','Duenndarm-Fremdkoerper','Akute Gastroenteritis (HGE)','Addison-Krise (Hypoadrenokortizismus)'],
+    explanation:'Charly zeigt die klassische akute Pankreatitis: Miniature Schnauzer (haeufigste praedisponierte Rasse!), adipoes, "Gebetsstellung" als Schmerzzeichen, Erbrechen, Diarrhoe. Ultraschall zeigt vergroessertes, hypoechogenes Pankreas mit peripankreatischer Saponifikation. Labor: Spec cPL stark erhoeht (>400ug/L). Therapie: Aggressive Fluessigkeitstherapie, Analgesie (Buprenorphin/Metamizol), Antiemetika (Maropitant), FRUEHE Ernaehrung! Keine Nahrungskarenz mehr empfohlen.',
+    difficulty: 'mittel',
+    points: 100
+  },
+  {
+    id: 14,
+    patient: { name:'Lotte', species:'Rind', breed:'Braunvieh', age:'5 Jahre', weight:'620 kg', sex:'weiblich (Kuh)', icon:'&#x1F404;' },
+    symptoms: ['Rechtes Vorderviertel vergroessert und hart','Milch waessrig-eitrig mit Flocken','Fieber seit gestern','Kuh tritt beim Melken'],
+    vitals: [
+      {label:'HF',value:'92',unit:'/min',abnormal:true},
+      {label:'AF',value:'28',unit:'/min',abnormal:false},
+      {label:'Temp',value:'40.5',unit:'C',abnormal:true},
+      {label:'SH',value:'injiziert',unit:'',abnormal:true},
+      {label:'Pansen',value:'2/2min',unit:'Kontr.',abnormal:false},
+      {label:'BCS',value:'3.0/5',unit:'',abnormal:false}
+    ],
+    model:'assets/models/animals/cow/cow.glb',
+    pathModel:'assets/models/pathology/mastitis-udder/mastitis-udder.glb',
+    scanFindings: {
+      visual:'Rechtes Vorderviertel deutlich vergroessert, geroetet, warm. Milch: waessrig-eitrig, gelbliche Flocken. Andere 3 Viertel: CMT negativ.',
+      xray:'Nicht verfuegbar (Weichteile nicht roentgenologisch beurteilbar)',
+      ultrasound:'Rechtes Vorderviertel: Oedem im Parenchym, verdickte Zitzenzisterne. Abszessformation (hypoechogene Zone 3x4cm)? Milchgang teilweise verlegt.',
+      palpation:'Rechtes Vorderviertel: Hart, geschwollen, deutlich waermer als die anderen. Schmerzhaft bei Beruehrung. Milch: Vorgemelksprobe zeigt gelblich-eitrige Flocken. CMT: 3+ rechts vorne.',
+      auscultation:'Herz: Tachykardie. Lunge: Unauffaellig. Pansen: Normale Motilitaet.'
+    },
+    correctDx: 'Klinische Mastitis (E. coli / S. aureus)',
+    options: ['Klinische Mastitis (E. coli / S. aureus)','Euterodem post partum','Euterhaematom','Mammakarzinom'],
+    explanation:'Lotte zeigt eine akute klinische Mastitis: Geschwollenes, schmerzhaftes Euterviertel, eitrige Milch, Fieber, CMT 3+. Erreger haeufig E. coli (perakut, toxisch) oder S. aureus (chronisch, Abszesse). Sofort: Milchprobe fuer Bakteriologie VOR Antibiose! Therapie: Systemisch Antibiose (Cephalosporine oder Penicillin/Aminoglykosid), NSAIDs, haeufiges Ausmelken. E. coli-Mastitis kann septisch verlaufen → intensive Fluessigkeitstherapie! Prognose bei S. aureus: Moeglicherweise chronisch (Biofilm!).',
+    difficulty: 'leicht',
+    points: 80
   }
 ];
 
@@ -434,9 +648,21 @@ function initThreeJS() {
   });
   ro.observe(container);
 
+  let pathAnimStart = Date.now() * 0.001;
+  let pathModelBaseScale = 1;
+
   function animate() {
     requestAnimationFrame(animate);
+    const elapsed = Date.now() * 0.001 - pathAnimStart;
     controls.update();
+
+    // Subtle pulse animation for pathology models
+    if (currentModel && pathModelBaseScale > 0) {
+      const pulse = Math.sin(elapsed * 0.5 * Math.PI * 2) * 0.01;
+      const s = pathModelBaseScale;
+      currentModel.scale.setScalar(s * (1 + pulse));
+    }
+
     renderer.render(scene, camera);
   }
   animate();
@@ -461,6 +687,7 @@ function loadModel(path, callback) {
     model.position.y -= box.min.y * s;
     scene.add(model);
     currentModel = model;
+    pathModelBaseScale = s;
     camera.position.set(3, 2, 3);
     controls.target.set(0, size.y * s * 0.4, 0);
     controls.update();

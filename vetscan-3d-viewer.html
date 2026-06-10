@@ -122,6 +122,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <button class="ctrl-btn" id="btnReset" title="Ansicht zuruecksetzen (0)">&#x1F3AF;</button>
       <button class="ctrl-btn" id="btnGrid" title="Gitter ein/aus (G)">&#x25A6;</button>
       <button class="ctrl-btn" id="btnScreenshot" title="Screenshot (S)">&#x1F4F7;</button>
+      <button class="ctrl-btn active" id="btnAnimate" title="Animation ein/aus (A)">&#x1F4AB;</button>
       <button class="ctrl-btn" id="btnFullscreen" title="Vollbild (F)">&#x26F6;</button>
     </div>
 
@@ -199,6 +200,36 @@ const SPECIES = [
   { id:'cow-anatomy', name:'Rind Anatomie', latin:'Organtopographie', file:'assets/models/animals/cow-anatomy/cow_anatomy.glb', icon:'&#x1F52C;', category:'Medizinisch', tags:['Organe','Verdauung','Wiederkaeuer'] },
   { id:'cat-xray', name:'Katze Roentgen', latin:'Roentgenvisualisierung', file:'assets/models/animals/cat-xray/cat_xray.glb', icon:'&#x2622;', category:'Medizinisch', tags:['Roentgen','Skelett','Diagnostik'] },
   { id:'horse-anatomy', name:'Pferd Anatomie', latin:'Organtopographie', file:'assets/models/animals/horse-anatomy/horse_anatomy.glb', icon:'&#x1F52C;', category:'Medizinisch', tags:['Organe','Anatomie','Equide'] },
+
+  // Dynamische Posen (generiert fuer Animation)
+  { id:'horse-walking', name:'Pferd (Schritt)', latin:'Equus caballus - ambulans', file:'assets/models/animated/horse_walking.glb', icon:'&#x1F40E;', category:'Dynamische Posen', tags:['Pferd','Schritt','Bewegung'] },
+  { id:'horse-trotting', name:'Pferd (Trab)', latin:'Equus caballus - trottans', file:'assets/models/animated/horse_trotting.glb', icon:'&#x1F40E;', category:'Dynamische Posen', tags:['Pferd','Trab','Bewegung'] },
+  { id:'horse-galloping', name:'Pferd (Galopp)', latin:'Equus caballus - galloppans', file:'assets/models/animated/horse_galloping.glb', icon:'&#x1F40E;', category:'Dynamische Posen', tags:['Pferd','Galopp','schnell'] },
+  { id:'horse-rearing', name:'Pferd (Steigend)', latin:'Equus caballus - erigens', file:'assets/models/animated/horse_rearing.glb', icon:'&#x1F40E;', category:'Dynamische Posen', tags:['Pferd','Steigen','dramatisch'] },
+  { id:'dog-running', name:'Hund (Rennend)', latin:'Canis lupus familiaris - currens', file:'assets/models/animated/dog_running.glb', icon:'&#x1F415;', category:'Dynamische Posen', tags:['Hund','Rennen','Bewegung'] },
+  { id:'dog-playing', name:'Hund (Spielend)', latin:'Canis lupus familiaris - ludens', file:'assets/models/animated/dog_playing.glb', icon:'&#x1F415;', category:'Dynamische Posen', tags:['Hund','Spielen','Verhalten'] },
+  { id:'cat-jumping', name:'Katze (Sprung)', latin:'Felis catus - saliens', file:'assets/models/animated/cat_jumping.glb', icon:'&#x1F408;', category:'Dynamische Posen', tags:['Katze','Sprung','agil'] },
+  { id:'cat-stretching', name:'Katze (Streckend)', latin:'Felis catus - extendens', file:'assets/models/animated/cat_stretching.glb', icon:'&#x1F408;', category:'Dynamische Posen', tags:['Katze','Strecken','Verhalten'] },
+  { id:'rabbit-hopping', name:'Kaninchen (Hoppelnd)', latin:'Oryctolagus cuniculus - saliens', file:'assets/models/animated/rabbit_hopping.glb', icon:'&#x1F407;', category:'Dynamische Posen', tags:['Kaninchen','Hoppeln','Bewegung'] },
+  { id:'parrot-flying', name:'Papagei (Flug)', latin:'Psittacidae - volans', file:'assets/models/animated/parrot_flying.glb', icon:'&#x1F99C;', category:'Dynamische Posen', tags:['Vogel','Flug','Fluegel'] },
+  { id:'eagle-soaring', name:'Adler (Gleitflug)', latin:'Haliaeetus leucocephalus', file:'assets/models/animated/eagle_soaring.glb', icon:'&#x1F985;', category:'Dynamische Posen', tags:['Greifvogel','Gleitflug','majestaetisch'] },
+  { id:'owl-flying', name:'Eule (Flug)', latin:'Tyto alba - volans', file:'assets/models/animated/owl_flying.glb', icon:'&#x1F989;', category:'Dynamische Posen', tags:['Eule','Nachtjaeger','lautlos'] },
+  { id:'snake-striking', name:'Schlange (Angriff)', latin:'Serpentes - percutiens', file:'assets/models/animated/snake_striking.glb', icon:'&#x1F40D;', category:'Dynamische Posen', tags:['Schlange','Angriff','Giftzaehne'] },
+
+  // Organe & Medizinisch (Animationsvarianten)
+  { id:'heart-systole', name:'Herz (Systole)', latin:'Cor - systole', file:'assets/models/animated/heart_systole.glb', icon:'&#x2764;', category:'Organ-Animation', tags:['Herz','Kontraktion','Kardiologie'] },
+  { id:'heart-diastole', name:'Herz (Diastole)', latin:'Cor - diastole', file:'assets/models/animated/heart_diastole.glb', icon:'&#x2764;', category:'Organ-Animation', tags:['Herz','Relaxation','Kardiologie'] },
+  { id:'lungs-inflated', name:'Lunge (Einatmung)', latin:'Pulmo - inspiratio', file:'assets/models/animated/lungs_inflated.glb', icon:'&#x1FAC1;', category:'Organ-Animation', tags:['Lunge','Einatmung','Respiration'] },
+  { id:'lungs-deflated', name:'Lunge (Ausatmung)', latin:'Pulmo - expiratio', file:'assets/models/animated/lungs_deflated.glb', icon:'&#x1FAC1;', category:'Organ-Animation', tags:['Lunge','Ausatmung','Respiration'] },
+  { id:'eye-dilated', name:'Auge (Mydriasis)', latin:'Oculus - mydriasis', file:'assets/models/animated/eye_dilated_pupil.glb', icon:'&#x1F441;', category:'Organ-Animation', tags:['Auge','Pupille','Neurologie'] },
+  { id:'neuron-cell', name:'Nervenzelle', latin:'Neuron', file:'assets/models/animated/neuron_cell.glb', icon:'&#x1F9E0;', category:'Organ-Animation', tags:['Neuron','Nervensystem','Zelle'] },
+
+  // Natur & Umgebung
+  { id:'grass-tall', name:'Wiesengras', latin:'Poaceae', file:'assets/models/animated/grass_patch_tall.glb', icon:'&#x1F33F;', category:'Natur', tags:['Gras','Wiese','Vegetation'] },
+  { id:'wildflowers', name:'Gaensebluemchen', latin:'Bellis perennis', file:'assets/models/animated/wildflower_daisies.glb', icon:'&#x1F33C;', category:'Natur', tags:['Blumen','Wiese','Wildblumen'] },
+  { id:'butterfly', name:'Monarch-Falter', latin:'Danaus plexippus', file:'assets/models/animated/butterfly_monarch.glb', icon:'&#x1F98B;', category:'Natur', tags:['Schmetterling','Insekt','Bestaeubung'] },
+  { id:'bee', name:'Honigbiene', latin:'Apis mellifera', file:'assets/models/animated/bee_honeybee.glb', icon:'&#x1F41D;', category:'Natur', tags:['Biene','Insekt','Bestaeubung'] },
+  { id:'ladybug', name:'Marienkaefer', latin:'Coccinellidae', file:'assets/models/animated/ladybug.glb', icon:'&#x1F41E;', category:'Natur', tags:['Kaefer','Insekt','Nuetzling'] },
 ];
 
 // === App State ===
@@ -208,6 +239,7 @@ const state = {
   viewMode: 'normal',
   autoRotate: true,
   showGrid: true,
+  animated: true,
   scene: null,
   camera: null,
   renderer: null,
@@ -215,6 +247,38 @@ const state = {
   loader: new GLTFLoader(),
   gridHelper: null,
   animationId: null,
+  clock: new THREE.Clock(),
+  modelBaseScale: 1,
+  modelBaseY: 0,
+  particles: null,
+};
+
+// === Animation Config ===
+const ANIM = {
+  // Breathing: subtle Y-scale oscillation
+  breathRate: 0.8,       // breaths per second
+  breathAmount: 0.012,   // scale variation (1.2%)
+  // Idle sway: gentle rotation
+  swayRate: 0.3,
+  swayAmount: 0.015,     // radians (~0.9 degrees)
+  // Organ pulse (heart, etc.)
+  pulseRate: 1.2,        // beats per second
+  pulseAmount: 0.04,     // 4% scale variation
+  // Particle system
+  particleCount: 60,
+  particleSpeed: 0.15,
+};
+
+// Which species categories get which animation profile
+const ANIM_PROFILES = {
+  'Kleintiere': 'mammal',
+  'Grosstiere': 'mammal_large',
+  'Voegel': 'bird',
+  'Reptilien': 'reptile',
+  'Medizinisch': 'medical',
+  'Dynamische Posen': 'mammal',
+  'Organ-Animation': 'medical',
+  'Natur': 'nature',
 };
 
 // === Build Sidebar ===
@@ -306,10 +370,121 @@ function initThreeJS() {
   });
   ro.observe(container);
 
+  // === Particle System ===
+  function createParticles() {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(ANIM.particleCount * 3);
+    const velocities = new Float32Array(ANIM.particleCount * 3);
+    const sizes = new Float32Array(ANIM.particleCount);
+    for (let i = 0; i < ANIM.particleCount; i++) {
+      positions[i*3]   = (Math.random() - 0.5) * 4;
+      positions[i*3+1] = Math.random() * 3;
+      positions[i*3+2] = (Math.random() - 0.5) * 4;
+      velocities[i*3]   = (Math.random() - 0.5) * 0.02;
+      velocities[i*3+1] = Math.random() * 0.01 + 0.005;
+      velocities[i*3+2] = (Math.random() - 0.5) * 0.02;
+      sizes[i] = Math.random() * 3 + 1;
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+    const mat = new THREE.PointsMaterial({
+      color: 0x4488ff,
+      size: 0.03,
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+    });
+    state.particles = new THREE.Points(geo, mat);
+    state.particles.visible = false;
+    state.scene.add(state.particles);
+  }
+
+  function updateParticles(dt) {
+    if (!state.particles || !state.particles.visible) return;
+    const pos = state.particles.geometry.attributes.position;
+    const vel = state.particles.geometry.attributes.velocity;
+    for (let i = 0; i < ANIM.particleCount; i++) {
+      pos.array[i*3]   += vel.array[i*3]   * dt * 60;
+      pos.array[i*3+1] += vel.array[i*3+1] * dt * 60;
+      pos.array[i*3+2] += vel.array[i*3+2] * dt * 60;
+      if (pos.array[i*3+1] > 3.5) {
+        pos.array[i*3]   = (Math.random() - 0.5) * 4;
+        pos.array[i*3+1] = -0.5;
+        pos.array[i*3+2] = (Math.random() - 0.5) * 4;
+      }
+    }
+    pos.needsUpdate = true;
+  }
+
+  createParticles();
+
+  // === Model Animation ===
+  function animateModel(elapsed, dt) {
+    if (!state.currentModel || !state.animated) return;
+
+    const species = state.currentSpecies;
+    if (!species) return;
+    const profile = ANIM_PROFILES[species.category] || 'mammal';
+
+    // Breathing animation (all living models)
+    let breathRate = ANIM.breathRate;
+    let breathAmt = ANIM.breathAmount;
+    if (profile === 'mammal_large') { breathRate = 0.5; breathAmt = 0.015; }
+    else if (profile === 'bird') { breathRate = 1.5; breathAmt = 0.008; }
+    else if (profile === 'reptile') { breathRate = 0.3; breathAmt = 0.006; }
+    else if (profile === 'medical') { breathRate = ANIM.pulseRate; breathAmt = ANIM.pulseAmount; }
+    else if (profile === 'nature') { breathRate = 0.4; breathAmt = 0.02; }
+
+    const breathPhase = Math.sin(elapsed * breathRate * Math.PI * 2);
+    const baseS = state.modelBaseScale;
+
+    if (profile === 'nature') {
+      // Wind sway for grass/plants: bend X and Z with layered sine waves
+      const wind1 = Math.sin(elapsed * 0.8) * 0.04;
+      const wind2 = Math.sin(elapsed * 1.3 + 0.5) * 0.02;
+      const wind3 = Math.cos(elapsed * 0.5) * 0.03;
+      state.currentModel.rotation.x = wind1 + wind2;
+      state.currentModel.rotation.z = wind3;
+      // Subtle scale breathing for organic feel
+      state.currentModel.scale.set(baseS, baseS * (1 + breathPhase * 0.01), baseS);
+    } else {
+      const scaleY = baseS * (1 + breathPhase * breathAmt);
+      const scaleXZ = baseS * (1 - breathPhase * breathAmt * 0.3);
+      state.currentModel.scale.set(scaleXZ, scaleY, scaleXZ);
+    }
+
+    // Idle sway (gentle body rotation)
+    if (profile !== 'medical' && profile !== 'nature') {
+      const swayX = Math.sin(elapsed * ANIM.swayRate * Math.PI * 2) * ANIM.swayAmount;
+      const swayZ = Math.cos(elapsed * ANIM.swayRate * 0.7 * Math.PI * 2) * ANIM.swayAmount * 0.5;
+      state.currentModel.rotation.z = swayX;
+      state.currentModel.rotation.x = swayZ;
+    }
+
+    // Subtle Y bob for small animals and birds
+    if (profile === 'bird') {
+      // Birds get more pronounced bob (flying sensation)
+      const bob = Math.sin(elapsed * 1.8 * Math.PI * 2) * 0.01 * baseS;
+      state.currentModel.position.y = state.modelBaseY + bob;
+    } else if (profile === 'mammal') {
+      const bob = Math.sin(elapsed * 1.5 * Math.PI * 2) * 0.005 * baseS;
+      state.currentModel.position.y = state.modelBaseY + bob;
+    }
+  }
+
   // Animation loop
   function animate() {
     state.animationId = requestAnimationFrame(animate);
+    const dt = state.clock.getDelta();
+    const elapsed = state.clock.getElapsedTime();
+
     state.controls.update();
+    animateModel(elapsed, dt);
+    updateParticles(dt);
     state.renderer.render(state.scene, state.camera);
   }
   animate();
@@ -373,6 +548,8 @@ function loadSpecies(speciesId) {
 
       state.scene.add(model);
       state.currentModel = model;
+      state.modelBaseScale = scale;
+      state.modelBaseY = model.position.y;
 
       // Reset camera
       state.camera.position.set(3, 2, 3);
@@ -478,6 +655,15 @@ function applyViewMode(mode) {
   // Adjust scene background per mode
   const bg = { normal: 0x0f172a, wireframe: 0x0a0f1a, xray: 0x050a15, thermal: 0x0a0505 };
   state.scene.background.setHex(bg[mode] || 0x0f172a);
+
+  // Show particles in medical modes
+  if (state.particles) {
+    const showParticles = (mode === 'xray' || mode === 'thermal');
+    state.particles.visible = showParticles;
+    const particleColors = { xray: 0x4488ff, thermal: 0xff6633 };
+    state.particles.material.color.setHex(particleColors[mode] || 0x4488ff);
+    state.particles.material.opacity = showParticles ? 0.4 : 0;
+  }
 }
 
 // === Info Panel ===
@@ -535,6 +721,19 @@ function setupControls() {
     link.click();
   });
 
+  // Animation toggle
+  document.getElementById('btnAnimate').addEventListener('click', function() {
+    state.animated = !state.animated;
+    this.classList.toggle('active', state.animated);
+    if (!state.animated && state.currentModel) {
+      // Reset to base scale/rotation when disabled
+      state.currentModel.scale.setScalar(state.modelBaseScale);
+      state.currentModel.rotation.z = 0;
+      state.currentModel.rotation.x = 0;
+      state.currentModel.position.y = state.modelBaseY;
+    }
+  });
+
   // Fullscreen
   document.getElementById('btnFullscreen').addEventListener('click', () => {
     const vp = document.getElementById('viewport');
@@ -553,6 +752,7 @@ function setupControls() {
       case '0': document.getElementById('btnReset').click(); break;
       case 'g': document.getElementById('btnGrid').click(); break;
       case 's': if (!e.ctrlKey && !e.metaKey) document.getElementById('btnScreenshot').click(); break;
+      case 'a': document.getElementById('btnAnimate').click(); break;
       case 'f': document.getElementById('btnFullscreen').click(); break;
       case '1': loadViewMode('normal'); break;
       case '2': loadViewMode('wireframe'); break;

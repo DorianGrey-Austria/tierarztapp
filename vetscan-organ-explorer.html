@@ -204,6 +204,7 @@ const SPECIES = [
   { id:'cat', name:'Katze', icon:'&#x1F408;' },
   { id:'horse', name:'Pferd', icon:'&#x1F40E;' },
   { id:'cow', name:'Rind', icon:'&#x1F404;' },
+  { id:'rabbit', name:'Kaninchen', icon:'&#x1F407;' },
 ];
 
 const ORGANS = {
@@ -228,6 +229,7 @@ const ORGANS = {
     },
     { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
       model:'assets/models/organs/lungs/dog_lungs.glb',
+      pathModel:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb',
       desc:'Die Hundelunge hat links 2 Lappen (Cranialis, Caudalis) und rechts 4 Lappen. Atemfrequenz in Ruhe: 15-30/min.',
       stats:[
         {label:'Atemfrequenz',value:'15-30',unit:'/min'},
@@ -236,8 +238,8 @@ const ORGANS = {
         {label:'Lappen rechts',value:'4',unit:''}
       ],
       pathologies:[
-        {name:'Pneumonie',desc:'Bakterielle oder virale Lungenentzuendung. Symptome: Husten, Fieber, Dyspnoe, Nasenausfluss.',severity:'high'},
-        {name:'Lungenoedem',desc:'Fluessigkeitsansammlung in den Alveolen. Haeufig bei Linksherzinsuffizienz.',severity:'high'},
+        {name:'Pneumonie',desc:'Bakterielle oder virale Lungenentzuendung. Symptome: Husten, Fieber, Dyspnoe, Nasenausfluss.',severity:'high',model:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb'},
+        {name:'Lungenoedem',desc:'Fluessigkeitsansammlung in den Alveolen. Haeufig bei Linksherzinsuffizienz.',severity:'high',model:'assets/models/pathology/pulmonary-edema/pulmonary-edema.glb'},
         {name:'Lungenmetastasen',desc:'Tumorableger in der Lunge. Roentgenologisch: multiple runde Verschattungen ("cannonball lesions").',severity:'high'},
         {name:'Trachealkollaps',desc:'Dorsoventrales Abflachen der Trachea. Typisch: Zwergrassen, "Gansehupfen"-Husten.',severity:'medium'}
       ],
@@ -360,11 +362,29 @@ const ORGANS = {
         {name:'Hirntumor',desc:'Meningeom (haeufigster extraaxialer Tumor), Gliom. Symptome: Anfaelle, Verhaltensaenderungen, Kreislaufen.',severity:'high'}
       ],
       examTips:'Neurologische Untersuchung: Bewusstsein, Kopfnerven (I-XII), Haltungs-/Stellreaktionen, Reflexe, Schmerz. Lokalisierung: Vorderhirn, Hirnstamm, Kleinhirn, Rueckenmark. Goldstandard: MRT.'
+    },
+    { id:'intestines', name:'Darm', color:'#84cc16', system:'Gastrointestinal',
+      model:'assets/models/organs/intestines/dog_intestines.glb',
+      desc:'Der Hundedarm ist ca. 3-6m lang. Duenndarm (Duodenum, Jejunum, Ileum) und Dickdarm (Caecum, Colon, Rektum). Fremdkoerper und IBD sind haeufige Probleme.',
+      stats:[
+        {label:'Darmlaenge',value:'3-6',unit:'m'},
+        {label:'Passage-Zeit',value:'12-30',unit:'h'},
+        {label:'Kotabsatz',value:'1-3',unit:'x/Tag'},
+        {label:'Duenndarm-Wanddicke',value:'<5',unit:'mm'}
+      ],
+      pathologies:[
+        {name:'Fremdkoerperobstruktion',desc:'Haeufig bei jungen Hunden (Socken, Spielzeug, Knochen). Erbrechen, Inappetenz, Dehydratation. Roentgen: Ileus-Zeichen.',severity:'high',model:'assets/models/pathology/foreign-body/stomach_foreign_body.glb'},
+        {name:'Pankreatitis',desc:'Akute Entzuendung der Bauchspeicheldruese. Erbrechen, Bauchschmerz ("Gebetsstellung"), Durchfall. Miniature Schnauzer praedisponiert.',severity:'high',model:'assets/models/pathology/pancreatitis/pancreatitis.glb'},
+        {name:'Proteinverlust-Enteropathie (PLE)',desc:'Chronischer Proteinverlust ueber den Darm. IBD, Lymphom, Lymphangiektasie. Hypoalbuminaemie, Oedem.',severity:'high'},
+        {name:'Invagination (Intussuszeption)',desc:'Darmeinstuellung. Haeufig Ileozoekal bei Junghunden. Akutes Abdomen, blutige Durchfaelle.',severity:'high'}
+      ],
+      examTips:'Palpation: Systematisch alle 4 Quadranten. Darmschlingen einzeln abtasten. Fremdkoerper? Verdickung? Masse? Ultraschall: Wandschichtung (5 Schichten), Target-Sign bei Invagination. Roentgen: Gasverteilung, Ileus-Zeichen. Kontraststudie bei Verdacht auf FK.'
     }
   ],
   cat: [
     { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
       model:'assets/models/organs/heart/cat_heart.glb',
+      pathModel:'assets/models/pathology/hcm-heart/hcm-heart.glb',
       desc:'Das Katzenherz wiegt nur 15-20g. Herzfrequenz in Ruhe: 120-180/min. Haeufigste Herzerkrankung: HCM.',
       stats:[
         {label:'Herzfrequenz',value:'120-180',unit:'/min'},
@@ -381,6 +401,7 @@ const ORGANS = {
     },
     { id:'kidney', name:'Niere', color:'#06b6d4', system:'Urogenital',
       model:'assets/models/organs/kidney/cat_kidney.glb',
+      pathModel:'assets/models/pathology/polycystic-kidney/polycystic-kidney.glb',
       desc:'Katzennieren sind relativ gross im Verhaeltnis zum Koerpergewicht. CKD ist eine der haeufigsten Erkrankungen alter Katzen.',
       stats:[
         {label:'Kreatinin',value:'0.8-1.8',unit:'mg/dL'},
@@ -409,6 +430,106 @@ const ORGANS = {
         {name:'Schilddruesenkarzinom',desc:'Maligner Tumor. Selten (2-5% der Hyperthyreosen). Grosse, derbe, fixierte Masse. Metastasen moeglich.',severity:'high'}
       ],
       examTips:'Palpation: Ventral am Hals, beidseits der Trachea. Vergroesserte Schilddruese als kleiner Knoten tastbar. Labor: T4 gesamt als Screening. fT4 bei grenzwertigen Werten. Blutdruck messen!'
+    },
+    { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
+      model:'assets/models/organs/lungs/cat_lungs.glb',
+      pathModel:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb',
+      desc:'Die Katzenlunge hat links 2 Lappen (Cranialis, Caudalis) und rechts 4 Lappen inkl. Lobus accessorius. Atemfrequenz in Ruhe: 20-30/min.',
+      stats:[
+        {label:'Atemfrequenz',value:'20-30',unit:'/min'},
+        {label:'Tidalvolumen',value:'10-12',unit:'ml/kg'},
+        {label:'Lappen links',value:'2',unit:''},
+        {label:'Lappen rechts',value:'4',unit:''}
+      ],
+      pathologies:[
+        {name:'Felines Asthma',desc:'Chronische eosinophile Bronchitis. Haeufig bei jungen Katzen. Symptome: Husten, Dyspnoe, Wuergen. Roentgen: "Donut"-Bronchien.',severity:'medium'},
+        {name:'Pneumonie',desc:'Bakteriell (Bordetella, Pasteurella) oder viral (Calicivirus, Herpesvirus). Symptome: Fieber, Nasenausfluss, Dyspnoe.',severity:'high',model:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb'},
+        {name:'Pleuraerguss',desc:'Fluessigkeitsansammlung im Pleuraraum. FIP (exsudativ), Chylothorax, Pyothorax, Neoplasie.',severity:'high'},
+        {name:'Lungenmetastasen',desc:'Haeufig bei Mammakarzinom. Roentgen: Multiple nodulaere Verschattungen.',severity:'high'}
+      ],
+      examTips:'Auskultation: Katzen haben physiologisch verstaerkte Atemgeraeusche. Bei Dyspnoe: KEIN Stress! Roentgen in 3 Ebenen (DV, LL rechts, LL links). Thorakozentese bei Erguss diagnostisch + therapeutisch.'
+    },
+    { id:'liver', name:'Leber', color:'#8b5cf6', system:'Gastrointestinal',
+      model:'assets/models/organs/liver/cat_liver.glb',
+      pathModel:'assets/models/pathology/fatty-liver/fatty-liver.glb',
+      desc:'Die Katzenleber hat 6 Lappen und wiegt ca. 3-5% des Koerpergewichts. Katzen sind besonders anfaellig fuer hepatische Lipidose.',
+      stats:[
+        {label:'Gewicht',value:'3-5',unit:'% KGW'},
+        {label:'Lappen',value:'6',unit:''},
+        {label:'ALT normal',value:'12-130',unit:'U/L'},
+        {label:'AP normal',value:'14-111',unit:'U/L'}
+      ],
+      pathologies:[
+        {name:'Hepatische Lipidose',desc:'Haeufigste Lebererkrankung der Katze! Fetteinlagerung nach Anorexie (>3-5 Tage). Ikterus. Oft sekundaer zu anderer Grunderkrankung.',severity:'high',model:'assets/models/pathology/fatty-liver/fatty-liver.glb'},
+        {name:'Cholangitis/Cholangiohepatitis',desc:'Entzuendung der Gallengaenge. Neutrophile Form (akut) vs. lymphozytaere Form (chronisch). Triaditis-Komplex.',severity:'high'},
+        {name:'Portosystemischer Shunt',desc:'Kongenitale Gefaessanomalie. Wachstumsverzoegerung, Speicheln, neurologische Symptome nach Fressen.',severity:'high'}
+      ],
+      examTips:'Palpation: Kaudal des Rippenbogens bei schlanken Katzen. Ikterus: Ohrinnenrand, SH, Skleren pruefen. Labor: ALT, AP (bei Katzen kaum leberspezifisch!), Bilirubin, Gallensaeuren. Ultraschall: Parenchymechos, Gallenblase.'
+    },
+    { id:'brain', name:'Gehirn', color:'#94a3b8', system:'Neurologie',
+      model:'assets/models/organs/brain/cat_brain.glb',
+      desc:'Das Katzengehirn wiegt ca. 25-30g. Das Kleinhirn ist relativ gross. Katzen zeigen haeufig vestibulaere und zerebellare Erkrankungen.',
+      stats:[
+        {label:'Gewicht',value:'25-30',unit:'g'},
+        {label:'Liquor-Protein',value:'<25',unit:'mg/dL'},
+        {label:'Liquor-Zellen',value:'<5',unit:'/uL'},
+        {label:'MRT noetig ab',value:'Stufe 2',unit:''}
+      ],
+      pathologies:[
+        {name:'FIP (neurologische Form)',desc:'Feline Infektioese Peritonitis mit ZNS-Beteiligung. Granulomatoese Meningitis. MRT + Liquor (Protein erhoeht, Rivalta-Test positiv).',severity:'high'},
+        {name:'Vestibulaersyndrom',desc:'Peripher (Otitis media/interna) vs. zentral (Tumor, FIP). Kopfschiefhaltung, Nystagmus, Ataxie.',severity:'medium'},
+        {name:'Meningeom',desc:'Haeufigster intrakranieller Tumor der Katze. Oft operabel! Langsames Wachstum, gute Prognose nach Chirurgie.',severity:'high'}
+      ],
+      examTips:'Neurologische Untersuchung: Bewusstsein, Kopfnerven, Haltungsreaktionen. Vestibular: Kopfschiefhaltung, Nystagmus-Richtung (peripher = horizontaler Nystagmus zur gesunden Seite). MRT Goldstandard. Liquoruntersuchung unter Narkose.'
+    },
+    { id:'stomach', name:'Magen', color:'#f59e0b', system:'Gastrointestinal',
+      model:'assets/models/organs/stomach/cat_stomach.glb',
+      desc:'Der Katzenmagen ist relativ gross fuer die Koerpergroesse. Fassungsvermoegen ca. 300-350 ml. Katzen erbrechen haeufig - nicht immer pathologisch.',
+      stats:[
+        {label:'Fassungsvermoegen',value:'300-350',unit:'ml'},
+        {label:'pH Magensaft',value:'1-3',unit:''},
+        {label:'Entleerung',value:'6-8',unit:'h'},
+        {label:'Magenform',value:'J-foermig',unit:''}
+      ],
+      pathologies:[
+        {name:'Chronisches Erbrechen',desc:'Haeufigste GI-Beschwerde. Ursachen: IBD, Futtermittelallergie, Haarballen, Parasiten, Neoplasie.',severity:'medium'},
+        {name:'Fremdkoerper (lineare)',desc:'Katzen verschlucken haeufig Faeden/Geschenkbaender. Linearer Fremdkoerper: Zunge pruefen! Plikation des Darms.',severity:'high'},
+        {name:'Magenneoplasie',desc:'Lymphom (haeufigster GI-Tumor der Katze). Adenokarzinom selten. Endoskopische Biopsie.',severity:'high'}
+      ],
+      examTips:'Palpation: Abdomen vorsichtig (Katzen spannen schnell an). Magenbereich: Kraniodorsal. Bei Verdacht auf Fremdkoerper: ZUNGE pruefen (linearer FK oft sublingual fixiert). Roentgen: Kontraststudie. Endoskopie fuer Biopsien.'
+    },
+    { id:'intestines', name:'Darm', color:'#84cc16', system:'Gastrointestinal',
+      model:'assets/models/organs/intestines/cat_intestines.glb',
+      desc:'Der Katzendarm ist ca. 1.5m lang (kurz im Vergleich zu Pflanzenfressern). Als Karnivor hat die Katze einen kurzen Dickdarm.',
+      stats:[
+        {label:'Darmlaenge',value:'~1.5',unit:'m'},
+        {label:'Passage-Zeit',value:'12-24',unit:'h'},
+        {label:'Kotabsatz',value:'1-2',unit:'x/Tag'},
+        {label:'Duenndarm',value:'~1.2',unit:'m'}
+      ],
+      pathologies:[
+        {name:'IBD (Inflammatory Bowel Disease)',desc:'Chronische Darmentzuendung. Lymphoplasmazytaer am haeufigsten. Symptome: Erbrechen, Durchfall, Gewichtsverlust. Biopsie!',severity:'medium'},
+        {name:'Intestinales Lymphom',desc:'Haeufigster Darmtumor der Katze. Low-grade (gute Prognose) vs. high-grade. Verdickung der Darmwand im Ultraschall.',severity:'high'},
+        {name:'Tritrichomonas foetus',desc:'Protozoer. Chronischer Dickdarmdurchfall bei Jungtieren. Direktausstrich oder PCR.',severity:'low'}
+      ],
+      examTips:'Palpation: Darmschlingen einzeln abtasten. Verdickte Schlingen? Masse? Mesenteriallymphknoten? Ultraschall: Wandschichtung erhalten? Wanddicke (normal <2.5mm Duenndarm). Endoskopische Biopsien bei chronischem GI.'
+    },
+    { id:'bladder', name:'Harnblase', color:'#14b8a6', system:'Urogenital',
+      model:'assets/models/organs/bladder/cat_bladder.glb',
+      pathModel:'assets/models/pathology/bladder-stones/bladder_stones.glb',
+      desc:'Die Katzenblase fasst ca. 120-200 ml. FLUTD (Feline Lower Urinary Tract Disease) ist eine der haeufigsten Erkrankungen.',
+      stats:[
+        {label:'Kapazitaet',value:'120-200',unit:'ml'},
+        {label:'Urin-pH',value:'6.0-6.5',unit:''},
+        {label:'spez. Gewicht',value:'>1.035',unit:''},
+        {label:'Harnmenge/Tag',value:'20-40',unit:'ml/kg'}
+      ],
+      pathologies:[
+        {name:'FLUTD/FIC',desc:'Feline idiopathische Zystitis. Haeufigste Ursache von FLUTD (60%). Stressbedingt. Haematurie, Strangurie, Periurie.',severity:'medium'},
+        {name:'Harnroehrenobstruktion',desc:'NOTFALL beim Kater! Urethrapfropf oder Steine. Strangurieversuch, volle Blase, Hyperkaliemie. Katheterisieren!',severity:'high'},
+        {name:'Urolithiasis',desc:'Struvit (Infektionssteine, diaetisch aufloesbar) oder Kalziumoxalat (chirurgisch). Roentgen + Urinanalyse.',severity:'medium',model:'assets/models/pathology/bladder-stones/bladder_stones.glb'}
+      ],
+      examTips:'Palpation: Blasengroesse! Bei Obstruktion: Pralle, schmerzhafte Blase, nicht ausdrueckbar. EKG bei Verdacht auf Hyperkaliemie! Ultraschall: Sediment, Steine, Wanddicke (>2mm = verdickt). CAVE: Katze unter Stress → Harnwege reagieren!'
     }
   ],
   horse: [
@@ -430,6 +551,7 @@ const ORGANS = {
     },
     { id:'hoof', name:'Huf', color:'#92400e', system:'Bewegungsapparat',
       model:'assets/models/organs/hoof/horse_hoof.glb',
+      pathModel:'assets/models/pathology/laminitis-hoof/laminitis-hoof.glb',
       desc:'Der Huf ist das modifizierte dritte Zehenglied des Pferdes. Hufwand, Sohle, Strahl, Hufbein, Hufknorpel, Strahlkissen bilden eine funktionelle Einheit.',
       stats:[
         {label:'Wachstum',value:'6-10',unit:'mm/Monat'},
@@ -438,7 +560,7 @@ const ORGANS = {
         {label:'Hufwinkel hinten',value:'55-60',unit:'Grad'}
       ],
       pathologies:[
-        {name:'Hufrehe (Laminitis)',desc:'Entzuendung der Huflederhaut. Rotation/Senkung des Hufbeins. NOTFALL! Ursachen: metabolisch (EMS), toxisch, belastungsbedingt.',severity:'high'},
+        {name:'Hufrehe (Laminitis)',desc:'Entzuendung der Huflederhaut. Rotation/Senkung des Hufbeins. NOTFALL! Ursachen: metabolisch (EMS), toxisch, belastungsbedingt.',severity:'high',model:'assets/models/pathology/laminitis-hoof/laminitis-hoof.glb'},
         {name:'Hufabszess',desc:'Eitrige Infektion in der weissen Linie oder Sohle. Akute, hochgradige Lahmheit. Hufzange zum Lokalisieren.',severity:'medium'},
         {name:'Strahlbeinerkrankung (Podotrochlitis)',desc:'Degenerative Veraenderung im Bereich des Strahlbeins und der tiefen Beugesehne. Chronische Lahmheit.',severity:'medium'}
       ],
@@ -460,6 +582,104 @@ const ORGANS = {
         {name:'Sandkolik',desc:'Sandansammlung im grossen Kolon. Regionen mit sandigem Boden. Diagnose: Kotprobe in Wasser.',severity:'medium'}
       ],
       examTips:'Rektale Untersuchung: Standardprozedur bei Kolik! Labmagen-Verlagerung ausschliessen. Darmgeraeusche in allen 4 Quadranten auskultieren. Bauchhoehlenpunktat: Protein, Zellzahl, Farbe. Nasenschlundsonde: Reflux?'
+    },
+    { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
+      model:'assets/models/organs/lungs/horse_lungs.glb',
+      pathModel:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb',
+      desc:'Die Pferdelunge wiegt ca. 5-7 kg und hat ein grosses Atemvolumen fuer die Leistung. Atemfrequenz in Ruhe: 8-16/min. Unter Belastung bis 120/min.',
+      stats:[
+        {label:'Atemfrequenz',value:'8-16',unit:'/min'},
+        {label:'Tidalvolumen',value:'5-6',unit:'L'},
+        {label:'Atemminutenvol.',value:'60-80',unit:'L/min'},
+        {label:'Lungenkapazitaet',value:'~42',unit:'L'}
+      ],
+      pathologies:[
+        {name:'Equine Asthma (RAO/IAD)',desc:'Recurrent Airway Obstruction oder Inflammatory Airway Disease. Haeufigste Atemwegserkrankung. Husten, Leistungsabfall, vermehrte Bauchatmung.',severity:'medium'},
+        {name:'Pleuropneumonie',desc:'Bakterielle Lungenentzuendung mit Pleuritis. Oft nach Transport ("Shipping Fever"). Streptococcus equi subsp. zooepidemicus.',severity:'high',model:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb'},
+        {name:'EIPH',desc:'Exercise-Induced Pulmonary Hemorrhage. Lungenblutung bei/nach Belastung. Endoskopisch: Blut in der Trachea.',severity:'medium'}
+      ],
+      examTips:'Auskultation: Grosses Lungenfeld! Systematisch von cranial (Schulterblatt) nach caudal. Normale Atemgeraeusche beim Pferd relativ leise. Rebreathing-Test (Tuete): Verstaerkt Geraeusche bei Obstruktion. Tracheallavage/BAL fuer Zytologie.'
+    },
+    { id:'liver', name:'Leber', color:'#8b5cf6', system:'Gastrointestinal',
+      model:'assets/models/organs/liver/horse_liver.glb',
+      desc:'Die Pferdeleber wiegt ca. 5-6 kg (ca. 1% KGW). Liegt rechts unter dem Zwerchfell. Kein Gallenblase beim Pferd!',
+      stats:[
+        {label:'Gewicht',value:'5-6',unit:'kg'},
+        {label:'KGW-Anteil',value:'~1',unit:'%'},
+        {label:'GGT normal',value:'8-22',unit:'U/L'},
+        {label:'Gallensaeuren',value:'5-15',unit:'umol/L'}
+      ],
+      pathologies:[
+        {name:'Hyperlipidaemie',desc:'Fettstoffwechselstoerung. Haeufig bei Ponys/Eseln bei Anorexie. Truebes ("milchiges") Blut. Lebensbedrohlich!',severity:'high'},
+        {name:'Pyrrolizidin-Alkaloid-Vergiftung',desc:'Chronische Lebervergiftung durch Senecio (Jakobskreuzkraut). Photosensiblisierung, Leberversagen. Irreversibel!',severity:'high'},
+        {name:'Cholelithiasis',desc:'Gallensteine (selten). Koliksymptome, Ikterus, erhoehlte Leberenzyme. Diagnose per Ultraschall.',severity:'medium'}
+      ],
+      examTips:'Palpation nicht moeglich (zu gross). Labor: GGT, GLDH, Gallensaeuren, Bilirubin, Albumin. GGT ist sensitivster Marker! Ultraschall: Rechte Seite, 10.-15. IKR. Leberbiopsie: Percutan unter Ultraschallkontrolle.'
+    },
+    { id:'brain', name:'Gehirn', color:'#94a3b8', system:'Neurologie',
+      model:'assets/models/organs/brain/horse_brain.glb',
+      desc:'Das Pferdegehirn wiegt ca. 600-700g. Neurologische Erkrankungen sind beim Pferd haeufig und oft dramatisch in der Praesetation.',
+      stats:[
+        {label:'Gewicht',value:'600-700',unit:'g'},
+        {label:'Liquor-Protein',value:'<80',unit:'mg/dL'},
+        {label:'Liquor-Zellen',value:'<5',unit:'/uL'},
+        {label:'MRT',value:'limitiert',unit:'(Groesse)'}
+      ],
+      pathologies:[
+        {name:'Equine Protozoenmyeloenzephalitis (EPM)',desc:'Sarcocystis neurona. Asymmetrische Ataxie, Muskelschwund. Haeufig in Amerika.',severity:'high'},
+        {name:'EHV-1 Myeloenzephalopathie',desc:'Equines Herpesvirus Typ 1. Hinterhandataxie bis Festliegen. Harnverhalten. Meldepflicht!',severity:'high'},
+        {name:'Headshaking',desc:'Trigeminusneuralgie. Uncontrollierbares Kopfschuetteln, v.a. bei Licht/Pollen. Multifaktoriell.',severity:'medium'}
+      ],
+      examTips:'Neurologische Untersuchung: Gang (auf gerader Linie, Kreise, Bodenwelle), Schweiftonus, Pannikulus, Propriozeption (Ueberkoeten?). Grading nach Mayhew (0-5). Liquor: atlantooccipital oder lumbosacral. Stehende MRT nur fuer Kopf verfuegbar.'
+    },
+    { id:'kidneys', name:'Nieren', color:'#06b6d4', system:'Urogenital',
+      model:'assets/models/organs/kidneys/horse_kidneys.glb',
+      desc:'Die rechte Pferdeniere ist herzfoermig, die linke bohnenfoermig. Die linke Niere ist mobil (Wanderniere). Physiologisch trueber Harn (Kalziumkristalle).',
+      stats:[
+        {label:'Kreatinin',value:'1.2-1.9',unit:'mg/dL'},
+        {label:'Harnstoff',value:'21-51',unit:'mg/dL'},
+        {label:'spez. Gewicht',value:'1.020-1.050',unit:''},
+        {label:'Urin-pH',value:'7.5-8.5',unit:'(basisch!)'}
+      ],
+      pathologies:[
+        {name:'Chronische Niereninsuffizienz',desc:'Beim Pferd oft spaet erkannt. Gewichtsverlust, PU/PD, Oedem ventral. Ultraschall: verkleinerte Nieren.',severity:'high'},
+        {name:'Nephrolithiasis',desc:'Nierensteine (Kalziumkarbonat). Kolik, Haematurie. Endoskopie der Harnblase zur Steinsuche.',severity:'medium'},
+        {name:'Toxische Nephropathie',desc:'NSAIDs (Phenylbutazon-Ueberdosierung), Aminoglykoside, Eicheln, Vitamin D-Vergiftung.',severity:'high'}
+      ],
+      examTips:'Palpation: Rektale Untersuchung — linke Niere am kaudalen Pol tastbar. Kaudaler Rand der rechten Niere gelegentlich erreichbar. Ultraschall transrektal oder transcutan rechts. Harn: CAVE Kalziumkristalle sind physiologisch!'
+    },
+    { id:'stomach', name:'Magen', color:'#f59e0b', system:'Gastrointestinal',
+      model:'assets/models/organs/stomach/horse_stomach.glb',
+      desc:'Der Pferdemagen ist relativ klein (8-15 L) fuer die Koerpergroesse. Pferde koennen NICHT erbrechen (Kardia-Sphinkter zu stark). Magenulcera sind extrem haeufig.',
+      stats:[
+        {label:'Fassungsvermoegen',value:'8-15',unit:'L'},
+        {label:'Entleerung',value:'2-6',unit:'h'},
+        {label:'ESGD-Praevalenz',value:'60-90',unit:'%'},
+        {label:'pH Druesenteil',value:'1-3',unit:''}
+      ],
+      pathologies:[
+        {name:'Magenulcera (EGUS)',desc:'Equine Gastric Ulcer Syndrome. Bis 90% der Rennpferde betroffen! Squamoese oder glandulaere Ulzera. Inappetenz, Kolik, schlechte Leistung.',severity:'medium'},
+        {name:'Magenueberlading',desc:'Akute Ueberfuellung nach uebermassigem Kraftfutter. Kann zur Magenruptur fuehren! Nasenschlundsonde: >2L Reflux.',severity:'high'},
+        {name:'Magenruptur',desc:'Immer toedlich! Ursachen: GDV (sehr selten beim Pferd), Magenueberladung. Ploetzlicher Schmerzstop → schlechtes Zeichen.',severity:'high'}
+      ],
+      examTips:'Gastroskopie ist Goldstandard (3m Endoskop!). Pferd muss 12-16h nuechtern sein. Nasenschlundsonde: Reflux pruefen bei Kolik (>2L = pathologisch). EGUS-Grading: 0 (normal) bis 4 (ausgedehnte Ulzeration).'
+    },
+    { id:'spleen', name:'Milz', color:'#a855f7', system:'Lymphatisch',
+      model:'assets/models/organs/spleen/horse_spleen.glb',
+      pathModel:'assets/models/pathology/tumor-spleen/tumor-spleen.glb',
+      desc:'Die Pferdemilz ist sehr gross (1-2 kg) und dient als wichtiges Blutreservoir. Bei Aufregung/Anstrengung wird Blut aus der Milz mobilisiert.',
+      stats:[
+        {label:'Gewicht',value:'1-2',unit:'kg'},
+        {label:'Blutreservoir',value:'6-12',unit:'L (!)'},
+        {label:'Laenge',value:'40-50',unit:'cm'},
+        {label:'HKT-Anstieg',value:'10-15',unit:'% bei Stress'}
+      ],
+      pathologies:[
+        {name:'Milzvergroesserung',desc:'Stauungsmilz bei Herzinsuffizienz, Medikamente (Acepromazin!), Haemolyse, Lymphom.',severity:'medium'},
+        {name:'Milztumor',desc:'Lymphom, Haemangiosarkom (seltener als beim Hund). Kann zu Milzruptur und Haemoabdomen fuehren.',severity:'high',model:'assets/models/pathology/tumor-spleen/tumor-spleen.glb'},
+        {name:'Milz-Nieren-Band-Einklemmung',desc:'Colon ascendens klemmt sich zwischen Milz und linker Niere ein. Kolikursache! Rektaler Befund diagnostisch.',severity:'high'}
+      ],
+      examTips:'Palpation: Rektale Untersuchung — Kaudaler Milzpol und Milz-Nieren-Band palpierbar. Milzvergroesserung: weiter kaudal tastbar. Ultraschall: Links, 12.-17. IKR. CAVE: Acepromazin vergroessert die Milz physiologisch um bis zu 50%!'
     }
   ],
   cow: [
@@ -481,6 +701,7 @@ const ORGANS = {
     },
     { id:'udder', name:'Euter', color:'#f472b6', system:'Reproduktion',
       model:'assets/models/organs/udder/cow_udder.glb',
+      pathModel:'assets/models/pathology/mastitis-udder/mastitis-udder.glb',
       desc:'Das Kuheuter hat 4 separate Druesen mit je einer Zitze. Tagesleistung bei Hochleistungskuehen: 30-60 Liter Milch.',
       stats:[
         {label:'Milchleistung',value:'30-60',unit:'L/Tag'},
@@ -489,11 +710,189 @@ const ORGANS = {
         {label:'Fettgehalt',value:'3.5-4.5',unit:'%'}
       ],
       pathologies:[
-        {name:'Mastitis (Euterentzuendung)',desc:'Haeufigste und teuerste Erkrankung der Milchkuh. Klinisch oder subklinisch. Erreger: S. aureus, E. coli, Streptokokken.',severity:'high'},
+        {name:'Mastitis (Euterentzuendung)',desc:'Haeufigste und teuerste Erkrankung der Milchkuh. Klinisch oder subklinisch. Erreger: S. aureus, E. coli, Streptokokken.',severity:'high',model:'assets/models/pathology/mastitis-udder/mastitis-udder.glb'},
         {name:'Euteroedem',desc:'Schwellung des Euters peripartal. Physiologisch mild, pathologisch bei starker Auspraegung.',severity:'low'},
         {name:'Zitzenverletzung',desc:'Tritt- oder Quetschverletzungen der Zitze. Kann zu Strichkanalverengung fuehren.',severity:'medium'}
       ],
       examTips:'Adspektion: Symmetrie, Schwellung, Roetung, Waerme. Palpation: Konsistenz, Schmerz. Milchproben: CMT (California Mastitis Test) als Schnelltest. Bakteriologische Untersuchung. Zellzahl im Labor.'
+    },
+    { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
+      model:'assets/models/organs/heart/cow_heart.glb',
+      desc:'Das Rinderherz wiegt ca. 2-3 kg. Herzfrequenz in Ruhe: 60-80/min. Fremdkoerper-Perikarditis (Haubennaegel) ist eine wichtige Differentialdiagnose.',
+      stats:[
+        {label:'Herzfrequenz',value:'60-80',unit:'/min'},
+        {label:'Gewicht',value:'2-3',unit:'kg'},
+        {label:'Systole',value:'80-120',unit:'mmHg'},
+        {label:'HMV',value:'25-35',unit:'L/min'}
+      ],
+      pathologies:[
+        {name:'Traumatische Perikarditis',desc:'Fremdkoerper (Nagel/Draht) durchbohrt Haube → Zwerchfell → Herzbeutel. Gedaempfte Herztoene, Venenstauung, Oedem.',severity:'high'},
+        {name:'Endokarditis',desc:'Bakterielle Herzklappenentzuendung. Oft sekundaer zu anderen Infektionen. Recycling-Fieber.',severity:'high'},
+        {name:'Cor pulmonale',desc:'Rechtsherzinsuffizienz durch chronische Lungenerkrankung. Hoehenerkrankung ("Brisket Disease") in Hochlagen.',severity:'medium'}
+      ],
+      examTips:'Auskultation: Links 3.-5. IKR. Gedaempfte Herztoene bei Perikarderguss/Perikarditis. "Waschmaschinengeraeusch" bei Perikarditis. Jugularvenen: Stauung, positiver Venenpuls? Ultraschall: Perikardfluessigkeit.'
+    },
+    { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
+      model:'assets/models/organs/lungs/cow_lungs.glb',
+      pathModel:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb',
+      desc:'Die Rinderlunge ist relativ klein fuer die Koerpergroesse und hat eine starke Lobulierung. Anfaellig fuer Pneumonien, v.a. bei Jungrindern.',
+      stats:[
+        {label:'Atemfrequenz',value:'15-35',unit:'/min'},
+        {label:'Tidalvolumen',value:'3-5',unit:'L'},
+        {label:'Lappen links',value:'2',unit:'(+ Acc.)'},
+        {label:'Lappen rechts',value:'4',unit:'(+ Acc.)'}
+      ],
+      pathologies:[
+        {name:'Enzootische Bronchopneumonie',desc:'Rindergrippe-Komplex (BRD). Multifaktoriell: Viren (BHV-1, BRSV, PI-3) + Bakterien (Mannheimia, Pasteurella). Haeufigste Kalberkrankheit!',severity:'high',model:'assets/models/pathology/pneumonia-lung/pneumonia-lung.glb'},
+        {name:'Interstitielle Pneumonie',desc:'Akute bovine pulmonale Emphysem (ABPE/Fog Fever). 3-Methylindol-Toxikose bei Weidewechsel.',severity:'high'},
+        {name:'Lungenabszess',desc:'Chronische Pneumonie mit Abszessbildung. Haematogen oder per continuitatem. Schlechte Prognose.',severity:'high'}
+      ],
+      examTips:'Auskultation: Rechte Seite bevorzugen (linke Lunge kleiner). Perkussion: Obere Grenze 7.-11. Rippe. Rasselgeraeusche, Bronchialatmen bei Pneumonie. BAL-Probe bei Bestandsproblem. Metaphylaxe bei BRD-Ausbruch.'
+    },
+    { id:'liver', name:'Leber', color:'#8b5cf6', system:'Gastrointestinal',
+      model:'assets/models/organs/liver/cow_liver.glb',
+      desc:'Die Rinderleber wiegt ca. 6-10 kg und liegt rechts unter dem Zwerchfell. Wichtig fuer Leberegelbefal (Fasciola hepatica) in feuchten Weidegebieten.',
+      stats:[
+        {label:'Gewicht',value:'6-10',unit:'kg'},
+        {label:'KGW-Anteil',value:'~1.2',unit:'%'},
+        {label:'GGT normal',value:'6-17',unit:'U/L'},
+        {label:'GLDH normal',value:'4-25',unit:'U/L'}
+      ],
+      pathologies:[
+        {name:'Fasziolose (Leberegel)',desc:'Fasciola hepatica. Wanderung durch Leberparenchym → Fibrosierung der Gallengaenge. Chronisch: Oedem, Anaemie, reduzierte Milchleistung.',severity:'medium'},
+        {name:'Fettlebersyndrom (Ketose)',desc:'Negative Energiebilanz peripartal bei Hochleistungskuehen. Fettmobilisation → Fettleber. Beta-Hydroxybutyrat erhoeht.',severity:'high'},
+        {name:'Leberabszess',desc:'Haeufig bei Mastrindern. Assoziation mit Pansenazidose und Fusobacterium necrophorum. "Liver check" am Schlachthof.',severity:'medium'}
+      ],
+      examTips:'Palpation: Nicht moeglich (zu gross). Labor: GGT, GLDH, AST, Bilirubin, Gallensaeuren. GGT + GLDH = leberspezifisch beim Rind. Ultraschall: Rechte Seite, 10.-12. IKR. Leberbiopsie: Percutan unter Ultraschallkontrolle.'
+    },
+    { id:'kidneys', name:'Nieren', color:'#06b6d4', system:'Urogenital',
+      model:'assets/models/organs/kidneys/cow_kidneys.glb',
+      desc:'Die rechte Rinderniere ist dreilappig und liegt subvertebral. Die linke Niere ist "Wanderniere" und haengt am Mesenterium. Beide Nieren sind gelappt.',
+      stats:[
+        {label:'Kreatinin',value:'1.0-1.8',unit:'mg/dL'},
+        {label:'Harnstoff',value:'20-48',unit:'mg/dL'},
+        {label:'Urin-pH',value:'7.5-8.5',unit:'(basisch)'},
+        {label:'spez. Gewicht',value:'1.020-1.040',unit:''}
+      ],
+      pathologies:[
+        {name:'Pyelonephritis',desc:'Aufsteigende Harnwegsinfektion (Corynebacterium renale). Haeufig bei Kuehen post partum. Einseitig oder bilateral.',severity:'high'},
+        {name:'Amyloidose',desc:'Amyloidablagerung in den Nieren. Chronische Entzuendung als Grundursache. Proteinurie, Nierenversagen.',severity:'high'},
+        {name:'Nephrolithiasis',desc:'Harnsteine. Beim Bullen/Ochsen: Urolithiasis mit Harnroehrenobstruktion (Processus urethralis). Herdenproblem bei falscher Fuetterung.',severity:'medium'}
+      ],
+      examTips:'Rektale Untersuchung: Linke Niere gut tastbar (Wanderniere). Rechte Niere: kaudaler Pol manchmal erreichbar. Groesse, Form, Schmerz? Ultraschall transrektal. Urinuntersuchung: Teststreifen, Sediment, Bakteriologie.'
+    },
+    { id:'reticulum', name:'Netzmagen', color:'#22c55e', system:'Gastrointestinal',
+      model:'assets/models/organs/reticulum/cow_reticulum.glb',
+      desc:'Der Netzmagen (Reticulum) ist der kleinste Vormagen. Wabenfoermige Schleimhaut. Fremdkoerper sammeln sich hier an ("Hardware Disease").',
+      stats:[
+        {label:'Volumen',value:'5-10',unit:'L'},
+        {label:'Kontraktionen',value:'1-2',unit:'/min'},
+        {label:'Lage',value:'cranial',unit:'(Zwerchfell)'},
+        {label:'Funktion',value:'Filter',unit:'+ Sortierung'}
+      ],
+      pathologies:[
+        {name:'Reticuloperitonitis traumatica',desc:'Fremdkoerper (Nagel, Draht) perforiert Netzmagenwand. "Hardware Disease". Akut: Fieber, Inappetenz, Bewegungsunlust.',severity:'high'},
+        {name:'Fremdkoerper-Perikarditis',desc:'FK durchbohrt Zwerchfell nach cranial → Herzbeutel. Gedaempfte Herztoene, Jugularstauung. Oft toedlich.',severity:'high'}
+      ],
+      examTips:'Schmerzprobe: Rueckengriff (Stabdruck unter Processus xiphoideus) oder Schmerzperkussion links cranioventral. "Stoehnprobe" positiv? Stabtest. Bei Verdacht: Magnetsondenapplikation prophylaktisch. Ultraschall: Netzmagen-Motilitaet, Peritonealfluessigkeit.'
+    },
+    { id:'omasum', name:'Blaettermagen', color:'#65a30d', system:'Gastrointestinal',
+      model:'assets/models/organs/omasum/cow_omasum.glb',
+      desc:'Der Blaettermagen (Omasum) liegt rechts zwischen Netz- und Labmagen. Blaetterfoermige Schleimhautfalten entziehen Wasser und Elektrolyte.',
+      stats:[
+        {label:'Volumen',value:'7-15',unit:'L'},
+        {label:'Blaetter',value:'~100',unit:''},
+        {label:'Lage',value:'rechts',unit:'medial'},
+        {label:'Funktion',value:'Wasser-',unit:'Resorption'}
+      ],
+      pathologies:[
+        {name:'Blattmagenverstoepfung',desc:'Eintrocknung des Inhalts ("Omasum impaction"). Inappetenz, reduzierte Kotmenge, Dehydratation. Diagnostisch schwierig.',severity:'medium'},
+        {name:'Blaettermagen-Parese',desc:'Motilitaetsstoerung nach Erkrankungen (Labmagenverlagerung, Ketose). Sekundaer zu anderen GI-Problemen.',severity:'medium'}
+      ],
+      examTips:'Klinisch schwierig zu untersuchen (liegt tief). Perkussion/Auskultation rechts 7.-9. IKR gibt wenig Information. Ultraschall rechts: Blaettermagen zwischen Leber und Pansen. Bei Verstoepfung: Laparotomie oft einzige Diagnostik.'
+    },
+    { id:'abomasum', name:'Labmagen', color:'#eab308', system:'Gastrointestinal',
+      model:'assets/models/organs/abomasum/cow_abomasum.glb',
+      desc:'Der Labmagen (Abomasum) entspricht dem Druesenmagen. Salzsaeureproduktion. Labmagenverlagerung (LDA/RDA) ist eine der haeufigsten Rindererkrankungen.',
+      stats:[
+        {label:'Volumen',value:'15-25',unit:'L'},
+        {label:'pH',value:'2-3',unit:''},
+        {label:'LDA-Praevalenz',value:'3-7',unit:'%'},
+        {label:'Lage normal',value:'ventral',unit:'rechts'}
+      ],
+      pathologies:[
+        {name:'Labmagenverlagerung links (LDA)',desc:'Haeufigste Form! Gas im Labmagen → Aufstieg nach links. Typisch 2-6 Wochen post partum bei Hochleistungskuehen. "Ping" bei Perkussion!',severity:'high'},
+        {name:'Labmagenverlagerung rechts (RDA)',desc:'Seltener aber gefaehrlicher als LDA. Kann zu Volvulus und Ischaemie fuehren. NOTFALL bei Drehung!',severity:'high'},
+        {name:'Labmagenulkus',desc:'Typ I-IV. Typ I: erosiv. Typ II: blutend (Melaena). Typ III: perforiert (lokale Peritonitis). Typ IV: perforiert (diffuse Peritonitis).',severity:'high'}
+      ],
+      examTips:'LDA-Diagnose: Perkussion + Auskultation links (13.-11. Rippe). Metallischer "Ping"-Ton! Schwing-/Plaetscherprobe. RDA: Rechte Seite, Ping + Fluessigkeitsspiegel hoerbar. OP: LDA = Omentopexie oder Toggle-Pin (Perkutane Abomasopexie).'
+    }
+  ],
+  rabbit: [
+    { id:'heart', name:'Herz', color:'#ef4444', system:'Kardiovaskular',
+      model:'assets/models/organs/heart/rabbit_heart.glb',
+      desc:'Das Kaninchenherz ist relativ klein (ca. 0.3% KGW). Herzfrequenz sehr hoch: 130-325/min. Herzerkrankungen werden haeufig uebersehen.',
+      stats:[
+        {label:'Herzfrequenz',value:'130-325',unit:'/min'},
+        {label:'Gewicht',value:'~0.3',unit:'% KGW'},
+        {label:'Blutdruck',value:'90-130',unit:'mmHg'},
+        {label:'Auskultation',value:'schwierig',unit:'(schnell!)'}
+      ],
+      pathologies:[
+        {name:'Kardiomyopathie',desc:'Dilatativ oder hypertoph. Haeufiger als angenommen. Symptome: Dyspnoe, Leistungsschwaeche, Aszites.',severity:'high'},
+        {name:'Arteriosklerose',desc:'Altersbedingte Gefaessveraenderungen. Besonders bei adipoesen Kaninchen. Ploetzlicher Tod moeglich.',severity:'high'},
+        {name:'Myxomatose (kardiale Form)',desc:'Myxomavirus kann Myokarditis verursachen. Oedem, Schwellungen, Lethargie.',severity:'high'}
+      ],
+      examTips:'Auskultation: Schwierig wegen hoher Frequenz! Stethoskop ventral, Kaninchen auf Tisch sitzend. Roentgen: Herzsilhouette, VHS adaptiert fuer Kaninchen. Echokardiographie moeglich aber technisch anspruchsvoll. Blutdruck: Doppler an Ohrarterie.'
+    },
+    { id:'liver', name:'Leber', color:'#8b5cf6', system:'Gastrointestinal',
+      model:'assets/models/organs/liver/rabbit_liver.glb',
+      desc:'Die Kaninchenleber hat 4 Hauptlappen und ist relativ gross (ca. 4% KGW). Anfaellig fuer Fettleber und Kokzidiose (Eimeria stiedai).',
+      stats:[
+        {label:'Gewicht',value:'~4',unit:'% KGW'},
+        {label:'Lappen',value:'4',unit:''},
+        {label:'ALT normal',value:'14-80',unit:'U/L'},
+        {label:'GGT normal',value:'0-14',unit:'U/L'}
+      ],
+      pathologies:[
+        {name:'Hepatische Lipidose',desc:'Fettleber bei Anorexie oder Adipositas. Kaninchen mobilisieren schnell Fettreserven. Innerhalb 2-3 Tagen moeglich!',severity:'high'},
+        {name:'Leberkokzidiose',desc:'Eimeria stiedai in den Gallengaengen. Jungkaninchen besonders betroffen. Ikterus, Hepatomegalie. Kotuntersuchung!',severity:'medium'},
+        {name:'Enzephalitozoonose (Leber)',desc:'Enzephalitozoon cuniculi kann Granulome in der Leber bilden. Meist subklinisch.',severity:'low'}
+      ],
+      examTips:'Palpation: Kaudal des Rippenbogens beidseits. Vergroesserung? Roentgen: Lebergroesse im Verhaeltnis zum Koerper. Blutchemie: ALT, GGT (bei Kokzidiose deutlich erhoeht). Kotuntersuchung auf Eimeria-Oozysten.'
+    },
+    { id:'lungs', name:'Lunge', color:'#ec4899', system:'Respiratorisch',
+      model:'assets/models/organs/lungs/rabbit_lungs.glb',
+      desc:'Kaninchen sind obligate Nasenatmer! Atemfrequenz: 30-60/min. Pasteurellose (Kaninchenschnupfen) ist die haeufigste Atemwegserkrankung.',
+      stats:[
+        {label:'Atemfrequenz',value:'30-60',unit:'/min'},
+        {label:'Tidalvolumen',value:'4-6',unit:'ml/kg'},
+        {label:'Nasenatmer',value:'obligat!',unit:''},
+        {label:'Lappen',value:'2L+4R',unit:''}
+      ],
+      pathologies:[
+        {name:'Pasteurellose (Schnupfen)',desc:'Pasteurella multocida. Chronischer Nasenausfluss, Niesen, Kopfschiefhaltung (Otitis). Latente Traeger haeufig!',severity:'medium'},
+        {name:'Thymom',desc:'Tumor des Thymus im Mediastinum. Exophthalmus beidseits! Dyspnoe durch Kompression.',severity:'high'},
+        {name:'Pneumonie',desc:'Bakteriell (Pasteurella, Bordetella) oder mykotisch. Dyspnoe, Nasenausfluss, Anorexie.',severity:'high'}
+      ],
+      examTips:'Auskultation: Kaninchen ruhig halten (Stress = schnelle Atmung). Obligater Nasenatmer → Maulatmung = NOTFALL! Roentgen: Thorax in 2 Ebenen. Nasenabstrich + Kultur. CT bei chronischem Schnupfen (Rhinitis). CAVE: Kaninchen tolerieren Narkose schlecht.'
+    },
+    { id:'intestines', name:'Darm/Caecum', color:'#84cc16', system:'Gastrointestinal',
+      model:'assets/models/organs/intestines/cat_intestines.glb',
+      pathModel:'assets/models/pathology/gi-stasis-rabbit/gi-stasis-rabbit.glb',
+      desc:'Das Kaninchencaecum ist riesig (ca. 40% des Darmvolumens!). GI-Stasis ist der haeufigste Notfall beim Kaninchen. Caecotrophie ist physiologisch.',
+      stats:[
+        {label:'Caecum-Anteil',value:'~40',unit:'% GI-Vol.'},
+        {label:'Darmlaenge',value:'4-5',unit:'m'},
+        {label:'Kotabsatz',value:'150-200',unit:'Kotel/Tag'},
+        {label:'Passage-Zeit',value:'4-5',unit:'h'}
+      ],
+      pathologies:[
+        {name:'GI-Stasis',desc:'Magenueberladung/Darmstillstand. Haeufigster Notfall! Anorexie, aufgeblaehter Magen, kein Kotabsatz. Stress, Schmerz, falsche Ernaehrung.',severity:'high',model:'assets/models/pathology/gi-stasis-rabbit/gi-stasis-rabbit.glb'},
+        {name:'Caecum-Dysbiose',desc:'Fehlgaerung im Blinddarm. Blaehendes Futter, Antibiotika (CAVE!), Stress. Durchfall, Aufgasung.',severity:'medium'},
+        {name:'Kokzidiose (Darm)',desc:'Eimeria-Arten im Darm. Durchfall, Gewichtsverlust bei Jungkaninchen. Kotflotation.',severity:'medium'}
+      ],
+      examTips:'Palpation: Magen (normalerweise weich, teigig). Bei Stasis: hart, aufgeblaet. Caecum: grosse Struktur rechts ventral. Roentgen: Gasverteilung? Magen ueberladen? Fluid-Level? Kotuntersuchung: Kokzidien, Hefen. NIEMALS Clindamycin/Amoxicillin/Erythromycin geben!'
     }
   ]
 };
@@ -507,6 +906,8 @@ const state = {
   scene: null, camera: null, renderer: null, controls: null,
   currentModel: null,
   loader: new GLTFLoader(),
+  clock: new THREE.Clock(),
+  modelBaseScale: 1,
 };
 
 // === BUILD UI ===
@@ -690,7 +1091,31 @@ function initThreeJS() {
 
   function animate() {
     requestAnimationFrame(animate);
+    const elapsed = state.clock.getElapsedTime();
     state.controls.update();
+
+    // Organ pulsing animation
+    if (state.currentModel && state.modelBaseScale > 0) {
+      const organ = state.currentOrgan;
+      const isHeart = organ && organ.id === 'heart';
+      const isLungs = organ && organ.id === 'lungs';
+      const s = state.modelBaseScale;
+
+      if (isHeart) {
+        // Heartbeat: rapid squeeze then relax
+        const beat = Math.pow(Math.sin(elapsed * 1.2 * Math.PI) * 0.5 + 0.5, 3);
+        state.currentModel.scale.set(s * (1 - beat * 0.06), s * (1 + beat * 0.04), s * (1 - beat * 0.06));
+      } else if (isLungs) {
+        // Breathing cycle
+        const breath = Math.sin(elapsed * 0.8 * Math.PI);
+        state.currentModel.scale.set(s * (1 + breath * 0.04), s * (1 - breath * 0.015), s * (1 + breath * 0.04));
+      } else {
+        // Gentle pulse for other organs
+        const pulse = Math.sin(elapsed * 0.5 * Math.PI * 2) * 0.015;
+        state.currentModel.scale.setScalar(s * (1 + pulse));
+      }
+    }
+
     state.renderer.render(state.scene, state.camera);
   }
   animate();
@@ -742,6 +1167,7 @@ function loadModelFromPath(modelPath) {
 
       state.scene.add(model);
       state.currentModel = model;
+      state.modelBaseScale = scale;
 
       // Apply color tint based on organ
       if (state.currentOrgan) {
@@ -794,6 +1220,7 @@ function showPlaceholderOrgan() {
   mesh.position.y = 0.5;
   state.scene.add(mesh);
   state.currentModel = mesh;
+  state.modelBaseScale = 1;
 
   const indicator = document.getElementById('modeIndicator');
   indicator.textContent = 'Platzhalter (3D-Modell wird generiert)';

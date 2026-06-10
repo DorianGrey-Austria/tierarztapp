@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Animierte 3D-Szenen</title>
+<meta name="description" content="Interaktive animierte 3D-Szenen mit Tieren, Natur und medizinischen Modellen">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --vs-primary:#2563eb;--vs-primary-dark:#1d4ed8;
+  --vs-bg:#0f172a;--vs-surface:#1e293b;--vs-surface-2:#334155;
+  --vs-text:#f1f5f9;--vs-text-muted:#a1a1aa;
+  --vs-accent:#10b981;--vs-danger:#ef4444;--vs-warning:#f59e0b;
+  --vs-radius:12px;--vs-shadow:0 4px 24px rgba(0,0,0,0.3);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--vs-bg);color:var(--vs-text)}
+.app{display:grid;grid-template-rows:56px 1fr 48px;height:100vh}
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--vs-surface);border-bottom:1px solid var(--vs-surface-2);z-index:10}
+.header h1{font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.header h1 span{color:var(--vs-accent)}
+.viewport{position:relative;overflow:hidden;background:var(--vs-bg)}
+.statusbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--vs-surface);border-top:1px solid var(--vs-surface-2);font-size:0.75rem;color:var(--vs-text-muted)}
+
+/* Scene selector */
+.scene-tabs{display:flex;gap:4px;background:var(--vs-surface);border-radius:8px;padding:3px}
+.scene-tab{padding:6px 14px;border:none;border-radius:6px;background:transparent;color:var(--vs-text-muted);cursor:pointer;font-size:0.8rem;transition:all 0.15s;white-space:nowrap}
+.scene-tab:hover{background:var(--vs-surface-2);color:var(--vs-text)}
+.scene-tab.active{background:var(--vs-primary);color:#fff}
+
+/* Controls overlay */
+.controls-overlay{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.ctrl-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--vs-surface-2);background:rgba(30,41,59,0.9);color:var(--vs-text);cursor:pointer;font-size:0.85rem;transition:all 0.15s;backdrop-filter:blur(8px);display:flex;align-items:center;gap:6px}
+.ctrl-btn:hover{background:var(--vs-primary);border-color:var(--vs-primary)}
+.ctrl-btn.active{background:var(--vs-accent);border-color:var(--vs-accent)}
+
+/* Info overlay */
+.info-overlay{position:absolute;top:16px;left:16px;background:rgba(30,41,59,0.88);backdrop-filter:blur(12px);border:1px solid var(--vs-surface-2);border-radius:var(--vs-radius);padding:14px 18px;z-index:5;max-width:320px}
+.info-overlay h3{font-size:0.95rem;margin-bottom:6px}
+.info-overlay p{font-size:0.78rem;color:var(--vs-text-muted);line-height:1.5}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,23,42,0.95);z-index:20;transition:opacity 0.4s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:48px;height:48px;border:3px solid var(--vs-surface-2);border-top-color:var(--vs-primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;font-size:0.9rem;color:var(--vs-text-muted)}
+
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1><span>&#x1F3AC;</span> VetScan Animierte 3D-Szenen</h1>
+    <div class="scene-tabs" id="sceneTabs">
+      <button class="scene-tab active" data-scene="meadow">Tierwiese</button>
+      <button class="scene-tab" data-scene="birds">Vogelflug</button>
+      <button class="scene-tab" data-scene="anatomy">Anatomie-Labor</button>
+      <button class="scene-tab" data-scene="clinic">Tierklinik</button>
+      <button class="scene-tab" data-scene="micro">Mikrowelt</button>
+    </div>
+    <a href="vetscan-version-selector.html" style="color:var(--vs-text-muted);text-decoration:none;font-size:0.8rem">Alle Werkzeuge</a>
+  </header>
+
+  <main class="viewport" id="viewport">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="loading-text" id="loaderText">Szene wird geladen...</div>
+    </div>
+    <div class="info-overlay" id="infoOverlay">
+      <h3 id="infoTitle">Tierwiese</h3>
+      <p id="infoDesc">Interaktive Szene mit animierten Tieren und Naturelemente. Drehe die Kamera mit der Maus, scrolle zum Zoomen.</p>
+    </div>
+    <div class="controls-overlay">
+      <button class="ctrl-btn active" id="btnAnimate" title="Animationen ein/aus">&#x1F4AB; Animiert</button>
+      <button class="ctrl-btn active" id="btnAutoRotate" title="Kamera-Rotation">&#x1F504; Rotation</button>
+      <button class="ctrl-btn" id="btnWireframe" title="Drahtgitter-Modus">&#x25A6; Wireframe</button>
+      <button class="ctrl-btn" id="btnScreenshot" title="Screenshot">&#x1F4F7; Screenshot</button>
+    </div>
+  </main>
+
+  <footer class="statusbar">
+    <span id="statusLeft">Bereit</span>
+    <span id="statusRight">Animierte Hyper3D Rodin Modelle | Three.js r170</span>
+  </footer>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// === Scene Definitions ===
+const SCENES = {
+  meadow: {
+    title: 'Tierwiese',
+    desc: 'Pferde, Hunde und Katzen auf einer animierten Wiese mit wehendem Gras und flatternden Schmetterlingen.',
+    bg: 0x87CEEB,
+    ground: 0x4a7c3f,
+    fog: { color: 0x87CEEB, near: 15, far: 40 },
+    models: [
+      { file: 'assets/models/animated/horse_walking.glb', pos: [0, 0, 0], scale: 1.0, anim: 'breath_large' },
+      { file: 'assets/models/animated/horse_grazing.glb', pos: [4, 0, -3], scale: 0.9, anim: 'breath_large', rotY: -0.5 },
+      { file: 'assets/models/animated/foal_playing.glb', pos: [2, 0, 1.5], scale: 0.6, anim: 'playful' },
+      { file: 'assets/models/animated/dog_running.glb', pos: [-3, 0, 2], scale: 0.5, anim: 'breath' },
+      { file: 'assets/models/animated/cat_stretching.glb', pos: [-2, 0, -2], scale: 0.4, anim: 'breath' },
+      { file: 'assets/models/animated/rabbit_hopping.glb', pos: [3, 0, 3], scale: 0.3, anim: 'playful' },
+      // Nature
+      { file: 'assets/models/animated/grass_patch_tall.glb', pos: [-1, 0, -1], scale: 0.5, anim: 'wind' },
+      { file: 'assets/models/animated/grass_patch_tall.glb', pos: [1.5, 0, -2.5], scale: 0.4, anim: 'wind', phase: 0.5 },
+      { file: 'assets/models/animated/grass_patch_wild.glb', pos: [-3, 0, -3], scale: 0.5, anim: 'wind', phase: 1.2 },
+      { file: 'assets/models/animated/wildflower_daisies.glb', pos: [2, 0, -1.5], scale: 0.35, anim: 'wind', phase: 0.8 },
+      { file: 'assets/models/animated/wildflower_poppies.glb', pos: [-1.5, 0, 2.5], scale: 0.35, anim: 'wind', phase: 1.5 },
+      { file: 'assets/models/animated/butterfly_monarch.glb', pos: [0.5, 1.2, 1], scale: 0.15, anim: 'flutter' },
+      { file: 'assets/models/animated/butterfly_blue.glb', pos: [-2, 1.5, 0.5], scale: 0.12, anim: 'flutter', phase: 2.0 },
+      { file: 'assets/models/animated/bee_honeybee.glb', pos: [1, 0.8, -0.5], scale: 0.08, anim: 'flutter', phase: 1.0 },
+    ],
+    camera: { pos: [8, 5, 8], target: [0, 0.5, 0] },
+    sun: { pos: [10, 15, 8], intensity: 1.5 },
+  },
+  birds: {
+    title: 'Vogelflug',
+    desc: 'Adler, Eulen und Papageien in verschiedenen Flugphasen, ueber einer Waldlandschaft schwebend.',
+    bg: 0x6BA3D6,
+    ground: 0x2d5a27,
+    fog: { color: 0x6BA3D6, near: 20, far: 50 },
+    models: [
+      { file: 'assets/models/animated/eagle_soaring.glb', pos: [0, 4, 0], scale: 1.2, anim: 'soar' },
+      { file: 'assets/models/animated/eagle_diving.glb', pos: [5, 3, -2], scale: 1.0, anim: 'dive' },
+      { file: 'assets/models/animated/owl_flying.glb', pos: [-3, 3.5, 1], scale: 0.8, anim: 'soar', phase: 1.0 },
+      { file: 'assets/models/animated/parrot_flying.glb', pos: [2, 2.5, 3], scale: 0.5, anim: 'flap' },
+      { file: 'assets/models/animated/parrot_wings_up.glb', pos: [-1, 2.8, -3], scale: 0.45, anim: 'flap', phase: 0.5 },
+      { file: 'assets/models/animated/swallow_flight.glb', pos: [3, 3, 1.5], scale: 0.3, anim: 'dart' },
+      { file: 'assets/models/animated/swallow_flight.glb', pos: [-2, 3.5, 2.5], scale: 0.28, anim: 'dart', phase: 1.5 },
+      { file: 'assets/models/animated/budgerigar_flying.glb', pos: [1, 2, -1.5], scale: 0.25, anim: 'flap', phase: 2.0 },
+      { file: 'assets/models/animated/hummingbird_hovering.glb', pos: [-0.5, 1.8, 0.5], scale: 0.15, anim: 'hover' },
+      // Trees
+      { file: 'assets/models/animated/oak_tree_small.glb', pos: [-4, 0, -4], scale: 1.5, anim: 'wind' },
+      { file: 'assets/models/animated/willow_tree.glb', pos: [4, 0, -3], scale: 1.2, anim: 'wind', phase: 0.7 },
+    ],
+    camera: { pos: [6, 5, 10], target: [0, 3, 0] },
+    sun: { pos: [8, 20, 12], intensity: 1.8 },
+  },
+  anatomy: {
+    title: 'Anatomie-Labor',
+    desc: 'Pulsierende Herzen, atmende Lungen und detaillierte Organmodelle in einer medizinischen Laborumgebung.',
+    bg: 0x0a1628,
+    ground: 0x1a1a2e,
+    fog: null,
+    models: [
+      { file: 'assets/models/animated/heart_systole.glb', pos: [-2, 1.5, 0], scale: 0.8, anim: 'heartbeat' },
+      { file: 'assets/models/animated/heart_diastole.glb', pos: [-2, 1.5, 0], scale: 0.75, anim: 'heartbeat_alt' },
+      { file: 'assets/models/animated/lungs_inflated.glb', pos: [0, 1.5, 0], scale: 0.7, anim: 'breathe_organ' },
+      { file: 'assets/models/animated/lungs_with_trachea.glb', pos: [0, 1.5, -3], scale: 0.65, anim: 'breathe_organ', phase: 0.5 },
+      { file: 'assets/models/animated/brain_lateral_view.glb', pos: [2.5, 1.5, 0], scale: 0.6, anim: 'pulse_slow' },
+      { file: 'assets/models/animated/eye_dilated_pupil.glb', pos: [2.5, 1.5, -3], scale: 0.5, anim: 'pulse_slow', phase: 1.0 },
+      { file: 'assets/models/animated/kidney_cross_section.glb', pos: [-2, 1.5, -3], scale: 0.55, anim: 'pulse_slow', phase: 0.3 },
+      { file: 'assets/models/animated/liver_with_vessels.glb', pos: [0, 1.5, 3], scale: 0.6, anim: 'pulse_slow', phase: 0.8 },
+    ],
+    camera: { pos: [5, 4, 5], target: [0, 1.5, 0] },
+    sun: { pos: [3, 10, 5], intensity: 0.8 },
+  },
+  clinic: {
+    title: 'Tierklinik',
+    desc: 'Szenen aus dem Veterinaeralltag: Untersuchungen, Behandlungen und Genesung.',
+    bg: 0xf0f4f8,
+    ground: 0xd4d8dc,
+    fog: null,
+    models: [
+      { file: 'assets/models/animated/vet_examining_dog.glb', pos: [0, 0, 0], scale: 0.9, anim: 'breath' },
+      { file: 'assets/models/animated/vet_examining_horse.glb', pos: [4, 0, 0], scale: 1.0, anim: 'breath_large' },
+      { file: 'assets/models/animated/dog_with_cone.glb', pos: [-2, 0, 2], scale: 0.5, anim: 'breath' },
+      { file: 'assets/models/animated/dog_bandaged_paw.glb', pos: [-3, 0, -1], scale: 0.5, anim: 'breath' },
+      { file: 'assets/models/animated/cat_in_carrier.glb', pos: [2, 0, 2.5], scale: 0.4, anim: 'breath' },
+      { file: 'assets/models/animated/dog_sitting.glb', pos: [1.5, 0, -2], scale: 0.5, anim: 'breath' },
+      { file: 'assets/models/animated/cat_sitting_alert.glb', pos: [-1, 0, -2.5], scale: 0.35, anim: 'breath' },
+    ],
+    camera: { pos: [6, 4, 6], target: [0, 0.5, 0] },
+    sun: { pos: [5, 12, 8], intensity: 1.2 },
+  },
+  micro: {
+    title: 'Mikrowelt',
+    desc: 'Zellen, DNA, Viren und Bakterien in dramatischer Vergroesserung mit Puls-Animationen.',
+    bg: 0x050818,
+    ground: null,
+    fog: { color: 0x050818, near: 8, far: 25 },
+    models: [
+      { file: 'assets/models/animated/red_blood_cells.glb', pos: [0, 0, 0], scale: 1.0, anim: 'float' },
+      { file: 'assets/models/animated/white_blood_cell.glb', pos: [2.5, 0.5, 1], scale: 0.8, anim: 'float', phase: 0.5 },
+      { file: 'assets/models/animated/platelets_clotting.glb', pos: [-2, -0.5, 0.5], scale: 0.7, anim: 'float', phase: 1.0 },
+      { file: 'assets/models/animated/neuron_cell.glb', pos: [0, 2, -2], scale: 1.2, anim: 'pulse_electric' },
+      { file: 'assets/models/animated/dna_helix.glb', pos: [-3, 0, -1.5], scale: 0.8, anim: 'rotate_slow' },
+      { file: 'assets/models/animated/virus_particle.glb', pos: [3, 1, -1], scale: 0.5, anim: 'float', phase: 1.5 },
+      { file: 'assets/models/animated/bacteria_rod.glb', pos: [1, -1, 2], scale: 0.6, anim: 'swim' },
+      { file: 'assets/models/animated/bacteria_rod.glb', pos: [-1.5, 1, 1.5], scale: 0.45, anim: 'swim', phase: 2.0 },
+    ],
+    camera: { pos: [5, 3, 5], target: [0, 0, 0] },
+    sun: { pos: [0, 5, 5], intensity: 0.6 },
+  },
+};
+
+// === State ===
+const state = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  controls: null,
+  clock: new THREE.Clock(),
+  currentScene: 'meadow',
+  models: [],       // { mesh, anim, phase, basePos, baseScale, baseRotY }
+  animated: true,
+  wireframe: false,
+  ground: null,
+  particles: null,
+  loadedCount: 0,
+  totalCount: 0,
+};
+
+const loader = new GLTFLoader();
+
+// === Init ===
+function init() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  state.scene = new THREE.Scene();
+  state.camera = new THREE.PerspectiveCamera(50, rect.width / rect.height, 0.1, 100);
+  state.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  state.renderer.setSize(rect.width, rect.height);
+  state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.0;
+  state.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  state.renderer.shadowMap.enabled = true;
+  state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(state.renderer.domElement);
+
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.06;
+  state.controls.autoRotate = true;
+  state.controls.autoRotateSpeed = 0.8;
+  state.controls.minDistance = 2;
+  state.controls.maxDistance = 30;
+  state.controls.maxPolarAngle = Math.PI * 0.48;
+
+  const ro = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      state.camera.aspect = width / height;
+      state.camera.updateProjectionMatrix();
+      state.renderer.setSize(width, height);
+    }
+  });
+  ro.observe(container);
+
+  loadScene('meadow');
+  animate();
+}
+
+// === Scene Loading ===
+function clearScene() {
+  state.models.forEach(m => {
+    state.scene.remove(m.mesh);
+    m.mesh.traverse(child => {
+      if (child.isMesh) {
+        child.geometry.dispose();
+        if (child.material.map) child.material.map.dispose();
+        child.material.dispose();
+      }
+    });
+  });
+  state.models = [];
+  if (state.ground) { state.scene.remove(state.ground); state.ground = null; }
+  if (state.particles) { state.scene.remove(state.particles); state.particles = null; }
+  // Remove lights
+  const toRemove = [];
+  state.scene.traverse(child => {
+    if (child.isLight || child.isGridHelper) toRemove.push(child);
+  });
+  toRemove.forEach(c => state.scene.remove(c));
+  state.scene.fog = null;
+}
+
+function loadScene(sceneId) {
+  const sceneDef = SCENES[sceneId];
+  if (!sceneDef) return;
+  state.currentScene = sceneId;
+
+  const loaderEl = document.getElementById('loader');
+  loaderEl.classList.remove('hidden');
+
+  clearScene();
+
+  // Background
+  state.scene.background = new THREE.Color(sceneDef.bg);
+
+  // Fog
+  if (sceneDef.fog) {
+    state.scene.fog = new THREE.Fog(sceneDef.fog.color, sceneDef.fog.near, sceneDef.fog.far);
+  }
+
+  // Ground
+  if (sceneDef.ground !== null) {
+    const groundGeo = new THREE.PlaneGeometry(50, 50);
+    const groundMat = new THREE.MeshStandardMaterial({
+      color: sceneDef.ground,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    state.ground = new THREE.Mesh(groundGeo, groundMat);
+    state.ground.rotation.x = -Math.PI / 2;
+    state.ground.receiveShadow = true;
+    state.scene.add(state.ground);
+  }
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+  state.scene.add(ambient);
+
+  const hemisphere = new THREE.HemisphereLight(0x87CEEB, 0x362907, 0.3);
+  state.scene.add(hemisphere);
+
+  if (sceneDef.sun) {
+    const sun = new THREE.DirectionalLight(0xffffff, sceneDef.sun.intensity);
+    sun.position.set(...sceneDef.sun.pos);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 1024;
+    sun.shadow.mapSize.height = 1024;
+    sun.shadow.camera.far = 50;
+    state.scene.add(sun);
+  }
+
+  // For micro scene: add point lights for dramatic effect
+  if (sceneId === 'micro') {
+    const p1 = new THREE.PointLight(0x4466ff, 2, 10);
+    p1.position.set(3, 2, 3);
+    state.scene.add(p1);
+    const p2 = new THREE.PointLight(0xff4466, 1.5, 10);
+    p2.position.set(-3, 1, -2);
+    state.scene.add(p2);
+    const p3 = new THREE.PointLight(0x44ff66, 1, 8);
+    p3.position.set(0, -2, 3);
+    state.scene.add(p3);
+  }
+
+  // For anatomy: grid
+  if (sceneId === 'anatomy') {
+    const grid = new THREE.GridHelper(12, 24, 0x1a3366, 0x0d1a33);
+    state.scene.add(grid);
+  }
+
+  // Floating particles
+  createParticles(sceneId);
+
+  // Camera
+  const cam = sceneDef.camera;
+  state.camera.position.set(...cam.pos);
+  state.controls.target.set(...cam.target);
+  state.controls.update();
+
+  // Load models
+  state.loadedCount = 0;
+  state.totalCount = sceneDef.models.length;
+
+  let failCount = 0;
+  sceneDef.models.forEach((modelDef, idx) => {
+    loader.load(
+      modelDef.file,
+      (gltf) => {
+        const mesh = gltf.scene;
+
+        // Auto-center and scale
+        const box = new THREE.Box3().setFromObject(mesh);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const s = (modelDef.scale || 1.0) / maxDim;
+
+        mesh.scale.setScalar(s);
+        mesh.position.set(
+          modelDef.pos[0] - center.x * s,
+          modelDef.pos[1] - box.min.y * s,
+          modelDef.pos[2] - center.z * s
+        );
+        if (modelDef.rotY) mesh.rotation.y = modelDef.rotY;
+
+        mesh.traverse(child => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        state.scene.add(mesh);
+        state.models.push({
+          mesh,
+          anim: modelDef.anim || 'none',
+          phase: modelDef.phase || 0,
+          basePos: mesh.position.clone(),
+          baseScale: s,
+          baseRotY: mesh.rotation.y,
+        });
+
+        state.loadedCount++;
+        updateLoadProgress();
+      },
+      undefined,
+      (err) => {
+        failCount++;
+        state.loadedCount++;
+        console.warn(`Could not load ${modelDef.file}:`, err.message || err);
+
+        // Create placeholder sphere
+        const geo = new THREE.SphereGeometry(0.15, 16, 16);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x666688, transparent: true, opacity: 0.5 });
+        const placeholder = new THREE.Mesh(geo, mat);
+        placeholder.position.set(...modelDef.pos);
+        placeholder.position.y += 0.15;
+        state.scene.add(placeholder);
+        state.models.push({
+          mesh: placeholder,
+          anim: modelDef.anim || 'none',
+          phase: modelDef.phase || 0,
+          basePos: placeholder.position.clone(),
+          baseScale: 1,
+          baseRotY: 0,
+        });
+        updateLoadProgress();
+      }
+    );
+  });
+
+  // Update UI
+  document.getElementById('infoTitle').textContent = sceneDef.title;
+  document.getElementById('infoDesc').textContent = sceneDef.desc;
+}
+
+function updateLoadProgress() {
+  const pct = Math.round(state.loadedCount / state.totalCount * 100);
+  document.getElementById('loaderText').textContent = `${state.loadedCount}/${state.totalCount} Modelle (${pct}%)`;
+  if (state.loadedCount >= state.totalCount) {
+    document.getElementById('loader').classList.add('hidden');
+    const vertCount = countAllVertices();
+    document.getElementById('statusLeft').textContent =
+      `${SCENES[state.currentScene].title} | ${state.models.length} Modelle | ${(vertCount/1000).toFixed(1)}k Vertices`;
+  }
+}
+
+function countAllVertices() {
+  let count = 0;
+  state.models.forEach(m => {
+    m.mesh.traverse(child => {
+      if (child.isMesh && child.geometry) {
+        count += child.geometry.attributes.position?.count || 0;
+      }
+    });
+  });
+  return count;
+}
+
+// === Particles ===
+function createParticles(sceneId) {
+  const count = sceneId === 'micro' ? 200 : 80;
+  const spread = sceneId === 'micro' ? 8 : 6;
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const speeds = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    positions[i*3]   = (Math.random() - 0.5) * spread;
+    positions[i*3+1] = Math.random() * 5;
+    positions[i*3+2] = (Math.random() - 0.5) * spread;
+    speeds[i] = Math.random() * 0.5 + 0.2;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
+
+  const colors = {
+    meadow: 0xffffff,
+    birds: 0xffffff,
+    anatomy: 0x4488ff,
+    clinic: 0xffffff,
+    micro: 0x88aaff,
+  };
+
+  const mat = new THREE.PointsMaterial({
+    color: colors[sceneId] || 0xffffff,
+    size: sceneId === 'micro' ? 0.06 : 0.02,
+    transparent: true,
+    opacity: sceneId === 'micro' ? 0.6 : 0.3,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true,
+  });
+
+  state.particles = new THREE.Points(geo, mat);
+  state.scene.add(state.particles);
+}
+
+function updateParticles(elapsed) {
+  if (!state.particles) return;
+  const pos = state.particles.geometry.attributes.position;
+  const speed = state.particles.geometry.attributes.speed;
+  for (let i = 0; i < pos.count; i++) {
+    pos.array[i*3+1] += speed.array[i] * 0.003;
+    pos.array[i*3]   += Math.sin(elapsed + i) * 0.001;
+    if (pos.array[i*3+1] > 5.5) pos.array[i*3+1] = -0.5;
+  }
+  pos.needsUpdate = true;
+}
+
+// === Model Animations ===
+function animateModels(elapsed) {
+  if (!state.animated) return;
+
+  state.models.forEach(m => {
+    const t = elapsed + m.phase;
+    const s = m.baseScale;
+
+    switch (m.anim) {
+      case 'breath': {
+        const b = Math.sin(t * 1.6) * 0.012;
+        m.mesh.scale.set(s * (1 - b * 0.3), s * (1 + b), s * (1 - b * 0.3));
+        const sway = Math.sin(t * 0.6) * 0.01;
+        m.mesh.rotation.z = sway;
+        break;
+      }
+      case 'breath_large': {
+        const b = Math.sin(t * 1.0) * 0.015;
+        m.mesh.scale.set(s * (1 - b * 0.3), s * (1 + b), s * (1 - b * 0.3));
+        const sway = Math.sin(t * 0.4) * 0.008;
+        m.mesh.rotation.z = sway;
+        const headBob = Math.sin(t * 0.5) * 0.005;
+        m.mesh.position.y = m.basePos.y + headBob;
+        break;
+      }
+      case 'playful': {
+        const bounce = Math.abs(Math.sin(t * 2.5)) * 0.03;
+        m.mesh.position.y = m.basePos.y + bounce;
+        const wiggle = Math.sin(t * 3) * 0.03;
+        m.mesh.rotation.z = wiggle;
+        const breathe = Math.sin(t * 2) * 0.01;
+        m.mesh.scale.setScalar(s * (1 + breathe));
+        break;
+      }
+      case 'wind': {
+        const w1 = Math.sin(t * 0.8) * 0.05;
+        const w2 = Math.sin(t * 1.3 + 0.5) * 0.03;
+        const w3 = Math.cos(t * 0.5) * 0.04;
+        m.mesh.rotation.x = w1 + w2;
+        m.mesh.rotation.z = w3;
+        m.mesh.scale.set(s, s * (1 + Math.sin(t * 0.6) * 0.01), s);
+        break;
+      }
+      case 'flutter': {
+        // Butterfly/bee: wing-like flapping + floating path
+        const flapSpeed = 6;
+        const flap = Math.sin(t * flapSpeed) * 0.2;
+        m.mesh.rotation.z = flap;
+        m.mesh.rotation.x = Math.sin(t * 0.5) * 0.1;
+        // Circular floating path
+        const radius = 0.3;
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.7) * radius;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 1.2) * 0.15;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.7) * radius;
+        break;
+      }
+      case 'soar': {
+        // Large bird soaring: gentle banking and altitude variation
+        const bank = Math.sin(t * 0.3) * 0.05;
+        m.mesh.rotation.z = bank;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.4) * 0.2;
+        // Slow circular drift
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.15) * 1.0;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.15) * 1.0;
+        m.mesh.rotation.y = m.baseRotY + t * 0.15;
+        break;
+      }
+      case 'flap': {
+        const flapB = Math.sin(t * 4) * 0.15;
+        m.mesh.rotation.z = flapB;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.8) * 0.1;
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.3) * 0.5;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.3) * 0.5;
+        m.mesh.rotation.y = m.baseRotY + Math.atan2(
+          Math.cos(t * 0.3) * 0.5,
+          Math.sin(t * 0.3) * 0.5
+        );
+        break;
+      }
+      case 'dart': {
+        // Swallow-like: fast, darting movement
+        const speed = 2.0;
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.5 * speed) * 2;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.35 * speed) * 2;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.8 * speed) * 0.3;
+        m.mesh.rotation.z = Math.sin(t * 1.5) * 0.15;
+        m.mesh.rotation.y = Math.atan2(
+          Math.cos(t * 0.5 * speed) * 2,
+          -Math.sin(t * 0.35 * speed) * 2
+        );
+        break;
+      }
+      case 'hover': {
+        // Hummingbird: rapid vibration + figure-8
+        m.mesh.rotation.z = Math.sin(t * 15) * 0.05; // wing buzz
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 2) * 0.05;
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.8) * 0.15;
+        m.mesh.position.z = m.basePos.z + Math.sin(t * 1.6) * 0.1;
+        break;
+      }
+      case 'dive': {
+        // Eagle diving: periodic dive and pull-up
+        const cycle = (t * 0.3) % (Math.PI * 2);
+        const diveY = Math.sin(cycle) * 1.5;
+        m.mesh.position.y = m.basePos.y + diveY;
+        m.mesh.rotation.x = -Math.cos(cycle) * 0.3;
+        m.mesh.rotation.z = Math.sin(t * 0.5) * 0.05;
+        break;
+      }
+      case 'heartbeat': {
+        // Heart: rapid squeeze then relax
+        const heartCycle = t * 1.2;
+        const beat = Math.pow(Math.sin(heartCycle * Math.PI) * 0.5 + 0.5, 3);
+        const squeeze = 1 - beat * 0.08;
+        const expand = 1 + beat * 0.04;
+        m.mesh.scale.set(s * squeeze, s * expand, s * squeeze);
+        break;
+      }
+      case 'heartbeat_alt': {
+        // Offset heartbeat
+        const heartCycle2 = (t + 0.3) * 1.2;
+        const beat2 = Math.pow(Math.sin(heartCycle2 * Math.PI) * 0.5 + 0.5, 3);
+        const sq2 = 1 + beat2 * 0.06;
+        const ex2 = 1 - beat2 * 0.03;
+        m.mesh.scale.set(s * sq2, s * ex2, s * sq2);
+        break;
+      }
+      case 'breathe_organ': {
+        // Lung breathing: expand and contract
+        const lungCycle = Math.sin(t * 0.8 * Math.PI);
+        const expand = 1 + lungCycle * 0.06;
+        const compress = 1 - lungCycle * 0.02;
+        m.mesh.scale.set(s * expand, s * compress, s * expand);
+        break;
+      }
+      case 'pulse_slow': {
+        // Gentle pulsing for organs
+        const pulse = Math.sin(t * 0.5 * Math.PI * 2) * 0.02;
+        m.mesh.scale.setScalar(s * (1 + pulse));
+        m.mesh.rotation.y = m.baseRotY + t * 0.2;
+        break;
+      }
+      case 'pulse_electric': {
+        // Neuron: electric pulse effect
+        const spike = Math.max(0, Math.sin(t * 3)) ** 8;
+        m.mesh.scale.setScalar(s * (1 + spike * 0.05));
+        m.mesh.rotation.y = m.baseRotY + t * 0.1;
+        break;
+      }
+      case 'float': {
+        // Cells floating in fluid
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.3) * 0.3;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.5) * 0.15;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.4) * 0.2;
+        m.mesh.rotation.y = m.baseRotY + t * 0.2;
+        m.mesh.rotation.x = Math.sin(t * 0.25) * 0.1;
+        break;
+      }
+      case 'rotate_slow': {
+        // DNA helix rotation
+        m.mesh.rotation.y = m.baseRotY + t * 0.5;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.3) * 0.1;
+        break;
+      }
+      case 'swim': {
+        // Bacteria swimming with flagella motion
+        m.mesh.position.x = m.basePos.x + Math.sin(t * 0.6) * 0.8;
+        m.mesh.position.z = m.basePos.z + Math.cos(t * 0.4) * 0.6;
+        m.mesh.position.y = m.basePos.y + Math.sin(t * 0.9) * 0.1;
+        m.mesh.rotation.y = Math.atan2(
+          Math.cos(t * 0.6) * 0.8,
+          -Math.sin(t * 0.4) * 0.6
+        );
+        const wiggle = Math.sin(t * 6) * 0.05;
+        m.mesh.rotation.z = wiggle;
+        break;
+      }
+    }
+  });
+}
+
+// === Main Loop ===
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = state.clock.getElapsedTime();
+  state.controls.update();
+  animateModels(elapsed);
+  updateParticles(elapsed);
+  state.renderer.render(state.scene, state.camera);
+}
+
+// === Controls ===
+function setupControls() {
+  // Scene tabs
+  document.querySelectorAll('.scene-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.scene-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      loadScene(tab.dataset.scene);
+    });
+  });
+
+  // Animate toggle
+  document.getElementById('btnAnimate').addEventListener('click', function() {
+    state.animated = !state.animated;
+    this.classList.toggle('active', state.animated);
+    if (!state.animated) {
+      state.models.forEach(m => {
+        m.mesh.scale.setScalar(m.baseScale);
+        m.mesh.position.copy(m.basePos);
+        m.mesh.rotation.y = m.baseRotY;
+        m.mesh.rotation.x = 0;
+        m.mesh.rotation.z = 0;
+      });
+    }
+  });
+
+  // Auto rotate
+  document.getElementById('btnAutoRotate').addEventListener('click', function() {
+    state.controls.autoRotate = !state.controls.autoRotate;
+    this.classList.toggle('active', state.controls.autoRotate);
+  });
+
+  // Wireframe
+  document.getElementById('btnWireframe').addEventListener('click', function() {
+    state.wireframe = !state.wireframe;
+    this.classList.toggle('active', state.wireframe);
+    state.models.forEach(m => {
+      m.mesh.traverse(child => {
+        if (child.isMesh) {
+          child.material.wireframe = state.wireframe;
+        }
+      });
+    });
+  });
+
+  // Screenshot
+  document.getElementById('btnScreenshot').addEventListener('click', () => {
+    state.renderer.render(state.scene, state.camera);
+    const link = document.createElement('a');
+    link.download = `vetscan-scene-${state.currentScene}.png`;
+    link.href = state.renderer.domElement.toDataURL('image/png');
+    link.click();
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT') return;
+    switch (e.key) {
+      case '1': loadScene('meadow'); setActiveTab('meadow'); break;
+      case '2': loadScene('birds'); setActiveTab('birds'); break;
+      case '3': loadScene('anatomy'); setActiveTab('anatomy'); break;
+      case '4': loadScene('clinic'); setActiveTab('clinic'); break;
+      case '5': loadScene('micro'); setActiveTab('micro'); break;
+      case 'a': document.getElementById('btnAnimate').click(); break;
+      case 'r': document.getElementById('btnAutoRotate').click(); break;
+    }
+  });
+}
+
+function setActiveTab(sceneId) {
+  document.querySelectorAll('.scene-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.scene === sceneId);
+  });
+}
+
+// === Start ===
+init();
+setupControls();
+</script>
+
+<!-- Shared module for nav -->
+<script src="js/vetscan-shared.js"></script>
+<script src="js/vetscan-pro.js"></script>
+</body>
+</html>
