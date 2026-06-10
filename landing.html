@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Veterinaermedizinische Lern-App</title>
+<meta name="description" content="Interaktive Tierarzt-Simulation mit 97 3D-Modellen, 16 Lernwerkzeugen und KI-generierten Organen. Fuer Studierende und Tieraerzte.">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#131829;--surface2:#1c2340;
+  --primary:#3b82f6;--accent:#10b981;--danger:#ef4444;
+  --text:#e2e8f0;--muted:#9ca3af;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+
+/* Hero */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%, rgba(59,130,246,0.12) 0%, transparent 70%)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:24px;font-size:0.8rem;color:var(--accent);margin-bottom:24px}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;margin-bottom:16px;background:linear-gradient(135deg,#f1f5f9,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:clamp(1rem,2vw,1.25rem);color:var(--muted);max-width:600px;line-height:1.7;margin-bottom:32px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:12px;font-size:1rem;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:#2563eb;transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,130,246,0.3)}
+.btn-secondary{background:transparent;color:var(--text);border:1px solid var(--surface2)}
+.btn-secondary:hover{border-color:var(--primary);background:rgba(59,130,246,0.05)}
+.hero-stats{display:flex;gap:40px;margin-top:48px}
+.hero-stat{text-align:center}
+.hero-stat .num{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-stat .lbl{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-top:4px}
+
+/* Sections */
+section{padding:80px 20px}
+.container{max-width:1100px;margin:0 auto}
+.section-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--accent);font-weight:600;margin-bottom:8px}
+.section-title{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:800;margin-bottom:16px;line-height:1.2}
+.section-desc{font-size:1rem;color:var(--muted);max-width:600px;line-height:1.7;margin-bottom:40px}
+
+/* Feature grid */
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.feature-card{background:var(--surface);border:1px solid var(--surface2);border-radius:16px;padding:28px;transition:all 0.2s}
+.feature-card:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.feature-icon{font-size:2rem;margin-bottom:12px}
+.feature-card h3{font-size:1.1rem;margin-bottom:8px}
+.feature-card p{font-size:0.85rem;color:var(--muted);line-height:1.6}
+.feature-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.feature-tag{font-size:0.65rem;padding:3px 10px;border-radius:20px;background:var(--surface2);color:var(--muted)}
+
+/* Tool grid */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.tool-card{display:flex;align-items:center;gap:12px;padding:16px;background:var(--surface);border:1px solid var(--surface2);border-radius:12px;text-decoration:none;color:var(--text);transition:all 0.15s}
+.tool-card:hover{border-color:var(--primary);background:rgba(59,130,246,0.05)}
+.tool-icon{font-size:1.5rem;width:40px;text-align:center;flex-shrink:0}
+.tool-info{flex:1;min-width:0}
+.tool-info h4{font-size:0.85rem;font-weight:600}
+.tool-info p{font-size:0.7rem;color:var(--muted);margin-top:2px}
+
+/* 3D Models section */
+.models-showcase{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:32px}
+.model-card{background:var(--surface);border:1px solid var(--surface2);border-radius:12px;padding:16px;text-align:center;transition:all 0.15s}
+.model-card:hover{border-color:var(--accent)}
+.model-card .emoji{font-size:2rem;margin-bottom:6px}
+.model-card .name{font-size:0.75rem;color:var(--muted)}
+.model-card .count{font-size:0.65rem;color:var(--accent);margin-top:2px}
+
+/* CTA section */
+.cta{text-align:center;padding:80px 20px;background:linear-gradient(180deg,transparent,rgba(59,130,246,0.05))}
+.cta h2{font-size:2rem;font-weight:800;margin-bottom:12px}
+.cta p{color:var(--muted);margin-bottom:24px}
+
+/* Footer */
+footer{text-align:center;padding:24px;border-top:1px solid var(--surface2);font-size:0.75rem;color:var(--muted)}
+footer a{color:var(--primary);text-decoration:none}
+
+/* Responsive */
+@media(max-width:768px){
+  .hero-stats{gap:24px}
+  .hero-stat .num{font-size:1.8rem}
+  .models-showcase{grid-template-columns:repeat(3,1fr)}
+  .features{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .models-showcase{grid-template-columns:repeat(2,1fr)}
+  .hero-actions{flex-direction:column;width:100%;max-width:300px}
+  .btn{width:100%;justify-content:center}
+}
+
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Hyper3D Rodin KI-Modelle</div>
+  <h1>VetScan Pro</h1>
+  <p>Die interaktive Tierarzt-Simulation mit 97 KI-generierten 3D-Modellen, 16 Lernwerkzeugen und realistischen klinischen Faellen. Fuer Veterinaermedizin-Studierende und praktizierende Tieraerztinnen.</p>
+  <div class="hero-actions">
+    <a href="vetscan-version-selector.html" class="btn btn-primary">Werkzeuge entdecken</a>
+    <a href="vetscan-organ-explorer.html" class="btn btn-secondary">Organ Explorer</a>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">97</div><div class="lbl">3D-Modelle</div></div>
+    <div class="hero-stat"><div class="num">16</div><div class="lbl">Werkzeuge</div></div>
+    <div class="hero-stat"><div class="num">4</div><div class="lbl">Tierarten</div></div>
+    <div class="hero-stat"><div class="num">30</div><div class="lbl">Spezies</div></div>
+  </div>
+</section>
+
+<!-- Features -->
+<section>
+  <div class="container">
+    <div class="section-label">Funktionen</div>
+    <h2 class="section-title">Alles fuer die veterinaermedizinische Ausbildung</h2>
+    <p class="section-desc">Von der klinischen Untersuchung bis zur Notfall-Triage - jedes Werkzeug basiert auf echten klinischen Protokollen und Leitlinien.</p>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F52C;</div>
+        <h3>3D Organ Explorer</h3>
+        <p>Erkunde 18 Organe von Hund, Katze, Pferd und Rind in 3D. Wechsle zwischen gesunden und pathologischen Zustaenden mit Normalwerten und Untersuchungstipps.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">18 Organe</span>
+          <span class="feature-tag">4 Tierarten</span>
+          <span class="feature-tag">5 Scan-Modi</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F50D;</div>
+        <h3>Pathologie-Scanner</h3>
+        <p>6 realistische Notfall-Faelle: Untersuche Patienten mit Roentgen, Ultraschall und Palpation. Diagnostiziere DCM, GDV, Pyometra und mehr.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">6 Faelle</span>
+          <span class="feature-tag">Scoring</span>
+          <span class="feature-tag">3D Pathologien</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F9B4;</div>
+        <h3>3D Anatomie-Viewer</h3>
+        <p>30 KI-generierte Tiermodelle interaktiv betrachten. Wireframe-, Roentgen- und Waermebild-Modi. Von Hund bis Leguan.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">30 Modelle</span>
+          <span class="feature-tag">Three.js</span>
+          <span class="feature-tag">4 Ansichten</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F6A8;</div>
+        <h3>Notfall-Triage</h3>
+        <p>10 zeitkritische Szenarien mit ABC-Schema und Entscheidungsbaeumen. Trainiere die Erstversorgung unter Zeitdruck.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">10 Szenarien</span>
+          <span class="feature-tag">Timer</span>
+          <span class="feature-tag">ABC-Schema</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F9EA;</div>
+        <h3>Laborwert-Interpreter</h3>
+        <p>81 Blutparameter mit speziesspezifischen Referenzbereichen. Automatische Mustererkennung erkennt 7 klinische Syndrome.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">81 Parameter</span>
+          <span class="feature-tag">7 Syndrome</span>
+          <span class="feature-tag">12 Patienten</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#x1F48A;</div>
+        <h3>Pharmakologie-Rechner</h3>
+        <p>30 Medikamente mit speziesspezifischer Dosierung, Kontraindikationen und Wechselwirkungspruefung. CAVE-System warnt vor Risiken.</p>
+        <div class="feature-tags">
+          <span class="feature-tag">30 Medikamente</span>
+          <span class="feature-tag">Interaktions-Check</span>
+          <span class="feature-tag">CAVE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3D Models -->
+<section style="background:var(--surface)">
+  <div class="container">
+    <div class="section-label">3D-Modelle</div>
+    <h2 class="section-title">97 KI-generierte Modelle mit Hyper3D Rodin</h2>
+    <p class="section-desc">Tiere, Organe, Pathologien und medizinische Instrumente - alle generiert mit Hyper3D Rodin und optimiert fuer das Web.</p>
+
+    <div class="models-showcase">
+      <div class="model-card"><div class="emoji">&#x1F415;</div><div class="name">Hunde</div><div class="count">4 Varianten</div></div>
+      <div class="model-card"><div class="emoji">&#x1F408;</div><div class="name">Katzen</div><div class="count">3 Varianten</div></div>
+      <div class="model-card"><div class="emoji">&#x1F40E;</div><div class="name">Pferde</div><div class="count">3 Varianten</div></div>
+      <div class="model-card"><div class="emoji">&#x1F404;</div><div class="name">Rinder</div><div class="count">3 Varianten</div></div>
+      <div class="model-card"><div class="emoji">&#x1F416;</div><div class="name">Schweine</div><div class="count">1 Modell</div></div>
+      <div class="model-card"><div class="emoji">&#x2764;&#xFE0F;</div><div class="name">Herzen</div><div class="count">3 Spezies</div></div>
+      <div class="model-card"><div class="emoji">&#x1FAC1;</div><div class="name">Lungen</div><div class="count">Hund</div></div>
+      <div class="model-card"><div class="emoji">&#x1F9E0;</div><div class="name">Gehirn</div><div class="count">Hund</div></div>
+      <div class="model-card"><div class="emoji">&#x1F489;</div><div class="name">Instrumente</div><div class="count">8 Modelle</div></div>
+      <div class="model-card"><div class="emoji">&#x26A0;&#xFE0F;</div><div class="name">Pathologien</div><div class="count">12 Modelle</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- All Tools -->
+<section>
+  <div class="container">
+    <div class="section-label">Werkzeuge</div>
+    <h2 class="section-title">16 interaktive Lernwerkzeuge</h2>
+    <p class="section-desc">Jedes Werkzeug ist standalone und funktioniert ohne Server direkt im Browser.</p>
+
+    <div class="tools-grid">
+      <a href="vetscan-organ-explorer.html" class="tool-card"><span class="tool-icon">&#x1F52C;</span><div class="tool-info"><h4>Organ Explorer</h4><p>3D-Organatlas mit Pathologien</p></div></a>
+      <a href="vetscan-pathology-scanner.html" class="tool-card"><span class="tool-icon">&#x1F50D;</span><div class="tool-info"><h4>Pathologie-Scanner</h4><p>Diagnostik-Spiel</p></div></a>
+      <a href="vetscan-3d-viewer.html" class="tool-card"><span class="tool-icon">&#x1F9B4;</span><div class="tool-info"><h4>3D Anatomie-Viewer</h4><p>30 Tiermodelle</p></div></a>
+      <a href="vetscan-clinical-exam.html" class="tool-card"><span class="tool-icon">&#x2695;&#xFE0F;</span><div class="tool-info"><h4>Klinische Untersuchung</h4><p>Systematischer Gang</p></div></a>
+      <a href="vetscan-ddx-trainer.html" class="tool-card"><span class="tool-icon">&#x1F9E9;</span><div class="tool-info"><h4>DDx-Trainer</h4><p>15 Faelle</p></div></a>
+      <a href="vetscan-lab-interpreter.html" class="tool-card"><span class="tool-icon">&#x1F9EA;</span><div class="tool-info"><h4>Laborwerte</h4><p>81 Parameter</p></div></a>
+      <a href="vetscan-emergency-triage.html" class="tool-card"><span class="tool-icon">&#x1F6A8;</span><div class="tool-info"><h4>Notfall-Triage</h4><p>10 Szenarien</p></div></a>
+      <a href="vetscan-pharma-calc.html" class="tool-card"><span class="tool-icon">&#x1F48A;</span><div class="tool-info"><h4>Pharmakologie</h4><p>30 Medikamente</p></div></a>
+      <a href="vetscan-auscultation.html" class="tool-card"><span class="tool-icon">&#x1FA7A;</span><div class="tool-info"><h4>Auskultation</h4><p>Herz & Lunge</p></div></a>
+      <a href="vetscan-radiology.html" class="tool-card"><span class="tool-icon">&#x2622;&#xFE0F;</span><div class="tool-info"><h4>Radiologie</h4><p>8 Roentgenfaelle</p></div></a>
+      <a href="vetscan-surgical-approaches.html" class="tool-card"><span class="tool-icon">&#x2702;&#xFE0F;</span><div class="tool-info"><h4>Chirurgie</h4><p>10 Zugaenge</p></div></a>
+      <a href="vetscan-pathology-cases.html" class="tool-card"><span class="tool-icon">&#x1F4CB;</span><div class="tool-info"><h4>Pathologie-Faelle</h4><p>12 Fallstudien</p></div></a>
+      <a href="vetscan-anatomy-layers.html" class="tool-card"><span class="tool-icon">&#x1F9B4;</span><div class="tool-info"><h4>Anatomie-Atlas</h4><p>4-Schichten-Modell</p></div></a>
+      <a href="vetscan-quick-reference.html" class="tool-card"><span class="tool-icon">&#x1F4CA;</span><div class="tool-info"><h4>Normalwerte</h4><p>Referenzkarte</p></div></a>
+      <a href="vetscan-glossary.html" class="tool-card"><span class="tool-icon">&#x1F4D6;</span><div class="tool-info"><h4>Glossar</h4><p>136 Fachbegriffe</p></div></a>
+      <a href="vetscan-dashboard.html" class="tool-card"><span class="tool-icon">&#x1F3E0;</span><div class="tool-info"><h4>Dashboard</h4><p>Lernfortschritt</p></div></a>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Bereit zum Lernen?</h2>
+  <p style="color:var(--muted)">Alle Werkzeuge sind kostenlos und funktionieren direkt im Browser.</p>
+  <a href="vetscan-version-selector.html" class="btn btn-primary">Jetzt starten</a>
+</section>
+
+<footer>
+  <p>VetScan Pro | 97 3D-Modelle generiert mit <a href="https://hyper3d.ai" target="_blank" rel="noopener">Hyper3D Rodin</a> | vibecoding.company</p>
+</footer>
+
+</body>
+</html>

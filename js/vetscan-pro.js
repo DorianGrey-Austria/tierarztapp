@@ -335,7 +335,7 @@ select, .scan-btn, .scan-type-btn, .ctrl-btn, .sp-btn, .organ-btn,
   addMetaTag('og:title', pageTitle);
   addMetaTag('og:description', pageDesc);
   addMetaTag('og:type', 'website');
-  addMetaTag('og:image', 'https://vibecoding.company/assets/og-vetscan.png');
+  addMetaTag('og:image', 'https://vibecoding.company/assets/og-vetscan.svg');
   addMetaTag('og:site_name', 'VetScan Pro - Veterinaermedizin-Simulation');
   addMetaTag('og:locale', 'de_DE');
 

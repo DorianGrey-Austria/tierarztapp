@@ -291,6 +291,11 @@
             { id: 'surgical-approaches', name: 'Chirurgie', category: 'Chirurgie', icon: '\u2702\uFE0F', file: 'vetscan-surgical-approaches.html' },
             { id: 'pathology-cases', name: 'Pathologie-Faelle', category: 'Klinik', icon: '\uD83D\uDCCB', file: 'vetscan-pathology-cases.html' },
             { id: 'anatomy-layers', name: 'Anatomie-Atlas', category: 'Grundlagen', icon: '\uD83E\uDDB4', file: 'vetscan-anatomy-layers.html' },
+            { id: 'quick-reference', name: 'Normalwerte', category: 'Referenz', icon: '\uD83D\uDCCA', file: 'vetscan-quick-reference.html' },
+            { id: 'glossary', name: 'Glossar', category: 'Referenz', icon: '\uD83D\uDCD6', file: 'vetscan-glossary.html' },
+            { id: '3d-viewer', name: '3D Anatomie-Viewer', category: '3D', icon: '\uD83E\uDDB4', file: 'vetscan-3d-viewer.html' },
+            { id: 'organ-explorer', name: 'Organ Explorer', category: '3D', icon: '\uD83D\uDD2C', file: 'vetscan-organ-explorer.html' },
+            { id: 'pathology-scanner', name: 'Pathologie-Scanner', category: 'Diagnostik', icon: '\uD83D\uDD0D', file: 'vetscan-pathology-scanner.html' },
         ];
 
         // --- Hilfsfunktionen ---
@@ -308,6 +313,8 @@
                 'Therapie': 'cat-therapie',
                 'Chirurgie': 'cat-chirurgie',
                 'Klinik': 'cat-klinik',
+                'Referenz': 'cat-grundlagen',
+                '3D': 'cat-diagnostik',
             };
             return map[category] || 'cat-grundlagen';
         }

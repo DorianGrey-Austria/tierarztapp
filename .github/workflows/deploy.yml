@@ -25,47 +25,12 @@ jobs:
         # Erstelle deployment Ordner
         mkdir -p deploy
         
-        # Kopiere alle HTML-Dateien des Tierarztspiels
+        # Copy ALL HTML game files (glob instead of individual cp)
+        cp vetscan-*.html deploy/ 2>/dev/null || true
         cp standalone.html deploy/ 2>/dev/null || true
-        cp vetscan-detective.html deploy/ 2>/dev/null || true
-        cp vetscan-ultimate.html deploy/ 2>/dev/null || true
-        cp vetscan-story-mode.html deploy/ 2>/dev/null || true
         cp vetgame-missions.html deploy/ 2>/dev/null || true
-        cp vetscan-professional.html deploy/ 2>/dev/null || true
-        cp vetscan-bello-3d-v7.html deploy/ 2>/dev/null || true
-        cp vetscan-bello-3d.html deploy/ 2>/dev/null || true
-        cp vetscan-pro-medical-3d.html deploy/ 2>/dev/null || true
-        
-        # Version 9 & 10 files
-        cp vetscan-modern-animal-showcase.html deploy/ 2>/dev/null || true
-        cp vetscan-version-selector.html deploy/ 2>/dev/null || true
-        cp vetscan-all-animals-showcase.html deploy/ 2>/dev/null || true
-        cp vetscan-guinea-pig-3d.html deploy/ 2>/dev/null || true
         cp test-rabbit-3d.html deploy/ 2>/dev/null || true
         cp turtle-model-test.html deploy/ 2>/dev/null || true
-        
-        # Copy V2.0 Demo (ausgraut, da noch nicht ready)
-        cp vetscan-pro-3d-demo-v2.html deploy/ 2>/dev/null || true
-
-        # Professional veterinary learning tools (v11)
-        cp vetscan-clinical-exam.html deploy/ 2>/dev/null || true
-        cp vetscan-ddx-trainer.html deploy/ 2>/dev/null || true
-        cp vetscan-lab-interpreter.html deploy/ 2>/dev/null || true
-        cp vetscan-emergency-triage.html deploy/ 2>/dev/null || true
-        cp vetscan-pharma-calc.html deploy/ 2>/dev/null || true
-        cp vetscan-auscultation.html deploy/ 2>/dev/null || true
-        cp vetscan-radiology.html deploy/ 2>/dev/null || true
-        cp vetscan-surgical-approaches.html deploy/ 2>/dev/null || true
-        cp vetscan-pathology-cases.html deploy/ 2>/dev/null || true
-        cp vetscan-anatomy-layers.html deploy/ 2>/dev/null || true
-        cp vetscan-dashboard.html deploy/ 2>/dev/null || true
-        cp vetscan-quick-reference.html deploy/ 2>/dev/null || true
-        cp vetscan-glossary.html deploy/ 2>/dev/null || true
-
-        # 3D Interactive tools (Hyper3D Rodin models)
-        cp vetscan-3d-viewer.html deploy/ 2>/dev/null || true
-        cp vetscan-organ-explorer.html deploy/ 2>/dev/null || true
-        cp vetscan-pathology-scanner.html deploy/ 2>/dev/null || true
 
         # Copy JS directory (shared module, pro module, Version 9)
         cp -r js deploy/ 2>/dev/null || true
@@ -77,152 +42,8 @@ jobs:
         cp -r assets deploy/ 2>/dev/null || true
         cp -r public deploy/ 2>/dev/null || true
         
-        # Erstelle index.html als Startseite mit Auswahl
-        cat > deploy/index.html << 'EOF'
-        <!DOCTYPE html>
-        <html lang="de">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>VetScan Pro - Tierarzt Simulator</title>
-            <style>
-                body {
-                    font-family: system-ui, -apple-system, sans-serif;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    min-height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    margin: 0;
-                    padding: 20px;
-                }
-                .container {
-                    background: white;
-                    border-radius: 20px;
-                    padding: 40px;
-                    max-width: 600px;
-                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                }
-                h1 {
-                    color: #667eea;
-                    text-align: center;
-                    margin-bottom: 10px;
-                }
-                .subtitle {
-                    text-align: center;
-                    color: #666;
-                    margin-bottom: 30px;
-                }
-                .version-grid {
-                    display: grid;
-                    gap: 15px;
-                }
-                .version-card {
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    text-decoration: none;
-                    transition: transform 0.3s, box-shadow 0.3s;
-                }
-                .version-card:hover {
-                    transform: translateY(-5px);
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                }
-                .version-card h3 {
-                    margin: 0 0 10px 0;
-                    font-size: 1.2em;
-                }
-                .version-card p {
-                    margin: 0;
-                    opacity: 0.9;
-                    font-size: 0.95em;
-                }
-                .recommended {
-                    position: relative;
-                }
-                .recommended::after {
-                    content: "⭐ EMPFOHLEN";
-                    position: absolute;
-                    top: -10px;
-                    right: 10px;
-                    background: #f59e0b;
-                    color: white;
-                    padding: 5px 10px;
-                    border-radius: 20px;
-                    font-size: 0.75em;
-                    font-weight: bold;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🩺 VetScan Pro 3000</h1>
-                <p class="subtitle">Wähle deine Spielversion:</p>
-                
-                <div class="version-grid">
-                    <a href="vetscan-3d-viewer.html" class="version-card recommended" style="background: linear-gradient(135deg, #059669 0%, #0891b2 100%); border: 3px solid #10b981; position: relative;">
-                        <div style="position: absolute; top: -10px; right: 10px; background: #059669; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">NEU!</div>
-                        <h3>3D Anatomie-Viewer</h3>
-                        <p>30 KI-generierte Tiermodelle (Hyper3D Rodin). Interaktiv mit Roentgen, Wireframe und Waermebild.</p>
-                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Three.js | 30 Spezies</small>
-                    </a>
-
-                    <a href="vetscan-all-animals-showcase.html" class="version-card" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); border: 3px solid #22c55e; position: relative;">
-                        <div style="position: absolute; top: -10px; right: 10px; background: #16a34a; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔥 AKTUELL</div>
-                        <h3>🐾 VetScan Pro 9.0</h3>
-                        <p>Realistische 3D-Tiere mit Blender MCP Integration. Funktioniert perfekt!</p>
-                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Komplett funktionsfähig</small>
-                    </a>
-                    
-                    <a href="vetscan-magic-v8.html" class="version-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); border: 3px solid #a855f7; position: relative;">
-                        <div style="position: absolute; top: -10px; right: 10px; background: #a855f7; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">✨ NEU</div>
-                        <h3>🎉 VetScan Pro 8.0 MAGIC</h3>
-                        <p>Die ultimative Version mit allem was funktioniert! 3D, Scanner-Spiel und Fun-Features.</p>
-                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Blender MCP Integration erfolgreich!</small>
-                    </a>
-                    
-                    <a href="vetscan-bello-3d-v7.html" class="version-card" style="background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%); border: 3px solid #ff6b00; position: relative;">
-                        <div style="position: absolute; top: -10px; right: 10px; background: #ff6b00; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🔧 BETA</div>
-                        <h3>🚀 Bello 3D Scanner V7</h3>
-                        <p>🔬 Medizinische Visualisierung mit X-Ray, Ultrasound, Thermal & MRI Modi.</p>
-                        <small style="color: #fff; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 8px; font-size: 11px;">Experimentelle Features</small>
-                    </a>
-                    
-                    <a href="vetscan-detective.html" class="version-card recommended">
-                        <h3>🔍 Tier-Detektiv</h3>
-                        <p>Löse knifflige Fälle und lerne dabei! Die beste Version mit Lerneffekt und spannenden Rätseln.</p>
-                    </a>
-                    
-                    <a href="standalone.html" class="version-card">
-                        <h3>🏥 Klassik Version</h3>
-                        <p>Die stabile Basisversion - perfekt für Einsteiger und schnelle Diagnosen.</p>
-                    </a>
-                    
-                    <a href="vetscan-ultimate.html" class="version-card">
-                        <h3>🎮 3D Ultimate</h3>
-                        <p>Mit Karrieremodus und 3D-Grafiken! Baue deine eigene Praxis auf.</p>
-                    </a>
-                    
-                    <a href="vetscan-story-mode.html" class="version-card">
-                        <h3>📖 Story Modus</h3>
-                        <p>Erlebe spannende Geschichten mit Dr. Sarah Miller und ihrem Team.</p>
-                    </a>
-                    
-                    <a href="vetgame-missions.html" class="version-card">
-                        <h3>🎯 Missionen</h3>
-                        <p>Absolviere verschiedene Aufträge und sammle Belohnungen.</p>
-                    </a>
-                    
-                    <a href="vetscan-professional.html" class="version-card">
-                        <h3>👨‍⚕️ Professional</h3>
-                        <p>Die realistische Simulation für angehende Tierärzte.</p>
-                    </a>
-                </div>
-            </div>
-        </body>
-        </html>
-        EOF
+        # Use professional landing page as index.html
+        cp landing.html deploy/index.html
         
         # Erstelle .htaccess für HTTPS und Performance
         cat > deploy/.htaccess << 'EOF'

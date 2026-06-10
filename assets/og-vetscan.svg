@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e1b4b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="600" y="200" text-anchor="middle" font-family="system-ui,sans-serif" font-size="80" font-weight="800" fill="#f1f5f9">VetScan Pro</text>
+  <text x="600" y="270" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" fill="#94a3b8">Veterinaermedizinische Lern-App</text>
+  <text x="600" y="370" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#10b981">97 3D-Modelle | 16 Lernwerkzeuge | Hyper3D Rodin</text>
+  <text x="600" y="420" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" fill="#64748b">Organe, Pathologien, Diagnostik-Spiele</text>
+  <text x="600" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#475569">vibecoding.company</text>
+  <!-- Paw icon -->
+  <text x="600" y="510" text-anchor="middle" font-size="60">&#x1F43E;</text>
+</svg>
