@@ -13,9 +13,9 @@ Two parallel implementations:
 
 The root `index.html` is a standalone game file (not the React app entry point). `vetscan-version-selector.html` and the CI-generated `deploy/index.html` serve as navigation hubs.
 
-The 38 HTML files fall into two groups:
-- **16 professional learning tools** registered in the `js/vetscan-shared.js` TOOLS array (clinical-exam, ddx-trainer, lab-interpreter, etc.) -- these use the shared module system and appear in the navigation bar.
-- **22 legacy/game HTML files** (standalone.html, vetscan-detective.html, vetscan-magic-v8.html, etc.) -- fully self-contained, no shared modules.
+The 43 HTML files fall into two groups:
+- **19 professional learning tools** registered in the `js/vetscan-shared.js` TOOLS array (clinical-exam, ddx-trainer, bone-atlas, parasite-atlas, etc.) -- these use the shared module system and appear in the navigation bar.
+- **24 legacy/game HTML files** (standalone.html, vetscan-detective.html, vetscan-magic-v8.html, etc.) -- fully self-contained, no shared modules.
 
 ## Development Commands
 
@@ -75,11 +75,13 @@ The 16 professional learning tools share runtime code via `<script>` tags:
 
 ### 3D Assets (`assets/models/`)
 
-Four model categories:
+Seven model categories:
 - `animals/<species>/` -- 31 species directories with quality tiers (`_high.glb`, `_medium.glb`, `_low.glb`) plus medical variants (`_medical.glb`, `_xray.glb`)
 - `organs/` -- Individual organ models (heart, brain, liver, lungs, kidney, etc.)
-- `pathology/` -- Pathology-specific models (fracture, hip-dysplasia, foreign-body, pyometra, etc.)
+- `pathology/` -- 30 pathology-specific models in subdirectories (fracture, hip-dysplasia, hcm-heart, pancreatitis, etc.)
 - `instruments/` -- Medical instruments (stethoscope, syringe, thermometer, ultrasound-probe, etc.)
+- `bones/` -- 20 skeletal models (dog/cat/horse/cow/rabbit skulls, long bones, spine segments, 3 orthopedic implants)
+- `parasites/` -- 10 parasite models (roundworm, tapeworm, flea, tick, heartworm, hookworm, coccidia, giardia, ear/sarcoptic mites)
 - `special/` -- Life stage models (puppy, kitten, foal, pregnant variants, embryo)
 
 The loader falls back to procedural Three.js geometry if GLB files fail to load.
