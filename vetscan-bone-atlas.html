@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VetScan Pro - Knochen-Atlas</title>
-<meta name="description" content="Interaktiver 3D-Skelettanatomie-Atlas fuer die Veterinaermedizin">
+<meta name="description" content="Interaktiver 3D-Skelettanatomie-Atlas für die Veterinaermedizin">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -120,7 +120,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
   <!-- Left Panel -->
   <nav class="left-panel" id="leftPanel">
-    <div class="section-title">Kategorie waehlen</div>
+    <div class="section-title">Kategorie wählen</div>
     <div class="species-tabs" id="speciesTabs"></div>
     <div class="section-title">Knochen / Struktur</div>
     <div class="bone-list" id="boneList"></div>
@@ -134,8 +134,8 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     </div>
     <div class="welcome" id="welcome">
       <div class="big-icon">&#x1F9B4;</div>
-      <h2>Waehle einen Knochen zum Erkunden</h2>
-      <p>Waehle links eine Tierart und dann einen Knochen, um ihn in 3D zu betrachten. Klinische Informationen und Untersuchungstipps findest du rechts.</p>
+      <h2>Wähle einen Knochen zum Erkunden</h2>
+      <p>Wähle links eine Tierart und dann einen Knochen, um ihn in 3D zu betrachten. Klinische Informationen und Untersuchungstipps findest du rechts.</p>
     </div>
     <div class="mode-indicator" id="modeIndicator"></div>
     <div class="scan-controls" id="scanControls" style="display:none">
@@ -193,38 +193,38 @@ const SPECIES = [
 const BONES = {
   dog: [
     {
-      id:'dog-skull', name:'Schaedel', species:'Hund', region:'Kopf',
+      id:'dog-skull', name:'Schädel', species:'Hund', region:'Kopf',
       model:'assets/models/bones/dog-skull.glb', color:'#e2e8f0',
-      description:'Der Hundeschaedel besteht aus ca. 50 Knochen, die durch Naehte verbunden sind. Die Schaedelform variiert stark je nach Rasse: Brachyzephal (Mops, Franz. Bulldogge), Mesozephal (Beagle, Labrador), Dolichozephal (Windhund, Collie). Die Fontanelle schliesst sich bei Zwergrassen manchmal nicht vollstaendig (persistierende Fontanelle).',
-      clinicalSignificance:'Frakturen nach Trauma (v.a. Kiefergelenksluxation, Mandibulafrakturen). Brachyzephales Syndrom mit obstruktiver Atemwegserkrankung. Kraniomandibulaere Osteopathie (CMO) bei Terriern. Kalvarientumoren (Osteosarkom selten am Schaedel).',
+      description:'Der Hundeschädel besteht aus ca. 50 Knochen, die durch Nähte verbunden sind. Die Schädelform variiert stark je nach Rasse: Brachyzephal (Mops, Franz. Bulldogge), Mesozephal (Beagle, Labrador), Dolichozephal (Windhund, Collie). Die Fontanelle schliesst sich bei Zwergrassen manchmal nicht vollstaendig (persistierende Fontanelle).',
+      clinicalSignificance:'Frakturen nach Trauma (v.a. Kiefergelenksluxation, Mandibulafrakturen). Brachyzephales Syndrom mit obstruktiver Atemwegserkrankung. Kraniomandibulaere Osteopathie (CMO) bei Terriern. Kalvarientumoren (Osteosarkom selten am Schädel).',
       stats:[
         {label:'Knochenanzahl',value:'~50',unit:''},
-        {label:'Naehte',value:'diverse',unit:'(Suturae)'},
+        {label:'Nähte',value:'diverse',unit:'(Suturae)'},
         {label:'Fontanelle',value:'molera',unit:'b. Zwergrassen'},
-        {label:'Formtypen',value:'3',unit:'Schaedelformen'}
+        {label:'Formtypen',value:'3',unit:'Schädelformen'}
       ],
-      examTips:'Adspektion: Symmetrie, Schwellungen, Deformitaeten. Palpation: Kiefergelenk (TMJ), Masseter-Muskulatur, Fontanelle bei Zwergrassen. Roentgen: DV + lateral. CT bei Verdacht auf Schaedelfraktur oder Nasenhoehlenerkrankung. Zahnroentgen (intraorale Aufnahme) separat.'
+      examTips:'Adspektion: Symmetrie, Schwellungen, Deformitaeten. Palpation: Kiefergelenk (TMJ), Masseter-Muskulatur, Fontanelle bei Zwergrassen. Roentgen: DV + lateral. CT bei Verdacht auf Schädelfraktur oder Nasenhöhlenerkrankung. Zahnroentgen (intraorale Aufnahme) separat.'
     },
     {
       id:'dog-mandible', name:'Unterkiefer (Mandibula)', species:'Hund', region:'Kopf',
       model:'assets/models/bones/dog-mandible.glb', color:'#d4d4d8',
-      description:'Die Mandibula besteht aus zwei Haelften, die rostral an der Symphyse verbunden sind. Beim Hund ist die mandibulare Symphyse nicht verknoeochert, sondern fibrokartilaginoes. Der Unterkiefer traegt die unteren Schneidezaehne, Eckzaehne und Backenzaehne.',
-      clinicalSignificance:'Symphysenfrakturen (haeufig bei Katzen, auch beim Hund). Mandibulafrakturen im Bereich der Zahnwurzeln. Kiefergelenksluxation. Zahnerkrankungen (Parodontitis, Wurzelabszesse). Osteosarkom der Mandibula. Craniomandibulaere Osteopathie (CMO).',
+      description:'Die Mandibula besteht aus zwei Haelften, die rostral an der Symphyse verbunden sind. Beim Hund ist die mandibulare Symphyse nicht verknoeochert, sondern fibrokartilaginoes. Der Unterkiefer traegt die unteren Schneidezähne, Eckzähne und Backenzähne.',
+      clinicalSignificance:'Symphysenfrakturen (häufig bei Katzen, auch beim Hund). Mandibulafrakturen im Bereich der Zahnwurzeln. Kiefergelenksluxation. Zahnerkrankungen (Parodontitis, Wurzelabszesse). Osteosarkom der Mandibula. Craniomandibulaere Osteopathie (CMO).',
       stats:[
         {label:'Haelften',value:'2',unit:'(Symphyse)'},
         {label:'Symphyse',value:'fibroes',unit:'nicht verknoeochert'},
-        {label:'Zaehne unten',value:'6I+2C+8P+6M',unit:''},
+        {label:'Zähne unten',value:'6I+2C+8P+6M',unit:''},
         {label:'Frakturlokalisation',value:'50%',unit:'Praemolarenbereich'}
       ],
-      examTips:'Palpation: Symphyse auf Instabilitaet pruefen (v.a. nach Trauma). Kiefergelenk beidseits. Mundhoehle: Zahnfleisch, lockere Zaehne, Fisteln. Roentgen: DV der Mandibula, intraorale Aufnahmen fuer einzelne Zaehne. CAVE: Frakturen im Zahnwurzelbereich oft schwer sichtbar.'
+      examTips:'Palpation: Symphyse auf Instabilitaet pruefen (v.a. nach Trauma). Kiefergelenk beidseits. Mundhöhle: Zahnfleisch, lockere Zähne, Fisteln. Roentgen: DV der Mandibula, intraorale Aufnahmen für einzelne Zähne. CAVE: Frakturen im Zahnwurzelbereich oft schwer sichtbar.'
     },
     {
       id:'dog-femur', name:'Oberschenkelknochen (Femur)', species:'Hund', region:'Hintergliedmasse',
       model:'assets/models/bones/dog-femur.glb', color:'#fafafa',
-      description:'Der Femur ist der laengste und kraeftigste Roehrenknochen des Hundes. Er artikuliert proximal mit dem Acetabulum (Hueftgelenk) und distal mit der Tibia (Kniegelenk). Der Femurkopf wird ueber die A. circumflexa femoris medialis versorgt.',
-      clinicalSignificance:'Femurfrakturen sind die haeufigsten langen Roehrenknochenfrakturen beim Hund (ca. 45% aller Frakturen). Legg-Calve-Perthes-Erkrankung bei Zwergrassen (aseptische Femurkopfnekrose). Hueftgelenksdysplasie (HD): Inkongruenz Femurkopf-Acetabulum. Patellaluxation: Sulcus trochlearis zu flach.',
+      description:'Der Femur ist der längste und kraeftigste Roehrenknochen des Hundes. Er artikuliert proximal mit dem Acetabulum (Hüftgelenk) und distal mit der Tibia (Kniegelenk). Der Femurkopf wird über die A. circumflexa femoris medialis versorgt.',
+      clinicalSignificance:'Femurfrakturen sind die häufigsten langen Roehrenknochenfrakturen beim Hund (ca. 45% aller Frakturen). Legg-Calve-Perthes-Erkrankung bei Zwergrassen (aseptische Femurkopfnekrose). Hüftgelenksdysplasie (HD): Inkongruenz Femurkopf-Acetabulum. Patellaluxation: Sulcus trochlearis zu flach.',
       stats:[
-        {label:'Frakturhaeufigkeit',value:'~45%',unit:'aller Frakturen'},
+        {label:'Frakturhäufigkeit',value:'~45%',unit:'aller Frakturen'},
         {label:'Blutversorgung',value:'A. circ.',unit:'fem. med.'},
         {label:'LCP',value:'Zwergrassen',unit:'3-12 Monate'},
         {label:'HD-Diagnostik',value:'ab 12',unit:'Monate (Roentgen)'}
@@ -240,20 +240,20 @@ const BONES = {
         {label:'Kondylenfusion',value:'8-12',unit:'Wochen'},
         {label:'IOHC',value:'Spaniel',unit:'Praedisposition'},
         {label:'ED-Formen',value:'4',unit:'(FPC,OCD,IPA,IOHC)'},
-        {label:'Frakturtyp',value:'kondylaer',unit:'am haeufigsten'}
+        {label:'Frakturtyp',value:'kondylaer',unit:'am häufigsten'}
       ],
-      examTips:'Ellbogengelenk: Beugung, Streckung, Pronation/Supination pruefen. Schmerz bei Hyperextension? Gelenkfuellung? Roentgen: mediolateral gebeugt + craniocaudal. CT: Goldstandard fuer ED-Diagnostik und IOHC-Nachweis. Arthroskopie fuer FPC/OCD.'
+      examTips:'Ellbogengelenk: Beugung, Streckung, Pronation/Supination pruefen. Schmerz bei Hyperextension? Gelenkfuellung? Roentgen: mediolateral gebeugt + craniocaudal. CT: Goldstandard für ED-Diagnostik und IOHC-Nachweis. Arthroskopie für FPC/OCD.'
     },
     {
       id:'dog-pelvis', name:'Becken (Pelvis)', species:'Hund', region:'Rumpf',
       model:'assets/models/bones/dog-pelvis.glb', color:'#e5e5e5',
-      description:'Das Becken (Pelvis) besteht aus dem Os coxae, das sich aus Ilium (Darmbein), Ischium (Sitzbein) und Pubis (Schambein) zusammensetzt. Diese drei Knochen vereinigen sich im Acetabulum (Hueftgelenkspfanne). Das Kreuzbein (Sacrum) verbindet die Wirbelsaeule mit dem Becken.',
-      clinicalSignificance:'Beckenfrakturen: haeufig bei Autounfaellen (Polytrauma!). Iliumfrakturen, Acetabularfrakturen, Pubis-/Ischiumfrakturen. HD-Roentgen: Acetabulumform und Norberg-Winkel. Triple Pelvic Osteotomy (TPO) bei juveniler HD. Beckenverengung nach Fraktur: Obstipation.',
+      description:'Das Becken (Pelvis) besteht aus dem Os coxae, das sich aus Ilium (Darmbein), Ischium (Sitzbein) und Pubis (Schambein) zusammensetzt. Diese drei Knochen vereinigen sich im Acetabulum (Hüftgelenkspfanne). Das Kreuzbein (Sacrum) verbindet die Wirbelsaeule mit dem Becken.',
+      clinicalSignificance:'Beckenfrakturen: häufig bei Autounfaellen (Polytrauma!). Iliumfrakturen, Acetabularfrakturen, Pubis-/Ischiumfrakturen. HD-Roentgen: Acetabulumform und Norberg-Winkel. Triple Pelvic Osteotomy (TPO) bei juveniler HD. Beckenverengung nach Fraktur: Obstipation.',
       stats:[
         {label:'Knochen pro Seite',value:'3',unit:'(Il+Is+Pu)'},
         {label:'Norberg-Winkel',value:'>105',unit:'Grad (normal)'},
         {label:'TPO-Alter',value:'5-8',unit:'Monate'},
-        {label:'Traumaursache',value:'Autounfall',unit:'am haeufigsten'}
+        {label:'Traumaursache',value:'Autounfall',unit:'am häufigsten'}
       ],
       examTips:'Palpation: Tuber coxae, Tuber ischiadicum beidseits auf Symmetrie. Rektale Untersuchung bei Verdacht auf Beckenverengung. Roentgen: VD gestreckt (HD-Position). Neurologische Untersuchung der Hinterhand (N. ischiadicus-Verlauf am Becken!). CT bei komplexen Acetabularfrakturen.'
     },
@@ -274,37 +274,37 @@ const BONES = {
       id:'dog-scapula', name:'Schulterblatt (Scapula)', species:'Hund', region:'Vordergliedmasse',
       model:'assets/models/bones/dog-scapula.glb', color:'#e2e8f0',
       description:'Die Scapula ist ein flacher Knochen, der die Vordergliedmasse mit dem Rumpf verbindet. Sie hat eine markante Spina scapulae und die Cavitas glenoidalis, die das Schultergelenk bildet. Beim Hund gibt es kein Schluesselbein (Clavicula rudimentaer).',
-      clinicalSignificance:'Scapulafrakturen: selten, aber bei schwerem Trauma moeglich. OCD der Schulter: laesion am kaudalen Rand der Cavitas glenoidalis. Bizepssehnenentzuendung am Tuberculum supraglenoidale. Suprascapularis-Neuropathie ("Sweeney" -- selten beim Hund). Infraspinatus-Kontraktur.',
+      clinicalSignificance:'Scapulafrakturen: selten, aber bei schwerem Trauma möglich. OCD der Schulter: laesion am kaudalen Rand der Cavitas glenoidalis. Bizepssehnenentzuendung am Tuberculum supraglenoidale. Suprascapularis-Neuropathie ("Sweeney" -- selten beim Hund). Infraspinatus-Kontraktur.',
       stats:[
-        {label:'Frakturhaeufigkeit',value:'selten',unit:'(~2%)'},
+        {label:'Frakturhäufigkeit',value:'selten',unit:'(~2%)'},
         {label:'OCD-Alter',value:'4-8',unit:'Monate'},
         {label:'Clavicula',value:'rudimentaer',unit:''},
         {label:'Spina scapulae',value:'prominent',unit:'palpierbar'}
       ],
-      examTips:'Palpation: Spina scapulae, Acromion, Tuberculum supraglenoidale. Schultergelenk: Beugung/Streckung, Bizepssehnentest (Druck auf Sulcus intertubercularis bei Beugung). Roentgen: mediolateral Schulter. Arthroskopie: Goldstandard fuer OCD und Bizeps-Pathologie.'
+      examTips:'Palpation: Spina scapulae, Acromion, Tuberculum supraglenoidale. Schultergelenk: Beugung/Streckung, Bizepssehnentest (Druck auf Sulcus intertubercularis bei Beugung). Roentgen: mediolateral Schulter. Arthroskopie: Goldstandard für OCD und Bizeps-Pathologie.'
     },
     {
       id:'dog-spine-thoracic', name:'Brustwirbelsaeule', species:'Hund', region:'Rumpf',
       model:'assets/models/bones/dog-spine-thoracic.glb', color:'#d4d4d8',
-      description:'Die Brustwirbelsaeule des Hundes besteht aus 13 Brustwirbeln (T1-T13). Jeder Wirbel artikuliert mit einem Rippenpaar. Der Anticlinalwirbel (T11) markiert den Uebergang von nach kaudal zu nach kranial gerichteten Dornfortsaetzen.',
-      clinicalSignificance:'Bandscheibenvorfall (IVDD): Hansen Typ I (akut, Chondrodystrophe Rassen -- Dackel!) und Typ II (chronisch, grosse Rassen). Spondylose deformans: degenerative Knochenbrueckenbildung. Wirbelkoerperfrakturen/-luxationen bei Trauma. Diskospondylitis (Infektion). Wobbler-Syndrom (eher cervikal).',
+      description:'Die Brustwirbelsaeule des Hundes besteht aus 13 Brustwirbeln (T1-T13). Jeder Wirbel artikuliert mit einem Rippenpaar. Der Anticlinalwirbel (T11) markiert den Übergang von nach kaudal zu nach kranial gerichteten Dornfortsaetzen.',
+      clinicalSignificance:'Bandscheibenvorfall (IVDD): Hansen Typ I (akut, Chondrodystrophe Rassen -- Dackel!) und Typ II (chronisch, grosse Rassen). Spondylose deformans: degenerative Knochenbrückenbildung. Wirbelkörperfrakturen/-luxationen bei Trauma. Diskospondylitis (Infektion). Wobbler-Syndrom (eher cervikal).',
       stats:[
         {label:'Wirbel',value:'13',unit:'(T1-T13)'},
         {label:'Anticlinal',value:'T11',unit:''},
         {label:'IVDD-Praedisp.',value:'Dackel',unit:'Chondrodystrophe'},
         {label:'Bandscheiben',value:'12',unit:'(T1-T2 bis T12-T13)'}
       ],
-      examTips:'Palpation: Dornfortsaetze, paraspinale Muskulatur. Schmerzhaftigkeit? Druckdolenz? Neurologische Untersuchung: Propriozeption, Reflexe (Patella, Flexor), Pannikulus-Reflex zur Lokalisation. Roentgen: LL + VD. MRT: Goldstandard fuer IVDD und Rueckenmark. CAVE: Dackel mit ploetzlicher Paraplegie = NOTFALL (MRT + OP innerhalb 24-48h).'
+      examTips:'Palpation: Dornfortsaetze, paraspinale Muskulatur. Schmerzhaftigkeit? Druckdolenz? Neurologische Untersuchung: Propriozeption, Reflexe (Patella, Flexor), Pannikulus-Reflex zur Lokalisation. Roentgen: LL + VD. MRT: Goldstandard für IVDD und Rückenmark. CAVE: Dackel mit ploetzlicher Paraplegie = NOTFALL (MRT + OP innerhalb 24-48h).'
     },
     {
       id:'dog-tibia-fibula', name:'Schienbein/Wadenbein', species:'Hund', region:'Hintergliedmasse',
       model:'assets/models/bones/dog-tibia-fibula.glb', color:'#fafafa',
       description:'Die Tibia ist der Hauptlasttragsknochen des Unterschenkels. Die Fibula liegt lateral und ist deutlich duenner. Proximal bildet die Tibia mit dem Femur das Kniegelenk (mit Menisken und Kreuzbaendern). Die Tuberositas tibiae ist der Ansatzpunkt des Ligamentum patellae.',
-      clinicalSignificance:'Kreuzbandriss (CrCL-Ruptur): haeufigste orthopaedische Erkrankung grosser Hunde. TTA (Tibial Tuberosity Advancement) und TPLO (Tibial Plateau Leveling Osteotomy) als Therapie. Tibiafrakturen: haeufig bei Junghunden. Wachstumsfugenverletzungen (Salter-Harris). Meniskusschaden.',
+      clinicalSignificance:'Kreuzbandriss (CrCL-Ruptur): häufigste orthopaedische Erkrankung grosser Hunde. TTA (Tibial Tuberosity Advancement) und TPLO (Tibial Plateau Leveling Osteotomy) als Therapie. Tibiafrakturen: häufig bei Junghunden. Wachstumsfugenverletzungen (Salter-Harris). Meniskusschaden.',
       stats:[
         {label:'CrCL-OP',value:'TTA/TPLO',unit:''},
         {label:'Tibiaplateau',value:'24-34',unit:'Grad (TPA)'},
-        {label:'Junghunde',value:'haeufig',unit:'Tibiafrakturen'},
+        {label:'Junghunde',value:'häufig',unit:'Tibiafrakturen'},
         {label:'Meniskusschaden',value:'40-60%',unit:'bei CrCL-Ruptur'}
       ],
       examTips:'Kniegelenk: Schubladentest (Cranial Drawer), Tibial Thrust Test. Meniskus-Klick? Gelenkfuellung? Tibial Plateau Angle (TPA) auf Roentgen messen. Roentgen: mediolateral + caudocranial. CAVE: Teilrisse des Kreuzbandes sind schwieriger zu diagnostizieren -- Arthroskopie oder MRT bei Verdacht.'
@@ -312,157 +312,157 @@ const BONES = {
   ],
   cat: [
     {
-      id:'cat-skull', name:'Katzenschaedel', species:'Katze', region:'Kopf',
+      id:'cat-skull', name:'Katzenschädel', species:'Katze', region:'Kopf',
       model:'assets/models/bones/cat-skull.glb', color:'#e2e8f0',
-      description:'Der Katzenschaedel ist rundlicher und kuerzer als der Hundeschaedel. Die Orbitae sind proportional groesser. Die Nasengaenge sind relativ eng, was bei Erkrankungen schnell zu Atemnot fuehrt. Die Tympanopetrosalbullae sind gross und duennwandig.',
-      clinicalSignificance:'Kieferfrakturen: Mandibularsymphyse-Fraktur haeufigste Katzenfraktur nach Fenstersturz! Zahnresorptive Laesionen (FORL/TR) bei >50% der Katzen ueber 5 Jahre. Nasopharyngeale Erkrankungen: Polypen, Stenose. Otitis media: Bulla-Osteotomie.',
+      description:'Der Katzenschädel ist rundlicher und kuerzer als der Hundeschädel. Die Orbitae sind proportional groesser. Die Nasengaenge sind relativ eng, was bei Erkrankungen schnell zu Atemnot fuehrt. Die Tympanopetrosalbullae sind gross und duennwandig.',
+      clinicalSignificance:'Kieferfrakturen: Mandibularsymphyse-Fraktur häufigste Katzenfraktur nach Fenstersturz! Zahnresorptive Laesionen (FORL/TR) bei >50% der Katzen über 5 Jahre. Nasopharyngeale Erkrankungen: Polypen, Stenose. Otitis media: Bulla-Osteotomie.',
       stats:[
-        {label:'Schaedelform',value:'rundlich',unit:'brachyzephal'},
+        {label:'Schädelform',value:'rundlich',unit:'brachyzephal'},
         {label:'FORL-Praevalenz',value:'>50%',unit:'ab 5 Jahre'},
-        {label:'Symphysenfraktur',value:'haeufigste',unit:'Fraktur'},
+        {label:'Symphysenfraktur',value:'häufigste',unit:'Fraktur'},
         {label:'Tympanobulla',value:'gross',unit:'duennwandig'}
       ],
-      examTips:'Mundhoehle: FORL-Screening (Sondieren!). Palpation: Symphyse, Kiefergelenk. Zahnroentgen (intraoral) fuer Wurzelresorption. CT: Goldstandard bei Bulla-Erkrankung, nasopharyngealen Polypen, Sinusitis. CAVE: Katzen mit Maulatmung = NOTFALL (obligate Nasenatmer).'
+      examTips:'Mundhöhle: FORL-Screening (Sondieren!). Palpation: Symphyse, Kiefergelenk. Zahnroentgen (intraoral) für Wurzelresorption. CT: Goldstandard bei Bulla-Erkrankung, nasopharyngealen Polypen, Sinusitis. CAVE: Katzen mit Maulatmung = NOTFALL (obligate Nasenatmer).'
     }
   ],
   horse: [
     {
-      id:'horse-skull', name:'Pferdeschaedel', species:'Pferd', region:'Kopf',
+      id:'horse-skull', name:'Pferdeschädel', species:'Pferd', region:'Kopf',
       model:'assets/models/bones/horse-skull.glb', color:'#e2e8f0',
-      description:'Der Pferdeschaedel ist extrem lang (bis 60 cm). Die Stirnhoehlen und Kieferhoehlen (Sinus maxillaris, frontalis) sind sehr gross und klinisch bedeutsam. Die Backenzaehne haben lange Reservekronen, die in den Sinus maxillaris ragen. Zahnformel: 3I 1C 3-4P 3M pro Halbkiefer.',
-      clinicalSignificance:'Sinusitis: primaer oder sekundaer (Zahnwurzelabszess!). Zahnprobleme: scharfe Kanten (Haken), Diastemen, EOTRH (Incisivi-Resorption alter Pferde). Frakturen: Mandibula (Hufschlag), Maxilla, Os incisivum. Kieferzysten. Headshaking (trigeminal-bedingt).',
+      description:'Der Pferdeschädel ist extrem lang (bis 60 cm). Die Stirnhöhlen und Kieferhöhlen (Sinus maxillaris, frontalis) sind sehr gross und klinisch bedeutsam. Die Backenzähne haben lange Reservekronen, die in den Sinus maxillaris ragen. Zahnformel: 3I 1C 3-4P 3M pro Halbkiefer.',
+      clinicalSignificance:'Sinusitis: primär oder sekundaer (Zahnwurzelabszess!). Zahnprobleme: scharfe Kanten (Haken), Diastemen, EOTRH (Incisivi-Resorption alter Pferde). Frakturen: Mandibula (Hufschlag), Maxilla, Os incisivum. Kieferzysten. Headshaking (trigeminal-bedingt).',
       stats:[
-        {label:'Schaedellaenge',value:'~60',unit:'cm'},
+        {label:'Schädellänge',value:'~60',unit:'cm'},
         {label:'Sinus',value:'maxillaris',unit:'+ frontalis'},
-        {label:'Reservekrone',value:'6-8',unit:'cm (Backenzaehne)'},
-        {label:'Zaehne total',value:'36-44',unit:'(m/w verschieden)'}
+        {label:'Reservekrone',value:'6-8',unit:'cm (Backenzähne)'},
+        {label:'Zähne total',value:'36-44',unit:'(m/w verschieden)'}
       ],
-      examTips:'Adspektion: Nasenausfluss (einseitig = Zahnwurzel/Sinus!). Perkussion der Sinus (gedaempft = gefuellt). Mundhoehle: Maulgatter, Spiegel, Endoskopie. Zahnbehandlung: Raspeln alle 6-12 Monate. Roentgen: schraege Projektionen fuer Backenzaehne. CT: Goldstandard fuer Sinus und Zaehne (stehend moeglich).'
+      examTips:'Adspektion: Nasenausfluss (einseitig = Zahnwurzel/Sinus!). Perkussion der Sinus (gedaempft = gefuellt). Mundhöhle: Maulgatter, Spiegel, Endoskopie. Zahnbehandlung: Raspeln alle 6-12 Monate. Roentgen: schraege Projektionen für Backenzähne. CT: Goldstandard für Sinus und Zähne (stehend möglich).'
     },
     {
       id:'horse-cannon', name:'Roehrbein (Os metacarpale III)', species:'Pferd', region:'Vordergliedmasse',
       model:'assets/models/bones/horse-cannon.glb', color:'#f5f5f5',
       description:'Das Roehrbein (Cannon Bone, Os metacarpale III) ist der Hauptlastknochen der distalen Vordergliedmasse. Lateral und medial liegen die rudimentaeren Griffelbeine (Ossa metacarpalia II und IV). Das Roehrbein artikuliert distal mit dem Fesselbein (Fesselgelenk).',
-      clinicalSignificance:'Stressfrakturen: bei Rennpferden (dorsale Kortikalis), Kondylarfrakturen (Fesselgelenk). Griffelbeinfrakturen: haeufig bei Sportpferden. "Splints" (Desmitis des interossaeren Bandes). Periostitis: "Sore Shins" bei jungen Rennpferden.',
+      clinicalSignificance:'Stressfrakturen: bei Rennpferden (dorsale Kortikalis), Kondylarfrakturen (Fesselgelenk). Griffelbeinfrakturen: häufig bei Sportpferden. "Splints" (Desmitis des interossaeren Bandes). Periostitis: "Sore Shins" bei jungen Rennpferden.',
       stats:[
-        {label:'Laenge',value:'22-28',unit:'cm'},
+        {label:'Länge',value:'22-28',unit:'cm'},
         {label:'Griffelbeine',value:'Mc II+IV',unit:'rudimentaer'},
         {label:'Stressfrakturen',value:'dorsal',unit:'Kortikalis'},
         {label:'Belastung',value:'~5000',unit:'N beim Galopp'}
       ],
-      examTips:'Palpation: Palmare Strukturen (Beugesehnen, Fesseltraeger), Griffelbeine auf Verdickung, dorsale Metacarpalflaeche auf Schmerz. Beugeprobe: Fesselgelenk. Roentgen: 4 Standardprojektionen. Szintigraphie bei Stressfraktur-Verdacht. Ultraschall: Weichteilstrukturen palmar.'
+      examTips:'Palpation: Palmare Strukturen (Beugesehnen, Fesselträger), Griffelbeine auf Verdickung, dorsale Metacarpalflaeche auf Schmerz. Beugeprobe: Fesselgelenk. Roentgen: 4 Standardprojektionen. Szintigraphie bei Stressfraktur-Verdacht. Ultraschall: Weichteilstrukturen palmar.'
     },
     {
       id:'horse-distal-limb', name:'Distale Gliedmasse', species:'Pferd', region:'Vordergliedmasse',
       model:'assets/models/bones/horse-distal-limb.glb', color:'#e2e8f0',
-      description:'Die distale Gliedmasse besteht aus Fesselbein (Phalanx proximalis), Kronbein (Phalanx media) und Hufbein (Phalanx distalis). Das Strahlbein (Os sesamoideum distale) liegt palmar im Hufgelenk. Die Gleichbeine (Ossa sesamoidea proximalia) sichern den Fesseltraeger.',
+      description:'Die distale Gliedmasse besteht aus Fesselbein (Phalanx proximalis), Kronbein (Phalanx media) und Hufbein (Phalanx distalis). Das Strahlbein (Os sesamoideum distale) liegt palmar im Hufgelenk. Die Gleichbeine (Ossa sesamoidea proximalia) sichern den Fesselträger.',
       clinicalSignificance:'Fesselbeinfrakturen (Sagittal-, Spiral-, Konfigurationsfrakturen). Hufgelenksentzuendung (Arthritis). Podotrochlose (Strahlbeinsyndrom): chronische Lahmheit der Vorderhand. Hufbeinfrakturen: Typ I-VII. Gleichbeinfrakturen: apikale, basilare, abaxiale Fragmente.',
       stats:[
         {label:'Knochen',value:'5',unit:'pro Gliedmasse'},
         {label:'Hufgelenk',value:'P2-P3',unit:'+ Strahlbein'},
-        {label:'Podotrochlose',value:'vorne',unit:'haeufiger'},
+        {label:'Podotrochlose',value:'vorne',unit:'häufiger'},
         {label:'MRI-Indikation',value:'Huf-',unit:'lahmheit'}
       ],
-      examTips:'Lahmheitsuntersuchung: Ganganalyse auf hartem + weichem Boden, Kreise, Beugeprobe. Diagnostische Anaesthesien: TPA (Tiefer Palmarnerv), Hufgelenk, Fesselgelenk. Roentgen: Huf (Oxspring, DPr-PaDiO, lateral, skyline). MRT: Goldstandard fuer Huflahmheit (stehend moeglich).'
+      examTips:'Lahmheitsuntersuchung: Ganganalyse auf hartem + weichem Boden, Kreise, Beugeprobe. Diagnostische Anaesthesien: TPA (Tiefer Palmarnerv), Hufgelenk, Fesselgelenk. Roentgen: Huf (Oxspring, DPr-PaDiO, lateral, skyline). MRT: Goldstandard für Huflahmheit (stehend möglich).'
     },
     {
       id:'horse-spine-lumbar', name:'Lendenwirbelsaeule', species:'Pferd', region:'Rumpf',
       model:'assets/models/bones/horse-spine-lumbar.glb', color:'#d4d4d8',
-      description:'Die Lendenwirbelsaeule des Pferdes hat 6 Lendenwirbel (L1-L6). Die Querfortsaetze sind gross und breit. Der lumbosakrale Uebergang ist eine haeufige Schmerzlokalisation. Die Brustwirbelsaeule hat 18 Wirbel mit dorsal ueberlagernden Dornfortsaetzen.',
-      clinicalSignificance:'Kissing Spines (Ueberreitende Dornfortsaetze): v.a. T13-L2, haeufig bei Reitpferden. Spondylose deformans. Lumbosakrale Schmerzen (Sacroiliakal-Gelenk). Wirbelkoerperfrakturen nach Sturz/Ueberschlag. Osteoarthritis der Facettengelenke.',
+      description:'Die Lendenwirbelsaeule des Pferdes hat 6 Lendenwirbel (L1-L6). Die Querfortsaetze sind gross und breit. Der lumbosakrale Übergang ist eine häufige Schmerzlokalisation. Die Brustwirbelsaeule hat 18 Wirbel mit dorsal überlagernden Dornfortsaetzen.',
+      clinicalSignificance:'Kissing Spines (Überreitende Dornfortsaetze): v.a. T13-L2, häufig bei Reitpferden. Spondylose deformans. Lumbosakrale Schmerzen (Sacroiliakal-Gelenk). Wirbelkörperfrakturen nach Sturz/Überschlag. Osteoarthritis der Facettengelenke.',
       stats:[
         {label:'Lendenwirbel',value:'6',unit:'(L1-L6)'},
         {label:'Kissing Spines',value:'T13-L2',unit:'Praedilektionsstelle'},
         {label:'Brustwirbel',value:'18',unit:'(T1-T18)'},
         {label:'Sacroiliakal',value:'SI-Gelenk',unit:'Schmerzquelle'}
       ],
-      examTips:'Rueckenuntersuchung: Palpation der Dornfortsaetze (Druckschmerz?), Flexion/Extension des Rueckens (Reflexe). Longieren: Steifheit, Taktunreinheit? Roentgen: Dornfortsaetze (stehend moeglich). Ultraschall: Facettengelenke, SI-Gelenk. Szintigraphie: sensitiv fuer Knochenumbau. Diagnostische Anaesthesie: periartikulaer an Facettengelenke.'
+      examTips:'Rückenuntersuchung: Palpation der Dornfortsaetze (Druckschmerz?), Flexion/Extension des Rückens (Reflexe). Longieren: Steifheit, Taktunreinheit? Roentgen: Dornfortsaetze (stehend möglich). Ultraschall: Facettengelenke, SI-Gelenk. Szintigraphie: sensitiv für Knochenumbau. Diagnostische Anaesthesie: periartikulaer an Facettengelenke.'
     }
   ],
   cow: [
     {
-      id:'cow-skull', name:'Rinderschaedel', species:'Rind', region:'Kopf',
+      id:'cow-skull', name:'Rinderschädel', species:'Rind', region:'Kopf',
       model:'assets/models/bones/cow-skull.glb', color:'#e2e8f0',
-      description:'Der Rinderschaedel zeichnet sich durch sehr grosse Stirnhoehlen (Sinus frontalis) aus, die sich weit nach kaudal erstrecken. Die Hornzapfen (Processus cornuales) sind knoeocherne Fortsaetze des Os frontale. Der Oberkiefer hat keine Schneidezaehne -- stattdessen eine harte Dentalplatte (Pulvinus dentalis).',
-      clinicalSignificance:'Enthornung (Dehorning): chirurgisch oder thermisch, wichtige Routine-Prozedur. Hornzapfenfraktur bei Horntraegern. Stirnhoehlenerkrankungen: Sinusitis, Stirnhoehlen-Trepanation. Oberkiefer-Zahnprobleme (selten). Nervus cornualis: Leitungsanaesthesie fuer Enthornung.',
+      description:'Der Rinderschädel zeichnet sich durch sehr grosse Stirnhöhlen (Sinus frontalis) aus, die sich weit nach kaudal erstrecken. Die Hornzapfen (Processus cornuales) sind knoeocherne Fortsaetze des Os frontale. Der Oberkiefer hat keine Schneidezähne -- stattdessen eine harte Dentalplatte (Pulvinus dentalis).',
+      clinicalSignificance:'Enthornung (Dehorning): chirurgisch oder thermisch, wichtige Routine-Prozedur. Hornzapfenfraktur bei Hornträgern. Stirnhöhlenerkrankungen: Sinusitis, Stirnhöhlen-Trepanation. Oberkiefer-Zahnprobleme (selten). Nervus cornualis: Leitungsanaesthesie für Enthornung.',
       stats:[
-        {label:'Stirnhoehle',value:'sehr gross',unit:'weit ausgedehnt'},
-        {label:'Schneidezaehne oben',value:'0',unit:'(Zahnplatte)'},
+        {label:'Stirnhöhle',value:'sehr gross',unit:'weit ausgedehnt'},
+        {label:'Schneidezähne oben',value:'0',unit:'(Zahnplatte)'},
         {label:'Hornzapfen',value:'Os frontale',unit:'knoeoechern'},
         {label:'N. cornualis',value:'Leitungs-',unit:'anaesthesie'}
       ],
-      examTips:'Adspektion: Hornstatus, Kopfhaltung, Nasenausfluss. Palpation: Stirnhoehlen (Perkussion: normal sonor, bei Sinusitis gedaempft). Enthornung: N. cornualis-Block (Mitte zwischen lateralem Augenwinkel und Hornbasis). Trepanation der Stirnhoehle: bei chronischer Sinusitis. CAVE: Rinder mit abgebrochenen Hoernern bluten stark (Hornzapfenarterie).'
+      examTips:'Adspektion: Hornstatus, Kopfhaltung, Nasenausfluss. Palpation: Stirnhöhlen (Perkussion: normal sonor, bei Sinusitis gedaempft). Enthornung: N. cornualis-Block (Mitte zwischen lateralem Augenwinkel und Hornbasis). Trepanation der Stirnhöhle: bei chronischer Sinusitis. CAVE: Rinder mit abgebrochenen Hörnern bluten stark (Hornzapfenarterie).'
     }
   ],
   rabbit: [
     {
-      id:'rabbit-skull', name:'Kaninchenschaedel', species:'Kaninchen', region:'Kopf',
+      id:'rabbit-skull', name:'Kaninchenschädel', species:'Kaninchen', region:'Kopf',
       model:'assets/models/bones/rabbit-skull.glb', color:'#e2e8f0',
-      description:'Der Kaninchenschaedel ist extrem fragil und leicht. Charakteristisch ist die Doppelreihe der oberen Schneidezaehne: hinter den grossen Incisivi liegen kleine Stiftzaehne (Dentes peg). Alle Kaninchenzaehne sind wurzellos und wachsen lebenslang (Elodontie). Die Schaedelknochen sind sehr duenn und brechen leicht.',
-      clinicalSignificance:'Zahnprobleme (Malokklusionen): haeufigste Erkrankung! Schneidezahn-Malokklusion und Backenzahn-Malokklusion (Brueckenbildung, Spitzen). Zahnwurzelabszesse: retrobulbaer oder mandibular. Enzephalitozoonose: E. cuniculi kann den Kopf betreffen (Kopfschiefhaltung). Schaedelfrakturen bei unsachgemaessem Handling.',
+      description:'Der Kaninchenschädel ist extrem fragil und leicht. Charakteristisch ist die Doppelreihe der oberen Schneidezähne: hinter den grossen Incisivi liegen kleine Stiftzähne (Dentes peg). Alle Kaninchenzähne sind wurzellos und wachsen lebenslang (Elodontie). Die Schädelknochen sind sehr duenn und brechen leicht.',
+      clinicalSignificance:'Zahnprobleme (Malokklusionen): häufigste Erkrankung! Schneidezahn-Malokklusion und Backenzahn-Malokklusion (Brückenbildung, Spitzen). Zahnwurzelabszesse: retrobulbaer oder mandibular. Enzephalitozoonose: E. cuniculi kann den Kopf betreffen (Kopfschiefhaltung). Schädelfrakturen bei unsachgemaessem Handling.',
       stats:[
         {label:'Zahnwachstum',value:'lebenslang',unit:'(Elodontie)'},
-        {label:'Stiftzaehne',value:'2',unit:'hinter oberen I'},
-        {label:'Schaedeldicke',value:'extrem',unit:'duenn/fragil'},
-        {label:'Malokklusion',value:'haeufigste',unit:'Erkrankung'}
+        {label:'Stiftzähne',value:'2',unit:'hinter oberen I'},
+        {label:'Schädeldicke',value:'extrem',unit:'duenn/fragil'},
+        {label:'Malokklusion',value:'häufigste',unit:'Erkrankung'}
       ],
-      examTips:'Mundhoehle: Otoskop oder Spreizer zum Einblick. Schneidezaehne: Laengenverhaeltnis, Okklusion. Backenzaehne: Spitzen? Bruecken? Roentgen: 5 Projektionen (LL, DV, beide Schraegen, rostrocaudal). CT: Goldstandard bei Zahnwurzelabszess. CAVE: Kaninchenschaedel sehr fragil -- vorsichtig handhaben, keine uebermassige Kraft bei Fixation!'
+      examTips:'Mundhöhle: Otoskop oder Spreizer zum Einblick. Schneidezähne: Längenverhaeltnis, Okklusion. Backenzähne: Spitzen? Brücken? Roentgen: 5 Projektionen (LL, DV, beide Schraegen, rostrocaudal). CT: Goldstandard bei Zahnwurzelabszess. CAVE: Kaninchenschädel sehr fragil -- vorsichtig handhaben, keine übermassige Kraft bei Fixation!'
     }
   ],
   bird: [
     {
       id:'bird-skeleton', name:'Vogelskelett', species:'Vogel', region:'Ganzes Skelett',
       model:'assets/models/bones/bird-skeleton.glb', color:'#e2e8f0',
-      description:'Das Vogelskelett ist hoch spezialisiert fuer den Flug. Viele Knochen sind pneumatisiert (hohl, mit Luft aus den Luftsaecken gefuellt) und dadurch extrem leicht. Der Keel (Carina sterni) dient als Ansatz fuer die grosse Flugmuskulatur. Die Handknochen sind zu Carpometacarpus fusioniert. Das Skelett wiegt nur 5-10% des Koerpergewichts.',
-      clinicalSignificance:'Frakturen heilen anders als bei Saeugetieren: Callusbildung ist schnell, aber pneumatisierte Knochen koennen nicht mit intramedullaren Pins versorgt werden (Luftsack-Kontamination!). Keel-Frakturen bei Kollision. Flugunfaehigkeit nach Fraktur: Prognose abwaegen. Metabolische Knochenerkrankung (MBD) bei Mangelernaehrung (Kalzium/VitD3).',
+      description:'Das Vogelskelett ist hoch spezialisiert für den Flug. Viele Knochen sind pneumatisiert (hohl, mit Luft aus den Luftsaecken gefuellt) und dadurch extrem leicht. Der Keel (Carina sterni) dient als Ansatz für die grosse Flugmuskulatur. Die Handknochen sind zu Carpometacarpus fusioniert. Das Skelett wiegt nur 5-10% des Körpergewichts.',
+      clinicalSignificance:'Frakturen heilen anders als bei Säugetieren: Callusbildung ist schnell, aber pneumatisierte Knochen koennen nicht mit intramedullaren Pins versorgt werden (Luftsack-Kontamination!). Keel-Frakturen bei Kollision. Flugunfaehigkeit nach Fraktur: Prognose abwaegen. Metabolische Knochenerkrankung (MBD) bei Mangelernährung (Kalzium/VitD3).',
       stats:[
         {label:'Skelettgewicht',value:'5-10',unit:'% KGW'},
         {label:'Pneumatisation',value:'Humerus',unit:'Femur, Sternum'},
         {label:'Keel (Carina)',value:'Brustbein',unit:'Flugmuskelansatz'},
         {label:'Callusbildung',value:'schnell',unit:'7-14 Tage'}
       ],
-      examTips:'Palpation: Keel (Body Condition Score 1-5 am Brustbein ablesen), Fluegel, Beine einzeln auf Krepitation und Schwellung pruefen. Roentgen: VD + lateral (Ganzkoerper). Frakturversorgung: External Fixateur bei langen Knochen, KEINE intramedullaren Pins bei pneumatisierten Knochen! Calcium/VitD3-Status pruefen bei MBD.'
+      examTips:'Palpation: Keel (Body Condition Score 1-5 am Brustbein ablesen), Fluegel, Beine einzeln auf Krepitation und Schwellung pruefen. Roentgen: VD + lateral (Ganzkörper). Frakturversorgung: External Fixateur bei langen Knochen, KEINE intramedullaren Pins bei pneumatisierten Knochen! Calcium/VitD3-Status pruefen bei MBD.'
     }
   ],
   implants: [
     {
       id:'external-fixator', name:'Fixateur externe', species:'Alle', region:'Chirurgie',
       model:'assets/models/bones/external-fixator.glb', color:'#6366f1',
-      description:'Der Fixateur externe ist ein chirurgisches Fixationssystem zur Stabilisierung von Frakturen. Er besteht aus transkutanen Pins, die in die Knochenfragmente eingebracht werden, und Verbindungsstangen oder -ringen aussen. Typen: Typ I (unilateral), Typ II (bilateral), Typ III (Ring-Fixateur/Ilizarov). Besonders geeignet fuer offene und infizierte Frakturen.',
-      clinicalSignificance:'Indikationen: offene Frakturen (Grad I-III), kontaminierte Frakturen, Gelenkarthrodese, Korrekturosteotomien, temporaere Fixation. Vorteile: minimale Weichteildissektion, postoperative Anpassung moeglich, einfache Entfernung. Komplikationen: Pin-Tract-Infektion (haeufigste!), Pin-Lockerung, Osteomyelitis.',
+      description:'Der Fixateur externe ist ein chirurgisches Fixationssystem zur Stabilisierung von Frakturen. Er besteht aus transkutanen Pins, die in die Knochenfragmente eingebracht werden, und Verbindungsstangen oder -ringen aussen. Typen: Typ I (unilateral), Typ II (bilateral), Typ III (Ring-Fixateur/Ilizarov). Besonders geeignet für offene und infizierte Frakturen.',
+      clinicalSignificance:'Indikationen: offene Frakturen (Grad I-III), kontaminierte Frakturen, Gelenkarthrodese, Korrekturosteotomien, temporaere Fixation. Vorteile: minimale Weichteildissektion, postoperative Anpassung möglich, einfache Entfernung. Komplikationen: Pin-Tract-Infektion (häufigste!), Pin-Lockerung, Osteomyelitis.',
       stats:[
         {label:'Typen',value:'I, II, III',unit:'(+ Hybride)'},
         {label:'Pin-Durchmesser',value:'20-30%',unit:'Knochenbreite'},
         {label:'Komplikation',value:'Pin-Trakt',unit:'Infektion'},
         {label:'Tragezeit',value:'6-12',unit:'Wochen'}
       ],
-      examTips:'Postoperative Kontrolle: Pin-Trakt taeglich reinigen, Roetung/Ausfluss pruefen. Roentgen: Frakturheilung alle 4-6 Wochen kontrollieren. Dynamisierung: Verbindungsstangen lockern zur Stimulation der Kallusbildung. Entfernung: wenn radiologisch Heilung abgeschlossen (Kortikalisbruecke sichtbar).'
+      examTips:'Postoperative Kontrolle: Pin-Trakt taeglich reinigen, Roetung/Ausfluss pruefen. Roentgen: Frakturheilung alle 4-6 Wochen kontrollieren. Dynamisierung: Verbindungsstangen lockern zur Stimulation der Kallusbildung. Entfernung: wenn radiologisch Heilung abgeschlossen (Kortikalisbrücke sichtbar).'
     },
     {
       id:'fracture-plate', name:'Knochenplatte', species:'Alle', region:'Chirurgie',
       model:'assets/models/bones/fracture-plate.glb', color:'#8b5cf6',
-      description:'Knochenplatten (DCP = Dynamic Compression Plate, LCP = Locking Compression Plate) werden mit Schrauben am Knochen fixiert. Sie bieten absolute Stabilitaet und ermoeglichen primaere Knochenheilung (direkte Heilung ohne sichtbaren Callus). LCP-Platten kombinieren Kompression mit winkelstabiler Verriegelung.',
-      clinicalSignificance:'Indikationen: Gelenkfrakturen (anatomische Reposition!), Schaftfrakturen, Korrekturosteotomien (TPLO, TTA). DCP: Kompression ueber exzentrische Schraubenloecher. LCP: winkelstabile Schrauben, schont Periost (biologische Osteosynthese). Titan vs. Stahl: Titan leichter, biokompatibel, MRT-faehig.',
+      description:'Knochenplatten (DCP = Dynamic Compression Plate, LCP = Locking Compression Plate) werden mit Schrauben am Knochen fixiert. Sie bieten absolute Stabilitaet und ermöglichen primäre Knochenheilung (direkte Heilung ohne sichtbaren Callus). LCP-Platten kombinieren Kompression mit winkelstabiler Verriegelung.',
+      clinicalSignificance:'Indikationen: Gelenkfrakturen (anatomische Reposition!), Schaftfrakturen, Korrekturosteotomien (TPLO, TTA). DCP: Kompression über exzentrische Schraubenloecher. LCP: winkelstabile Schrauben, schont Periost (biologische Osteosynthese). Titan vs. Stahl: Titan leichter, biokompatibel, MRT-faehig.',
       stats:[
         {label:'DCP-Prinzip',value:'Kompression',unit:'exzentrisch'},
         {label:'LCP-Prinzip',value:'winkelstabil',unit:'+ Kompression'},
         {label:'Material',value:'Titan/Stahl',unit:''},
-        {label:'Heilungstyp',value:'primaer',unit:'(ohne Callus)'}
+        {label:'Heilungstyp',value:'primär',unit:'(ohne Callus)'}
       ],
-      examTips:'OP-Planung: Roentgen in 2 Ebenen, Plattenwahl (DCP vs. LCP, Groesse), Schraubenlaenge (sollte gegenueberliegende Kortikalis fassen). Postoperativ: Roentgen sofort + 6 Wochen. Aktivitaetseinschraenkung: 8-12 Wochen. Implantatentfernung: nur bei Problemen (Infektion, Kaltverformung), sonst in situ belassen.'
+      examTips:'OP-Planung: Roentgen in 2 Ebenen, Plattenwahl (DCP vs. LCP, Grösse), Schraubenlänge (sollte gegenüberliegende Kortikalis fassen). Postoperativ: Roentgen sofort + 6 Wochen. Aktivitaetseinschraenkung: 8-12 Wochen. Implantatentfernung: nur bei Problemen (Infektion, Kaltverformung), sonst in situ belassen.'
     },
     {
-      id:'hip-prosthesis', name:'Hueftprothese (THR)', species:'Hund/Katze', region:'Chirurgie',
+      id:'hip-prosthesis', name:'Hüftprothese (THR)', species:'Hund/Katze', region:'Chirurgie',
       model:'assets/models/bones/hip-prosthesis.glb', color:'#10b981',
-      description:'Der Totale Hueftgelenkersatz (THR = Total Hip Replacement) ersetzt sowohl den Femurkopf (Schaft + Kugelkopf) als auch das Acetabulum (Pfanne). Systeme: zementiert (Biomedtrix BFX), zementfrei (BFX, Kyon HELICA). Die Prothese besteht aus einer Titanpfanne (mit Polyethylen-Inlay) und einem Titanschaft mit Keramik- oder Metallkopf.',
-      clinicalSignificance:'Indikationen: schwere Hueftgelenksdysplasie (HD Grad D/E), Femurkopfnekrose (Legg-Calve-Perthes), Acetabularfraktur, DJD (degenerative Gelenkerkrankung), Hueftluxation (chronisch rezidivierend). Erfolgsrate: >90% gute bis exzellente Ergebnisse. Komplikationen: Luxation (haeufigste!), Infektion, aseptische Lockerung, Femurfraktur.',
+      description:'Der Totale Hüftgelenkersatz (THR = Total Hip Replacement) ersetzt sowohl den Femurkopf (Schaft + Kugelkopf) als auch das Acetabulum (Pfanne). Systeme: zementiert (Biomedtrix BFX), zementfrei (BFX, Kyon HELICA). Die Prothese besteht aus einer Titanpfanne (mit Polyethylen-Inlay) und einem Titanschaft mit Keramik- oder Metallkopf.',
+      clinicalSignificance:'Indikationen: schwere Hüftgelenksdysplasie (HD Grad D/E), Femurkopfnekrose (Legg-Calve-Perthes), Acetabularfraktur, DJD (degenerative Gelenkerkrankung), Hüftluxation (chronisch rezidivierend). Erfolgsrate: >90% gute bis exzellente Ergebnisse. Komplikationen: Luxation (häufigste!), Infektion, aseptische Lockerung, Femurfraktur.',
       stats:[
         {label:'Erfolgsrate',value:'>90%',unit:''},
         {label:'Komplikation Nr.1',value:'Luxation',unit:'3-5%'},
         {label:'Systeme',value:'zementiert',unit:'+ zementfrei'},
         {label:'Mindestalter',value:'10-12',unit:'Monate'}
       ],
-      examTips:'Praeopertaiv: Roentgen HD-Position + laterale Aufnahme beider Hueften. Template-Planung: Schaft- und Pfannengroesse bestimmen. Postoperativ: striktes Leinenprogramm 8-12 Wochen, Roentgen 6 + 12 Wochen. CAVE: keine Flexion >90 Grad + Adduktion (Luxationsrisiko). Langzeitkontrolle: jaehrliches Roentgen auf Lockerung.'
+      examTips:'Praeopertaiv: Roentgen HD-Position + laterale Aufnahme beider Hüften. Template-Planung: Schaft- und Pfannengroesse bestimmen. Postoperativ: striktes Leinenprogramm 8-12 Wochen, Roentgen 6 + 12 Wochen. CAVE: keine Flexion >90 Grad + Adduktion (Luxationsrisiko). Langzeitkontrolle: jaehrliches Roentgen auf Lockerung.'
     }
   ]
 };

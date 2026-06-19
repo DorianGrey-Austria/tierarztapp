@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VetScan Pro - Parasiten-Atlas</title>
-<meta name="description" content="Interaktiver 3D-Parasitenatlas fuer die Veterinaermedizin mit Identifikation und Diagnostik">
+<meta name="description" content="Interaktiver 3D-Parasitenatlas für die Veterinaermedizin mit Identifikation und Diagnostik">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -151,14 +151,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       <div class="load-text" id="loadText">Parasiten-Atlas wird geladen...</div>
     </div>
     <div class="welcome" id="welcome">
-      <h2>Parasit auswaehlen</h2>
-      <p>Waehle links einen Parasiten, um ihn als 3D-Modell zu betrachten und detaillierte veterinaermedizinische Informationen zu erhalten.</p>
+      <h2>Parasit auswählen</h2>
+      <p>Wähle links einen Parasiten, um ihn als 3D-Modell zu betrachten und detaillierte veterinaermedizinische Informationen zu erhalten.</p>
       <div class="hint">Drehen: Maus ziehen / Zoom: Scrollrad / Verschieben: Rechtsklick</div>
     </div>
     <div class="model-label" id="modelLabel"></div>
     <div class="viewport-controls" id="viewportControls" style="display:none">
       <button class="vp-btn active" id="btnRotate" title="Auto-Rotation umschalten (R)">Rotation</button>
-      <button class="vp-btn" id="btnReset" title="Kameraposition zuruecksetzen">Reset</button>
+      <button class="vp-btn" id="btnReset" title="Kameraposition zurücksetzen">Reset</button>
     </div>
   </main>
 
@@ -167,12 +167,12 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
     <div id="infoContent">
       <div class="info-card">
         <h3>Parasiten-Atlas</h3>
-        <p>Dieses Werkzeug bietet eine interaktive 3D-Visualisierung der wichtigsten veterinaermedizinischen Parasiten. Waehle einen Parasiten aus der linken Liste, um das 3D-Modell und detaillierte Informationen anzuzeigen.</p>
+        <p>Dieses Werkzeug bietet eine interaktive 3D-Visualisierung der wichtigsten veterinaermedizinischen Parasiten. Wähle einen Parasiten aus der linken Liste, um das 3D-Modell und detaillierte Informationen anzuzeigen.</p>
       </div>
       <div class="info-card">
         <h3>Kategorien</h3>
-        <p><strong style="color:var(--danger)">Ektoparasiten</strong> leben auf oder in der Haut des Wirtes (Floehe, Zecken, Milben).</p>
-        <p style="margin-top:8px"><strong style="color:var(--accent)">Endoparasiten</strong> leben im Koerperinneren des Wirtes (Wuermer, Protozoen).</p>
+        <p><strong style="color:var(--danger)">Ektoparasiten</strong> leben auf oder in der Haut des Wirtes (Flöhe, Zecken, Milben).</p>
+        <p style="margin-top:8px"><strong style="color:var(--accent)">Endoparasiten</strong> leben im Körperinneren des Wirtes (Würmer, Protozoen).</p>
       </div>
     </div>
     <div id="parasiteInfo" style="display:none"></div>
@@ -204,14 +204,14 @@ const PARASITES = [
     model: 'assets/models/parasites/flea.glb',
     hosts: ['Hund', 'Katze', 'Kaninchen'],
     size: '1-3 mm',
-    lifecycle: 'Ei \u2192 Larve \u2192 Puppe \u2192 Adulter Floh (3-8 Wochen). Puppen koennen monatelang in der Umgebung ueberdauern.',
-    diagnostics: 'Flohkot-Nachweis (Nasses-Papier-Test: schwarze Kruemmel werden rotbraun), Direktnachweis adulter Floehe im Fell, Flohkamm.',
+    lifecycle: 'Ei \u2192 Larve \u2192 Puppe \u2192 Adulter Floh (3-8 Wochen). Puppen koennen monatelang in der Umgebung überdauern.',
+    diagnostics: 'Flohkot-Nachweis (Nasses-Papier-Test: schwarze Kruemmel werden rotbraun), Direktnachweis adulter Flöhe im Fell, Flohkamm.',
     therapy: 'Spot-on (Fipronil, Imidacloprid), Isoxazoline oral (Fluralaner, Sarolaner, Afoxolaner). Umgebungsbehandlung essenziell!',
-    zoonosis: { risk: 'ja', detail: 'Flohbisse beim Menschen, Uebertraeger von Dipylidium caninum (Gurkenkernbandwurm), selten Bartonella henselae (Katzenkratzkrankheit).' },
-    clinicalSignificance: 'FAD (Flohallergie-Dermatitis) ist eine der haeufigsten Hauterkrankungen bei Hund und Katze. Sekundaere bakterielle Infektionen. Bandwurm-Uebertraeger (Dipylidium). Schwere Anaemie bei Welpen/Kaetzchen bei Massenbefall.',
-    examTips: 'Flohkamm in Lumbosacralregion und Bauch. Nasses-Papier-Test: Fellmaterial auf feuchtem Papier verreiben - rotbraune Faerbung = Flohkot (verdautes Blut). Auch bei negativem Direktnachweis FAD moeglich (1 Flohbiss genuegt bei Allergikern!).',
+    zoonosis: { risk: 'ja', detail: 'Flohbisse beim Menschen, Überträger von Dipylidium caninum (Gurkenkernbandwurm), selten Bartonella henselae (Katzenkratzkrankheit).' },
+    clinicalSignificance: 'FAD (Flohallergie-Dermatitis) ist eine der häufigsten Hauterkrankungen bei Hund und Katze. Sekundaere bakterielle Infektionen. Bandwurm-Überträger (Dipylidium). Schwere Anaemie bei Welpen/Kaetzchen bei Massenbefall.',
+    examTips: 'Flohkamm in Lumbosacralregion und Bauch. Nasses-Papier-Test: Fellmaterial auf feuchtem Papier verreiben - rotbraune Faerbung = Flohkot (verdautes Blut). Auch bei negativem Direktnachweis FAD möglich (1 Flohbiss genügt bei Allergikern!).',
     stats: [
-      { label: 'Groesse', value: '1-3', unit: 'mm' },
+      { label: 'Grösse', value: '1-3', unit: 'mm' },
       { label: 'Lebenszyklus', value: '3-8', unit: 'Wochen' },
       { label: 'Eier/Tag', value: '20-50', unit: 'pro Weibchen' },
       { label: 'Sprungweite', value: '30', unit: 'cm' }
@@ -229,11 +229,11 @@ const PARASITES = [
     lifecycle: 'Ei \u2192 Larve (6 Beine) \u2192 Nymphe (8 Beine) \u2192 Adulte Zecke. Gesamtzyklus 2-3 Jahre. Jedes Stadium benoetigt eine Blutmahlzeit.',
     diagnostics: 'Direktnachweis am Tier, Zeckenbestimmung nach Gattung (Ixodes, Dermacentor, Rhipicephalus). Bei Krankheitsverdacht: serologische Tests auf Erreger.',
     therapy: 'Manuelle Entfernung (Zeckenzange, gerade herausziehen, nicht drehen!). Repellentien: Permethrin (NICHT bei Katzen!), Isoxazoline (Fluralaner, Sarolaner), Seresto-Halsband (Imidacloprid/Flumethrin).',
-    zoonosis: { risk: 'ja', detail: 'Uebertraeger von Borreliose (Borrelia burgdorferi), FSME (Flavivirus), Babesiose (Babesia canis), Anaplasmose (Anaplasma phagocytophilum), Ehrlichiose (Ehrlichia canis).' },
-    clinicalSignificance: 'Primaer gefaehrlich als Krankheitsuebertraeger! Babesiose (haeufig bei Reiserueckkehrern aus Suedeuropa), Borreliose, Anaplasmose. Zeckenparalyse durch Neurotoxin (selten in Europa, haeufig in Australien/Nordamerika).',
+    zoonosis: { risk: 'ja', detail: 'Überträger von Borreliose (Borrelia burgdorferi), FSME (Flavivirus), Babesiose (Babesia canis), Anaplasmose (Anaplasma phagocytophilum), Ehrlichiose (Ehrlichia canis).' },
+    clinicalSignificance: 'Primär gefährlich als Krankheitsüberträger! Babesiose (häufig bei Reiserückkehrern aus Südeuropa), Borreliose, Anaplasmose. Zeckenparalyse durch Neurotoxin (selten in Europa, häufig in Australien/Nordamerika).',
     examTips: 'Systematische Fellinspektion nach jedem Freilauf. Praedilektionsstellen: Ohren, Achseln, Leiste, Zwischenzehenbereich. Zecke gerade herausziehen, nicht quetschen. Bei Fieber nach Zeckenkontakt: Blutausstrich, serologische Tests.',
     stats: [
-      { label: 'Groesse', value: '2-11', unit: 'mm' },
+      { label: 'Grösse', value: '2-11', unit: 'mm' },
       { label: 'Lebenszyklus', value: '2-3', unit: 'Jahre' },
       { label: 'Saugdauer', value: '3-7', unit: 'Tage' },
       { label: 'Eier/Gelege', value: '2000-3000', unit: '' }
@@ -248,16 +248,16 @@ const PARASITES = [
     model: 'assets/models/parasites/ear-mite.glb',
     hosts: ['Hund', 'Katze', 'Frettchen', 'Kaninchen'],
     size: '0.3-0.5 mm',
-    lifecycle: '3 Wochen Gesamtzyklus im aeusseren Gehoergang. Ei \u2192 Larve \u2192 Protonymphe \u2192 Deutonymphe \u2192 Adulte. Hochkontagioes bei direktem Kontakt.',
+    lifecycle: '3 Wochen Gesamtzyklus im äusseren Gehörgang. Ei \u2192 Larve \u2192 Protonymphe \u2192 Deutonymphe \u2192 Adulte. Hochkontagioes bei direktem Kontakt.',
     diagnostics: 'Otoskopie (weisse bewegliche Punkte auf dunklem Cerumen sichtbar). Ohrabstrich mit Mineraloel unter dem Mikroskop: Milben und Eier. Typisches dunkles, kaffeesatzartiges Cerumen.',
     therapy: 'Selamectin (Stronghold) Spot-on, Ivermectin, Milbemycin. Lokale Ohrtropfen (z.B. mit Thiabendazol). Alle Kontakttiere mitbehandeln!',
-    zoonosis: { risk: 'selten', detail: 'Transiente Infektion beim Menschen moeglich (Papeln an Armen/Haenden), selbstlimitierend.' },
-    clinicalSignificance: 'Haeufigste Ursache fuer Otitis externa bei jungen Katzen und Hunden. Dunkles, kaffeesatzartiges Cerumen. Intensiver Juckreiz, Kopfschuetteln, Kratzen an den Ohren. Sekundaere bakterielle/mykotische Otitis.',
-    examTips: 'Otoskopie: Milben als kleine weisse Punkte auf dunklem Hintergrund sichtbar. Ohrabstrich auf Objekttraeger mit Mineraloel, Mikroskop (4x-10x Vergroesserung). Beide Ohren immer untersuchen. Alle Tiere im Haushalt untersuchen und behandeln.',
+    zoonosis: { risk: 'selten', detail: 'Transiente Infektion beim Menschen möglich (Papeln an Armen/Haenden), selbstlimitierend.' },
+    clinicalSignificance: 'Häufigste Ursache für Otitis externa bei jungen Katzen und Hunden. Dunkles, kaffeesatzartiges Cerumen. Intensiver Juckreiz, Kopfschuetteln, Kratzen an den Ohren. Sekundaere bakterielle/mykotische Otitis.',
+    examTips: 'Otoskopie: Milben als kleine weisse Punkte auf dunklem Hintergrund sichtbar. Ohrabstrich auf Objektträger mit Mineraloel, Mikroskop (4x-10x Vergroesserung). Beide Ohren immer untersuchen. Alle Tiere im Haushalt untersuchen und behandeln.',
     stats: [
-      { label: 'Groesse', value: '0.3-0.5', unit: 'mm' },
+      { label: 'Grösse', value: '0.3-0.5', unit: 'mm' },
       { label: 'Lebenszyklus', value: '3', unit: 'Wochen' },
-      { label: 'Lokalisation', value: 'Gehoergang', unit: '' },
+      { label: 'Lokalisation', value: 'Gehörgang', unit: '' },
       { label: 'Kontagiositaet', value: 'Hoch', unit: '' }
     ]
   },
@@ -271,13 +271,13 @@ const PARASITES = [
     hosts: ['Hund', 'Fuchs', 'Katze (selten)'],
     size: '0.2-0.4 mm',
     lifecycle: '2-3 Wochen Gesamtzyklus in der Haut. Weibchen graben Gaenge in die Epidermis und legen dort Eier ab. Hochkontagioes.',
-    diagnostics: 'Tiefes Hautgeschabsel (mehrere Stellen, v.a. Ohrraender, Ellbogen). Oft falsch-negativ (nur 20-50% Sensitivitaet)! Versuchstherapie bei klinischem Verdacht. Antikoerper-ELISA verfuegbar.',
-    therapy: 'Isoxazoline (Fluralaner, Sarolaner) - Mittel der Wahl. Selamectin Spot-on. Ivermectin s.c. (CAVE: MDR1-Defekt bei Collies!). Umgebung behandeln (Milben ueberleben 2-3 Tage abseits des Wirts).',
+    diagnostics: 'Tiefes Hautgeschabsel (mehrere Stellen, v.a. Ohrraender, Ellbogen). Oft falsch-negativ (nur 20-50% Sensitivitaet)! Versuchstherapie bei klinischem Verdacht. Antikörper-ELISA verfuegbar.',
+    therapy: 'Isoxazoline (Fluralaner, Sarolaner) - Mittel der Wahl. Selamectin Spot-on. Ivermectin s.c. (CAVE: MDR1-Defekt bei Collies!). Umgebung behandeln (Milben überleben 2-3 Tage abseits des Wirts).',
     zoonosis: { risk: 'ja', detail: 'Pseudoskabies beim Menschen: juckende Papeln v.a. an Armen und Rumpf. Selbstlimitierend (Milben koennen sich auf menschlicher Haut nicht vermehren).' },
     clinicalSignificance: 'Intensiver Juckreiz (staerkster Juckreiz aller Hauterkrankungen!). Alopezie, Erythem, Krusten und Schuppen v.a. an Ohrraendern, Ellbogen, Sprunggelenken, ventral. Positiver Pinnal-Pedal-Reflex (Ohr reiben = Kratzreflex).',
     examTips: 'Pinnal-Pedal-Reflex: Am Ohrrand reiben - positiver Kratzreflex bei >80% der betroffenen Hunde. Tiefes Hautgeschabsel an Ohrraendern und Ellbogen. Bei negativem Geschabsel und klinischem Verdacht: Versuchstherapie mit Isoxazolinen. Ansprechen innerhalb 2-4 Wochen bestaetigt Diagnose.',
     stats: [
-      { label: 'Groesse', value: '0.2-0.4', unit: 'mm' },
+      { label: 'Grösse', value: '0.2-0.4', unit: 'mm' },
       { label: 'Lebenszyklus', value: '2-3', unit: 'Wochen' },
       { label: 'Diagnostik-Sens.', value: '20-50', unit: '%' },
       { label: 'Pinnal-Pedal', value: '>80', unit: '% positiv' }
@@ -292,14 +292,14 @@ const PARASITES = [
     model: 'assets/models/parasites/roundworm.glb',
     hosts: ['Hund', 'Katze'],
     size: '5-18 cm',
-    lifecycle: 'Ei \u2192 L2 \u2192 L3 (Wanderlarve durch Leber/Lunge) \u2192 Adult im Duenndarm. Praenatale Infektion beim Hund (transplazentar)! Galaktogene Infektion bei Hund und Katze.',
-    diagnostics: 'Kotflotation (dickschalige, runde Eier, ~80 um). Direkter Wurmnachweis bei massivem Befall (Erbrechen oder Kotabsatz ganzer Wuermer). Patenz: 4-5 Wochen nach Infektion.',
+    lifecycle: 'Ei \u2192 L2 \u2192 L3 (Wanderlarve durch Leber/Lunge) \u2192 Adult im Dünndarm. Praenatale Infektion beim Hund (transplazentar)! Galaktogene Infektion bei Hund und Katze.',
+    diagnostics: 'Kotflotation (dickschalige, runde Eier, ~80 um). Direkter Wurmnachweis bei massivem Befall (Erbrechen oder Kotabsatz ganzer Würmer). Patenz: 4-5 Wochen nach Infektion.',
     therapy: 'Fenbendazol (Panacur), Pyrantel, Milbemycin. Welpen: Entwurmung ab 2. Lebenswoche alle 2 Wochen bis 2 Wochen nach Absetzen. Muttertier: Fenbendazol ab Tag 40 der Traechtigkeit.',
     zoonosis: { risk: 'ja', detail: 'Larva migrans visceralis (LMV) und Larva migrans ocularis (LMO) beim Menschen, v.a. Kinder! Erblindungsgefahr bei LMO. Jaehrlich Tausende Faelle weltweit.' },
-    clinicalSignificance: 'Welpen: Katzenbuckel (aufgeblaehter Bauch), Durchfall, Erbrechen, Entwicklungsverzoegerung, struppiges Fell. Massiver Befall: Darmobstruktion, Darmperforation. Lungenwanderung: Husten, Pneumonie. Adulte Tiere oft asymptomatisch (Traeger!).',
+    clinicalSignificance: 'Welpen: Katzenbuckel (aufgeblaehter Bauch), Durchfall, Erbrechen, Entwicklungsverzoegerung, struppiges Fell. Massiver Befall: Darmobstruktion, Darmperforation. Lungenwanderung: Husten, Pneumonie. Adulte Tiere oft asymptomatisch (Träger!).',
     examTips: 'Kotuntersuchung (Flotation) bei allen Welpen/Kaetzchen. Entwurmungsprotokoll nach ESCCAP-Richtlinien. Bei Welpen mit aufgeblaehtem Bauch ("Wurmbauch") und Durchfall: sofort entwurmen. Besitzer auf Zoonoserisiko hinweisen (Haendehygiene, Spielplaetze).',
     stats: [
-      { label: 'Groesse', value: '5-18', unit: 'cm' },
+      { label: 'Grösse', value: '5-18', unit: 'cm' },
       { label: 'Patenz', value: '4-5', unit: 'Wochen' },
       { label: 'Eier/Tag', value: '200000', unit: '' },
       { label: 'Eierstabilitaet', value: 'Jahre', unit: 'im Boden' }
@@ -314,14 +314,14 @@ const PARASITES = [
     model: 'assets/models/parasites/hookworm.glb',
     hosts: ['Hund', 'Katze'],
     size: '1-2 cm',
-    lifecycle: 'Perkutane Larveninfektion (durch die Haut) oder orale Aufnahme. Larva migrans durch Lunge. Adulte Wuermer haften mit Zaehnen an der Duenndarmschleimhaut und saugen Blut.',
+    lifecycle: 'Perkutane Larveninfektion (durch die Haut) oder orale Aufnahme. Larva migrans durch Lunge. Adulte Würmer haften mit Zähnen an der Dünndarmschleimhaut und saugen Blut.',
     diagnostics: 'Kotflotation (ovale, duennschalige Eier mit Morula-Stadium). Blutbild: regenerative Anaemie bei starkem Befall.',
     therapy: 'Fenbendazol, Pyrantel, Milbemycin. Bei schwerer Anaemie: Bluttransfusion erforderlich. Umgebungssanierung (Sandboeden besonders betroffen).',
-    zoonosis: { risk: 'ja', detail: 'Larva migrans cutanea (LMC) beim Menschen: serpiginoese, juckende Hautlaesionen v.a. an Fuessen und Haenden. Haeufig in tropischen/subtropischen Regionen.' },
-    clinicalSignificance: 'Haematophag (blutsaugend)! Schwere regenerative Anaemie besonders bei Welpen (toedlich moeglich). Blutige Diarrhoee, Melaena. Perkutane Infektion: Dermatitis an den Pfoten (Zwischenzehendermatitis). Gewichtsverlust, Apathie.',
+    zoonosis: { risk: 'ja', detail: 'Larva migrans cutanea (LMC) beim Menschen: serpiginoese, juckende Hautlaesionen v.a. an Fuessen und Haenden. Häufig in tropischen/subtropischen Regionen.' },
+    clinicalSignificance: 'Haematophag (blutsaugend)! Schwere regenerative Anaemie besonders bei Welpen (toedlich möglich). Blutige Diarrhoee, Melaena. Perkutane Infektion: Dermatitis an den Pfoten (Zwischenzehendermatitis). Gewichtsverlust, Apathie.',
     examTips: 'Kotflotation: Eier morphologisch von Spulwurmeiern unterscheiden (oval, duennschalig vs. rund, dickschalig). Blutbild: PCV/Hkt kontrollieren. Bei Anaemie + blutiger Diarrhoee bei Welpe: sofort Hakenwurmbefall in Betracht ziehen. Umgebungshygiene wichtig.',
     stats: [
-      { label: 'Groesse', value: '1-2', unit: 'cm' },
+      { label: 'Grösse', value: '1-2', unit: 'cm' },
       { label: 'Blutverlust', value: '0.1', unit: 'ml/Wurm/Tag' },
       { label: 'Patenz', value: '2-3', unit: 'Wochen' },
       { label: 'Infektion', value: 'Perkutan', unit: '+ oral' }
@@ -338,12 +338,12 @@ const PARASITES = [
     size: '15-60 cm (Dipylidium), bis 5 m (Taenia)',
     lifecycle: 'Obligater Zwischenwirt erforderlich! Dipylidium: Floh als Zwischenwirt. Taenia: Nagetiere/Kaninchen als Zwischenwirt. Echinococcus: Nagetiere (E. multilocularis) bzw. Schafe (E. granulosus).',
     diagnostics: 'Proglottiden im Kot oder Perianalregion (reiskornartig bei Dipylidium, flach bei Taenia). Kotflotation oft falsch-negativ (Eier werden in Eipaketen abgegeben, nicht einzeln)!',
-    therapy: 'Praziquantel (Droncit) - einziger zuverlaessiger Cestodenwirkstoff. Flohbekaempfung bei Dipylidium essenziell! Wiederholung nach 3-4 Wochen bei Reinfektionsgefahr.',
-    zoonosis: { risk: 'ja', detail: 'Dipylidium caninum: selten beim Menschen (v.a. Kleinkinder nach Flohverschlucken). Echinococcus granulosus/multilocularis: hochgefaehrlich! Zystische/alveolaere Echinokokkose (Leber, Lunge). Meldepflichtig!' },
+    therapy: 'Praziquantel (Droncit) - einziger zuverlaessiger Cestodenwirkstoff. Flohbekämpfung bei Dipylidium essenziell! Wiederholung nach 3-4 Wochen bei Reinfektionsgefahr.',
+    zoonosis: { risk: 'ja', detail: 'Dipylidium caninum: selten beim Menschen (v.a. Kleinkinder nach Flohverschlucken). Echinococcus granulosus/multilocularis: hochgefährlich! Zystische/alveolaere Echinokokkose (Leber, Lunge). Meldepflichtig!' },
     clinicalSignificance: 'Oft asymptomatisch beim Endwirt. Sichtbare Proglottiden im Kot oder Perianalregion ("Reiskoerner" bei Dipylidium). Juckreiz perianal ("Schlittenfahren"). Selten: Gewichtsverlust bei massivem Befall. Echinococcus: klinisch unauffaellig beim Hund, aber massive Zoonosegefahr!',
-    examTips: 'Perianalregion inspizieren (Proglottiden). Kotflotation hat geringe Sensitivitaet fuer Bandwuermer. Besitzer nach "Reiskoernern" im Kot oder am Schlafplatz fragen. Bei Dipylidium immer gleichzeitig Floehe behandeln! Bei Fuchs-/Wildkontakt: Echinococcus-Risiko ansprechen.',
+    examTips: 'Perianalregion inspizieren (Proglottiden). Kotflotation hat geringe Sensitivitaet für Bandwürmer. Besitzer nach "Reiskoernern" im Kot oder am Schlafplatz fragen. Bei Dipylidium immer gleichzeitig Flöhe behandeln! Bei Fuchs-/Wildkontakt: Echinococcus-Risiko ansprechen.',
     stats: [
-      { label: 'Groesse', value: '15-500', unit: 'cm' },
+      { label: 'Grösse', value: '15-500', unit: 'cm' },
       { label: 'Proglottiden', value: 'Reiskorn', unit: '-artig' },
       { label: 'Zwischenwirt', value: 'Floh', unit: '/Nagetier' },
       { label: 'Therapie', value: 'Praziquantel', unit: '' }
@@ -356,16 +356,16 @@ const PARASITES = [
     type: 'endo',
     color: '#e11d48',
     model: 'assets/models/parasites/heartworm.glb',
-    hosts: ['Hund (primaer)', 'Katze (selten)'],
+    hosts: ['Hund (primär)', 'Katze (selten)'],
     size: '15-30 cm (Adulte in Pulmonalarterien)',
-    lifecycle: 'Muecke uebertraegt L3-Larven beim Stich \u2192 Wanderung durch Gewebe \u2192 Mikrofilarien im Blut \u2192 Adulte Wuermer in Pulmonalarterien und rechtem Herzen. Praepatenzdauer: 6-7 Monate.',
-    diagnostics: 'Antigen-Schnelltest (SNAP 4Dx: Sensitivitaet >99% fuer Weibchen). Mikrofilarien-Nachweis im Blut (Knott-Test, Heparinblut). Thorax-Roentgen: vergroesserte Pulmonalarterien. Echokardiographie: Wuermer im rechten Herzen sichtbar.',
-    therapy: 'Adultizide: Melarsomin (Immiticide) i.m. nach AHS-Protokoll. Alternative "Slow-kill": Doxycyclin (gegen Wolbachia-Endosymbionten) + Ivermectin monatlich. Kastrierung der Mikrofilarien. Strikte Bewegungseinschraenkung waehrend Therapie!',
+    lifecycle: 'Muecke übertraegt L3-Larven beim Stich \u2192 Wanderung durch Gewebe \u2192 Mikrofilarien im Blut \u2192 Adulte Würmer in Pulmonalarterien und rechtem Herzen. Präpatenzdauer: 6-7 Monate.',
+    diagnostics: 'Antigen-Schnelltest (SNAP 4Dx: Sensitivitaet >99% für Weibchen). Mikrofilarien-Nachweis im Blut (Knott-Test, Heparinblut). Thorax-Roentgen: vergroesserte Pulmonalarterien. Echokardiographie: Würmer im rechten Herzen sichtbar.',
+    therapy: 'Adultizide: Melarsomin (Immiticide) i.m. nach AHS-Protokoll. Alternative "Slow-kill": Doxycyclin (gegen Wolbachia-Endosymbionten) + Ivermectin monatlich. Kastrierung der Mikrofilarien. Strikte Bewegungseinschraenkung während Therapie!',
     zoonosis: { risk: 'selten', detail: 'Dirofilariose beim Menschen: aberrante Larve bildet Lungenknoten (Zufallsbefund im Roentgen, DD Lungentumor). Keine adulte Wurmentwicklung beim Menschen.' },
-    clinicalSignificance: 'Husten, Leistungsintoleranz, Dyspnoe. Fortgeschritten: Rechtsherzinsuffizienz (Aszites, Stauungsleber). Caval-Syndrom (massiver Wurmbefall in Vena cava): akute haemolytische Krise, Schock. Endemisch in Suedeuropa, Tropen/Subtropen. Reiserueckkehrer!',
-    examTips: 'Reiseanamnese! Hund aus Suedeuropa/Mittelmeerraum: immer auf Herzwurm testen. SNAP-Test (Antigen) als Screening. Bei positivem Test: Stadieneinteilung (Roentgen, Echo, Labor). Mikrofilarien-Test fuer Uebertragungsrisiko. Prophylaxe bei Reise: Milbemycin/Ivermectin monatlich.',
+    clinicalSignificance: 'Husten, Leistungsintoleranz, Dyspnoe. Fortgeschritten: Rechtsherzinsuffizienz (Aszites, Stauungsleber). Caval-Syndrom (massiver Wurmbefall in Vena cava): akute hämolytische Krise, Schock. Endemisch in Südeuropa, Tropen/Subtropen. Reiserückkehrer!',
+    examTips: 'Reiseanamnese! Hund aus Südeuropa/Mittelmeerraum: immer auf Herzwurm testen. SNAP-Test (Antigen) als Screening. Bei positivem Test: Stadieneinteilung (Roentgen, Echo, Labor). Mikrofilarien-Test für Übertragungsrisiko. Prophylaxe bei Reise: Milbemycin/Ivermectin monatlich.',
     stats: [
-      { label: 'Groesse', value: '15-30', unit: 'cm' },
+      { label: 'Grösse', value: '15-30', unit: 'cm' },
       { label: 'Praepatenz', value: '6-7', unit: 'Monate' },
       { label: 'Lebensdauer', value: '5-7', unit: 'Jahre' },
       { label: 'Vektor', value: 'Muecke', unit: '(Culicidae)' }
@@ -380,14 +380,14 @@ const PARASITES = [
     model: 'assets/models/parasites/giardia.glb',
     hosts: ['Hund', 'Katze', 'Mensch'],
     size: '10-20 um (Trophozoit)',
-    lifecycle: 'Zyste (umweltresistent, infektioes) wird oral aufgenommen \u2192 Exzystierung im Duenndarm \u2192 Trophozoit (birnenfoermig, 2 Kerne, 4 Geisselpaare) heftet sich an Darmepithel \u2192 Enzystierung \u2192 Zyste wird mit Kot ausgeschieden. Sehr niedrige Infektionsdosis!',
-    diagnostics: 'SNAP-Giardia-Antigen-Test (Idexx): beste Einzeltest-Sensitivitaet. Kotflotation mit Zinksulfat (Zysten, birnenfoermig). Direktausstrich aus frischem Kot (Trophozoiten in Bewegung). 3 Kotproben an verschiedenen Tagen erhoehen Sensitivitaet (intermittierende Ausscheidung!).',
-    therapy: 'Fenbendazol 50 mg/kg einmal taeglich fuer 5 Tage (in Europa bevorzugt). Metronidazol 25 mg/kg zweimal taeglich fuer 5-7 Tage (neurotoxisch in Ueberdosis!). Kombination beider Wirkstoffe bei therapieresistenten Faellen. Umgebungshygiene: Baden am letzten Behandlungstag, Reinigung aller Liegeplaetze.',
-    zoonosis: { risk: 'ja', detail: 'Zoonotische Assemblages A und B kommen bei Hund, Katze und Mensch vor. Faeko-orale Uebertragung. Besondere Vorsicht bei immunsupprimierten Personen.' },
-    clinicalSignificance: 'Chronischer Duenndarm-Durchfall (hell, fettig, uebelriechend). Malabsorption, Gewichtsverlust v.a. bei Jungtieren. Oft subklinische Traeger (Ausscheider ohne Symptome!). Intermittierende Ausscheidung erschwert Diagnostik. In Tierheimen und Zuchten besonders problematisch.',
+    lifecycle: 'Zyste (umweltresistent, infektioes) wird oral aufgenommen \u2192 Exzystierung im Dünndarm \u2192 Trophozoit (birnenfoermig, 2 Kerne, 4 Geisselpaare) heftet sich an Darmepithel \u2192 Enzystierung \u2192 Zyste wird mit Kot ausgeschieden. Sehr niedrige Infektionsdosis!',
+    diagnostics: 'SNAP-Giardia-Antigen-Test (Idexx): beste Einzeltest-Sensitivitaet. Kotflotation mit Zinksulfat (Zysten, birnenfoermig). Direktausstrich aus frischem Kot (Trophozoiten in Bewegung). 3 Kotproben an verschiedenen Tagen erhöhen Sensitivitaet (intermittierende Ausscheidung!).',
+    therapy: 'Fenbendazol 50 mg/kg einmal taeglich für 5 Tage (in Europa bevorzugt). Metronidazol 25 mg/kg zweimal taeglich für 5-7 Tage (neurotoxisch in Überdosis!). Kombination beider Wirkstoffe bei therapieresistenten Faellen. Umgebungshygiene: Baden am letzten Behandlungstag, Reinigung aller Liegeplaetze.',
+    zoonosis: { risk: 'ja', detail: 'Zoonotische Assemblages A und B kommen bei Hund, Katze und Mensch vor. Faeko-orale Übertragung. Besondere Vorsicht bei immunsupprimierten Personen.' },
+    clinicalSignificance: 'Chronischer Dünndarm-Durchfall (hell, fettig, uebelriechend). Malabsorption, Gewichtsverlust v.a. bei Jungtieren. Oft subklinische Träger (Ausscheider ohne Symptome!). Intermittierende Ausscheidung erschwert Diagnostik. In Tierheimen und Zuchten besonders problematisch.',
     examTips: 'SNAP-Test als Erstdiagnostik (schnell, gute Sensitivitaet). Kotflotation mit Zinksulfat (nicht NaCl - Zysten kollabieren!). Mindestens 3 Kotproben an verschiedenen Tagen. Bei chronischem Durchfall und negativer Erstuntersuchung: wiederholen! Nach Therapie: Kontrolle 5-7 Tage nach Behandlungsende.',
     stats: [
-      { label: 'Groesse', value: '10-20', unit: 'um' },
+      { label: 'Grösse', value: '10-20', unit: 'um' },
       { label: 'Infektionsdosis', value: '10', unit: 'Zysten' },
       { label: 'Praepatenz', value: '5-16', unit: 'Tage' },
       { label: 'Zysten/g Kot', value: '10^5-10^7', unit: '' }
@@ -403,13 +403,13 @@ const PARASITES = [
     hosts: ['Hund', 'Katze', 'Kaninchen'],
     size: '20-40 um (Oozysten)',
     lifecycle: 'Unsporulierte Oozyste wird mit Kot ausgeschieden \u2192 Sporulation in der Umgebung (1-3 Tage) \u2192 orale Aufnahme der sporulierten Oozyste \u2192 Merogonie (asexuelle Vermehrung im Darmepithel) \u2192 Gamogonie (sexuelle Vermehrung) \u2192 Oozyste.',
-    diagnostics: 'Kotflotation: Oozysten (oval, farblos bis gelblich, 20-40 um). Autofluoreszenz unter UV-Licht. Quantitative Untersuchung (McMaster) fuer Befallsstaerke. Beachte: Oozysten koennen auch bei gesunden Tieren vorkommen (Interpretation im klinischen Kontext!).',
-    therapy: 'Toltrazuril (Baycox) 10-20 mg/kg einmalig, Wiederholung nach 1 Woche. Sulfonamide (Sulfadimethoxin) fuer 5-20 Tage als Alternative. Hygiene essenziell: Oozysten resistent gegen gaengige Desinfektionsmittel! Dampfreiniger oder Kresolloesung.',
-    zoonosis: { risk: 'nein', detail: 'Isospora/Cystoisospora sind artspezifisch. Kein Zoonoserisiko fuer den Menschen.' },
-    clinicalSignificance: 'Waessrig-blutiger Durchfall besonders bei Jungtieren (Welpen, Kaetzchen, Jungkaninchen). Dehydratation, Gewichtsverlust, Inappetenz. Oft selbstlimitierend bei adulten, immunkompetenten Tieren. Sekundaerinfektionen moeglich. Bei Kaninchen: E. stiedai (Leberkokzidiose) besonders gefaehrlich.',
-    examTips: 'Kotflotation bei allen Jungtieren mit Durchfall. Oozysten-Nachweis allein ist nicht gleichbedeutend mit Kokzidiose (auch bei gesunden Tieren moeglich). Klinische Relevanz bei hoher Oozystenzahl UND passenden Symptomen. Bei Kaninchen: getrennte Diagnostik fuer Darm- und Leberkokzidien.',
+    diagnostics: 'Kotflotation: Oozysten (oval, farblos bis gelblich, 20-40 um). Autofluoreszenz unter UV-Licht. Quantitative Untersuchung (McMaster) für Befallsstärke. Beachte: Oozysten koennen auch bei gesunden Tieren vorkommen (Interpretation im klinischen Kontext!).',
+    therapy: 'Toltrazuril (Baycox) 10-20 mg/kg einmalig, Wiederholung nach 1 Woche. Sulfonamide (Sulfadimethoxin) für 5-20 Tage als Alternative. Hygiene essenziell: Oozysten resistent gegen gaengige Desinfektionsmittel! Dampfreiniger oder Kresolloesung.',
+    zoonosis: { risk: 'nein', detail: 'Isospora/Cystoisospora sind artspezifisch. Kein Zoonoserisiko für den Menschen.' },
+    clinicalSignificance: 'Waessrig-blutiger Durchfall besonders bei Jungtieren (Welpen, Kaetzchen, Jungkaninchen). Dehydratation, Gewichtsverlust, Inappetenz. Oft selbstlimitierend bei adulten, immunkompetenten Tieren. Sekundaerinfektionen möglich. Bei Kaninchen: E. stiedai (Leberkokzidiose) besonders gefährlich.',
+    examTips: 'Kotflotation bei allen Jungtieren mit Durchfall. Oozysten-Nachweis allein ist nicht gleichbedeutend mit Kokzidiose (auch bei gesunden Tieren möglich). Klinische Relevanz bei hoher Oozystenzahl UND passenden Symptomen. Bei Kaninchen: getrennte Diagnostik für Darm- und Leberkokzidien.',
     stats: [
-      { label: 'Groesse', value: '20-40', unit: 'um' },
+      { label: 'Grösse', value: '20-40', unit: 'um' },
       { label: 'Sporulation', value: '1-3', unit: 'Tage' },
       { label: 'Praepatenz', value: '5-11', unit: 'Tage' },
       { label: 'Artspezifisch', value: 'Ja', unit: '' }
@@ -519,7 +519,7 @@ function showParasiteInfo(p) {
     '</div>' +
 
     '<div class="info-card">' +
-      '<h3>Groesse</h3>' +
+      '<h3>Grösse</h3>' +
       '<p>' + p.size + '</p>' +
     '</div>' +
 
