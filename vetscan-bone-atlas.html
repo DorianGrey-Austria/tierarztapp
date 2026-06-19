@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Knochen-Atlas</title>
+<meta name="description" content="Interaktiver 3D-Skelettanatomie-Atlas fuer die Veterinaermedizin">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#131829;--surface2:#1c2340;--surface3:#252d4a;
+  --primary:#3b82f6;--primary-dark:#2563eb;
+  --accent:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#06b6d4;
+  --text:#e2e8f0;--muted:#9ca3af;
+  --radius:12px;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+.app{display:grid;grid-template-columns:300px 1fr 340px;grid-template-rows:52px 1fr;height:100vh}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
+.header h1{font-size:1rem;font-weight:700}
+.header h1 span{color:var(--accent)}
+
+/* Left panel - Species + Bone selection */
+.left-panel{background:var(--surface);border-right:1px solid var(--surface2);overflow-y:auto;padding:12px}
+.section-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:12px 0 8px;padding:0 4px}
+.section-title:first-child{margin-top:4px}
+
+.species-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.sp-btn{padding:8px 10px;border:1px solid transparent;border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.72rem;text-align:center;transition:all 0.15s;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center}
+.sp-btn:hover{border-color:var(--primary)}
+.sp-btn.active{background:var(--primary);border-color:var(--primary-dark);font-weight:600}
+
+.bone-list{display:flex;flex-direction:column;gap:4px}
+.bone-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--text);cursor:pointer;font-size:0.82rem;text-align:left;transition:all 0.15s;width:100%;min-height:44px}
+.bone-btn:hover{background:var(--surface2)}
+.bone-btn.active{background:var(--primary);border-color:var(--primary-dark)}
+.bone-btn .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.bone-btn .label{flex:1}
+.bone-btn .region{font-size:0.65rem;padding:2px 6px;border-radius:4px;background:var(--surface3);color:var(--muted)}
+
+/* 3D Viewport */
+.viewport{position:relative;background:var(--bg)}
+.viewport canvas{display:block}
+
+/* Controls overlay */
+.scan-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:var(--radius);padding:6px;z-index:5}
+.scan-btn{padding:8px 16px;border:1px solid var(--surface2);border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.78rem;font-weight:500;transition:all 0.15s;white-space:nowrap;min-height:44px}
+.scan-btn:hover{border-color:var(--primary)}
+.scan-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+.mode-indicator{position:absolute;top:16px;left:50%;transform:translateX(-50%);padding:6px 16px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:20px;font-size:0.75rem;color:var(--accent);font-weight:600;z-index:5;display:none}
+
+/* Right panel - Bone info */
+.right-panel{background:var(--surface);border-left:1px solid var(--surface2);overflow-y:auto;padding:16px}
+.info-card{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.info-card h3{font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.info-card p{font-size:0.8rem;color:var(--muted);line-height:1.6}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.stat{background:var(--surface3);border-radius:8px;padding:10px}
+.stat .label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.stat .value{font-size:1.1rem;font-weight:700;margin-top:2px}
+.stat .unit{font-size:0.7rem;color:var(--muted)}
+
+.clinical-section{margin-top:12px}
+.clinical-box{padding:10px 12px;background:var(--surface3);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--warning)}
+.clinical-box h4{font-size:0.8rem;margin-bottom:4px;color:var(--warning)}
+.clinical-box p{font-size:0.72rem;color:var(--muted);line-height:1.4}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:20;transition:opacity 0.3s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{margin-top:12px;color:var(--muted);font-size:0.82rem}
+
+/* Welcome screen */
+.welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;z-index:3}
+.welcome .big-icon{font-size:5rem;margin-bottom:16px;opacity:0.2}
+.welcome h2{font-size:1.2rem;margin-bottom:8px;color:var(--text)}
+.welcome p{color:var(--muted);font-size:0.85rem;max-width:400px;line-height:1.6}
+
+/* Bone count badge */
+.bone-count{font-size:0.65rem;padding:2px 8px;border-radius:10px;background:var(--surface3);color:var(--muted);margin-left:auto}
+
+/* Responsive */
+@media(max-width:1280px){
+  .app{grid-template-columns:240px 1fr 300px}
+}
+@media(max-width:1024px){
+  .app{grid-template-columns:1fr;grid-template-rows:52px auto 50vh auto}
+  .left-panel{display:flex;gap:8px;overflow-x:auto;padding:8px;border-right:none;border-bottom:1px solid var(--surface2);flex-wrap:wrap}
+  .section-title{display:none}
+  .species-tabs{display:flex;gap:4px;flex-wrap:nowrap}
+  .bone-list{flex-direction:row;overflow-x:auto;flex-wrap:nowrap}
+  .bone-btn .region{display:none}
+  .right-panel{border-left:none;border-top:1px solid var(--surface2)}
+}
+@media(max-width:768px){
+  .app{grid-template-rows:52px auto 40vh auto}
+  .info-card{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .clinical-box p{display:none}
+}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1><span>&#x1F9B4;</span> VetScan Knochen-Atlas</h1>
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="vetscan-organ-explorer.html" style="color:var(--muted);text-decoration:none;font-size:0.75rem">Organ Explorer</a>
+      <a href="vetscan-3d-viewer.html" style="color:var(--muted);text-decoration:none;font-size:0.75rem">3D-Viewer</a>
+      <a href="vetscan-version-selector.html" style="color:var(--muted);text-decoration:none;font-size:0.75rem">Alle Werkzeuge</a>
+    </div>
+  </header>
+
+  <!-- Left Panel -->
+  <nav class="left-panel" id="leftPanel">
+    <div class="section-title">Kategorie waehlen</div>
+    <div class="species-tabs" id="speciesTabs"></div>
+    <div class="section-title">Knochen / Struktur</div>
+    <div class="bone-list" id="boneList"></div>
+  </nav>
+
+  <!-- 3D Viewport -->
+  <main class="viewport" id="viewport">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="load-text" id="loadText">Knochen-Atlas wird geladen...</div>
+    </div>
+    <div class="welcome" id="welcome">
+      <div class="big-icon">&#x1F9B4;</div>
+      <h2>Waehle einen Knochen zum Erkunden</h2>
+      <p>Waehle links eine Tierart und dann einen Knochen, um ihn in 3D zu betrachten. Klinische Informationen und Untersuchungstipps findest du rechts.</p>
+    </div>
+    <div class="mode-indicator" id="modeIndicator"></div>
+    <div class="scan-controls" id="scanControls" style="display:none">
+      <button class="scan-btn active" data-mode="standard">Standard</button>
+      <button class="scan-btn" data-mode="xray">Roentgen</button>
+    </div>
+  </main>
+
+  <!-- Right Panel - Bone Info -->
+  <aside class="right-panel" id="rightPanel">
+    <div class="info-card" id="boneInfo" style="display:none">
+      <h3 id="boneTitle"></h3>
+      <p id="boneDesc"></p>
+      <div class="stat-grid" id="boneStats"></div>
+    </div>
+
+    <div class="info-card" id="clinicalCard" style="display:none">
+      <h3>&#x26A0; Klinische Bedeutung</h3>
+      <div class="clinical-section" id="clinicalContent"></div>
+    </div>
+
+    <div class="info-card" id="examTips" style="display:none">
+      <h3>&#x1F9D1;&#x200D;&#x2695; Untersuchungstipps</h3>
+      <p id="examTipsContent"></p>
+    </div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// === SPECIES / CATEGORY TABS ===
+const SPECIES = [
+  { id:'dog', name:'Hund' },
+  { id:'cat', name:'Katze' },
+  { id:'horse', name:'Pferd' },
+  { id:'cow', name:'Rind' },
+  { id:'rabbit', name:'Kaninchen' },
+  { id:'bird', name:'Vogel' },
+  { id:'implants', name:'Implantate' },
+];
+
+// === VETERINARY BONE DATABASE ===
+const BONES = {
+  dog: [
+    {
+      id:'dog-skull', name:'Schaedel', species:'Hund', region:'Kopf',
+      model:'assets/models/bones/dog-skull.glb', color:'#e2e8f0',
+      description:'Der Hundeschaedel besteht aus ca. 50 Knochen, die durch Naehte verbunden sind. Die Schaedelform variiert stark je nach Rasse: Brachyzephal (Mops, Franz. Bulldogge), Mesozephal (Beagle, Labrador), Dolichozephal (Windhund, Collie). Die Fontanelle schliesst sich bei Zwergrassen manchmal nicht vollstaendig (persistierende Fontanelle).',
+      clinicalSignificance:'Frakturen nach Trauma (v.a. Kiefergelenksluxation, Mandibulafrakturen). Brachyzephales Syndrom mit obstruktiver Atemwegserkrankung. Kraniomandibulaere Osteopathie (CMO) bei Terriern. Kalvarientumoren (Osteosarkom selten am Schaedel).',
+      stats:[
+        {label:'Knochenanzahl',value:'~50',unit:''},
+        {label:'Naehte',value:'diverse',unit:'(Suturae)'},
+        {label:'Fontanelle',value:'molera',unit:'b. Zwergrassen'},
+        {label:'Formtypen',value:'3',unit:'Schaedelformen'}
+      ],
+      examTips:'Adspektion: Symmetrie, Schwellungen, Deformitaeten. Palpation: Kiefergelenk (TMJ), Masseter-Muskulatur, Fontanelle bei Zwergrassen. Roentgen: DV + lateral. CT bei Verdacht auf Schaedelfraktur oder Nasenhoehlenerkrankung. Zahnroentgen (intraorale Aufnahme) separat.'
+    },
+    {
+      id:'dog-mandible', name:'Unterkiefer (Mandibula)', species:'Hund', region:'Kopf',
+      model:'assets/models/bones/dog-mandible.glb', color:'#d4d4d8',
+      description:'Die Mandibula besteht aus zwei Haelften, die rostral an der Symphyse verbunden sind. Beim Hund ist die mandibulare Symphyse nicht verknoeochert, sondern fibrokartilaginoes. Der Unterkiefer traegt die unteren Schneidezaehne, Eckzaehne und Backenzaehne.',
+      clinicalSignificance:'Symphysenfrakturen (haeufig bei Katzen, auch beim Hund). Mandibulafrakturen im Bereich der Zahnwurzeln. Kiefergelenksluxation. Zahnerkrankungen (Parodontitis, Wurzelabszesse). Osteosarkom der Mandibula. Craniomandibulaere Osteopathie (CMO).',
+      stats:[
+        {label:'Haelften',value:'2',unit:'(Symphyse)'},
+        {label:'Symphyse',value:'fibroes',unit:'nicht verknoeochert'},
+        {label:'Zaehne unten',value:'6I+2C+8P+6M',unit:''},
+        {label:'Frakturlokalisation',value:'50%',unit:'Praemolarenbereich'}
+      ],
+      examTips:'Palpation: Symphyse auf Instabilitaet pruefen (v.a. nach Trauma). Kiefergelenk beidseits. Mundhoehle: Zahnfleisch, lockere Zaehne, Fisteln. Roentgen: DV der Mandibula, intraorale Aufnahmen fuer einzelne Zaehne. CAVE: Frakturen im Zahnwurzelbereich oft schwer sichtbar.'
+    },
+    {
+      id:'dog-femur', name:'Oberschenkelknochen (Femur)', species:'Hund', region:'Hintergliedmasse',
+      model:'assets/models/bones/dog-femur.glb', color:'#fafafa',
+      description:'Der Femur ist der laengste und kraeftigste Roehrenknochen des Hundes. Er artikuliert proximal mit dem Acetabulum (Hueftgelenk) und distal mit der Tibia (Kniegelenk). Der Femurkopf wird ueber die A. circumflexa femoris medialis versorgt.',
+      clinicalSignificance:'Femurfrakturen sind die haeufigsten langen Roehrenknochenfrakturen beim Hund (ca. 45% aller Frakturen). Legg-Calve-Perthes-Erkrankung bei Zwergrassen (aseptische Femurkopfnekrose). Hueftgelenksdysplasie (HD): Inkongruenz Femurkopf-Acetabulum. Patellaluxation: Sulcus trochlearis zu flach.',
+      stats:[
+        {label:'Frakturhaeufigkeit',value:'~45%',unit:'aller Frakturen'},
+        {label:'Blutversorgung',value:'A. circ.',unit:'fem. med.'},
+        {label:'LCP',value:'Zwergrassen',unit:'3-12 Monate'},
+        {label:'HD-Diagnostik',value:'ab 12',unit:'Monate (Roentgen)'}
+      ],
+      examTips:'Orthopaedische Untersuchung: Ortolani-Test (HD), Ganganalyse. Palpation: Trochanter major, Patella (Luxationsprobe Grad I-IV). Roentgen: VD gestreckt (HD-Screening), mediolateral (Frakturen). Bei Junghunden: Wachstumsfugen beachten (Salter-Harris-Klassifikation).'
+    },
+    {
+      id:'dog-humerus', name:'Oberarmknochen (Humerus)', species:'Hund', region:'Vordergliedmasse',
+      model:'assets/models/bones/dog-humerus.glb', color:'#f5f5f5',
+      description:'Der Humerus artikuliert proximal mit der Scapula (Schultergelenk) und distal mit Radius und Ulna (Ellbogengelenk). Der distale Humerus hat einen medialen und lateralen Kondylus, die beim Hund normalerweise vollstaendig fusionieren.',
+      clinicalSignificance:'Kondylaere Frakturen: v.a. lateraler Kondylus bei Spaniels. Incomplete Ossification of the Humeral Condyle (IOHC) -- rassepraeDisposition bei Spaniel, Labrador. Ellbogendysplasie: FPC, OCD, IPA, IOHC. Proximale Humerusfrakturen seltener.',
+      stats:[
+        {label:'Kondylenfusion',value:'8-12',unit:'Wochen'},
+        {label:'IOHC',value:'Spaniel',unit:'Praedisposition'},
+        {label:'ED-Formen',value:'4',unit:'(FPC,OCD,IPA,IOHC)'},
+        {label:'Frakturtyp',value:'kondylaer',unit:'am haeufigsten'}
+      ],
+      examTips:'Ellbogengelenk: Beugung, Streckung, Pronation/Supination pruefen. Schmerz bei Hyperextension? Gelenkfuellung? Roentgen: mediolateral gebeugt + craniocaudal. CT: Goldstandard fuer ED-Diagnostik und IOHC-Nachweis. Arthroskopie fuer FPC/OCD.'
+    },
+    {
+      id:'dog-pelvis', name:'Becken (Pelvis)', species:'Hund', region:'Rumpf',
+      model:'assets/models/bones/dog-pelvis.glb', color:'#e5e5e5',
+      description:'Das Becken (Pelvis) besteht aus dem Os coxae, das sich aus Ilium (Darmbein), Ischium (Sitzbein) und Pubis (Schambein) zusammensetzt. Diese drei Knochen vereinigen sich im Acetabulum (Hueftgelenkspfanne). Das Kreuzbein (Sacrum) verbindet die Wirbelsaeule mit dem Becken.',
+      clinicalSignificance:'Beckenfrakturen: haeufig bei Autounfaellen (Polytrauma!). Iliumfrakturen, Acetabularfrakturen, Pubis-/Ischiumfrakturen. HD-Roentgen: Acetabulumform und Norberg-Winkel. Triple Pelvic Osteotomy (TPO) bei juveniler HD. Beckenverengung nach Fraktur: Obstipation.',
+      stats:[
+        {label:'Knochen pro Seite',value:'3',unit:'(Il+Is+Pu)'},
+        {label:'Norberg-Winkel',value:'>105',unit:'Grad (normal)'},
+        {label:'TPO-Alter',value:'5-8',unit:'Monate'},
+        {label:'Traumaursache',value:'Autounfall',unit:'am haeufigsten'}
+      ],
+      examTips:'Palpation: Tuber coxae, Tuber ischiadicum beidseits auf Symmetrie. Rektale Untersuchung bei Verdacht auf Beckenverengung. Roentgen: VD gestreckt (HD-Position). Neurologische Untersuchung der Hinterhand (N. ischiadicus-Verlauf am Becken!). CT bei komplexen Acetabularfrakturen.'
+    },
+    {
+      id:'dog-ribcage', name:'Brustkorb (Thorax)', species:'Hund', region:'Rumpf',
+      model:'assets/models/bones/dog-ribcage.glb', color:'#d4d4d8',
+      description:'Der Brustkorb des Hundes besteht aus 13 Rippenpaaren und dem Sternum (Brustbein). Rippen 1-9 sind sternale (echte) Rippen, Rippen 10-12 asternale (falsche) Rippen, Rippe 13 ist eine fluktuierende Rippe. Das Sternum besteht aus 8 Sternebrae.',
+      clinicalSignificance:'Rippenfrakturen: nach Trauma, oft mehrere Rippen beteiligt (Flail Chest bei segmentalen Frakturen). Pneumothorax als Folge. Kongenitale Thoraxwanddeformitaeten: Pectus excavatum (Trichterbrust). Rippenneoplasien: Chondrosarkom, Osteosarkom.',
+      stats:[
+        {label:'Rippenpaare',value:'13',unit:''},
+        {label:'Sternale Rippen',value:'9',unit:'(echte)'},
+        {label:'Sternebrae',value:'8',unit:''},
+        {label:'Flail Chest',value:'>=2',unit:'segm. Frakturen'}
+      ],
+      examTips:'Palpation: Jede Rippe einzeln abtasten auf Krepitation, Schmerz, Schwellung. Thoraxkompressibilitaet? Auskultation: Atemgeraeusche in allen Quadranten. Roentgen: LL + DV (Thoraxaufnahmen). CAVE: Rippenfrakturen oft auf Roentgen schwer sichtbar, Ultraschall sensitiver! Bei Flail Chest: paradoxe Atmung.'
+    },
+    {
+      id:'dog-scapula', name:'Schulterblatt (Scapula)', species:'Hund', region:'Vordergliedmasse',
+      model:'assets/models/bones/dog-scapula.glb', color:'#e2e8f0',
+      description:'Die Scapula ist ein flacher Knochen, der die Vordergliedmasse mit dem Rumpf verbindet. Sie hat eine markante Spina scapulae und die Cavitas glenoidalis, die das Schultergelenk bildet. Beim Hund gibt es kein Schluesselbein (Clavicula rudimentaer).',
+      clinicalSignificance:'Scapulafrakturen: selten, aber bei schwerem Trauma moeglich. OCD der Schulter: laesion am kaudalen Rand der Cavitas glenoidalis. Bizepssehnenentzuendung am Tuberculum supraglenoidale. Suprascapularis-Neuropathie ("Sweeney" -- selten beim Hund). Infraspinatus-Kontraktur.',
+      stats:[
+        {label:'Frakturhaeufigkeit',value:'selten',unit:'(~2%)'},
+        {label:'OCD-Alter',value:'4-8',unit:'Monate'},
+        {label:'Clavicula',value:'rudimentaer',unit:''},
+        {label:'Spina scapulae',value:'prominent',unit:'palpierbar'}
+      ],
+      examTips:'Palpation: Spina scapulae, Acromion, Tuberculum supraglenoidale. Schultergelenk: Beugung/Streckung, Bizepssehnentest (Druck auf Sulcus intertubercularis bei Beugung). Roentgen: mediolateral Schulter. Arthroskopie: Goldstandard fuer OCD und Bizeps-Pathologie.'
+    },
+    {
+      id:'dog-spine-thoracic', name:'Brustwirbelsaeule', species:'Hund', region:'Rumpf',
+      model:'assets/models/bones/dog-spine-thoracic.glb', color:'#d4d4d8',
+      description:'Die Brustwirbelsaeule des Hundes besteht aus 13 Brustwirbeln (T1-T13). Jeder Wirbel artikuliert mit einem Rippenpaar. Der Anticlinalwirbel (T11) markiert den Uebergang von nach kaudal zu nach kranial gerichteten Dornfortsaetzen.',
+      clinicalSignificance:'Bandscheibenvorfall (IVDD): Hansen Typ I (akut, Chondrodystrophe Rassen -- Dackel!) und Typ II (chronisch, grosse Rassen). Spondylose deformans: degenerative Knochenbrueckenbildung. Wirbelkoerperfrakturen/-luxationen bei Trauma. Diskospondylitis (Infektion). Wobbler-Syndrom (eher cervikal).',
+      stats:[
+        {label:'Wirbel',value:'13',unit:'(T1-T13)'},
+        {label:'Anticlinal',value:'T11',unit:''},
+        {label:'IVDD-Praedisp.',value:'Dackel',unit:'Chondrodystrophe'},
+        {label:'Bandscheiben',value:'12',unit:'(T1-T2 bis T12-T13)'}
+      ],
+      examTips:'Palpation: Dornfortsaetze, paraspinale Muskulatur. Schmerzhaftigkeit? Druckdolenz? Neurologische Untersuchung: Propriozeption, Reflexe (Patella, Flexor), Pannikulus-Reflex zur Lokalisation. Roentgen: LL + VD. MRT: Goldstandard fuer IVDD und Rueckenmark. CAVE: Dackel mit ploetzlicher Paraplegie = NOTFALL (MRT + OP innerhalb 24-48h).'
+    },
+    {
+      id:'dog-tibia-fibula', name:'Schienbein/Wadenbein', species:'Hund', region:'Hintergliedmasse',
+      model:'assets/models/bones/dog-tibia-fibula.glb', color:'#fafafa',
+      description:'Die Tibia ist der Hauptlasttragsknochen des Unterschenkels. Die Fibula liegt lateral und ist deutlich duenner. Proximal bildet die Tibia mit dem Femur das Kniegelenk (mit Menisken und Kreuzbaendern). Die Tuberositas tibiae ist der Ansatzpunkt des Ligamentum patellae.',
+      clinicalSignificance:'Kreuzbandriss (CrCL-Ruptur): haeufigste orthopaedische Erkrankung grosser Hunde. TTA (Tibial Tuberosity Advancement) und TPLO (Tibial Plateau Leveling Osteotomy) als Therapie. Tibiafrakturen: haeufig bei Junghunden. Wachstumsfugenverletzungen (Salter-Harris). Meniskusschaden.',
+      stats:[
+        {label:'CrCL-OP',value:'TTA/TPLO',unit:''},
+        {label:'Tibiaplateau',value:'24-34',unit:'Grad (TPA)'},
+        {label:'Junghunde',value:'haeufig',unit:'Tibiafrakturen'},
+        {label:'Meniskusschaden',value:'40-60%',unit:'bei CrCL-Ruptur'}
+      ],
+      examTips:'Kniegelenk: Schubladentest (Cranial Drawer), Tibial Thrust Test. Meniskus-Klick? Gelenkfuellung? Tibial Plateau Angle (TPA) auf Roentgen messen. Roentgen: mediolateral + caudocranial. CAVE: Teilrisse des Kreuzbandes sind schwieriger zu diagnostizieren -- Arthroskopie oder MRT bei Verdacht.'
+    }
+  ],
+  cat: [
+    {
+      id:'cat-skull', name:'Katzenschaedel', species:'Katze', region:'Kopf',
+      model:'assets/models/bones/cat-skull.glb', color:'#e2e8f0',
+      description:'Der Katzenschaedel ist rundlicher und kuerzer als der Hundeschaedel. Die Orbitae sind proportional groesser. Die Nasengaenge sind relativ eng, was bei Erkrankungen schnell zu Atemnot fuehrt. Die Tympanopetrosalbullae sind gross und duennwandig.',
+      clinicalSignificance:'Kieferfrakturen: Mandibularsymphyse-Fraktur haeufigste Katzenfraktur nach Fenstersturz! Zahnresorptive Laesionen (FORL/TR) bei >50% der Katzen ueber 5 Jahre. Nasopharyngeale Erkrankungen: Polypen, Stenose. Otitis media: Bulla-Osteotomie.',
+      stats:[
+        {label:'Schaedelform',value:'rundlich',unit:'brachyzephal'},
+        {label:'FORL-Praevalenz',value:'>50%',unit:'ab 5 Jahre'},
+        {label:'Symphysenfraktur',value:'haeufigste',unit:'Fraktur'},
+        {label:'Tympanobulla',value:'gross',unit:'duennwandig'}
+      ],
+      examTips:'Mundhoehle: FORL-Screening (Sondieren!). Palpation: Symphyse, Kiefergelenk. Zahnroentgen (intraoral) fuer Wurzelresorption. CT: Goldstandard bei Bulla-Erkrankung, nasopharyngealen Polypen, Sinusitis. CAVE: Katzen mit Maulatmung = NOTFALL (obligate Nasenatmer).'
+    }
+  ],
+  horse: [
+    {
+      id:'horse-skull', name:'Pferdeschaedel', species:'Pferd', region:'Kopf',
+      model:'assets/models/bones/horse-skull.glb', color:'#e2e8f0',
+      description:'Der Pferdeschaedel ist extrem lang (bis 60 cm). Die Stirnhoehlen und Kieferhoehlen (Sinus maxillaris, frontalis) sind sehr gross und klinisch bedeutsam. Die Backenzaehne haben lange Reservekronen, die in den Sinus maxillaris ragen. Zahnformel: 3I 1C 3-4P 3M pro Halbkiefer.',
+      clinicalSignificance:'Sinusitis: primaer oder sekundaer (Zahnwurzelabszess!). Zahnprobleme: scharfe Kanten (Haken), Diastemen, EOTRH (Incisivi-Resorption alter Pferde). Frakturen: Mandibula (Hufschlag), Maxilla, Os incisivum. Kieferzysten. Headshaking (trigeminal-bedingt).',
+      stats:[
+        {label:'Schaedellaenge',value:'~60',unit:'cm'},
+        {label:'Sinus',value:'maxillaris',unit:'+ frontalis'},
+        {label:'Reservekrone',value:'6-8',unit:'cm (Backenzaehne)'},
+        {label:'Zaehne total',value:'36-44',unit:'(m/w verschieden)'}
+      ],
+      examTips:'Adspektion: Nasenausfluss (einseitig = Zahnwurzel/Sinus!). Perkussion der Sinus (gedaempft = gefuellt). Mundhoehle: Maulgatter, Spiegel, Endoskopie. Zahnbehandlung: Raspeln alle 6-12 Monate. Roentgen: schraege Projektionen fuer Backenzaehne. CT: Goldstandard fuer Sinus und Zaehne (stehend moeglich).'
+    },
+    {
+      id:'horse-cannon', name:'Roehrbein (Os metacarpale III)', species:'Pferd', region:'Vordergliedmasse',
+      model:'assets/models/bones/horse-cannon.glb', color:'#f5f5f5',
+      description:'Das Roehrbein (Cannon Bone, Os metacarpale III) ist der Hauptlastknochen der distalen Vordergliedmasse. Lateral und medial liegen die rudimentaeren Griffelbeine (Ossa metacarpalia II und IV). Das Roehrbein artikuliert distal mit dem Fesselbein (Fesselgelenk).',
+      clinicalSignificance:'Stressfrakturen: bei Rennpferden (dorsale Kortikalis), Kondylarfrakturen (Fesselgelenk). Griffelbeinfrakturen: haeufig bei Sportpferden. "Splints" (Desmitis des interossaeren Bandes). Periostitis: "Sore Shins" bei jungen Rennpferden.',
+      stats:[
+        {label:'Laenge',value:'22-28',unit:'cm'},
+        {label:'Griffelbeine',value:'Mc II+IV',unit:'rudimentaer'},
+        {label:'Stressfrakturen',value:'dorsal',unit:'Kortikalis'},
+        {label:'Belastung',value:'~5000',unit:'N beim Galopp'}
+      ],
+      examTips:'Palpation: Palmare Strukturen (Beugesehnen, Fesseltraeger), Griffelbeine auf Verdickung, dorsale Metacarpalflaeche auf Schmerz. Beugeprobe: Fesselgelenk. Roentgen: 4 Standardprojektionen. Szintigraphie bei Stressfraktur-Verdacht. Ultraschall: Weichteilstrukturen palmar.'
+    },
+    {
+      id:'horse-distal-limb', name:'Distale Gliedmasse', species:'Pferd', region:'Vordergliedmasse',
+      model:'assets/models/bones/horse-distal-limb.glb', color:'#e2e8f0',
+      description:'Die distale Gliedmasse besteht aus Fesselbein (Phalanx proximalis), Kronbein (Phalanx media) und Hufbein (Phalanx distalis). Das Strahlbein (Os sesamoideum distale) liegt palmar im Hufgelenk. Die Gleichbeine (Ossa sesamoidea proximalia) sichern den Fesseltraeger.',
+      clinicalSignificance:'Fesselbeinfrakturen (Sagittal-, Spiral-, Konfigurationsfrakturen). Hufgelenksentzuendung (Arthritis). Podotrochlose (Strahlbeinsyndrom): chronische Lahmheit der Vorderhand. Hufbeinfrakturen: Typ I-VII. Gleichbeinfrakturen: apikale, basilare, abaxiale Fragmente.',
+      stats:[
+        {label:'Knochen',value:'5',unit:'pro Gliedmasse'},
+        {label:'Hufgelenk',value:'P2-P3',unit:'+ Strahlbein'},
+        {label:'Podotrochlose',value:'vorne',unit:'haeufiger'},
+        {label:'MRI-Indikation',value:'Huf-',unit:'lahmheit'}
+      ],
+      examTips:'Lahmheitsuntersuchung: Ganganalyse auf hartem + weichem Boden, Kreise, Beugeprobe. Diagnostische Anaesthesien: TPA (Tiefer Palmarnerv), Hufgelenk, Fesselgelenk. Roentgen: Huf (Oxspring, DPr-PaDiO, lateral, skyline). MRT: Goldstandard fuer Huflahmheit (stehend moeglich).'
+    },
+    {
+      id:'horse-spine-lumbar', name:'Lendenwirbelsaeule', species:'Pferd', region:'Rumpf',
+      model:'assets/models/bones/horse-spine-lumbar.glb', color:'#d4d4d8',
+      description:'Die Lendenwirbelsaeule des Pferdes hat 6 Lendenwirbel (L1-L6). Die Querfortsaetze sind gross und breit. Der lumbosakrale Uebergang ist eine haeufige Schmerzlokalisation. Die Brustwirbelsaeule hat 18 Wirbel mit dorsal ueberlagernden Dornfortsaetzen.',
+      clinicalSignificance:'Kissing Spines (Ueberreitende Dornfortsaetze): v.a. T13-L2, haeufig bei Reitpferden. Spondylose deformans. Lumbosakrale Schmerzen (Sacroiliakal-Gelenk). Wirbelkoerperfrakturen nach Sturz/Ueberschlag. Osteoarthritis der Facettengelenke.',
+      stats:[
+        {label:'Lendenwirbel',value:'6',unit:'(L1-L6)'},
+        {label:'Kissing Spines',value:'T13-L2',unit:'Praedilektionsstelle'},
+        {label:'Brustwirbel',value:'18',unit:'(T1-T18)'},
+        {label:'Sacroiliakal',value:'SI-Gelenk',unit:'Schmerzquelle'}
+      ],
+      examTips:'Rueckenuntersuchung: Palpation der Dornfortsaetze (Druckschmerz?), Flexion/Extension des Rueckens (Reflexe). Longieren: Steifheit, Taktunreinheit? Roentgen: Dornfortsaetze (stehend moeglich). Ultraschall: Facettengelenke, SI-Gelenk. Szintigraphie: sensitiv fuer Knochenumbau. Diagnostische Anaesthesie: periartikulaer an Facettengelenke.'
+    }
+  ],
+  cow: [
+    {
+      id:'cow-skull', name:'Rinderschaedel', species:'Rind', region:'Kopf',
+      model:'assets/models/bones/cow-skull.glb', color:'#e2e8f0',
+      description:'Der Rinderschaedel zeichnet sich durch sehr grosse Stirnhoehlen (Sinus frontalis) aus, die sich weit nach kaudal erstrecken. Die Hornzapfen (Processus cornuales) sind knoeocherne Fortsaetze des Os frontale. Der Oberkiefer hat keine Schneidezaehne -- stattdessen eine harte Dentalplatte (Pulvinus dentalis).',
+      clinicalSignificance:'Enthornung (Dehorning): chirurgisch oder thermisch, wichtige Routine-Prozedur. Hornzapfenfraktur bei Horntraegern. Stirnhoehlenerkrankungen: Sinusitis, Stirnhoehlen-Trepanation. Oberkiefer-Zahnprobleme (selten). Nervus cornualis: Leitungsanaesthesie fuer Enthornung.',
+      stats:[
+        {label:'Stirnhoehle',value:'sehr gross',unit:'weit ausgedehnt'},
+        {label:'Schneidezaehne oben',value:'0',unit:'(Zahnplatte)'},
+        {label:'Hornzapfen',value:'Os frontale',unit:'knoeoechern'},
+        {label:'N. cornualis',value:'Leitungs-',unit:'anaesthesie'}
+      ],
+      examTips:'Adspektion: Hornstatus, Kopfhaltung, Nasenausfluss. Palpation: Stirnhoehlen (Perkussion: normal sonor, bei Sinusitis gedaempft). Enthornung: N. cornualis-Block (Mitte zwischen lateralem Augenwinkel und Hornbasis). Trepanation der Stirnhoehle: bei chronischer Sinusitis. CAVE: Rinder mit abgebrochenen Hoernern bluten stark (Hornzapfenarterie).'
+    }
+  ],
+  rabbit: [
+    {
+      id:'rabbit-skull', name:'Kaninchenschaedel', species:'Kaninchen', region:'Kopf',
+      model:'assets/models/bones/rabbit-skull.glb', color:'#e2e8f0',
+      description:'Der Kaninchenschaedel ist extrem fragil und leicht. Charakteristisch ist die Doppelreihe der oberen Schneidezaehne: hinter den grossen Incisivi liegen kleine Stiftzaehne (Dentes peg). Alle Kaninchenzaehne sind wurzellos und wachsen lebenslang (Elodontie). Die Schaedelknochen sind sehr duenn und brechen leicht.',
+      clinicalSignificance:'Zahnprobleme (Malokklusionen): haeufigste Erkrankung! Schneidezahn-Malokklusion und Backenzahn-Malokklusion (Brueckenbildung, Spitzen). Zahnwurzelabszesse: retrobulbaer oder mandibular. Enzephalitozoonose: E. cuniculi kann den Kopf betreffen (Kopfschiefhaltung). Schaedelfrakturen bei unsachgemaessem Handling.',
+      stats:[
+        {label:'Zahnwachstum',value:'lebenslang',unit:'(Elodontie)'},
+        {label:'Stiftzaehne',value:'2',unit:'hinter oberen I'},
+        {label:'Schaedeldicke',value:'extrem',unit:'duenn/fragil'},
+        {label:'Malokklusion',value:'haeufigste',unit:'Erkrankung'}
+      ],
+      examTips:'Mundhoehle: Otoskop oder Spreizer zum Einblick. Schneidezaehne: Laengenverhaeltnis, Okklusion. Backenzaehne: Spitzen? Bruecken? Roentgen: 5 Projektionen (LL, DV, beide Schraegen, rostrocaudal). CT: Goldstandard bei Zahnwurzelabszess. CAVE: Kaninchenschaedel sehr fragil -- vorsichtig handhaben, keine uebermassige Kraft bei Fixation!'
+    }
+  ],
+  bird: [
+    {
+      id:'bird-skeleton', name:'Vogelskelett', species:'Vogel', region:'Ganzes Skelett',
+      model:'assets/models/bones/bird-skeleton.glb', color:'#e2e8f0',
+      description:'Das Vogelskelett ist hoch spezialisiert fuer den Flug. Viele Knochen sind pneumatisiert (hohl, mit Luft aus den Luftsaecken gefuellt) und dadurch extrem leicht. Der Keel (Carina sterni) dient als Ansatz fuer die grosse Flugmuskulatur. Die Handknochen sind zu Carpometacarpus fusioniert. Das Skelett wiegt nur 5-10% des Koerpergewichts.',
+      clinicalSignificance:'Frakturen heilen anders als bei Saeugetieren: Callusbildung ist schnell, aber pneumatisierte Knochen koennen nicht mit intramedullaren Pins versorgt werden (Luftsack-Kontamination!). Keel-Frakturen bei Kollision. Flugunfaehigkeit nach Fraktur: Prognose abwaegen. Metabolische Knochenerkrankung (MBD) bei Mangelernaehrung (Kalzium/VitD3).',
+      stats:[
+        {label:'Skelettgewicht',value:'5-10',unit:'% KGW'},
+        {label:'Pneumatisation',value:'Humerus',unit:'Femur, Sternum'},
+        {label:'Keel (Carina)',value:'Brustbein',unit:'Flugmuskelansatz'},
+        {label:'Callusbildung',value:'schnell',unit:'7-14 Tage'}
+      ],
+      examTips:'Palpation: Keel (Body Condition Score 1-5 am Brustbein ablesen), Fluegel, Beine einzeln auf Krepitation und Schwellung pruefen. Roentgen: VD + lateral (Ganzkoerper). Frakturversorgung: External Fixateur bei langen Knochen, KEINE intramedullaren Pins bei pneumatisierten Knochen! Calcium/VitD3-Status pruefen bei MBD.'
+    }
+  ],
+  implants: [
+    {
+      id:'external-fixator', name:'Fixateur externe', species:'Alle', region:'Chirurgie',
+      model:'assets/models/bones/external-fixator.glb', color:'#6366f1',
+      description:'Der Fixateur externe ist ein chirurgisches Fixationssystem zur Stabilisierung von Frakturen. Er besteht aus transkutanen Pins, die in die Knochenfragmente eingebracht werden, und Verbindungsstangen oder -ringen aussen. Typen: Typ I (unilateral), Typ II (bilateral), Typ III (Ring-Fixateur/Ilizarov). Besonders geeignet fuer offene und infizierte Frakturen.',
+      clinicalSignificance:'Indikationen: offene Frakturen (Grad I-III), kontaminierte Frakturen, Gelenkarthrodese, Korrekturosteotomien, temporaere Fixation. Vorteile: minimale Weichteildissektion, postoperative Anpassung moeglich, einfache Entfernung. Komplikationen: Pin-Tract-Infektion (haeufigste!), Pin-Lockerung, Osteomyelitis.',
+      stats:[
+        {label:'Typen',value:'I, II, III',unit:'(+ Hybride)'},
+        {label:'Pin-Durchmesser',value:'20-30%',unit:'Knochenbreite'},
+        {label:'Komplikation',value:'Pin-Trakt',unit:'Infektion'},
+        {label:'Tragezeit',value:'6-12',unit:'Wochen'}
+      ],
+      examTips:'Postoperative Kontrolle: Pin-Trakt taeglich reinigen, Roetung/Ausfluss pruefen. Roentgen: Frakturheilung alle 4-6 Wochen kontrollieren. Dynamisierung: Verbindungsstangen lockern zur Stimulation der Kallusbildung. Entfernung: wenn radiologisch Heilung abgeschlossen (Kortikalisbruecke sichtbar).'
+    },
+    {
+      id:'fracture-plate', name:'Knochenplatte', species:'Alle', region:'Chirurgie',
+      model:'assets/models/bones/fracture-plate.glb', color:'#8b5cf6',
+      description:'Knochenplatten (DCP = Dynamic Compression Plate, LCP = Locking Compression Plate) werden mit Schrauben am Knochen fixiert. Sie bieten absolute Stabilitaet und ermoeglichen primaere Knochenheilung (direkte Heilung ohne sichtbaren Callus). LCP-Platten kombinieren Kompression mit winkelstabiler Verriegelung.',
+      clinicalSignificance:'Indikationen: Gelenkfrakturen (anatomische Reposition!), Schaftfrakturen, Korrekturosteotomien (TPLO, TTA). DCP: Kompression ueber exzentrische Schraubenloecher. LCP: winkelstabile Schrauben, schont Periost (biologische Osteosynthese). Titan vs. Stahl: Titan leichter, biokompatibel, MRT-faehig.',
+      stats:[
+        {label:'DCP-Prinzip',value:'Kompression',unit:'exzentrisch'},
+        {label:'LCP-Prinzip',value:'winkelstabil',unit:'+ Kompression'},
+        {label:'Material',value:'Titan/Stahl',unit:''},
+        {label:'Heilungstyp',value:'primaer',unit:'(ohne Callus)'}
+      ],
+      examTips:'OP-Planung: Roentgen in 2 Ebenen, Plattenwahl (DCP vs. LCP, Groesse), Schraubenlaenge (sollte gegenueberliegende Kortikalis fassen). Postoperativ: Roentgen sofort + 6 Wochen. Aktivitaetseinschraenkung: 8-12 Wochen. Implantatentfernung: nur bei Problemen (Infektion, Kaltverformung), sonst in situ belassen.'
+    },
+    {
+      id:'hip-prosthesis', name:'Hueftprothese (THR)', species:'Hund/Katze', region:'Chirurgie',
+      model:'assets/models/bones/hip-prosthesis.glb', color:'#10b981',
+      description:'Der Totale Hueftgelenkersatz (THR = Total Hip Replacement) ersetzt sowohl den Femurkopf (Schaft + Kugelkopf) als auch das Acetabulum (Pfanne). Systeme: zementiert (Biomedtrix BFX), zementfrei (BFX, Kyon HELICA). Die Prothese besteht aus einer Titanpfanne (mit Polyethylen-Inlay) und einem Titanschaft mit Keramik- oder Metallkopf.',
+      clinicalSignificance:'Indikationen: schwere Hueftgelenksdysplasie (HD Grad D/E), Femurkopfnekrose (Legg-Calve-Perthes), Acetabularfraktur, DJD (degenerative Gelenkerkrankung), Hueftluxation (chronisch rezidivierend). Erfolgsrate: >90% gute bis exzellente Ergebnisse. Komplikationen: Luxation (haeufigste!), Infektion, aseptische Lockerung, Femurfraktur.',
+      stats:[
+        {label:'Erfolgsrate',value:'>90%',unit:''},
+        {label:'Komplikation Nr.1',value:'Luxation',unit:'3-5%'},
+        {label:'Systeme',value:'zementiert',unit:'+ zementfrei'},
+        {label:'Mindestalter',value:'10-12',unit:'Monate'}
+      ],
+      examTips:'Praeopertaiv: Roentgen HD-Position + laterale Aufnahme beider Hueften. Template-Planung: Schaft- und Pfannengroesse bestimmen. Postoperativ: striktes Leinenprogramm 8-12 Wochen, Roentgen 6 + 12 Wochen. CAVE: keine Flexion >90 Grad + Adduktion (Luxationsrisiko). Langzeitkontrolle: jaehrliches Roentgen auf Lockerung.'
+    }
+  ]
+};
+
+// === APP STATE ===
+const state = {
+  currentSpecies: 'dog',
+  currentBone: null,
+  currentMode: 'standard',
+  scene: null, camera: null, renderer: null, controls: null,
+  currentModel: null,
+  loader: (() => {
+    const l = new GLTFLoader();
+    const d = new DRACOLoader();
+    d.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    l.setDRACOLoader(d);
+    return l;
+  })(),
+  clock: new THREE.Clock(),
+  modelBaseScale: 1,
+  reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+};
+
+// Listen for reduced-motion changes
+window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+  state.reducedMotion = e.matches;
+});
+
+// === BUILD UI ===
+function buildSpeciesTabs() {
+  const el = document.getElementById('speciesTabs');
+  el.innerHTML = SPECIES.map(s => {
+    const count = (BONES[s.id] || []).length;
+    return `<button class="sp-btn${s.id === state.currentSpecies ? ' active' : ''}" data-id="${s.id}">
+      ${s.name} <span class="bone-count">${count}</span>
+    </button>`;
+  }).join('');
+  el.querySelectorAll('.sp-btn').forEach(btn => {
+    btn.addEventListener('click', () => selectSpecies(btn.dataset.id));
+  });
+}
+
+function buildBoneList() {
+  const bones = BONES[state.currentSpecies] || [];
+  const el = document.getElementById('boneList');
+  el.innerHTML = bones.map(b =>
+    `<button class="bone-btn${state.currentBone?.id === b.id ? ' active' : ''}" data-id="${b.id}">
+      <span class="dot" style="background:${b.color}"></span>
+      <span class="label">${b.name}</span>
+      <span class="region">${b.region}</span>
+    </button>`
+  ).join('');
+  el.querySelectorAll('.bone-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const bone = bones.find(b => b.id === btn.dataset.id);
+      if (bone) selectBone(bone);
+    });
+  });
+}
+
+function selectSpecies(speciesId) {
+  state.currentSpecies = speciesId;
+  state.currentBone = null;
+  buildSpeciesTabs();
+  buildBoneList();
+  clearBoneInfo();
+  clearModel();
+}
+
+function selectBone(bone) {
+  state.currentBone = bone;
+  state.currentMode = 'standard';
+  buildBoneList();
+  showBoneInfo(bone);
+  loadBoneModel(bone);
+  document.getElementById('scanControls').style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+  // Reset scan buttons
+  document.querySelectorAll('.scan-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.scan-btn[data-mode="standard"]').classList.add('active');
+}
+
+// === BONE INFO PANEL ===
+function showBoneInfo(bone) {
+  const infoEl = document.getElementById('boneInfo');
+  infoEl.style.display = 'block';
+  document.getElementById('boneTitle').innerHTML = `<span style="color:${bone.color}">&#x25CF;</span> ${bone.name} <small style="color:var(--muted);font-weight:normal">(${bone.species})</small>`;
+  document.getElementById('boneDesc').textContent = bone.description;
+
+  const statsEl = document.getElementById('boneStats');
+  statsEl.innerHTML = bone.stats.map(s =>
+    `<div class="stat"><div class="label">${s.label}</div><div class="value">${s.value} <span class="unit">${s.unit}</span></div></div>`
+  ).join('');
+
+  // Clinical significance
+  const clinicalCard = document.getElementById('clinicalCard');
+  clinicalCard.style.display = 'block';
+  document.getElementById('clinicalContent').innerHTML =
+    `<div class="clinical-box"><h4>Klinische Relevanz</h4><p>${bone.clinicalSignificance}</p></div>`;
+
+  // Exam tips
+  const tipsEl = document.getElementById('examTips');
+  tipsEl.style.display = bone.examTips ? 'block' : 'none';
+  document.getElementById('examTipsContent').textContent = bone.examTips || '';
+}
+
+function clearBoneInfo() {
+  document.getElementById('boneInfo').style.display = 'none';
+  document.getElementById('clinicalCard').style.display = 'none';
+  document.getElementById('examTips').style.display = 'none';
+  document.getElementById('scanControls').style.display = 'none';
+}
+
+// === THREE.JS ===
+function initThreeJS() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  state.scene = new THREE.Scene();
+  state.scene.background = new THREE.Color(0x0a0e1a);
+
+  state.camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.01, 100);
+  state.camera.position.set(2, 1.5, 2);
+
+  state.renderer = new THREE.WebGLRenderer({ antialias: true });
+  state.renderer.setSize(rect.width, rect.height);
+  state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.2;
+  state.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(state.renderer.domElement);
+
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.08;
+  state.controls.autoRotate = true;
+  state.controls.autoRotateSpeed = 1.0;
+  state.controls.minDistance = 0.2;
+  state.controls.maxDistance = 10;
+
+  // Lighting for bone models
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  state.scene.add(ambient);
+
+  const key = new THREE.DirectionalLight(0xffffff, 1.5);
+  key.position.set(5, 8, 5);
+  state.scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fill.position.set(-3, 3, -5);
+  state.scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xffaa66, 0.3);
+  rim.position.set(0, -2, -3);
+  state.scene.add(rim);
+
+  // Grid
+  const grid = new THREE.GridHelper(6, 12, 0x1c2340, 0x131829);
+  state.scene.add(grid);
+
+  // Resize
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const { width, height } = e.contentRect;
+      state.camera.aspect = width / height;
+      state.camera.updateProjectionMatrix();
+      state.renderer.setSize(width, height);
+    }
+  });
+  ro.observe(container);
+
+  function animate() {
+    requestAnimationFrame(animate);
+    state.controls.update();
+
+    // Gentle rotation pulse (respects prefers-reduced-motion)
+    if (state.currentModel && state.modelBaseScale > 0 && !state.reducedMotion) {
+      const elapsed = state.clock.getElapsedTime();
+      const pulse = Math.sin(elapsed * 0.5 * Math.PI * 2) * 0.008;
+      state.currentModel.scale.setScalar(state.modelBaseScale * (1 + pulse));
+    }
+
+    state.renderer.render(state.scene, state.camera);
+  }
+
+  // Disable auto-rotate if user prefers reduced motion
+  if (state.reducedMotion) {
+    state.controls.autoRotate = false;
+  }
+
+  animate();
+  document.getElementById('loader').classList.add('hidden');
+}
+
+function clearModel() {
+  if (state.currentModel) {
+    state.scene.remove(state.currentModel);
+    state.currentModel.traverse(c => {
+      if (c.isMesh) {
+        c.geometry.dispose();
+        if (c.material.map) c.material.map.dispose();
+        c.material.dispose();
+      }
+    });
+    state.currentModel = null;
+  }
+  const indicator = document.getElementById('modeIndicator');
+  indicator.style.display = 'none';
+}
+
+function loadBoneModel(bone) {
+  const loader = document.getElementById('loader');
+  loader.classList.remove('hidden');
+  document.getElementById('loadText').textContent = 'Modell wird geladen...';
+
+  clearModel();
+
+  state.loader.load(
+    bone.model,
+    (gltf) => {
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 1.5 / maxDim;
+
+      model.scale.setScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      model.position.y -= (box.min.y * scale);
+
+      state.scene.add(model);
+      state.currentModel = model;
+      state.modelBaseScale = scale;
+
+      // Store original materials for scan mode switching
+      model.traverse(child => {
+        if (child.isMesh) {
+          child.userData.originalMaterial = child.material.clone();
+        }
+      });
+
+      // Apply current scan mode
+      applyScanMode(state.currentMode);
+
+      state.camera.position.set(2, 1.5, 2);
+      state.controls.target.set(0, size.y * scale * 0.4, 0);
+      state.controls.update();
+
+      loader.classList.add('hidden');
+    },
+    (prog) => {
+      if (prog.total > 0) {
+        document.getElementById('loadText').textContent = `${Math.round(prog.loaded/prog.total*100)}%`;
+      }
+    },
+    (err) => {
+      console.error('Load error:', err);
+      loader.classList.add('hidden');
+      showPlaceholderBone();
+    }
+  );
+}
+
+function showPlaceholderBone() {
+  clearModel();
+  const bone = state.currentBone;
+  if (!bone) return;
+
+  // Create a procedural placeholder -- bone-shaped icosahedron
+  const geo = new THREE.IcosahedronGeometry(0.45, 1);
+  const mat = new THREE.MeshStandardMaterial({
+    color: bone.color,
+    roughness: 0.7,
+    metalness: 0.05,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0.5;
+  state.scene.add(mesh);
+  state.currentModel = mesh;
+  state.modelBaseScale = 1;
+
+  const indicator = document.getElementById('modeIndicator');
+  indicator.textContent = 'Platzhalter (3D-Modell wird generiert)';
+  indicator.style.display = 'block';
+  indicator.style.color = '#f59e0b';
+}
+
+// === SCAN MODES ===
+function applyScanMode(mode) {
+  state.currentMode = mode;
+  if (!state.currentModel || !state.currentModel.traverse) return;
+
+  const indicator = document.getElementById('modeIndicator');
+
+  state.currentModel.traverse(child => {
+    if (!child.isMesh) return;
+    const orig = child.userData.originalMaterial;
+
+    switch (mode) {
+      case 'standard':
+        if (orig) child.material = orig.clone();
+        indicator.style.display = 'none';
+        break;
+      case 'xray':
+        child.material = new THREE.MeshPhongMaterial({
+          color: 0x88ccff, transparent: true, opacity: 0.35,
+          side: THREE.DoubleSide, depthWrite: false, emissive: 0x223344
+        });
+        indicator.textContent = 'Roentgen-Modus';
+        indicator.style.display = 'block';
+        indicator.style.color = '#3b82f6';
+        break;
+    }
+    child.material.needsUpdate = true;
+  });
+
+  const bgColors = { standard: 0x0a0e1a, xray: 0x050810 };
+  state.scene.background.setHex(bgColors[mode] || 0x0a0e1a);
+}
+
+// Scan controls
+document.querySelectorAll('.scan-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scan-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyScanMode(btn.dataset.mode);
+  });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  switch(e.key) {
+    case '1': applyScanMode('standard'); updateScanButtons('standard'); break;
+    case '2': applyScanMode('xray'); updateScanButtons('xray'); break;
+    case 'r': state.controls.autoRotate = !state.controls.autoRotate; break;
+  }
+});
+
+function updateScanButtons(mode) {
+  document.querySelectorAll('.scan-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+}
+
+// === INIT ===
+buildSpeciesTabs();
+buildBoneList();
+initThreeJS();
+</script>
+<script src="js/vetscan-shared.js"></script>
+<script src="js/vetscan-pro.js"></script>
+</body>
+</html>

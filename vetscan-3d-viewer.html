@@ -94,7 +94,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
   </header>
 
   <!-- Sidebar - Species Selection -->
-  <nav class="sidebar" id="sidebar" role="navigation" aria-label="Tierauswahl"></nav>
+  <nav class="sidebar" id="sidebar" role="navigation" aria-label="Modellauswahl"></nav>
 
   <!-- 3D Viewport -->
   <main class="viewport" id="viewport">
@@ -105,7 +105,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
     <div class="screenshot-hint" id="placeholder">
       <div class="big-icon">&#x1F43E;</div>
-      <p>Waehle ein Tier aus der Liste</p>
+      <p>Wähle ein Modell aus der Liste</p>
     </div>
 
     <!-- View mode selector -->
@@ -158,6 +158,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 // === Species Data ===
 const SPECIES = [
@@ -227,8 +228,8 @@ const SPECIES = [
   { id:'heart-systole', name:'Herz (Systole)', latin:'Cor - systole', file:'assets/models/animated/heart_systole.glb', icon:'&#x2764;', category:'Organ-Animation', tags:['Herz','Kontraktion','Kardiologie'] },
   { id:'heart-diastole', name:'Herz (Diastole)', latin:'Cor - diastole', file:'assets/models/animated/heart_diastole.glb', icon:'&#x2764;', category:'Organ-Animation', tags:['Herz','Relaxation','Kardiologie'] },
   { id:'lungs-inflated', name:'Lunge (Einatmung)', latin:'Pulmo - inspiratio', file:'assets/models/animated/lungs_inflated.glb', icon:'&#x1FAC1;', category:'Organ-Animation', tags:['Lunge','Einatmung','Respiration'] },
-  { id:'lungs-deflated', name:'Lunge (Ausatmung)', latin:'Pulmo - expiratio', file:'assets/models/animated/lungs_deflated.glb', icon:'&#x1FAC1;', category:'Organ-Animation', tags:['Lunge','Ausatmung','Respiration'] },
-  { id:'eye-dilated', name:'Auge (Mydriasis)', latin:'Oculus - mydriasis', file:'assets/models/animated/eye_dilated_pupil.glb', icon:'&#x1F441;', category:'Organ-Animation', tags:['Auge','Pupille','Neurologie'] },
+  { id:'red-blood-cells', name:'Erythrozyten', latin:'Erythrocyti', file:'assets/models/animated/red_blood_cells.glb', icon:'&#x1FA78;', category:'Organ-Animation', tags:['Blut','Zellen','Haematologie'] },
+  { id:'dna-helix', name:'DNA-Doppelhelix', latin:'Acidum deoxyribonucleicum', file:'assets/models/animated/dna_helix.glb', icon:'&#x1F9EC;', category:'Organ-Animation', tags:['Genetik','Molekular','Zelle'] },
   { id:'neuron-cell', name:'Nervenzelle', latin:'Neuron', file:'assets/models/animated/neuron_cell.glb', icon:'&#x1F9E0;', category:'Organ-Animation', tags:['Neuron','Nervensystem','Zelle'] },
 
   // Natur & Umgebung
@@ -237,6 +238,51 @@ const SPECIES = [
   { id:'butterfly', name:'Monarch-Falter', latin:'Danaus plexippus', file:'assets/models/animated/butterfly_monarch.glb', icon:'&#x1F98B;', category:'Natur', tags:['Schmetterling','Insekt','Bestaeubung'] },
   { id:'bee', name:'Honigbiene', latin:'Apis mellifera', file:'assets/models/animated/bee_honeybee.glb', icon:'&#x1F41D;', category:'Natur', tags:['Biene','Insekt','Bestaeubung'] },
   { id:'ladybug', name:'Marienkaefer', latin:'Coccinellidae', file:'assets/models/animated/ladybug.glb', icon:'&#x1F41E;', category:'Natur', tags:['Kaefer','Insekt','Nuetzling'] },
+
+  // Diagnostische Instrumente (11)
+  { id:'blood-pressure', name:'Blutdruckmessgerät', latin:'Sphygmomanometer', file:'assets/models/instruments/diagnostic/vet_equip_blood_pressure.glb', icon:'&#x1FA7A;', category:'Diagnostik', tags:['Blutdruck','Vitalzeichen','Monitoring'] },
+  { id:'reflex-hammer', name:'Reflexhammer', latin:'Martellus reflexus', file:'assets/models/instruments/diagnostic/vet_equip_reflex_hammer.glb', icon:'&#x1F528;', category:'Diagnostik', tags:['Neurologie','Reflexe','Untersuchung'] },
+  { id:'penlight', name:'Pupillenleuchte', latin:'Lux pupillae', file:'assets/models/instruments/diagnostic/vet_equip_penlight.glb', icon:'&#x1F526;', category:'Diagnostik', tags:['Neurologie','Pupillen','Licht'] },
+  { id:'pulse-oximeter', name:'Pulsoximeter', latin:'Oximetrum pulsus', file:'assets/models/instruments/diagnostic/vet_equip_pulse_oximeter.glb', icon:'&#x1FA7A;', category:'Diagnostik', tags:['Sauerstoff','Monitoring','Vitalzeichen'] },
+  { id:'glucometer', name:'Blutzuckermessgerät', latin:'Glucometrum', file:'assets/models/instruments/diagnostic/vet_equip_glucometer.glb', icon:'&#x1FA78;', category:'Diagnostik', tags:['Blutzucker','Diabetes','Labor'] },
+  { id:'microscope-diag', name:'Mikroskop', latin:'Microscopium', file:'assets/models/instruments/diagnostic/vet_equip_microscope.glb', icon:'&#x1F52C;', category:'Diagnostik', tags:['Labor','Zytologie','Vergrößerung'] },
+  { id:'centrifuge', name:'Zentrifuge', latin:'Centrifuga', file:'assets/models/instruments/diagnostic/vet_equip_centrifuge.glb', icon:'&#x1F504;', category:'Diagnostik', tags:['Labor','Blut','Separation'] },
+  { id:'test-tubes', name:'Reagenzgläser', latin:'Tubuli probatorii', file:'assets/models/instruments/diagnostic/vet_equip_test_tubes.glb', icon:'&#x1F9EA;', category:'Diagnostik', tags:['Labor','Proben','Analyse'] },
+  { id:'blood-smear', name:'Blutausstrich-Set', latin:'Frottis sanguinis', file:'assets/models/instruments/diagnostic/vet_equip_blood_smear.glb', icon:'&#x1FA78;', category:'Diagnostik', tags:['Hämatologie','Mikroskopie','Labor'] },
+  { id:'urine-dipstick', name:'Urinteststreifen', latin:'Stria urinaria', file:'assets/models/instruments/diagnostic/vet_equip_urine_dipstick.glb', icon:'&#x1F9EA;', category:'Diagnostik', tags:['Urologie','Screening','Labor'] },
+  { id:'xray-viewer', name:'Röntgenbetrachter', latin:'Negatoscopium', file:'assets/models/instruments/diagnostic/vet_equip_xray_viewer.glb', icon:'&#x2622;', category:'Diagnostik', tags:['Röntgen','Bildgebung','Befundung'] },
+
+  // Chirurgische Instrumente (10)
+  { id:'hemostats', name:'Hämostatische Klemmen', latin:'Forceps haemostaticae', file:'assets/models/instruments/surgical/vet_equip_hemostats.glb', icon:'&#x2702;', category:'Chirurgie', tags:['OP','Hämostase','Klemmen'] },
+  { id:'scissors-metzenbaum', name:'Metzenbaum-Schere', latin:'Forfex Metzenbaum', file:'assets/models/instruments/surgical/vet_equip_scissors_metzenbaum.glb', icon:'&#x2702;', category:'Chirurgie', tags:['OP','Schneiden','Präparation'] },
+  { id:'needle-holder', name:'Nadelhalter', latin:'Porta-acus', file:'assets/models/instruments/surgical/vet_equip_needle_holder.glb', icon:'&#x1FAA1;', category:'Chirurgie', tags:['OP','Naht','Nadel'] },
+  { id:'retractor-balfour', name:'Balfour-Retraktor', latin:'Retractor Balfour', file:'assets/models/instruments/surgical/vet_equip_retractor_balfour.glb', icon:'&#x1FAA1;', category:'Chirurgie', tags:['OP','Wundspreizer','Abdomen'] },
+  { id:'suture-needle', name:'Nahtmaterial', latin:'Sutura chirurgica', file:'assets/models/instruments/surgical/vet_equip_suture_needle.glb', icon:'&#x1FAA1;', category:'Chirurgie', tags:['OP','Naht','Wundverschluss'] },
+  { id:'electrocautery', name:'Elektrokauter', latin:'Cauterium electricum', file:'assets/models/instruments/surgical/vet_equip_electrocautery.glb', icon:'&#x26A1;', category:'Chirurgie', tags:['OP','Koagulation','Hämostase'] },
+  { id:'surgical-drape', name:'OP-Abdeckung', latin:'Velamen chirurgicum', file:'assets/models/instruments/surgical/vet_equip_surgical_drape.glb', icon:'&#x1F9FB;', category:'Chirurgie', tags:['OP','Sterilität','Abdeckung'] },
+  { id:'iv-catheter', name:'IV-Katheter', latin:'Catheter intravenous', file:'assets/models/instruments/surgical/vet_equip_iv_catheter.glb', icon:'&#x1F489;', category:'Chirurgie', tags:['Zugang','intravenös','Infusion'] },
+  { id:'endotracheal-tube', name:'Endotrachealtubus', latin:'Tubus endotrachealis', file:'assets/models/instruments/surgical/vet_equip_endotracheal_tube.glb', icon:'&#x1FAC1;', category:'Chirurgie', tags:['Anästhesie','Atemweg','Intubation'] },
+  { id:'laryngoscope', name:'Laryngoskop', latin:'Laryngoscopium', file:'assets/models/instruments/surgical/vet_equip_laryngoscope.glb', icon:'&#x1F526;', category:'Chirurgie', tags:['Anästhesie','Intubation','Kehlkopf'] },
+
+  // Behandlungsequipment (9)
+  { id:'iv-fluid-bag', name:'Infusionsbeutel', latin:'Sacculus infusionis', file:'assets/models/instruments/treatment/vet_equip_iv_fluid_bag.glb', icon:'&#x1F4A7;', category:'Behandlung', tags:['Infusion','Flüssigkeit','Therapie'] },
+  { id:'bandage-roll', name:'Verbandrolle', latin:'Fasciae volumen', file:'assets/models/instruments/treatment/vet_equip_bandage_roll.glb', icon:'&#x1FA79;', category:'Behandlung', tags:['Verband','Wundversorgung','Fixation'] },
+  { id:'splint', name:'Schiene', latin:'Ferula', file:'assets/models/instruments/treatment/vet_equip_splint.glb', icon:'&#x1F9B4;', category:'Behandlung', tags:['Fraktur','Immobilisation','Orthopädie'] },
+  { id:'e-collar', name:'Halskragen (Trichter)', latin:'Collare Elisabethanum', file:'assets/models/instruments/treatment/vet_equip_e_collar.glb', icon:'&#x1F6E1;', category:'Behandlung', tags:['Schutz','Leckschutz','postoperativ'] },
+  { id:'muzzle', name:'Maulkorb', latin:'Capistrum', file:'assets/models/instruments/treatment/vet_equip_muzzle.glb', icon:'&#x1F43E;', category:'Behandlung', tags:['Fixation','Sicherheit','Handling'] },
+  { id:'nail-clippers', name:'Krallenzange', latin:'Forfex unguium', file:'assets/models/instruments/treatment/vet_equip_nail_clippers.glb', icon:'&#x2702;', category:'Behandlung', tags:['Pflege','Krallen','Routine'] },
+  { id:'dental-scaler', name:'Zahnsteinentferner', latin:'Scalator dentalis', file:'assets/models/instruments/treatment/vet_equip_dental_scaler.glb', icon:'&#x1F9B7;', category:'Behandlung', tags:['Dental','Zahnstein','Prophylaxe'] },
+  { id:'feeding-tube', name:'Fütterungssonde', latin:'Tubus nutritorius', file:'assets/models/instruments/treatment/vet_equip_feeding_tube.glb', icon:'&#x1F4A7;', category:'Behandlung', tags:['Ernährung','Sonde','Intensiv'] },
+  { id:'wound-care-kit', name:'Wundversorgungsset', latin:'Apparatus vulnerum', file:'assets/models/instruments/treatment/vet_equip_wound_care_kit.glb', icon:'&#x1FA79;', category:'Behandlung', tags:['Wunde','Versorgung','Desinfektion'] },
+
+  // Praxisausstattung (7)
+  { id:'xray-machine', name:'Röntgengerät', latin:'Apparatus radiographicus', file:'assets/models/equipment/vet_equip_xray_machine.glb', icon:'&#x2622;', category:'Praxisausstattung', tags:['Bildgebung','Röntgen','Diagnostik'] },
+  { id:'ultrasound-machine', name:'Ultraschallgerät', latin:'Apparatus ultrasonicus', file:'assets/models/equipment/vet_equip_ultrasound_machine.glb', icon:'&#x1F4F1;', category:'Praxisausstattung', tags:['Bildgebung','Sonographie','Diagnostik'] },
+  { id:'surgery-table', name:'OP-Tisch', latin:'Mensa chirurgica', file:'assets/models/equipment/vet_equip_surgery_table.glb', icon:'&#x1F6CF;', category:'Praxisausstattung', tags:['OP','Möbel','Chirurgie'] },
+  { id:'anesthesia-machine', name:'Narkosegerät', latin:'Apparatus anaesthesiae', file:'assets/models/equipment/vet_equip_anesthesia_machine.glb', icon:'&#x1F4A4;', category:'Praxisausstattung', tags:['Anästhesie','Inhalation','Monitoring'] },
+  { id:'dental-unit', name:'Dentaleinheit', latin:'Apparatus dentalis', file:'assets/models/equipment/vet_equip_dental_unit.glb', icon:'&#x1F9B7;', category:'Praxisausstattung', tags:['Dental','Station','Zahnmedizin'] },
+  { id:'autoclave', name:'Autoklav', latin:'Autoclavum', file:'assets/models/equipment/vet_equip_autoclave.glb', icon:'&#x2668;', category:'Praxisausstattung', tags:['Sterilisation','Hygiene','Dampf'] },
+  { id:'examination-table', name:'Untersuchungstisch', latin:'Mensa examinationis', file:'assets/models/equipment/vet_equip_examination_table.glb', icon:'&#x1F6CF;', category:'Praxisausstattung', tags:['Untersuchung','Möbel','Grundausstattung'] },
 ];
 
 // === App State ===
@@ -251,7 +297,13 @@ const state = {
   camera: null,
   renderer: null,
   controls: null,
-  loader: new GLTFLoader(),
+  loader: (() => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    loader.setDRACOLoader(dracoLoader);
+    return loader;
+  })(),
   gridHelper: null,
   animationId: null,
   clock: new THREE.Clock(),
@@ -286,6 +338,10 @@ const ANIM_PROFILES = {
   'Dynamische Posen': 'mammal',
   'Organ-Animation': 'medical',
   'Natur': 'nature',
+  'Diagnostik': 'equipment',
+  'Chirurgie': 'equipment',
+  'Behandlung': 'equipment',
+  'Praxisausstattung': 'equipment',
 };
 
 // === Build Sidebar ===
@@ -444,6 +500,7 @@ function initThreeJS() {
     else if (profile === 'bird') { breathRate = 1.5; breathAmt = 0.008; }
     else if (profile === 'reptile') { breathRate = 0.3; breathAmt = 0.006; }
     else if (profile === 'medical') { breathRate = ANIM.pulseRate; breathAmt = ANIM.pulseAmount; }
+    else if (profile === 'equipment') { breathRate = 0.2; breathAmt = 0.003; }
     else if (profile === 'nature') { breathRate = 0.4; breathAmt = 0.02; }
 
     const breathPhase = Math.sin(elapsed * breathRate * Math.PI * 2);
@@ -465,7 +522,7 @@ function initThreeJS() {
     }
 
     // Idle sway (gentle body rotation)
-    if (profile !== 'medical' && profile !== 'nature') {
+    if (profile !== 'medical' && profile !== 'nature' && profile !== 'equipment') {
       const swayX = Math.sin(elapsed * ANIM.swayRate * Math.PI * 2) * ANIM.swayAmount;
       const swayZ = Math.cos(elapsed * ANIM.swayRate * 0.7 * Math.PI * 2) * ANIM.swayAmount * 0.5;
       state.currentModel.rotation.z = swayX;
@@ -498,7 +555,7 @@ function initThreeJS() {
 
   // Hide loader
   document.getElementById('loader').classList.add('hidden');
-  document.getElementById('statusLeft').textContent = `${SPECIES.length} Tiermodelle verfuegbar`;
+  document.getElementById('statusLeft').textContent = `${SPECIES.length} 3D-Modelle verfügbar`;
 }
 
 // === Load Species ===

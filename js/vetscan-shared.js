@@ -28,6 +28,8 @@
     { id: 'organ-explorer', name: 'Organ Explorer', file: 'vetscan-organ-explorer.html', icon: '\u{1F52C}', category: '3D' },
     { id: 'animated-showcase', name: 'Animierte 3D-Szenen', file: 'vetscan-animated-showcase.html', icon: '\u{1F3AC}', category: '3D' },
     { id: 'pathology-scanner', name: 'Pathologie-Scanner', file: 'vetscan-pathology-scanner.html', icon: '\u{1F50D}', category: 'Diagnostik' },
+    { id: 'parasite-atlas', name: 'Parasiten-Atlas', file: 'vetscan-parasite-atlas.html', icon: '\u{1F9EC}', category: '3D' },
+    { id: 'bone-atlas', name: 'Knochen-Atlas', file: 'vetscan-bone-atlas.html', icon: '\u{1F9B4}', category: '3D' },
     { id: 'dashboard', name: 'Dashboard', file: 'vetscan-dashboard.html', icon: '\u{1F3E0}', category: 'System' },
   ];
 

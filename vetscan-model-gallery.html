@@ -116,6 +116,7 @@ html,body{min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe U
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const MODELS = [
   {name:"brain_lateral_view",label:"Gehirn (Lateral)",cat:"Organe",size:1157},
@@ -181,7 +182,10 @@ const MODELS = [
 ];
 
 const BASE = 'assets/models/animated/';
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
 const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 let activeFilter = 'Alle';
 let modalIdx = -1;
 let modalScene, modalCamera, modalRenderer, modalControls, modalModel, modalAnimId;
@@ -238,34 +242,35 @@ function buildGrid() {
   document.getElementById('totalCount').textContent = filtered.length;
 }
 
-// === Thumbnail renderer ===
-function loadThumbnail(idx, m) {
+// === Shared thumbnail renderer (single WebGL context for all cards) ===
+const thumbScene = new THREE.Scene();
+thumbScene.background = new THREE.Color(0x080c16);
+const thumbCam = new THREE.PerspectiveCamera(40, 260/200, 0.1, 50);
+const thumbRenderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+thumbRenderer.setSize(260, 200);
+thumbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+thumbRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+thumbRenderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const thumbAmb = new THREE.AmbientLight(0xffffff, 0.5);
+thumbScene.add(thumbAmb);
+const thumbDir = new THREE.DirectionalLight(0xffffff, 1.0);
+thumbDir.position.set(3, 5, 4);
+thumbScene.add(thumbDir);
+const thumbFill = new THREE.DirectionalLight(0x6688cc, 0.3);
+thumbFill.position.set(-2, 1, -3);
+thumbScene.add(thumbFill);
+
+// Queue-based loading to avoid overloading
+const thumbQueue = [];
+let thumbBusy = false;
+
+function processThumbQueue() {
+  if (thumbBusy || thumbQueue.length === 0) return;
+  thumbBusy = true;
+  const { idx, m } = thumbQueue.shift();
   const container = document.getElementById(`vp-${idx}`);
-  if (!container || container.dataset.loaded) return;
-  container.dataset.loaded = '1';
-
-  const w = container.clientWidth || 260;
-  const h = container.clientHeight || 200;
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080c16);
-  const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 50);
-  camera.position.set(2.5, 1.8, 2.5);
-
-  const renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
-  renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-
-  const amb = new THREE.AmbientLight(0xffffff, 0.5);
-  scene.add(amb);
-  const dir = new THREE.DirectionalLight(0xffffff, 1.0);
-  dir.position.set(3, 5, 4);
-  scene.add(dir);
-  const fill = new THREE.DirectionalLight(0x6688cc, 0.3);
-  fill.position.set(-2, 1, -3);
-  scene.add(fill);
+  if (!container || container.dataset.loaded === 'done') { thumbBusy = false; processThumbQueue(); return; }
 
   loader.load(BASE + m.name + '.glb', (gltf) => {
     const model = gltf.scene;
@@ -276,20 +281,44 @@ function loadThumbnail(idx, m) {
     model.scale.setScalar(s);
     model.position.sub(center.multiplyScalar(s));
     model.position.y -= box.min.y * s;
-    scene.add(model);
-
-    camera.position.set(2.2, 1.5, 2.2);
-    camera.lookAt(0, size.y * s * 0.35, 0);
-
-    container.innerHTML = '';
-    container.appendChild(renderer.domElement);
-
-    // Render a single static frame (no infinite rAF loop = no memory leak)
     model.rotation.y = 0.4;
-    renderer.render(scene, camera);
+    thumbScene.add(model);
+
+    thumbCam.position.set(2.2, 1.5, 2.2);
+    thumbCam.lookAt(0, size.y * s * 0.35, 0);
+    thumbRenderer.render(thumbScene, thumbCam);
+
+    // Copy to an <img> element
+    const dataUrl = thumbRenderer.domElement.toDataURL('image/webp', 0.8);
+    const img = new Image();
+    img.src = dataUrl;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    container.innerHTML = '';
+    container.appendChild(img);
+    container.dataset.loaded = 'done';
+
+    // Cleanup from shared scene
+    thumbScene.remove(model);
+    model.traverse(c => {
+      if (c.isMesh) { c.geometry.dispose(); c.material.dispose(); }
+    });
+
+    thumbBusy = false;
+    processThumbQueue();
   }, undefined, () => {
-    container.querySelector('.card-loading').textContent = 'Fehler';
+    if (container.querySelector('.card-loading'))
+      container.querySelector('.card-loading').textContent = 'Fehler';
+    container.dataset.loaded = 'done';
+    thumbBusy = false;
+    processThumbQueue();
   });
+}
+
+function loadThumbnail(idx, m) {
+  const container = document.getElementById(`vp-${idx}`);
+  if (!container || container.dataset.loaded === 'done') return;
+  thumbQueue.push({ idx, m });
+  processThumbQueue();
 }
 
 // === Modal ===

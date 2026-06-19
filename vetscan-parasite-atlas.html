@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VetScan Pro - Parasiten-Atlas</title>
+<meta name="description" content="Interaktiver 3D-Parasitenatlas fuer die Veterinaermedizin mit Identifikation und Diagnostik">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e1a;--surface:#131829;--surface2:#1c2340;--surface3:#252d4a;
+  --primary:#3b82f6;--primary-dark:#2563eb;
+  --accent:#10b981;--danger:#ef4444;--warning:#f59e0b;--info:#06b6d4;
+  --text:#e2e8f0;--muted:#9ca3af;
+  --radius:12px;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+.app{display:grid;grid-template-columns:320px 1fr 360px;grid-template-rows:52px 1fr;height:100vh}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--surface2)}
+.header h1{font-size:1rem;font-weight:700}
+.header h1 span{color:var(--accent)}
+.header-links{display:flex;gap:12px;align-items:center}
+.header-links a{color:var(--muted);text-decoration:none;font-size:0.75rem;min-height:44px;min-width:44px;display:flex;align-items:center;justify-content:center;padding:0 8px;border-radius:8px;transition:color 0.15s}
+.header-links a:hover{color:var(--text)}
+
+/* Left panel */
+.left-panel{background:var(--surface);border-right:1px solid var(--surface2);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.section-title{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:8px 0 4px;padding:0 4px}
+.section-title:first-child{margin-top:0}
+
+/* Filter buttons */
+.filter-bar{display:flex;gap:4px}
+.filter-btn{flex:1;padding:10px 8px;border:1px solid transparent;border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.78rem;text-align:center;transition:all 0.15s;min-height:44px;font-weight:500}
+.filter-btn:hover{border-color:var(--primary)}
+.filter-btn.active{background:var(--primary);border-color:var(--primary-dark);font-weight:600}
+
+/* Parasite grid */
+.parasite-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;overflow-y:auto;align-content:start}
+.parasite-card{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:1px solid transparent;border-radius:var(--radius);background:var(--surface2);cursor:pointer;transition:all 0.15s;min-height:44px;text-align:center}
+.parasite-card:hover{border-color:var(--primary);background:var(--surface3)}
+.parasite-card.active{border-color:var(--primary);background:rgba(59,130,246,0.15)}
+.parasite-card .card-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.parasite-card .card-name{font-size:0.78rem;font-weight:600;line-height:1.3}
+.parasite-card .card-latin{font-size:0.62rem;color:var(--muted);font-style:italic}
+.parasite-card .card-type{font-size:0.58rem;padding:2px 6px;border-radius:4px;margin-top:2px}
+.type-ekto{background:rgba(239,68,68,0.15);color:var(--danger)}
+.type-endo{background:rgba(16,185,129,0.15);color:var(--accent)}
+
+/* 3D Viewport */
+.viewport{position:relative;background:var(--bg)}
+.viewport canvas{display:block}
+
+.model-label{position:absolute;top:16px;left:50%;transform:translateX(-50%);padding:6px 16px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:20px;font-size:0.75rem;color:var(--accent);font-weight:600;z-index:5;display:none;white-space:nowrap}
+
+.viewport-controls{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;background:rgba(19,24,41,0.92);backdrop-filter:blur(12px);border:1px solid var(--surface2);border-radius:var(--radius);padding:6px;z-index:5}
+.vp-btn{padding:8px 16px;border:1px solid var(--surface2);border-radius:8px;background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.78rem;font-weight:500;transition:all 0.15s;white-space:nowrap;min-height:44px;display:flex;align-items:center;gap:6px}
+.vp-btn:hover{border-color:var(--primary)}
+.vp-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+/* Right panel */
+.right-panel{background:var(--surface);border-left:1px solid var(--surface2);overflow-y:auto;padding:16px}
+.info-card{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.info-card h3{font-size:0.9rem;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.info-card p,.info-card li{font-size:0.8rem;color:var(--muted);line-height:1.6}
+.info-card ul{padding-left:16px;margin-top:4px}
+.info-card ul li{margin-bottom:4px}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.stat{background:var(--surface3);border-radius:8px;padding:10px}
+.stat .label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.stat .value{font-size:1.1rem;font-weight:700;margin-top:2px}
+.stat .unit{font-size:0.7rem;color:var(--muted)}
+
+.detail-row{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.detail-label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);min-width:72px;flex-shrink:0;padding-top:2px}
+.detail-value{font-size:0.8rem;color:var(--text);line-height:1.5}
+
+.zoonose-badge{display:inline-block;font-size:0.68rem;padding:3px 8px;border-radius:6px;font-weight:600;margin-left:4px}
+.zoonose-ja{background:rgba(239,68,68,0.15);color:var(--danger)}
+.zoonose-selten{background:rgba(245,158,11,0.15);color:var(--warning)}
+.zoonose-nein{background:rgba(16,185,129,0.15);color:var(--accent)}
+
+.host-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.host-tag{font-size:0.7rem;padding:3px 8px;border-radius:6px;background:var(--surface3);color:var(--text)}
+
+/* Loading */
+.loading-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);z-index:20;transition:opacity 0.3s}
+.loading-overlay.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--surface2);border-top-color:var(--primary);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{margin-top:12px;color:var(--muted);font-size:0.82rem}
+
+/* Welcome screen */
+.welcome{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;z-index:3}
+.welcome h2{font-size:1.2rem;margin-bottom:8px;color:var(--text)}
+.welcome p{color:var(--muted);font-size:0.85rem;max-width:420px;line-height:1.6}
+.welcome .hint{margin-top:20px;font-size:0.75rem;color:var(--surface3);line-height:1.5}
+
+/* Responsive */
+@media(max-width:1280px){
+  .app{grid-template-columns:260px 1fr 320px}
+}
+@media(max-width:1024px){
+  .app{grid-template-columns:1fr;grid-template-rows:52px auto 50vh auto}
+  .left-panel{border-right:none;border-bottom:1px solid var(--surface2);overflow-x:auto;padding:8px}
+  .section-title{display:none}
+  .parasite-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));max-height:180px}
+  .right-panel{border-left:none;border-top:1px solid var(--surface2)}
+}
+@media(max-width:768px){
+  .app{grid-template-rows:52px auto 40vh auto}
+  .parasite-grid{grid-template-columns:1fr 1fr}
+  .info-card{padding:12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .viewport-controls{flex-wrap:wrap;justify-content:center}
+}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1><span>&#x1F9EC;</span> VetScan Parasiten-Atlas</h1>
+    <div class="header-links">
+      <a href="vetscan-organ-explorer.html">Organ Explorer</a>
+      <a href="vetscan-3d-viewer.html">3D-Viewer</a>
+      <a href="vetscan-version-selector.html">Alle Werkzeuge</a>
+    </div>
+  </header>
+
+  <!-- Left Panel -->
+  <nav class="left-panel" id="leftPanel">
+    <div class="section-title">Filter</div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="alle">Alle</button>
+      <button class="filter-btn" data-filter="endo">Endoparasiten</button>
+      <button class="filter-btn" data-filter="ekto">Ektoparasiten</button>
+    </div>
+    <div class="section-title">Parasiten (10)</div>
+    <div class="parasite-grid" id="parasiteGrid"></div>
+  </nav>
+
+  <!-- 3D Viewport -->
+  <main class="viewport" id="viewport">
+    <div class="loading-overlay" id="loader">
+      <div class="spinner"></div>
+      <div class="load-text" id="loadText">Parasiten-Atlas wird geladen...</div>
+    </div>
+    <div class="welcome" id="welcome">
+      <h2>Parasit auswaehlen</h2>
+      <p>Waehle links einen Parasiten, um ihn als 3D-Modell zu betrachten und detaillierte veterinaermedizinische Informationen zu erhalten.</p>
+      <div class="hint">Drehen: Maus ziehen / Zoom: Scrollrad / Verschieben: Rechtsklick</div>
+    </div>
+    <div class="model-label" id="modelLabel"></div>
+    <div class="viewport-controls" id="viewportControls" style="display:none">
+      <button class="vp-btn active" id="btnRotate" title="Auto-Rotation umschalten (R)">Rotation</button>
+      <button class="vp-btn" id="btnReset" title="Kameraposition zuruecksetzen">Reset</button>
+    </div>
+  </main>
+
+  <!-- Right Panel -->
+  <aside class="right-panel" id="rightPanel">
+    <div id="infoContent">
+      <div class="info-card">
+        <h3>Parasiten-Atlas</h3>
+        <p>Dieses Werkzeug bietet eine interaktive 3D-Visualisierung der wichtigsten veterinaermedizinischen Parasiten. Waehle einen Parasiten aus der linken Liste, um das 3D-Modell und detaillierte Informationen anzuzeigen.</p>
+      </div>
+      <div class="info-card">
+        <h3>Kategorien</h3>
+        <p><strong style="color:var(--danger)">Ektoparasiten</strong> leben auf oder in der Haut des Wirtes (Floehe, Zecken, Milben).</p>
+        <p style="margin-top:8px"><strong style="color:var(--accent)">Endoparasiten</strong> leben im Koerperinneren des Wirtes (Wuermer, Protozoen).</p>
+      </div>
+    </div>
+    <div id="parasiteInfo" style="display:none"></div>
+  </aside>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+// === PARASITE DATABASE ===
+const PARASITES = [
+  {
+    id: 'flea',
+    name: 'Floh',
+    latinName: 'Ctenocephalides felis/canis',
+    type: 'ekto',
+    color: '#ef4444',
+    model: 'assets/models/parasites/flea.glb',
+    hosts: ['Hund', 'Katze', 'Kaninchen'],
+    size: '1-3 mm',
+    lifecycle: 'Ei \u2192 Larve \u2192 Puppe \u2192 Adulter Floh (3-8 Wochen). Puppen koennen monatelang in der Umgebung ueberdauern.',
+    diagnostics: 'Flohkot-Nachweis (Nasses-Papier-Test: schwarze Kruemmel werden rotbraun), Direktnachweis adulter Floehe im Fell, Flohkamm.',
+    therapy: 'Spot-on (Fipronil, Imidacloprid), Isoxazoline oral (Fluralaner, Sarolaner, Afoxolaner). Umgebungsbehandlung essenziell!',
+    zoonosis: { risk: 'ja', detail: 'Flohbisse beim Menschen, Uebertraeger von Dipylidium caninum (Gurkenkernbandwurm), selten Bartonella henselae (Katzenkratzkrankheit).' },
+    clinicalSignificance: 'FAD (Flohallergie-Dermatitis) ist eine der haeufigsten Hauterkrankungen bei Hund und Katze. Sekundaere bakterielle Infektionen. Bandwurm-Uebertraeger (Dipylidium). Schwere Anaemie bei Welpen/Kaetzchen bei Massenbefall.',
+    examTips: 'Flohkamm in Lumbosacralregion und Bauch. Nasses-Papier-Test: Fellmaterial auf feuchtem Papier verreiben - rotbraune Faerbung = Flohkot (verdautes Blut). Auch bei negativem Direktnachweis FAD moeglich (1 Flohbiss genuegt bei Allergikern!).',
+    stats: [
+      { label: 'Groesse', value: '1-3', unit: 'mm' },
+      { label: 'Lebenszyklus', value: '3-8', unit: 'Wochen' },
+      { label: 'Eier/Tag', value: '20-50', unit: 'pro Weibchen' },
+      { label: 'Sprungweite', value: '30', unit: 'cm' }
+    ]
+  },
+  {
+    id: 'tick',
+    name: 'Zecke',
+    latinName: 'Ixodes/Dermacentor/Rhipicephalus',
+    type: 'ekto',
+    color: '#78350f',
+    model: 'assets/models/parasites/tick.glb',
+    hosts: ['Hund', 'Katze', 'Pferd', 'Rind', 'Mensch'],
+    size: '2-11 mm (nuechtern bis vollgesogen)',
+    lifecycle: 'Ei \u2192 Larve (6 Beine) \u2192 Nymphe (8 Beine) \u2192 Adulte Zecke. Gesamtzyklus 2-3 Jahre. Jedes Stadium benoetigt eine Blutmahlzeit.',
+    diagnostics: 'Direktnachweis am Tier, Zeckenbestimmung nach Gattung (Ixodes, Dermacentor, Rhipicephalus). Bei Krankheitsverdacht: serologische Tests auf Erreger.',
+    therapy: 'Manuelle Entfernung (Zeckenzange, gerade herausziehen, nicht drehen!). Repellentien: Permethrin (NICHT bei Katzen!), Isoxazoline (Fluralaner, Sarolaner), Seresto-Halsband (Imidacloprid/Flumethrin).',
+    zoonosis: { risk: 'ja', detail: 'Uebertraeger von Borreliose (Borrelia burgdorferi), FSME (Flavivirus), Babesiose (Babesia canis), Anaplasmose (Anaplasma phagocytophilum), Ehrlichiose (Ehrlichia canis).' },
+    clinicalSignificance: 'Primaer gefaehrlich als Krankheitsuebertraeger! Babesiose (haeufig bei Reiserueckkehrern aus Suedeuropa), Borreliose, Anaplasmose. Zeckenparalyse durch Neurotoxin (selten in Europa, haeufig in Australien/Nordamerika).',
+    examTips: 'Systematische Fellinspektion nach jedem Freilauf. Praedilektionsstellen: Ohren, Achseln, Leiste, Zwischenzehenbereich. Zecke gerade herausziehen, nicht quetschen. Bei Fieber nach Zeckenkontakt: Blutausstrich, serologische Tests.',
+    stats: [
+      { label: 'Groesse', value: '2-11', unit: 'mm' },
+      { label: 'Lebenszyklus', value: '2-3', unit: 'Jahre' },
+      { label: 'Saugdauer', value: '3-7', unit: 'Tage' },
+      { label: 'Eier/Gelege', value: '2000-3000', unit: '' }
+    ]
+  },
+  {
+    id: 'ear-mite',
+    name: 'Ohrmilbe',
+    latinName: 'Otodectes cynotis',
+    type: 'ekto',
+    color: '#f97316',
+    model: 'assets/models/parasites/ear-mite.glb',
+    hosts: ['Hund', 'Katze', 'Frettchen', 'Kaninchen'],
+    size: '0.3-0.5 mm',
+    lifecycle: '3 Wochen Gesamtzyklus im aeusseren Gehoergang. Ei \u2192 Larve \u2192 Protonymphe \u2192 Deutonymphe \u2192 Adulte. Hochkontagioes bei direktem Kontakt.',
+    diagnostics: 'Otoskopie (weisse bewegliche Punkte auf dunklem Cerumen sichtbar). Ohrabstrich mit Mineraloel unter dem Mikroskop: Milben und Eier. Typisches dunkles, kaffeesatzartiges Cerumen.',
+    therapy: 'Selamectin (Stronghold) Spot-on, Ivermectin, Milbemycin. Lokale Ohrtropfen (z.B. mit Thiabendazol). Alle Kontakttiere mitbehandeln!',
+    zoonosis: { risk: 'selten', detail: 'Transiente Infektion beim Menschen moeglich (Papeln an Armen/Haenden), selbstlimitierend.' },
+    clinicalSignificance: 'Haeufigste Ursache fuer Otitis externa bei jungen Katzen und Hunden. Dunkles, kaffeesatzartiges Cerumen. Intensiver Juckreiz, Kopfschuetteln, Kratzen an den Ohren. Sekundaere bakterielle/mykotische Otitis.',
+    examTips: 'Otoskopie: Milben als kleine weisse Punkte auf dunklem Hintergrund sichtbar. Ohrabstrich auf Objekttraeger mit Mineraloel, Mikroskop (4x-10x Vergroesserung). Beide Ohren immer untersuchen. Alle Tiere im Haushalt untersuchen und behandeln.',
+    stats: [
+      { label: 'Groesse', value: '0.3-0.5', unit: 'mm' },
+      { label: 'Lebenszyklus', value: '3', unit: 'Wochen' },
+      { label: 'Lokalisation', value: 'Gehoergang', unit: '' },
+      { label: 'Kontagiositaet', value: 'Hoch', unit: '' }
+    ]
+  },
+  {
+    id: 'sarcoptic-mite',
+    name: 'Sarcoptes-Milbe',
+    latinName: 'Sarcoptes scabiei var. canis',
+    type: 'ekto',
+    color: '#dc2626',
+    model: 'assets/models/parasites/sarcoptic-mite.glb',
+    hosts: ['Hund', 'Fuchs', 'Katze (selten)'],
+    size: '0.2-0.4 mm',
+    lifecycle: '2-3 Wochen Gesamtzyklus in der Haut. Weibchen graben Gaenge in die Epidermis und legen dort Eier ab. Hochkontagioes.',
+    diagnostics: 'Tiefes Hautgeschabsel (mehrere Stellen, v.a. Ohrraender, Ellbogen). Oft falsch-negativ (nur 20-50% Sensitivitaet)! Versuchstherapie bei klinischem Verdacht. Antikoerper-ELISA verfuegbar.',
+    therapy: 'Isoxazoline (Fluralaner, Sarolaner) - Mittel der Wahl. Selamectin Spot-on. Ivermectin s.c. (CAVE: MDR1-Defekt bei Collies!). Umgebung behandeln (Milben ueberleben 2-3 Tage abseits des Wirts).',
+    zoonosis: { risk: 'ja', detail: 'Pseudoskabies beim Menschen: juckende Papeln v.a. an Armen und Rumpf. Selbstlimitierend (Milben koennen sich auf menschlicher Haut nicht vermehren).' },
+    clinicalSignificance: 'Intensiver Juckreiz (staerkster Juckreiz aller Hauterkrankungen!). Alopezie, Erythem, Krusten und Schuppen v.a. an Ohrraendern, Ellbogen, Sprunggelenken, ventral. Positiver Pinnal-Pedal-Reflex (Ohr reiben = Kratzreflex).',
+    examTips: 'Pinnal-Pedal-Reflex: Am Ohrrand reiben - positiver Kratzreflex bei >80% der betroffenen Hunde. Tiefes Hautgeschabsel an Ohrraendern und Ellbogen. Bei negativem Geschabsel und klinischem Verdacht: Versuchstherapie mit Isoxazolinen. Ansprechen innerhalb 2-4 Wochen bestaetigt Diagnose.',
+    stats: [
+      { label: 'Groesse', value: '0.2-0.4', unit: 'mm' },
+      { label: 'Lebenszyklus', value: '2-3', unit: 'Wochen' },
+      { label: 'Diagnostik-Sens.', value: '20-50', unit: '%' },
+      { label: 'Pinnal-Pedal', value: '>80', unit: '% positiv' }
+    ]
+  },
+  {
+    id: 'roundworm',
+    name: 'Spulwurm',
+    latinName: 'Toxocara canis/cati',
+    type: 'endo',
+    color: '#10b981',
+    model: 'assets/models/parasites/roundworm.glb',
+    hosts: ['Hund', 'Katze'],
+    size: '5-18 cm',
+    lifecycle: 'Ei \u2192 L2 \u2192 L3 (Wanderlarve durch Leber/Lunge) \u2192 Adult im Duenndarm. Praenatale Infektion beim Hund (transplazentar)! Galaktogene Infektion bei Hund und Katze.',
+    diagnostics: 'Kotflotation (dickschalige, runde Eier, ~80 um). Direkter Wurmnachweis bei massivem Befall (Erbrechen oder Kotabsatz ganzer Wuermer). Patenz: 4-5 Wochen nach Infektion.',
+    therapy: 'Fenbendazol (Panacur), Pyrantel, Milbemycin. Welpen: Entwurmung ab 2. Lebenswoche alle 2 Wochen bis 2 Wochen nach Absetzen. Muttertier: Fenbendazol ab Tag 40 der Traechtigkeit.',
+    zoonosis: { risk: 'ja', detail: 'Larva migrans visceralis (LMV) und Larva migrans ocularis (LMO) beim Menschen, v.a. Kinder! Erblindungsgefahr bei LMO. Jaehrlich Tausende Faelle weltweit.' },
+    clinicalSignificance: 'Welpen: Katzenbuckel (aufgeblaehter Bauch), Durchfall, Erbrechen, Entwicklungsverzoegerung, struppiges Fell. Massiver Befall: Darmobstruktion, Darmperforation. Lungenwanderung: Husten, Pneumonie. Adulte Tiere oft asymptomatisch (Traeger!).',
+    examTips: 'Kotuntersuchung (Flotation) bei allen Welpen/Kaetzchen. Entwurmungsprotokoll nach ESCCAP-Richtlinien. Bei Welpen mit aufgeblaehtem Bauch ("Wurmbauch") und Durchfall: sofort entwurmen. Besitzer auf Zoonoserisiko hinweisen (Haendehygiene, Spielplaetze).',
+    stats: [
+      { label: 'Groesse', value: '5-18', unit: 'cm' },
+      { label: 'Patenz', value: '4-5', unit: 'Wochen' },
+      { label: 'Eier/Tag', value: '200000', unit: '' },
+      { label: 'Eierstabilitaet', value: 'Jahre', unit: 'im Boden' }
+    ]
+  },
+  {
+    id: 'hookworm',
+    name: 'Hakenwurm',
+    latinName: 'Ancylostoma/Uncinaria',
+    type: 'endo',
+    color: '#06b6d4',
+    model: 'assets/models/parasites/hookworm.glb',
+    hosts: ['Hund', 'Katze'],
+    size: '1-2 cm',
+    lifecycle: 'Perkutane Larveninfektion (durch die Haut) oder orale Aufnahme. Larva migrans durch Lunge. Adulte Wuermer haften mit Zaehnen an der Duenndarmschleimhaut und saugen Blut.',
+    diagnostics: 'Kotflotation (ovale, duennschalige Eier mit Morula-Stadium). Blutbild: regenerative Anaemie bei starkem Befall.',
+    therapy: 'Fenbendazol, Pyrantel, Milbemycin. Bei schwerer Anaemie: Bluttransfusion erforderlich. Umgebungssanierung (Sandboeden besonders betroffen).',
+    zoonosis: { risk: 'ja', detail: 'Larva migrans cutanea (LMC) beim Menschen: serpiginoese, juckende Hautlaesionen v.a. an Fuessen und Haenden. Haeufig in tropischen/subtropischen Regionen.' },
+    clinicalSignificance: 'Haematophag (blutsaugend)! Schwere regenerative Anaemie besonders bei Welpen (toedlich moeglich). Blutige Diarrhoee, Melaena. Perkutane Infektion: Dermatitis an den Pfoten (Zwischenzehendermatitis). Gewichtsverlust, Apathie.',
+    examTips: 'Kotflotation: Eier morphologisch von Spulwurmeiern unterscheiden (oval, duennschalig vs. rund, dickschalig). Blutbild: PCV/Hkt kontrollieren. Bei Anaemie + blutiger Diarrhoee bei Welpe: sofort Hakenwurmbefall in Betracht ziehen. Umgebungshygiene wichtig.',
+    stats: [
+      { label: 'Groesse', value: '1-2', unit: 'cm' },
+      { label: 'Blutverlust', value: '0.1', unit: 'ml/Wurm/Tag' },
+      { label: 'Patenz', value: '2-3', unit: 'Wochen' },
+      { label: 'Infektion', value: 'Perkutan', unit: '+ oral' }
+    ]
+  },
+  {
+    id: 'tapeworm',
+    name: 'Bandwurm',
+    latinName: 'Taenia/Dipylidium caninum',
+    type: 'endo',
+    color: '#8b5cf6',
+    model: 'assets/models/parasites/tapeworm.glb',
+    hosts: ['Hund', 'Katze'],
+    size: '15-60 cm (Dipylidium), bis 5 m (Taenia)',
+    lifecycle: 'Obligater Zwischenwirt erforderlich! Dipylidium: Floh als Zwischenwirt. Taenia: Nagetiere/Kaninchen als Zwischenwirt. Echinococcus: Nagetiere (E. multilocularis) bzw. Schafe (E. granulosus).',
+    diagnostics: 'Proglottiden im Kot oder Perianalregion (reiskornartig bei Dipylidium, flach bei Taenia). Kotflotation oft falsch-negativ (Eier werden in Eipaketen abgegeben, nicht einzeln)!',
+    therapy: 'Praziquantel (Droncit) - einziger zuverlaessiger Cestodenwirkstoff. Flohbekaempfung bei Dipylidium essenziell! Wiederholung nach 3-4 Wochen bei Reinfektionsgefahr.',
+    zoonosis: { risk: 'ja', detail: 'Dipylidium caninum: selten beim Menschen (v.a. Kleinkinder nach Flohverschlucken). Echinococcus granulosus/multilocularis: hochgefaehrlich! Zystische/alveolaere Echinokokkose (Leber, Lunge). Meldepflichtig!' },
+    clinicalSignificance: 'Oft asymptomatisch beim Endwirt. Sichtbare Proglottiden im Kot oder Perianalregion ("Reiskoerner" bei Dipylidium). Juckreiz perianal ("Schlittenfahren"). Selten: Gewichtsverlust bei massivem Befall. Echinococcus: klinisch unauffaellig beim Hund, aber massive Zoonosegefahr!',
+    examTips: 'Perianalregion inspizieren (Proglottiden). Kotflotation hat geringe Sensitivitaet fuer Bandwuermer. Besitzer nach "Reiskoernern" im Kot oder am Schlafplatz fragen. Bei Dipylidium immer gleichzeitig Floehe behandeln! Bei Fuchs-/Wildkontakt: Echinococcus-Risiko ansprechen.',
+    stats: [
+      { label: 'Groesse', value: '15-500', unit: 'cm' },
+      { label: 'Proglottiden', value: 'Reiskorn', unit: '-artig' },
+      { label: 'Zwischenwirt', value: 'Floh', unit: '/Nagetier' },
+      { label: 'Therapie', value: 'Praziquantel', unit: '' }
+    ]
+  },
+  {
+    id: 'heartworm',
+    name: 'Herzwurm',
+    latinName: 'Dirofilaria immitis',
+    type: 'endo',
+    color: '#e11d48',
+    model: 'assets/models/parasites/heartworm.glb',
+    hosts: ['Hund (primaer)', 'Katze (selten)'],
+    size: '15-30 cm (Adulte in Pulmonalarterien)',
+    lifecycle: 'Muecke uebertraegt L3-Larven beim Stich \u2192 Wanderung durch Gewebe \u2192 Mikrofilarien im Blut \u2192 Adulte Wuermer in Pulmonalarterien und rechtem Herzen. Praepatenzdauer: 6-7 Monate.',
+    diagnostics: 'Antigen-Schnelltest (SNAP 4Dx: Sensitivitaet >99% fuer Weibchen). Mikrofilarien-Nachweis im Blut (Knott-Test, Heparinblut). Thorax-Roentgen: vergroesserte Pulmonalarterien. Echokardiographie: Wuermer im rechten Herzen sichtbar.',
+    therapy: 'Adultizide: Melarsomin (Immiticide) i.m. nach AHS-Protokoll. Alternative "Slow-kill": Doxycyclin (gegen Wolbachia-Endosymbionten) + Ivermectin monatlich. Kastrierung der Mikrofilarien. Strikte Bewegungseinschraenkung waehrend Therapie!',
+    zoonosis: { risk: 'selten', detail: 'Dirofilariose beim Menschen: aberrante Larve bildet Lungenknoten (Zufallsbefund im Roentgen, DD Lungentumor). Keine adulte Wurmentwicklung beim Menschen.' },
+    clinicalSignificance: 'Husten, Leistungsintoleranz, Dyspnoe. Fortgeschritten: Rechtsherzinsuffizienz (Aszites, Stauungsleber). Caval-Syndrom (massiver Wurmbefall in Vena cava): akute haemolytische Krise, Schock. Endemisch in Suedeuropa, Tropen/Subtropen. Reiserueckkehrer!',
+    examTips: 'Reiseanamnese! Hund aus Suedeuropa/Mittelmeerraum: immer auf Herzwurm testen. SNAP-Test (Antigen) als Screening. Bei positivem Test: Stadieneinteilung (Roentgen, Echo, Labor). Mikrofilarien-Test fuer Uebertragungsrisiko. Prophylaxe bei Reise: Milbemycin/Ivermectin monatlich.',
+    stats: [
+      { label: 'Groesse', value: '15-30', unit: 'cm' },
+      { label: 'Praepatenz', value: '6-7', unit: 'Monate' },
+      { label: 'Lebensdauer', value: '5-7', unit: 'Jahre' },
+      { label: 'Vektor', value: 'Muecke', unit: '(Culicidae)' }
+    ]
+  },
+  {
+    id: 'giardia',
+    name: 'Giardien',
+    latinName: 'Giardia duodenalis',
+    type: 'endo',
+    color: '#22c55e',
+    model: 'assets/models/parasites/giardia.glb',
+    hosts: ['Hund', 'Katze', 'Mensch'],
+    size: '10-20 um (Trophozoit)',
+    lifecycle: 'Zyste (umweltresistent, infektioes) wird oral aufgenommen \u2192 Exzystierung im Duenndarm \u2192 Trophozoit (birnenfoermig, 2 Kerne, 4 Geisselpaare) heftet sich an Darmepithel \u2192 Enzystierung \u2192 Zyste wird mit Kot ausgeschieden. Sehr niedrige Infektionsdosis!',
+    diagnostics: 'SNAP-Giardia-Antigen-Test (Idexx): beste Einzeltest-Sensitivitaet. Kotflotation mit Zinksulfat (Zysten, birnenfoermig). Direktausstrich aus frischem Kot (Trophozoiten in Bewegung). 3 Kotproben an verschiedenen Tagen erhoehen Sensitivitaet (intermittierende Ausscheidung!).',
+    therapy: 'Fenbendazol 50 mg/kg einmal taeglich fuer 5 Tage (in Europa bevorzugt). Metronidazol 25 mg/kg zweimal taeglich fuer 5-7 Tage (neurotoxisch in Ueberdosis!). Kombination beider Wirkstoffe bei therapieresistenten Faellen. Umgebungshygiene: Baden am letzten Behandlungstag, Reinigung aller Liegeplaetze.',
+    zoonosis: { risk: 'ja', detail: 'Zoonotische Assemblages A und B kommen bei Hund, Katze und Mensch vor. Faeko-orale Uebertragung. Besondere Vorsicht bei immunsupprimierten Personen.' },
+    clinicalSignificance: 'Chronischer Duenndarm-Durchfall (hell, fettig, uebelriechend). Malabsorption, Gewichtsverlust v.a. bei Jungtieren. Oft subklinische Traeger (Ausscheider ohne Symptome!). Intermittierende Ausscheidung erschwert Diagnostik. In Tierheimen und Zuchten besonders problematisch.',
+    examTips: 'SNAP-Test als Erstdiagnostik (schnell, gute Sensitivitaet). Kotflotation mit Zinksulfat (nicht NaCl - Zysten kollabieren!). Mindestens 3 Kotproben an verschiedenen Tagen. Bei chronischem Durchfall und negativer Erstuntersuchung: wiederholen! Nach Therapie: Kontrolle 5-7 Tage nach Behandlungsende.',
+    stats: [
+      { label: 'Groesse', value: '10-20', unit: 'um' },
+      { label: 'Infektionsdosis', value: '10', unit: 'Zysten' },
+      { label: 'Praepatenz', value: '5-16', unit: 'Tage' },
+      { label: 'Zysten/g Kot', value: '10^5-10^7', unit: '' }
+    ]
+  },
+  {
+    id: 'coccidia',
+    name: 'Kokzidien',
+    latinName: 'Isospora/Cystoisospora spp.',
+    type: 'endo',
+    color: '#a855f7',
+    model: 'assets/models/parasites/coccidia.glb',
+    hosts: ['Hund', 'Katze', 'Kaninchen'],
+    size: '20-40 um (Oozysten)',
+    lifecycle: 'Unsporulierte Oozyste wird mit Kot ausgeschieden \u2192 Sporulation in der Umgebung (1-3 Tage) \u2192 orale Aufnahme der sporulierten Oozyste \u2192 Merogonie (asexuelle Vermehrung im Darmepithel) \u2192 Gamogonie (sexuelle Vermehrung) \u2192 Oozyste.',
+    diagnostics: 'Kotflotation: Oozysten (oval, farblos bis gelblich, 20-40 um). Autofluoreszenz unter UV-Licht. Quantitative Untersuchung (McMaster) fuer Befallsstaerke. Beachte: Oozysten koennen auch bei gesunden Tieren vorkommen (Interpretation im klinischen Kontext!).',
+    therapy: 'Toltrazuril (Baycox) 10-20 mg/kg einmalig, Wiederholung nach 1 Woche. Sulfonamide (Sulfadimethoxin) fuer 5-20 Tage als Alternative. Hygiene essenziell: Oozysten resistent gegen gaengige Desinfektionsmittel! Dampfreiniger oder Kresolloesung.',
+    zoonosis: { risk: 'nein', detail: 'Isospora/Cystoisospora sind artspezifisch. Kein Zoonoserisiko fuer den Menschen.' },
+    clinicalSignificance: 'Waessrig-blutiger Durchfall besonders bei Jungtieren (Welpen, Kaetzchen, Jungkaninchen). Dehydratation, Gewichtsverlust, Inappetenz. Oft selbstlimitierend bei adulten, immunkompetenten Tieren. Sekundaerinfektionen moeglich. Bei Kaninchen: E. stiedai (Leberkokzidiose) besonders gefaehrlich.',
+    examTips: 'Kotflotation bei allen Jungtieren mit Durchfall. Oozysten-Nachweis allein ist nicht gleichbedeutend mit Kokzidiose (auch bei gesunden Tieren moeglich). Klinische Relevanz bei hoher Oozystenzahl UND passenden Symptomen. Bei Kaninchen: getrennte Diagnostik fuer Darm- und Leberkokzidien.',
+    stats: [
+      { label: 'Groesse', value: '20-40', unit: 'um' },
+      { label: 'Sporulation', value: '1-3', unit: 'Tage' },
+      { label: 'Praepatenz', value: '5-11', unit: 'Tage' },
+      { label: 'Artspezifisch', value: 'Ja', unit: '' }
+    ]
+  }
+];
+
+// === APP STATE ===
+const state = {
+  currentFilter: 'alle',
+  currentParasite: null,
+  scene: null, camera: null, renderer: null, controls: null,
+  currentModel: null,
+  loader: (() => {
+    const l = new GLTFLoader();
+    const d = new DRACOLoader();
+    d.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
+    l.setDRACOLoader(d);
+    return l;
+  })(),
+  clock: new THREE.Clock(),
+  modelBaseScale: 1,
+  reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+};
+
+// Listen for reduced motion changes
+window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+  state.reducedMotion = e.matches;
+});
+
+// === FILTER ===
+function getFilteredParasites() {
+  if (state.currentFilter === 'alle') return PARASITES;
+  return PARASITES.filter(p => p.type === state.currentFilter);
+}
+
+function setFilter(filter) {
+  state.currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  buildParasiteGrid();
+  // Update count
+  const count = getFilteredParasites().length;
+  document.querySelectorAll('.section-title')[1].textContent = 'Parasiten (' + count + ')';
+}
+
+document.getElementById('filterBar').addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-btn');
+  if (btn) setFilter(btn.dataset.filter);
+});
+
+// === BUILD UI ===
+function buildParasiteGrid() {
+  const parasites = getFilteredParasites();
+  const el = document.getElementById('parasiteGrid');
+  el.innerHTML = parasites.map(p =>
+    '<button class="parasite-card' + (state.currentParasite?.id === p.id ? ' active' : '') + '" data-id="' + p.id + '">' +
+      '<span class="card-dot" style="background:' + p.color + '"></span>' +
+      '<span class="card-name">' + p.name + '</span>' +
+      '<span class="card-latin">' + p.latinName + '</span>' +
+      '<span class="card-type type-' + p.type + '">' + (p.type === 'ekto' ? 'Ektoparasit' : 'Endoparasit') + '</span>' +
+    '</button>'
+  ).join('');
+  el.querySelectorAll('.parasite-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const parasite = PARASITES.find(p => p.id === btn.dataset.id);
+      if (parasite) selectParasite(parasite);
+    });
+  });
+}
+
+function selectParasite(parasite) {
+  state.currentParasite = parasite;
+  buildParasiteGrid();
+  showParasiteInfo(parasite);
+  loadParasiteModel(parasite);
+  document.getElementById('viewportControls').style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+}
+
+// === PARASITE INFO PANEL ===
+function showParasiteInfo(p) {
+  document.getElementById('infoContent').style.display = 'none';
+  const el = document.getElementById('parasiteInfo');
+  el.style.display = 'block';
+
+  const zClass = p.zoonosis.risk === 'ja' ? 'zoonose-ja' : p.zoonosis.risk === 'selten' ? 'zoonose-selten' : 'zoonose-nein';
+  const zLabel = p.zoonosis.risk === 'ja' ? 'Ja - Zoonose!' : p.zoonosis.risk === 'selten' ? 'Selten' : 'Nein';
+
+  el.innerHTML =
+    '<div class="info-card">' +
+      '<h3><span style="color:' + p.color + '">&#x25CF;</span> ' + p.name + ' <small style="color:var(--muted);font-weight:normal;font-style:italic">' + p.latinName + '</small></h3>' +
+      '<span class="card-type type-' + p.type + '" style="display:inline-block;margin-bottom:8px">' + (p.type === 'ekto' ? 'Ektoparasit' : 'Endoparasit') + '</span>' +
+      '<div class="stat-grid">' +
+        p.stats.map(s =>
+          '<div class="stat"><div class="label">' + s.label + '</div><div class="value">' + s.value + ' <span class="unit">' + s.unit + '</span></div></div>'
+        ).join('') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Wirte</h3>' +
+      '<div class="host-tags">' +
+        p.hosts.map(h => '<span class="host-tag">' + h + '</span>').join('') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Groesse</h3>' +
+      '<p>' + p.size + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Lebenszyklus</h3>' +
+      '<p>' + p.lifecycle + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Diagnostik</h3>' +
+      '<p>' + p.diagnostics + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Therapie</h3>' +
+      '<p>' + p.therapy + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Zoonose <span class="zoonose-badge ' + zClass + '">' + zLabel + '</span></h3>' +
+      '<p>' + p.zoonosis.detail + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Klinische Bedeutung</h3>' +
+      '<p>' + p.clinicalSignificance + '</p>' +
+    '</div>' +
+
+    '<div class="info-card">' +
+      '<h3>Untersuchungstipps</h3>' +
+      '<p>' + p.examTips + '</p>' +
+    '</div>';
+}
+
+// === THREE.JS ===
+function initThreeJS() {
+  const container = document.getElementById('viewport');
+  const rect = container.getBoundingClientRect();
+
+  state.scene = new THREE.Scene();
+  state.scene.background = new THREE.Color(0x0a0e1a);
+
+  state.camera = new THREE.PerspectiveCamera(45, rect.width / rect.height, 0.01, 100);
+  state.camera.position.set(2, 1.5, 2);
+
+  state.renderer = new THREE.WebGLRenderer({ antialias: true });
+  state.renderer.setSize(rect.width, rect.height);
+  state.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  state.renderer.toneMappingExposure = 1.2;
+  state.renderer.outputColorSpace = THREE.SRGBColorSpace;
+  container.appendChild(state.renderer.domElement);
+
+  state.controls = new OrbitControls(state.camera, state.renderer.domElement);
+  state.controls.enableDamping = true;
+  state.controls.dampingFactor = 0.08;
+  state.controls.autoRotate = true;
+  state.controls.autoRotateSpeed = 1.0;
+  state.controls.minDistance = 0.2;
+  state.controls.maxDistance = 10;
+
+  // Lighting
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  state.scene.add(ambient);
+
+  const key = new THREE.DirectionalLight(0xffffff, 1.5);
+  key.position.set(5, 8, 5);
+  state.scene.add(key);
+
+  const fill = new THREE.DirectionalLight(0x8888ff, 0.4);
+  fill.position.set(-3, 3, -5);
+  state.scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0xff6644, 0.3);
+  rim.position.set(0, -2, -3);
+  state.scene.add(rim);
+
+  // Grid
+  const grid = new THREE.GridHelper(6, 12, 0x1c2340, 0x131829);
+  state.scene.add(grid);
+
+  // Resize
+  const ro = new ResizeObserver(entries => {
+    for (const e of entries) {
+      const { width, height } = e.contentRect;
+      if (width === 0 || height === 0) continue;
+      state.camera.aspect = width / height;
+      state.camera.updateProjectionMatrix();
+      state.renderer.setSize(width, height);
+    }
+  });
+  ro.observe(container);
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    state.controls.update();
+
+    // Gentle floating animation (respects prefers-reduced-motion)
+    if (state.currentModel && state.modelBaseScale > 0 && !state.reducedMotion) {
+      const elapsed = state.clock.getElapsedTime();
+      const hover = Math.sin(elapsed * 0.8) * 0.03;
+      state.currentModel.position.y = state.currentModel.userData.baseY + hover;
+      const pulse = Math.sin(elapsed * 0.5 * Math.PI * 2) * 0.01;
+      state.currentModel.scale.setScalar(state.modelBaseScale * (1 + pulse));
+    }
+
+    state.renderer.render(state.scene, state.camera);
+  }
+  animate();
+
+  document.getElementById('loader').classList.add('hidden');
+}
+
+function clearModel() {
+  if (state.currentModel) {
+    state.scene.remove(state.currentModel);
+    state.currentModel.traverse(c => {
+      if (c.isMesh) {
+        c.geometry.dispose();
+        if (c.material.map) c.material.map.dispose();
+        c.material.dispose();
+      }
+    });
+    state.currentModel = null;
+  }
+}
+
+function loadParasiteModel(parasite) {
+  const loader = document.getElementById('loader');
+  loader.classList.remove('hidden');
+  document.getElementById('loadText').textContent = parasite.name + ' wird geladen...';
+
+  clearModel();
+
+  state.loader.load(
+    parasite.model,
+    (gltf) => {
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const scale = 1.5 / maxDim;
+
+      model.scale.setScalar(scale);
+      model.position.sub(center.multiplyScalar(scale));
+      model.position.y -= (box.min.y * scale);
+
+      const baseY = model.position.y;
+      model.userData.baseY = baseY;
+
+      state.scene.add(model);
+      state.currentModel = model;
+      state.modelBaseScale = scale;
+
+      state.camera.position.set(2, 1.5, 2);
+      state.controls.target.set(0, size.y * scale * 0.4, 0);
+      state.controls.update();
+
+      // Show model label
+      const label = document.getElementById('modelLabel');
+      label.textContent = parasite.name + ' (' + parasite.latinName + ')';
+      label.style.display = 'block';
+      label.style.color = parasite.color;
+
+      loader.classList.add('hidden');
+    },
+    (prog) => {
+      if (prog.total > 0) {
+        document.getElementById('loadText').textContent = Math.round(prog.loaded / prog.total * 100) + '%';
+      }
+    },
+    (err) => {
+      console.error('Model load error:', err);
+      loader.classList.add('hidden');
+      showPlaceholder(parasite);
+    }
+  );
+}
+
+function showPlaceholder(parasite) {
+  clearModel();
+  const geo = new THREE.SphereGeometry(0.5, 32, 32);
+  const mat = new THREE.MeshStandardMaterial({
+    color: parasite.color,
+    roughness: 0.6,
+    metalness: 0.1,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0.5;
+  mesh.userData.baseY = 0.5;
+  state.scene.add(mesh);
+  state.currentModel = mesh;
+  state.modelBaseScale = 1;
+
+  const label = document.getElementById('modelLabel');
+  label.textContent = parasite.name + ' (Platzhalter - 3D-Modell wird generiert)';
+  label.style.display = 'block';
+  label.style.color = '#f59e0b';
+}
+
+function resetCamera() {
+  state.camera.position.set(2, 1.5, 2);
+  state.controls.target.set(0, 0.3, 0);
+  state.controls.update();
+}
+
+// === VIEWPORT CONTROLS ===
+document.getElementById('btnRotate').addEventListener('click', () => {
+  state.controls.autoRotate = !state.controls.autoRotate;
+  document.getElementById('btnRotate').classList.toggle('active', state.controls.autoRotate);
+});
+
+document.getElementById('btnReset').addEventListener('click', resetCamera);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  switch(e.key) {
+    case 'r':
+    case 'R':
+      state.controls.autoRotate = !state.controls.autoRotate;
+      document.getElementById('btnRotate').classList.toggle('active', state.controls.autoRotate);
+      break;
+    case 'Escape':
+      resetCamera();
+      break;
+    case '1': setFilter('alle'); break;
+    case '2': setFilter('ekto'); break;
+    case '3': setFilter('endo'); break;
+  }
+});
+
+// === INIT ===
+buildParasiteGrid();
+initThreeJS();
+</script>
+<script src="js/vetscan-shared.js"></script>
+<script src="js/vetscan-pro.js"></script>
+</body>
+</html>
