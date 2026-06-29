@@ -8,7 +8,7 @@ Educational veterinary medical scanner simulation game ("VetScan Pro 3000"). Liv
 
 Two parallel implementations:
 
-- **Standalone HTML versions** (production): 38 self-contained game files in the repo root. Each includes all CSS/JS inline. These are what gets deployed via GitHub Actions FTP to Hostinger.
+- **Standalone HTML versions** (production): 43 self-contained game files in the repo root. Each includes all CSS/JS inline. These are what gets deployed via GitHub Actions FTP to Hostinger.
 - **React app** (development target): Vite + React 18 + Tailwind CSS + Three.js in `src/`. The `dist/` build is NOT deployed -- only standalone HTML files go to production.
 
 The root `index.html` is a standalone game file (not the React app entry point). `vetscan-version-selector.html` and the CI-generated `deploy/index.html` serve as navigation hubs.
@@ -63,7 +63,7 @@ Key layers:
 
 ### Standalone Shared Modules (`js/`)
 
-The 16 professional learning tools share runtime code via `<script>` tags:
+The 19 professional learning tools share runtime code via `<script>` tags:
 
 - `js/vetscan-shared.js`: Navigation bar, localStorage progress tracking, dark mode, print support, design tokens (CSS variables). Contains the canonical TOOLS registry (IDs, filenames, categories) -- this is the **source of truth** for all tool metadata. Exposes a global `VetScan` object with `getProgress()`, `saveProgress(toolId, data)`, `saveScore(toolId, score, maxScore)`, `getToolProgress(toolId)`.
 - `js/vetscan-pro.js`: Professional polish layer -- toast notifications, keyboard shortcuts, ARIA/WCAG enhancements (44px touch targets, focus-visible, prefers-reduced-motion), service worker registration. Must be loaded **after** `vetscan-shared.js`.
@@ -76,7 +76,7 @@ The 16 professional learning tools share runtime code via `<script>` tags:
 ### 3D Assets (`assets/models/`)
 
 Seven model categories:
-- `animals/<species>/` -- 31 species directories with quality tiers (`_high.glb`, `_medium.glb`, `_low.glb`) plus medical variants (`_medical.glb`, `_xray.glb`)
+- `animals/<species>/` -- 39 species directories with quality tiers (`_high.glb`, `_medium.glb`, `_low.glb`) plus medical variants (`_medical.glb`, `_xray.glb`)
 - `organs/` -- Individual organ models (heart, brain, liver, lungs, kidney, etc.)
 - `pathology/` -- 30 pathology-specific models in subdirectories (fracture, hip-dysplasia, hcm-heart, pancreatitis, etc.)
 - `instruments/` -- Medical instruments (stethoscope, syringe, thermometer, ultrasound-probe, etc.)
@@ -105,6 +105,8 @@ GitHub Actions (`.github/workflows/deploy.yml`) on push to `main`:
 4. FTP-deploys to Hostinger (`/public_html/`)
 
 Requires secrets: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`.
+
+**Two workflows fire on every push to `main`**: `deploy.yml` and `deploy-to-root.yml` both FTP to Hostinger `/public_html/`. Keep both in mind when changing the deploy process -- a fix to one does not cover the other.
 
 **When adding a new HTML file**: you must also add a `cp <file>.html deploy/` line in the deploy workflow, or it won't reach production.
 
