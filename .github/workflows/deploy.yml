@@ -37,8 +37,14 @@ jobs:
 
         # Copy Service Worker to root
         cp sw.js deploy/ 2>/dev/null || true
-        
-        # Copy assets for 3D models
+
+        # Copy PWA + SEO files (manifest, offline fallback, robots, sitemap)
+        cp manifest.json deploy/ 2>/dev/null || true
+        cp offline.html deploy/ 2>/dev/null || true
+        cp robots.txt deploy/ 2>/dev/null || true
+        cp sitemap.xml deploy/ 2>/dev/null || true
+
+        # Copy assets for 3D models (includes assets/icons/ for the PWA icons)
         cp -r assets deploy/ 2>/dev/null || true
         cp -r public deploy/ 2>/dev/null || true
         
@@ -75,10 +81,25 @@ jobs:
             ExpiresByType application/octet-stream "access plus 1 month"
         </ifModule>
 
-        # MIME types for 3D models
+        # MIME types for 3D models and PWA manifest
         AddType model/gltf-binary .glb
         AddType model/gltf+json .gltf
-        
+        AddType application/manifest+json .webmanifest
+
+        # Force correct MIME type for the PWA manifest
+        <Files "manifest.json">
+            Header set Content-Type "application/manifest+json"
+        </Files>
+
+        # Service worker and manifest must NOT be long-cached (updates must propagate)
+        <FilesMatch "(sw\.js|manifest\.json)$">
+            <ifModule mod_expires.c>
+                ExpiresActive On
+                ExpiresDefault "access plus 0 seconds"
+            </ifModule>
+            Header set Cache-Control "no-cache, must-revalidate"
+        </FilesMatch>
+
         # Security headers
         Header always set X-Content-Type-Options nosniff
         Header always set X-Frame-Options SAMEORIGIN

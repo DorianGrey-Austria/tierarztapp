@@ -1493,7 +1493,7 @@ function getFilteredEntries() {
 }
 
 function normalizeChar(c) {
-    const map = { "\u00C4": "A", "\u00D6": "O", "\u00DC": "U", "\u00E4": "a", "\u00F6": "o", "\u00FC": "u" };
+    const map = { "Ä": "A", "Ö": "O", "Ü": "U", "ä": "a", "ö": "o", "ü": "u" };
     return (map[c] || c).toUpperCase();
 }
 

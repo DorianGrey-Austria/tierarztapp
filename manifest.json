@@ -1,0 +1,26 @@
+{
+  "name": "VetScan Pro 3000 - Veterinaermedizin Lern-App",
+  "short_name": "VetScan Pro",
+  "description": "Professionelle Lernwerkzeuge fuer Veterinaermedizin-Studierende: 3D-Anatomie, Diagnostik-Trainer, Fallstudien und Notfall-Simulation.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "./vetscan-version-selector.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["education", "medical", "productivity"],
+  "icons": [
+    { "src": "assets/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Klinische Untersuchung", "url": "./vetscan-clinical-exam.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "DDx-Trainer", "url": "./vetscan-ddx-trainer.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Notfall-Triage", "url": "./vetscan-emergency-triage.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "3D Anatomie-Viewer", "url": "./vetscan-3d-viewer.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

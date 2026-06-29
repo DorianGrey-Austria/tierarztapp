@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="VetScan Pro">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+  <!-- Full-bleed background for maskable safe zone -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- Scan ring -->
+  <circle cx="256" cy="246" r="150" fill="none" stroke="url(#accent)" stroke-width="10" opacity="0.35"/>
+  <!-- Paw print (centered within safe zone) -->
+  <g fill="url(#accent)">
+    <!-- main pad -->
+    <ellipse cx="256" cy="290" rx="62" ry="50"/>
+    <!-- toes -->
+    <ellipse cx="198" cy="232" rx="26" ry="34"/>
+    <ellipse cx="238" cy="200" rx="24" ry="34"/>
+    <ellipse cx="285" cy="200" rx="24" ry="34"/>
+    <ellipse cx="324" cy="232" rx="26" ry="34"/>
+  </g>
+  <!-- Medical pulse line through the ring -->
+  <path d="M120 246 H196 l18 -42 22 84 18 -42 H392" fill="none" stroke="#10b981" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+</svg>

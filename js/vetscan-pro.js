@@ -275,11 +275,34 @@ select, .scan-btn, .scan-type-btn, .ctrl-btn, .sp-btn, .organ-btn,
   helpOverlay.innerHTML = buildHelpHTML(defaultShortcuts);
   document.body.appendChild(helpOverlay);
 
-  helpOverlay.querySelector('.vp-help-close').addEventListener('click', () => {
+  // Focus management for the modal (WCAG 2.4.3 / 2.1.2: trap + restore focus).
+  let lastFocused = null;
+  function openHelp() {
+    lastFocused = document.activeElement;
+    helpOverlay.classList.add('visible');
+    const closeBtn = helpOverlay.querySelector('.vp-help-close');
+    if (closeBtn) closeBtn.focus();
+  }
+  function closeHelp() {
     helpOverlay.classList.remove('visible');
-  });
+    if (lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
+  }
+  VetScanPro.openHelp = openHelp;
+  VetScanPro.closeHelp = closeHelp;
+
+  helpOverlay.querySelector('.vp-help-close').addEventListener('click', closeHelp);
   helpOverlay.addEventListener('click', (e) => {
-    if (e.target === helpOverlay) helpOverlay.classList.remove('visible');
+    if (e.target === helpOverlay) closeHelp();
+  });
+  // Trap Tab within the overlay while it is open.
+  helpOverlay.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || !helpOverlay.classList.contains('visible')) return;
+    const focusables = helpOverlay.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
 
   VetScanPro.setShortcuts = function(shortcuts) {
@@ -294,10 +317,10 @@ select, .scan-btn, .scan-type-btn, .ctrl-btn, .sp-btn, .organ-btn,
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
       e.preventDefault();
-      helpOverlay.classList.toggle('visible');
+      if (helpOverlay.classList.contains('visible')) closeHelp(); else openHelp();
     }
     if (e.key === 'Escape' && helpOverlay.classList.contains('visible')) {
-      helpOverlay.classList.remove('visible');
+      closeHelp();
     }
   });
 
@@ -347,6 +370,69 @@ select, .scan-btn, .scan-type-btn, .ctrl-btn, .sp-btn, .organ-btn,
     document.head.appendChild(tc);
   }
 
+  // === 7b. PWA HEAD: FAVICON, ICONS, MANIFEST, THEME-COLOR ===
+  // Injected centrally so all standalone HTML files become installable apps
+  // with a consistent tab/home-screen icon (none ship it inline).
+  function addLink(rel, href, attrs) {
+    // De-dupe by rel+sizes so we never inject the same icon twice.
+    const sel = 'link[rel="' + rel + '"]' + (attrs && attrs.sizes ? '[sizes="' + attrs.sizes + '"]' : '');
+    if (document.querySelector(sel)) return;
+    const link = document.createElement('link');
+    link.rel = rel;
+    link.href = href;
+    if (attrs) Object.keys(attrs).forEach(k => link.setAttribute(k, attrs[k]));
+    document.head.appendChild(link);
+  }
+  // Performance: preconnect to the Three.js CDN, but only on pages that use it.
+  if (document.querySelector('script[src*="cdnjs.cloudflare.com"], script[src*="unpkg.com"]')) {
+    if (!document.querySelector('link[rel="preconnect"][href*="cdnjs"]')) {
+      const pc = document.createElement('link');
+      pc.rel = 'preconnect';
+      pc.href = 'https://cdnjs.cloudflare.com';
+      pc.crossOrigin = 'anonymous';
+      document.head.appendChild(pc);
+    }
+  }
+  addLink('icon', 'assets/icons/favicon.svg', { type: 'image/svg+xml' });
+  addLink('icon', 'assets/icons/favicon-32.png', { type: 'image/png', sizes: '32x32' });
+  addLink('apple-touch-icon', 'assets/icons/apple-touch-icon.png', { sizes: '180x180' });
+  addLink('manifest', 'manifest.json');
+
+  // SEO: canonical URL (strip query/hash) if none present.
+  if (!document.querySelector('link[rel="canonical"]')) {
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = location.origin + location.pathname;
+    document.head.appendChild(canonical);
+  }
+
+  // Adaptive theme-color (shared.js already sets a dark default; add a light one).
+  if (!document.querySelector('meta[name="theme-color"][media]')) {
+    const tcLight = document.createElement('meta');
+    tcLight.name = 'theme-color';
+    tcLight.media = '(prefers-color-scheme: light)';
+    tcLight.content = '#f8fafc';
+    document.head.appendChild(tcLight);
+    const tcDark = document.createElement('meta');
+    tcDark.name = 'theme-color';
+    tcDark.media = '(prefers-color-scheme: dark)';
+    tcDark.content = '#0f172a';
+    document.head.appendChild(tcDark);
+  }
+  // iOS standalone support
+  addMetaTag2('apple-mobile-web-app-capable', 'yes');
+  addMetaTag2('apple-mobile-web-app-status-bar-style', 'black-translucent');
+  addMetaTag2('apple-mobile-web-app-title', 'VetScan Pro');
+  addMetaTag2('mobile-web-app-capable', 'yes');
+
+  function addMetaTag2(name, content) {
+    if (document.querySelector('meta[name="' + name + '"]')) return;
+    const m = document.createElement('meta');
+    m.name = name;
+    m.content = content;
+    document.head.appendChild(m);
+  }
+
   // === 8. GLB LOAD ERROR INTERCEPTION ===
   // Monkey-patch console.error to catch GLB load failures
   const originalConsoleError = console.error;
@@ -361,11 +447,80 @@ select, .scan-btn, .scan-type-btn, .ctrl-btn, .sp-btn, .organ-btn,
   };
 
   // === 9. SERVICE WORKER REGISTRATION ===
-  if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
+  // Secure contexts only: https in production, localhost during development.
+  const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || isLocalhost)) {
+    navigator.serviceWorker.register('sw.js').catch(() => {
       // Silent fail - SW is optional
     });
   }
+
+  // === 9b. INSTALL PROMPT (Add to Home Screen) ===
+  // Captures the deferred beforeinstallprompt and offers a dismissable button.
+  // No tracking, no auto-popups (DSGVO-friendly): user stays in control.
+  let deferredPrompt = null;
+  const INSTALL_DISMISSED_KEY = 'vetscan_install_dismissed';
+
+  const installCSS = document.createElement('style');
+  installCSS.textContent = `
+.vp-install-btn {
+  position: fixed; bottom: 16px; right: 16px; z-index: 9996;
+  display: none; align-items: center; gap: 8px;
+  padding: 10px 16px; min-height: 44px;
+  background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff;
+  border: none; border-radius: 12px; cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+  animation: vp-install-in 0.3s ease-out;
+}
+.vp-install-btn.visible { display: flex; }
+.vp-install-btn:hover { filter: brightness(1.08); }
+.vp-install-btn .vp-install-x {
+  margin-left: 4px; opacity: 0.7; font-size: 16px; line-height: 1;
+}
+@keyframes vp-install-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .vp-install-btn { animation: none; } }
+@media print { .vp-install-btn { display: none !important; } }
+`;
+  document.head.appendChild(installCSS);
+
+  const installBtn = document.createElement('button');
+  installBtn.className = 'vp-install-btn';
+  installBtn.setAttribute('aria-label', 'VetScan Pro als App installieren');
+  installBtn.innerHTML = '<span aria-hidden="true">⬇️</span><span>App installieren</span><span class="vp-install-x" role="button" aria-label="Hinweis ausblenden" title="Ausblenden">×</span>';
+  document.body.appendChild(installBtn);
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (localStorage.getItem(INSTALL_DISMISSED_KEY) !== '1') {
+      installBtn.classList.add('visible');
+    }
+  });
+
+  installBtn.addEventListener('click', async (e) => {
+    // Dismiss handle (the "x") hides without prompting.
+    if (e.target.classList.contains('vp-install-x')) {
+      e.stopPropagation();
+      installBtn.classList.remove('visible');
+      localStorage.setItem(INSTALL_DISMISSED_KEY, '1');
+      return;
+    }
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      VetScanPro.toast('success', 'Installation gestartet', 'VetScan Pro wird zu deinem Geraet hinzugefuegt.');
+    }
+    deferredPrompt = null;
+    installBtn.classList.remove('visible');
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBtn.classList.remove('visible');
+    VetScanPro.toast('success', 'App installiert', 'VetScan Pro ist jetzt offline verfuegbar.');
+  });
 
   // === 10. PROFESSIONAL BADGE ===
   const badge = document.createElement('div');

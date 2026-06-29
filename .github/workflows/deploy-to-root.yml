@@ -37,6 +37,10 @@ jobs:
           **/scripts/**
           **/README.md
           **/package*.json
+          **/tests/**
+          **/playwright.config.js
+          **/*.spec.js
+          **/playwright-report/**
         dry-run: false
         log-level: verbose
         timeout: 60000

@@ -8,7 +8,7 @@
   <rect width="1200" height="630" fill="url(#bg)"/>
   <text x="600" y="200" text-anchor="middle" font-family="system-ui,sans-serif" font-size="80" font-weight="800" fill="#f1f5f9">VetScan Pro</text>
   <text x="600" y="270" text-anchor="middle" font-family="system-ui,sans-serif" font-size="32" fill="#94a3b8">Veterinaermedizinische Lern-App</text>
-  <text x="600" y="370" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#10b981">97 3D-Modelle | 16 Lernwerkzeuge | Hyper3D Rodin</text>
+  <text x="600" y="370" text-anchor="middle" font-family="system-ui,sans-serif" font-size="24" fill="#10b981">97 3D-Modelle | 19 Lernwerkzeuge | Hyper3D Rodin</text>
   <text x="600" y="420" text-anchor="middle" font-family="system-ui,sans-serif" font-size="20" fill="#64748b">Organe, Pathologien, Diagnostik-Spiele</text>
   <text x="600" y="540" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#475569">vibecoding.company</text>
   <!-- Paw icon -->

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - VetScan Pro</title>
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#0f172a">
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1e1b4b, #0f172a);
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      text-align: center; padding: 24px;
+    }
+    .card {
+      max-width: 420px; background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+      padding: 40px 32px; backdrop-filter: blur(12px);
+    }
+    img { width: 96px; height: 96px; margin-bottom: 16px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #94a3b8; font-size: 15px; line-height: 1.6; margin: 0 0 24px; }
+    button {
+      min-height: 44px; padding: 12px 24px; font-size: 15px; font-weight: 600;
+      background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff;
+      border: none; border-radius: 12px; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    .hint { margin-top: 20px; font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="assets/icons/icon-192.png" alt="VetScan Pro">
+    <h1>Du bist offline</h1>
+    <p>Diese Seite ist gerade nicht im Cache verfuegbar. Bereits besuchte Lernwerkzeuge und 3D-Modelle funktionieren weiterhin offline.</p>
+    <button onclick="location.reload()">Erneut versuchen</button>
+    <div class="hint">VetScan Pro 3000 &middot; Veterinaermedizin Lern-App</div>
+  </div>
+</body>
+</html>
