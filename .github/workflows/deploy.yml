@@ -48,8 +48,10 @@ jobs:
         cp -r assets deploy/ 2>/dev/null || true
         cp -r public deploy/ 2>/dev/null || true
         
-        # Use professional landing page as index.html
-        cp landing.html deploy/index.html
+        # Curated best-of hub is the production index.html (single source of truth
+        # across both deploy workflows). Marketing landing page stays reachable at landing.html.
+        cp index.html deploy/index.html
+        cp landing.html deploy/landing.html 2>/dev/null || true
         
         # Erstelle .htaccess für HTTPS und Performance
         cat > deploy/.htaccess << 'EOF'

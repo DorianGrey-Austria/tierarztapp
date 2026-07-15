@@ -67,3 +67,28 @@ test('landing hub boots cleanly', async ({ page }) => {
   await expect(page.locator('link[rel~="icon"]').first()).toHaveCount(1);
   expect(fatal, `Fatal errors on landing hub:\n${fatal.join('\n')}`).toEqual([]);
 });
+
+// Curated best-of hub -- the production index.html. Boots cleanly, has the PWA
+// head, and every curated card link resolves to a real page (no dead links).
+test('curated index.html boots cleanly and links resolve', async ({ page, request }) => {
+  const fatal = [];
+  page.on('pageerror', (err) => fatal.push(`pageerror: ${err.message}`));
+  await page.goto('/index.html', { waitUntil: 'domcontentloaded' });
+
+  await expect(page.locator('link[rel="manifest"]')).toHaveCount(1);
+  await expect(page.locator('link[rel~="icon"]').first()).toHaveCount(1);
+  await expect(page.locator('meta[name="theme-color"]').first()).toHaveCount(1);
+  // Curated picks are present
+  expect(await page.locator('a.pick').count()).toBeGreaterThanOrEqual(12);
+
+  // Every internal .html link the page points to must actually exist (HTTP 200).
+  const hrefs = await page.locator('a[href$=".html"]').evaluateAll((els) =>
+    [...new Set(els.map((e) => e.getAttribute('href')))]
+  );
+  for (const href of hrefs) {
+    const res = await request.get('/' + href);
+    expect(res.status(), `Dead link: ${href}`).toBe(200);
+  }
+
+  expect(fatal, `Fatal errors on index.html:\n${fatal.join('\n')}`).toEqual([]);
+});
