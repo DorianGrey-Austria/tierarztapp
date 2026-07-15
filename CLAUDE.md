@@ -8,14 +8,15 @@ Educational veterinary medical scanner simulation game ("VetScan Pro 3000"). Liv
 
 Two parallel implementations:
 
-- **Standalone HTML versions** (production): 43 self-contained game files in the repo root. Each includes all CSS/JS inline. These are what gets deployed via GitHub Actions FTP to Hostinger.
+- **Standalone HTML versions** (production): ~44 self-contained HTML files in the repo root. Each includes all CSS/JS inline. These are what gets deployed via GitHub Actions FTP to Hostinger.
 - **React app** (development target): Vite + React 18 + Tailwind CSS + Three.js in `src/`. The `dist/` build is NOT deployed -- only standalone HTML files go to production.
 
-The root `index.html` is a standalone game file (not the React app entry point). `vetscan-version-selector.html` and the CI-generated `deploy/index.html` serve as navigation hubs.
+The root `index.html` is a standalone game file (not the React app entry point). In production, `landing.html` is deployed **as** `index.html` (see Deployment); `vetscan-version-selector.html` is the manifest `start_url` and serves as the navigation hub.
 
-The 43 HTML files fall into two groups:
+The HTML files fall into groups:
 - **19 professional learning tools** registered in the `js/vetscan-shared.js` TOOLS array (clinical-exam, ddx-trainer, bone-atlas, parasite-atlas, etc.) -- these use the shared module system and appear in the navigation bar.
-- **24 legacy/game HTML files** (standalone.html, vetscan-detective.html, vetscan-magic-v8.html, etc.) -- fully self-contained, no shared modules.
+- **Legacy/game HTML files** (standalone.html, vetscan-detective.html, vetscan-magic-v8.html, etc.) -- fully self-contained, no shared modules.
+- **PWA/support files** (`offline.html` service-worker fallback, `landing.html` marketing entry) -- not games.
 
 ## Development Commands
 
@@ -30,6 +31,9 @@ npm run preview      # Preview production build on 8035
 
 # Standalone HTML testing
 python3 -m http.server 8080   # Serve root dir, then access localhost:8080/<file>.html
+
+# Smoke test (Playwright) -- boots all 19 learning tools, asserts no fatal errors + PWA head
+npm run test:smoke             # tests/smoke.spec.js (the pre-handover smoke gate)
 
 # 3D pipeline
 npm run optimize:model         # gltf-transform GLB optimization
@@ -94,21 +98,25 @@ Runs in Docker (`docker-compose.yml`): headless Blender with virtual display on 
 
 ### Service Worker (`sw.js`)
 
-Cache name: `vetscan-pro-v1`. Strategy: cache-first for `.glb` models (stable assets), network-first for HTML/JS/CSS. Provides offline support for all learning tools and 3D models.
+Cache name: `vetscan-pro-v2` (bump this constant in `sw.js` to invalidate old caches on deploy). Strategy: cache-first for `.glb` models (stable assets), network-first for HTML/JS/CSS falling back to cache then `offline.html`. Precaches the app shell for all 19 learning tools plus `manifest.json` and the icons under `assets/icons/`.
+
+### PWA
+
+`manifest.json` (root) defines the installable app: `start_url` is `vetscan-version-selector.html`, icons live in `assets/icons/` (`favicon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`), and it declares app shortcuts to key tools. The `beforeinstallprompt` install-prompt handling lives in `js/vetscan-pro.js`. `offline.html` is the SW network-failure fallback page.
 
 ### Deployment
 
 GitHub Actions (`.github/workflows/deploy.yml`) on push to `main`:
-1. Copies standalone HTML files + `assets/` + `public/` + `js/` + `sw.js` into `deploy/`
-2. Generates a version-selector `index.html` with links to all game variants
-3. Creates `.htaccess` (HTTPS redirect, gzip, GLB MIME types, caching headers)
+1. Copies standalone HTML files + `assets/` + `public/` + `js/` + `sw.js` into `deploy/`, plus PWA/SEO files (`manifest.json`, `offline.html`, `robots.txt`, `sitemap.xml`)
+2. Copies `landing.html` **to** `deploy/index.html` -- the marketing landing page is the production entry point
+3. Creates `.htaccess` (HTTPS redirect, gzip, GLB + manifest MIME types, caching headers)
 4. FTP-deploys to Hostinger (`/public_html/`)
 
 Requires secrets: `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`.
 
 **Two workflows fire on every push to `main`**: `deploy.yml` and `deploy-to-root.yml` both FTP to Hostinger `/public_html/`. Keep both in mind when changing the deploy process -- a fix to one does not cover the other.
 
-**When adding a new HTML file**: you must also add a `cp <file>.html deploy/` line in the deploy workflow, or it won't reach production.
+**When adding a new HTML file**: files matching `vetscan-*.html` are already globbed into `deploy/`. Any other filename needs its own `cp <file>.html deploy/` line in the deploy workflow, or it won't reach production.
 
 ## Ports
 
