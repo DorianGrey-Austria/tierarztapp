@@ -1,14 +1,24 @@
 name: Deploy to Hostinger - vibecoding.company
 
+# Single source of truth for production deploys (consolidated 2026-07).
+# Strategy: SFTP primary (encrypted, SSH port 65002) -> FTPS fallback on failure.
+# Plain FTP is intentionally NOT used (unencrypted, 2026 best practice).
+# Secrets required: see DEPLOY.md.
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:  # Erlaubt manuelles Triggern
 
+# Never run two production deploys at once (last push wins).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
@@ -113,14 +123,37 @@ jobs:
         echo "📁 Files to deploy:"
         ls -la deploy/
         
-    - name: Deploy to Hostinger via FTP
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+    # --- PRIMARY: SFTP over SSH (encrypted, Hostinger port 65002) ---
+    # Supports BOTH auth methods: SSH key (preferred) OR password fallback.
+    # Provide EITHER SSH_PRIVATE_KEY or SSH_PASSWORD in repo secrets.
+    - name: Deploy via SFTP (primary)
+      id: sftp
+      continue-on-error: true
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+      with:
+        server: ${{ secrets.SSH_HOST }}
+        port: ${{ secrets.SSH_PORT || 65002 }}
+        username: ${{ secrets.SSH_USERNAME }}
+        ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        password: ${{ secrets.SSH_PASSWORD }}
+        local_path: './deploy/*'
+        remote_path: '/public_html/'
+        sftp_only: true
+        delete_remote_files: false
+
+    # --- FALLBACK: FTPS (FTP over TLS) — only if SFTP failed ---
+    # security: loose is required for Hostinger's certificate chain.
+    - name: Deploy via FTPS (fallback)
+      if: steps.sftp.outcome == 'failure'
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftps
+        security: loose
         local-dir: ./deploy/
-        server-dir: /public_html/  # Hauptverzeichnis für vibecoding.company
+        server-dir: /public_html/
         dry-run: false
         log-level: verbose
         exclude: |
@@ -131,14 +164,13 @@ jobs:
           **/Thumbs.db
           **/*.backup
           **/*.md
-          
-    - name: Verify Deployment
+
+    - name: Deploy result
       run: |
-        echo "🎯 Deployment completed successfully!"
-        echo ""
-        echo "🌐 Your Tierarztspiel is now LIVE at:"
-        echo "https://vibecoding.company/"
-        echo ""
-        echo "✅ Deployment finished at $(date)"
-        echo ""
-        echo "🚀 Auto-deployed via GitHub Actions to Hostinger!"
+        if [ "${{ steps.sftp.outcome }}" = "success" ]; then
+          echo "Deployed via SFTP (primary)."
+        else
+          echo "SFTP failed -> deployed via FTPS (fallback)."
+        fi
+        echo "Live: https://vibecoding.company/"
+        echo "Finished at $(date)"
